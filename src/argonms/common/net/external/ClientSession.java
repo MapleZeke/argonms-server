@@ -288,6 +288,10 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	 * Selector loop.
 	 */
 	/* package-private */ void sendInitPacket() {
+		if (sendQueue == null) {
+			activate();
+			return;
+		}
 		ByteBuffer buf = ByteBuffer.wrap(makeInitPacketBytes());
 		send(sendQueue.getNextPush(), buf);
 		activate();

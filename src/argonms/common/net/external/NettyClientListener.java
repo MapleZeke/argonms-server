@@ -44,6 +44,7 @@ public final class NettyClientListener<T extends RemoteClient> implements Sessio
 	static final AttributeKey<ClientSession<?>> SESSION_KEY = AttributeKey.valueOf("argonms.external.session");
 
 	private static final Logger LOG = Logger.getLogger(NettyClientListener.class.getName());
+	private static final String VIRTUAL_THREADS_PROPERTY = "argonms.virtualThreads";
 
 	private final ClientPacketProcessor<T> packetProcessor;
 	private final ClientListener.ClientFactory<T> clientFactory;
@@ -57,9 +58,10 @@ public final class NettyClientListener<T extends RemoteClient> implements Sessio
 		this.packetProcessor = packetProcessor;
 		this.clientFactory = clientFactory;
 		this.closeEventsTriggered = new AtomicBoolean(false);
-		boolean useVirtualThreads = Boolean.parseBoolean(System.getProperty("argonms.virtualThreads", "true"));
+		boolean useVirtualThreads = Boolean.parseBoolean(System.getProperty(VIRTUAL_THREADS_PROPERTY, "true"));
+		int workerThreads = Runtime.getRuntime().availableProcessors() * 2;
 		this.workerThreadPool = useVirtualThreads ? Executors.newVirtualThreadPerTaskExecutor() : Executors.newFixedThreadPool(
-				Runtime.getRuntime().availableProcessors() * 2,
+				workerThreads,
 				new ThreadFactory() {
 					private final ThreadGroup group = Thread.currentThread().getThreadGroup();
 					private final AtomicInteger threadNumber = new AtomicInteger(1);
@@ -81,8 +83,9 @@ public final class NettyClientListener<T extends RemoteClient> implements Sessio
 
 	public boolean bind(int port) {
 		boolean useEpoll = Epoll.isAvailable();
+		int workerThreads = Runtime.getRuntime().availableProcessors() * 2;
 		bossGroup = useEpoll ? new EpollEventLoopGroup(1) : new NioEventLoopGroup(1);
-		workerGroup = useEpoll ? new EpollEventLoopGroup(Runtime.getRuntime().availableProcessors() * 2) : new NioEventLoopGroup(Runtime.getRuntime().availableProcessors() * 2);
+		workerGroup = useEpoll ? new EpollEventLoopGroup(workerThreads) : new NioEventLoopGroup(workerThreads);
 		try {
 			ServerBootstrap bootstrap = new ServerBootstrap()
 					.group(bossGroup, workerGroup)
