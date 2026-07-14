@@ -52,7 +52,7 @@ public final class MaplePacketEncoder extends MessageToByteEncoder<byte[]> {
 	}
 
 	private static void writeHeader(ByteBuf out, int payloadLength, byte[] iv) {
-		int versionMask = (((iv[3] & 0xFF) << 8) | (iv[2] & 0xFF)) ^ ~GlobalConstants.MAPLE_VERSION;
+		int versionMask = (((iv[3] & 0xFF) << 8) | (iv[2] & 0xFF)) ^ (~GlobalConstants.MAPLE_VERSION);
 		out.writeShortLE(versionMask & 0xFFFF);
 		out.writeShortLE((versionMask ^ (payloadLength & 0xFFFF)) & 0xFFFF);
 	}

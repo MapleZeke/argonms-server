@@ -46,7 +46,8 @@ public final class MaplePacketDecoder extends ByteToMessageDecoder {
 		}
 
 		int packetLength = readPacketLength(in, readerIndex);
-		if (in.readableBytes() < HEADER_LENGTH + packetLength) {
+		int availableBodyBytes = in.readableBytes() - HEADER_LENGTH;
+		if (availableBodyBytes < packetLength) {
 			return;
 		}
 

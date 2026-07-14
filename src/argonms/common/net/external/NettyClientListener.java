@@ -151,6 +151,9 @@ public final class NettyClientListener<T extends RemoteClient> implements Sessio
 	static void initializeCrypto(Channel channel, byte[] recvIv, byte[] sendIv) {
 		Objects.requireNonNull(recvIv, "recvIv");
 		Objects.requireNonNull(sendIv, "sendIv");
+		if (channel.attr(RECV_IV_KEY).get() != null || channel.attr(SEND_IV_KEY).get() != null) {
+			throw new IllegalStateException("Channel crypto already initialized");
+		}
 		channel.attr(RECV_IV_KEY).set(Arrays.copyOf(recvIv, recvIv.length));
 		channel.attr(SEND_IV_KEY).set(Arrays.copyOf(sendIv, sendIv.length));
 	}
