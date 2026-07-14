@@ -58,6 +58,9 @@ public final class NettyClientListener<T extends RemoteClient> implements Sessio
 		this.packetProcessor = packetProcessor;
 		this.clientFactory = clientFactory;
 		this.closeEventsTriggered = new AtomicBoolean(false);
+		// This repository targets Java 21, so virtual threads are available by
+		// default; setting argonms.virtualThreads=false falls back to the legacy
+		// platform-thread worker pool when needed.
 		boolean useVirtualThreads = Boolean.parseBoolean(System.getProperty(VIRTUAL_THREADS_PROPERTY, "true"));
 		int workerThreads = Runtime.getRuntime().availableProcessors() * 2;
 		this.workerThreadPool = useVirtualThreads ? Executors.newVirtualThreadPerTaskExecutor() : Executors.newFixedThreadPool(

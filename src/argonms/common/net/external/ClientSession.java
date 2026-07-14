@@ -63,6 +63,7 @@ public class ClientSession<T extends RemoteClient> implements Session {
 
 	private final SocketChannel commChn;
 	private final Channel nettyChn;
+	private final boolean nettyTransport;
 	private final AtomicBoolean closeEventsTriggered;
 	private ByteBuffer readBuffer;
 	private final CloseListener<T> onClose;
@@ -98,7 +99,8 @@ public class ClientSession<T extends RemoteClient> implements Session {
 
 	private ClientSession(SocketChannel socketChannel, Channel nettyChannel, SelectionKey key, T client, CloseListener<T> onClose) {
 		closeEventsTriggered = new AtomicBoolean(false);
-		sendQueue = nettyChannel == null ? new OrderedQueue() : null;
+		nettyTransport = nettyChannel != null;
+		sendQueue = nettyTransport ? null : new OrderedQueue();
 		heartbeatTask = new KeepAliveTask();
 		queuedReads = new AtomicInteger(0);
 
@@ -127,7 +129,7 @@ public class ClientSession<T extends RemoteClient> implements Session {
 
 	@Override
 	public SocketAddress getAddress() {
-		return nettyChn != null ? nettyChn.remoteAddress() : commChn.socket().getRemoteSocketAddress();
+		return nettyTransport ? nettyChn.remoteAddress() : commChn.socket().getRemoteSocketAddress();
 	}
 
 	public String getAccountName() {
@@ -148,7 +150,7 @@ public class ClientSession<T extends RemoteClient> implements Session {
 
 	@Override
 	public void send(byte[] message) {
-		if (nettyChn != null) {
+		if (nettyTransport) {
 			nettyChn.writeAndFlush(message);
 			return;
 		}
@@ -211,7 +213,7 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	public boolean close(String reason) {
 		if (closeEventsTriggered.compareAndSet(false, true)) {
 			try {
-				if (nettyChn != null) {
+				if (nettyTransport) {
 					nettyChn.close();
 				} else {
 					commChn.close();
@@ -245,7 +247,7 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	 * channel is closed.
 	 */
 	/* package-private */ byte tryFlushSendQueue() {
-	if (sendQueue == null) {
+	if (nettyTransport) {
 		return 1;
 	}
 	if (!sendQueue.shouldWrite()) {
@@ -288,7 +290,7 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	 * Selector loop.
 	 */
 	/* package-private */ void sendInitPacket() {
-		if (sendQueue == null) {
+		if (nettyTransport) {
 			activate();
 			return;
 		}
