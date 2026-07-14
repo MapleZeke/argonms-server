@@ -31,13 +31,13 @@ import java.util.logging.Logger;
  *
  * @author GoldenKevin
  */
-public class Scheduler {
+public final class Scheduler {
 	private static final Logger LOG = Logger.getLogger(Scheduler.class.getName());
 
 	private static Scheduler instance;
 	private static Scheduler hashedWheel;
 
-	private ScheduledExecutorService timer;
+	private final ScheduledExecutorService timer;
 
 	private Scheduler(ScheduledExecutorService impl) {
 		timer = impl;
@@ -74,7 +74,7 @@ public class Scheduler {
 	}
 
 	public static void enable(boolean enableGeneral, boolean enableHashedWheel) {
-		if (enableGeneral)
+		if (enableGeneral) {
 			instance = new Scheduler(Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
 				private final ThreadGroup group;
 				private final AtomicInteger threadNumber = new AtomicInteger(1);
@@ -86,15 +86,19 @@ public class Scheduler {
 				@Override
 				public Thread newThread(Runnable r) {
 					Thread t = new Thread(group, r, "scheduler-pool-thread-" + threadNumber.getAndIncrement(), 0);
-					if (t.isDaemon())
+					if (t.isDaemon()) {
 						t.setDaemon(false);
-					if (t.getPriority() != Thread.NORM_PRIORITY)
+					}
+					if (t.getPriority() != Thread.NORM_PRIORITY) {
 						t.setPriority(Thread.NORM_PRIORITY);
+					}
 					return t;
 				}
 			}));
-		if (enableHashedWheel)
+		}
+		if (enableHashedWheel) {
 			hashedWheel = new Scheduler(new ScheduledHashedWheelExecutor());
+		}
 	}
 
 	public static Scheduler getInstance() {

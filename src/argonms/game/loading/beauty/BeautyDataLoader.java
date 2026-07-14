@@ -59,13 +59,10 @@ public abstract class BeautyDataLoader {
 
 	public static void setInstance(DataFileType wzType, String wzPath) {
 		if (instance == null) {
-			switch (wzType) {
-				case KVJ:
-					instance = new KvjBeautyDataLoader(wzPath);
-					break;
-				case MCDB:
-					instance = new McdbBeautyDataLoader();
-					break;
+			if (wzType == DataFileType.KVJ) {
+				instance = new KvjBeautyDataLoader(wzPath);
+			} else if (wzType == DataFileType.MCDB) {
+				instance = new McdbBeautyDataLoader();
 			}
 		}
 	}

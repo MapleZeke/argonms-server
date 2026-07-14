@@ -71,8 +71,9 @@ public class ShopPlayerContinuation extends AbstractPlayerContinuation {
 		long now = System.currentTimeMillis();
 		for (Iterator<BuffState.ItemState> iter = getActiveItems().values().iterator(); iter.hasNext(); ) {
 			BuffState.ItemState buff = iter.next();
-			if (buff.endTime <= now)
+			if (buff.endTime <= now) {
 				iter.remove();
+			}
 		}
 		for (Iterator<Map.Entry<Integer, BuffState.SkillState>> iter = getActiveSkills().entrySet().iterator(); iter.hasNext(); ) {
 			Map.Entry<Integer, BuffState.SkillState> buff = iter.next();
@@ -83,8 +84,9 @@ public class ShopPlayerContinuation extends AbstractPlayerContinuation {
 		}
 		for (Iterator<BuffState.MobSkillState> iter = getActiveDebuffs().values().iterator(); iter.hasNext(); ) {
 			BuffState.MobSkillState buff = iter.next();
-			if (buff.endTime <= now)
+			if (buff.endTime <= now) {
 				iter.remove();
+			}
 		}
 		setChatroomId(0);
 	}

@@ -425,8 +425,9 @@ public class PlayerSkillEffectsData extends BuffsData implements MonsterStatusEf
 	@Override
 	public int getDuration() {
 		//freeze skills have weird times...
-		if (isFreeze)
+		if (isFreeze) {
 			return super.getDuration() * 2;
+		}
 		return super.getDuration();
 	}
 
@@ -471,8 +472,7 @@ public class PlayerSkillEffectsData extends BuffsData implements MonsterStatusEf
 		}
 		lty = lt.y + posFrom.y;
 		rby = rb.y + posFrom.y;
-		Rectangle bounds = new Rectangle(ltx, lty, rbx - ltx, rby - lty);
-		return bounds;
+		return new Rectangle(ltx, lty, rbx - ltx, rby - lty);
 	}
 
 	public byte getMobCount() {

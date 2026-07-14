@@ -95,9 +95,10 @@ public abstract class ChannelOrShopSynchronization extends CrossProcessSynchroni
 		byte result = packet.readByte();
 
 		BlockingQueue<Pair<Byte, Object>> consumer = blockingCalls.remove(Integer.valueOf(responseId));
-		if (consumer == null)
+		if (consumer == null) {
 			//timed out and garbage collected
 			return;
+		}
 
 		consumer.offer(new Pair<Byte, Object>(Byte.valueOf(targetCh), Byte.valueOf(result)));
 	}
@@ -107,8 +108,9 @@ public abstract class ChannelOrShopSynchronization extends CrossProcessSynchroni
 		writeSynchronizationPacketHeader(lew, ChannelSynchronizationOps.BUDDY_ONLINE);
 		lew.writeInt(sender);
 		lew.writeByte((byte) recipients.length);
-		for (int i = 0; i < recipients.length; i++)
+		for (int i = 0; i < recipients.length; i++) {
 			lew.writeInt(recipients[i]);
+		}
 
 		writeSynchronizationPacket(lew.getBytes());
 		return 0;
@@ -118,8 +120,9 @@ public abstract class ChannelOrShopSynchronization extends CrossProcessSynchroni
 		int sender = packet.readInt();
 		byte receiversCount = packet.readByte();
 		int[] receivers = new int[receiversCount];
-		for (int i = 0; i < receiversCount; i++)
+		for (int i = 0; i < receiversCount; i++) {
 			receivers[i] = packet.readInt();
+		}
 
 		handler.receivedSentBuddyLogInNotifications(sender, receivers, targetCh);
 	}
@@ -128,8 +131,9 @@ public abstract class ChannelOrShopSynchronization extends CrossProcessSynchroni
 		int recipient = packet.readInt();
 		byte count = packet.readByte();
 		List<Integer> senders = new ArrayList<>(count);
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++) {
 			senders.add(Integer.valueOf(packet.readInt()));
+		}
 		boolean bubble = packet.readBool();
 
 		handler.receivedReturnedBuddyLogInNotifications(recipient, senders, bubble, targetCh);
@@ -139,8 +143,9 @@ public abstract class ChannelOrShopSynchronization extends CrossProcessSynchroni
 		int sender = packet.readInt();
 		byte count = packet.readByte();
 		int[] recipients = new int[count];
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++) {
 			recipients[i] = packet.readInt();
+		}
 
 		handler.receivedBuddyLogOffNotifications(sender, recipients);
 	}

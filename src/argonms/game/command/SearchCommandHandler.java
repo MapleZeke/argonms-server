@@ -59,22 +59,22 @@ public class SearchCommandHandler extends AbstractCommandDefinition<CommandCalle
 
 		List<String> matches;
 		String typeName;
-		if (type.equalsIgnoreCase("item")) {
+		if ("item".equalsIgnoreCase(type)) {
 			matches = StringDataLoader.getInstance().getSimilarNamedItems(query);
 			typeName = "items";
-		} else if (type.equalsIgnoreCase("mob")) {
+		} else if ("mob".equalsIgnoreCase(type)) {
 			matches = StringDataLoader.getInstance().getSimilarNamedMobs(query);
 			typeName = "mobs";
-		} else if (type.equalsIgnoreCase("map")) {
+		} else if ("map".equalsIgnoreCase(type)) {
 			matches = StringDataLoader.getInstance().getSimilarNamedMaps(query);
 			typeName = "maps";
-		} else if (type.equalsIgnoreCase("skill")) {
+		} else if ("skill".equalsIgnoreCase(type)) {
 			matches = StringDataLoader.getInstance().getSimilarNamedSkills(query);
 			typeName = "skills";
-		} else if (type.equalsIgnoreCase("npc")) {
+		} else if ("npc".equalsIgnoreCase(type)) {
 			matches = StringDataLoader.getInstance().getSimilarNamedNpcs(query);
 			typeName = "NPCs";
-		} else if (type.equalsIgnoreCase("quest")) {
+		} else if ("quest".equalsIgnoreCase(type)) {
 			matches = QuestDataLoader.getInstance().getSimilarNamedQuests(query);
 			typeName = "quests";
 		} else {

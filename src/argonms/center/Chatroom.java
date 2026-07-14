@@ -152,9 +152,11 @@ public class Chatroom {
 
 	private void rebuildChannelSet() {
 		channels.clear();
-		for (byte i = 0; i < 3; i++)
-			if (occupants[i] != null)
+		for (byte i = 0; i < 3; i++) {
+			if (occupants[i] != null) {
 				channels.add(Byte.valueOf(occupants[i].getChannel()));
+			}
+		}
 	}
 
 	/**
@@ -176,8 +178,9 @@ public class Chatroom {
 	 * @param a 
 	 */
 	public void setPlayer(byte pos, Avatar a) {
-		if (occupants[pos] == null)
+		if (occupants[pos] == null) {
 			count++;
+		}
 		occupants[pos] = a;
 		rebuildChannelSet();
 	}
@@ -196,9 +199,11 @@ public class Chatroom {
 	 * @return 
 	 */
 	public byte positionOf(int playerId) {
-		for (byte i = 0; i < 3; i++)
-			if (occupants[i] != null && occupants[i].getPlayerId() == playerId)
+		for (byte i = 0; i < 3; i++) {
+			if (occupants[i] != null && occupants[i].getPlayerId() == playerId) {
 				return i;
+			}
+		}
 		return -1;
 	}
 

@@ -46,8 +46,9 @@ public final class ItemTools {
 		int skillId;
 		byte level;
 		if (InventoryTools.isThrowingStar(itemid) && (level = p.getSkillLevel(skillId = Skills.CLAW_MASTERY)) > 0
-				|| InventoryTools.isBullet(itemid) && (level = p.getSkillLevel(skillId = Skills.GUN_MASTERY)) > 0)
+			|| InventoryTools.isBullet(itemid) && (level = p.getSkillLevel(skillId = Skills.GUN_MASTERY)) > 0) {
 			max += SkillDataLoader.getInstance().getSkill(skillId).getLevel(level).getY();
+		}
 		return max;
 	}
 
@@ -77,34 +78,40 @@ public final class ItemTools {
 		}
 		if (e.curesCurse()) {
 			PlayerStatusEffectValues v = p.getEffectValue(PlayerStatusEffect.CURSE);
-			if (v != null)
+			if (v != null) {
 				DiseaseTools.cancelDebuff(p, (short) v.getSource(), v.getLevelWhenCast());
+			}
 		}
 		if (e.curesDarkness()) {
 			PlayerStatusEffectValues v = p.getEffectValue(PlayerStatusEffect.DARKNESS);
-			if (v != null)
+			if (v != null) {
 				DiseaseTools.cancelDebuff(p, (short) v.getSource(), v.getLevelWhenCast());
+			}
 		}
 		if (e.curesPoison()) {
 			PlayerStatusEffectValues v = p.getEffectValue(PlayerStatusEffect.POISON);
-			if (v != null)
+			if (v != null) {
 				DiseaseTools.cancelDebuff(p, (short) v.getSource(), v.getLevelWhenCast());
+			}
 		}
 		if (e.curesSeal()) {
 			PlayerStatusEffectValues v = p.getEffectValue(PlayerStatusEffect.SEAL);
-			if (v != null)
+			if (v != null) {
 				DiseaseTools.cancelDebuff(p, (short) v.getSource(), v.getLevelWhenCast());
+			}
 		}
 		if (e.curesWeakness()) {
 			PlayerStatusEffectValues v = p.getEffectValue(PlayerStatusEffect.WEAKNESS);
-			if (v != null)
+			if (v != null) {
 				DiseaseTools.cancelDebuff(p, (short) v.getSource(), v.getLevelWhenCast());
+			}
 		}
 		if (e.getMoveTo() != 0) {
-			if (e.getMoveTo() == GlobalConstants.NULL_MAP)
+			if (e.getMoveTo() == GlobalConstants.NULL_MAP) {
 				p.changeMap(p.getMap().getReturnMap());
-			else
+			} else {
 				p.changeMap(e.getMoveTo());
+			}
 		}
 		return ret;
 	}
@@ -130,8 +137,9 @@ public final class ItemTools {
 		}
 
 		Map<ClientUpdateKey, Number> statChanges = itemRecovers(p, e, statIncreasePercent);
-		if (!statChanges.isEmpty())
+		if (!statChanges.isEmpty()) {
 			p.getClient().getSession().send(GamePackets.writeUpdatePlayerStats(statChanges, false));
+		}
 		if (duration > 0) { //buff item
 			StatusEffectTools.applyEffectsAndShowVisuals(p, StatusEffectTools.ACTIVE_BUFF, e, (byte) -1, duration);
 			p.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(new Runnable() {

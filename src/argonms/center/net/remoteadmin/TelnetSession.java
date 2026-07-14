@@ -117,8 +117,9 @@ public class TelnetSession implements Session {
 				break;
 			case MESSAGE:
 				commandHandler.lineReceived(line, client);
-				if (commChn.isOpen())
+				if (commChn.isOpen()) {
 					client.writePrompt();
+				}
 				break;
 		}
 	}
@@ -155,8 +156,9 @@ public class TelnetSession implements Session {
 	 * channel is closed.
 	 */
 	/* package-private */ byte tryFlushSendQueue() {
-		if (!sendQueue.shouldWrite())
-			return -1;
+	if (!sendQueue.shouldWrite()) {
+		return -1;
+	}
 		try {
 			do {
 				int success = 0;
@@ -169,8 +171,9 @@ public class TelnetSession implements Session {
 						} else {
 							int i = sendQueue.currentPopBlock() + success;
 							sendQueue.insert(i++, buf);
-							while (iter.hasNext())
+							while (iter.hasNext()) {
 								sendQueue.insert(i++, iter.next());
+							}
 							return 0;
 						}
 					}
@@ -199,63 +202,63 @@ public class TelnetSession implements Session {
 				break;
 			case 0x1B: //Esc - swallow the ones we don't care about
 				if (i + 1 < message.length) {
-					switch (message[i + 1]) {
-						case 0x1B:
-							//function keys
-							if (i + 3 < message.length && i + 1 == 0x31 && i + 3 == '~')
-								i += 3;
-							break;
-						case '[':
-							//vt100 escape sequences
-							if (i + 2 < message.length) {
-								switch (message[i + 2]) {
-									case 'A':
-										//cursor up
-										//TODO: set cursor just to the right of
-										//name>, then echo { 0x1B, '[', 'K' },
-										//then echo the last line from history,
-										//and finally set cursor just to right
-										//of brought up text
-										i += 2;
-										break;
-									case 'B':
-										//cursor down
-										i += 2;
-										break;
-									case 'C':
-										//cursor right
-										if (inputCursor < inputCount) {
-											echo.write(message, i, 3);
-											inputCursor++;
-										}
-										i += 2;
-										break;
-									case 'D':
-										//cursor left
-										//TODO: this should insert chars and
-										//shift existing chars to right instead
-										//of replacing existing chars when
-										//typing after shifting cursor. wrong
-										//VT100 codes perhaps? Windows Telnet
-										//server and client have it right, so I
-										//guess I'll packet sniff them.
-										if (inputCursor > 0) {
-											echo.write(message, i, 3);
-											inputCursor--;
-										}
-										i += 2;
-										break;
-								}
+					if (message[i + 1] == 0x1B) {
+						//function keys
+						if (i + 3 < message.length && i + 1 == 0x31 && i + 3 == '~') {
+							i += 3;
+						}
+					} else if (message[i + 1] == '[') {
+						//vt100 escape sequences
+						if (i + 2 < message.length) {
+							switch (message[i + 2]) {
+								case 'A':
+									//cursor up
+									//TODO: set cursor just to the right of
+									//name>, then echo { 0x1B, '[', 'K' },
+									//then echo the last line from history,
+									//and finally set cursor just to right
+									//of brought up text
+									i += 2;
+									break;
+								case 'B':
+									//cursor down
+									i += 2;
+									break;
+								case 'C':
+									//cursor right
+									if (inputCursor < inputCount) {
+										echo.write(message, i, 3);
+										inputCursor++;
+									}
+									i += 2;
+									break;
+								case 'D':
+									//cursor left
+									//TODO: this should insert chars and
+									//shift existing chars to right instead
+									//of replacing existing chars when
+									//typing after shifting cursor. wrong
+									//VT100 codes perhaps? Windows Telnet
+									//server and client have it right, so I
+									//guess I'll packet sniff them.
+									if (inputCursor > 0) {
+										echo.write(message, i, 3);
+										inputCursor--;
+									}
+									i += 2;
+									break;
 							}
-							break;
+						}
 					}
 				}
 				break;
 			case '\b': //ASCII non-destructive backspace (Windows telnet)
-				if (inputCursor <= 0)
+				if (inputCursor <= 0) {
 					break;
+				}
 				echo.write(message[i]);
 				echo.write(' ');
+				break;
 			case 0x7F: //Ctrl-? destructive backspace (PuTTY)
 				if (inputCursor > 0) {
 					inputCursor--;
@@ -294,8 +297,9 @@ public class TelnetSession implements Session {
 				}
 			}
 
-			if (client.willEcho())
+			if (client.willEcho()) {
 				send(ByteBuffer.wrap(echo.toByteArray()));
+			}
 			String[] statements = newLineRegex.split(inputBuffer, -1);
 			String statement;
 			int cutTo = 0;

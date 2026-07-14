@@ -106,10 +106,11 @@ public class StorageInventory implements IInventory {
 	public void remove(InventoryType inv, short position) {
 		writeLock.lock();
 		try {
-			if (alreadyTouched.contains(inv))
+			if (alreadyTouched.contains(inv)) {
 				realItems.get(inv).remove(position);
-			else
+			} else {
 				realItems.get(inv).remove(startItems[position]);
+			}
 			occupied--;
 		} finally {
 			writeLock.unlock();
@@ -119,10 +120,11 @@ public class StorageInventory implements IInventory {
 	public InventorySlot get(InventoryType inv, short position) {
 		readLock.lock();
 		try {
-			if (alreadyTouched.contains(inv))
+			if (alreadyTouched.contains(inv)) {
 				return realItems.get(inv).get(position);
-			else
+			} else {
 				return startItems[position];
+			}
 		} finally {
 			readLock.unlock();
 		}
@@ -134,9 +136,11 @@ public class StorageInventory implements IInventory {
 		readLock.lock();
 		try {
 			Map<Short, InventorySlot> mapRep = new LinkedHashMap<>(occupied);
-			for (short i = 0; i < startItems.length; i++)
-				if ((item = startItems[i]) != null)
+			for (short i = 0; i < startItems.length; i++) {
+				if ((item = startItems[i]) != null) {
 					mapRep.put(Short.valueOf(i), item);
+				}
+			}
 			return mapRep;
 		} finally {
 			readLock.unlock();
@@ -194,12 +198,14 @@ public class StorageInventory implements IInventory {
 		int field = 0;
 		for (InventoryType inv : inventories)
 			field |= 2 << inv.byteValue();
-		if (updateMesos)
+		if (updateMesos) {
 			field |= 2 << 0;
+		}
 		writeLock.lock();
 		try {
-			if (!init && !updateMesos)
+			if (!init && !updateMesos) {
 				alreadyTouched.addAll(inventories);
+			}
 		} finally {
 			writeLock.unlock();
 		}
@@ -213,10 +219,11 @@ public class StorageInventory implements IInventory {
 			List<InventorySlot> allItems = new ArrayList<>(occupied);
 			for (Iterator<List<InventorySlot>> iter = realItems.values().iterator(); iter.hasNext();) {
 				List<InventorySlot> inventorySpecificItems = iter.next();
-				if (!inventorySpecificItems.isEmpty())
+				if (!inventorySpecificItems.isEmpty()) {
 					allItems.addAll(inventorySpecificItems);
-				else
+				} else {
 					iter.remove();
+				}
 			}
 			startItems = allItems.toArray(new InventorySlot[occupied]);
 		} finally {

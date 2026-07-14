@@ -48,11 +48,10 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public final class MonsterStatusEffectTools {
 	private static byte[] getCastEffect(Mob m, MonsterStatusEffectsData e, Map<MonsterStatusEffect, Short> updatedStats) {
-		switch (e.getSourceType()) {
-			case MOB_SKILL:
-				return GamePackets.writeMonsterBuff(m, updatedStats, (short) e.getDataId(), e.getLevel(), (short) 900);
-			case PLAYER_SKILL:
-				return GamePackets.writeMonsterDebuff(m, updatedStats, e.getDataId(), (short) 900);
+		if (e.getSourceType() == StatusEffectsData.EffectSource.MOB_SKILL) {
+			return GamePackets.writeMonsterBuff(m, updatedStats, (short) e.getDataId(), e.getLevel(), (short) 900);
+		} else if (e.getSourceType() == StatusEffectsData.EffectSource.PLAYER_SKILL) {
+			return GamePackets.writeMonsterDebuff(m, updatedStats, e.getDataId(), (short) 900);
 		}
 		return null;
 	}
@@ -79,9 +78,10 @@ public final class MonsterStatusEffectTools {
 			}
 		}
 		if (!e.makeChanceResult() || elem != null && (m.getElementalResistance(elem) > Element.EFFECTIVENESS_NORMAL
-				|| elem == Element.POISON && m.getHp() <= 1
-				|| elem == Element.ICE && m.isBoss()))
+			|| elem == Element.POISON && m.getHp() <= 1
+			|| elem == Element.ICE && m.isBoss())) {
 			return -1;
+		}
 		for (MonsterStatusEffect buff : e.getMonsterEffects()) {
 			MonsterStatusEffectValues v = m.getEffectValue(buff);
 			if (v != null) {
@@ -118,8 +118,9 @@ public final class MonsterStatusEffectTools {
 						break;
 					case MobSkills.SUMMON:
 						short limit = skill.getSummonLimit();
-						if (limit == 5000)
+						if (limit == 5000) {
 							limit = (short) (30 + m.getMap().getPlayerCount() * 2);
+						}
 						if (m.getSpawnedSummons() < limit) {
 							Random generator = Rng.getGenerator();
 							for (Integer oMobId : skill.getSummons().values()) {
@@ -131,37 +132,39 @@ public final class MonsterStatusEffectTools {
 								ypos = m.getPosition().y;
 								switch (mobId) {
 									case 8500003: // Pap bomb high
-										summon.setFoothold((short)Math.ceil(generator.nextDouble() * 19.0));
-										ypos = -590; //no break?
+										summon.setFoothold((short) Math.ceil(generator.nextDouble() * 19.0));
+										ypos = -590;
+										break; //no break?
 									case 8500004: // Pap bomb
 										//Spawn between -500 and 500 from the monsters X position
-										xpos = (int)(m.getPosition().x + Math.ceil(generator.nextDouble() * 1000.0) - 500);
-										if (ypos != -590)
+										xpos = (int) (m.getPosition().x + Math.ceil(generator.nextDouble() * 1000.0) - 500);
+										if (ypos != -590) {
 											ypos = m.getPosition().y;
+										}
 										break;
 									case 8510100: //Pianus bomb
 										if (Math.ceil(generator.nextDouble() * 5) == 1) {
 											ypos = 78;
-											xpos = (int)(0 + Math.ceil(generator.nextDouble() * 5)) + (Math.ceil(generator.nextDouble() * 2) == 1 ? 180 : 0);
-										} else
-											xpos = (int)(m.getPosition().x + Math.ceil(generator.nextDouble() * 1000.0) - 500);
+											xpos = (int) (0 + Math.ceil(generator.nextDouble() * 5)) + (Math.ceil(generator.nextDouble() * 2) == 1 ? 180 : 0);
+										} else {
+											xpos = (int) (m.getPosition().x + Math.ceil(generator.nextDouble() * 1000.0) - 500);
+										}
 										break;
 								}
 								// Get spawn coordinates (This fixes monster lock)
 								// TODO get map left and right wall. Any suggestions?
-								switch (m.getMap().getDataId()) {
-									case 220080001: //Pap map
-										if (xpos < -890)
-											xpos = (int)(-890 + Math.ceil(generator.nextDouble() * 150));
-										else if (xpos > 230)
-											xpos = (int)(230 - Math.ceil(generator.nextDouble() * 150));
-										break;
-									case 230040420: // Pianus map
-										if (xpos < -239)
-											xpos = (int)(-239 + Math.ceil(generator.nextDouble() * 150));
-										else if (xpos > 371)
-											xpos = (int)(371 - Math.ceil(generator.nextDouble() * 150));
-										break;
+								if (m.getMap().getDataId() == 220080001) { //Pap map
+									if (xpos < -890) {
+										xpos = (int) (-890 + Math.ceil(generator.nextDouble() * 150));
+									} else if (xpos > 230) {
+										xpos = (int) (230 - Math.ceil(generator.nextDouble() * 150));
+									}
+								} else if (m.getMap().getDataId() == 230040420) { // Pianus map
+									if (xpos < -239) {
+										xpos = (int) (-239 + Math.ceil(generator.nextDouble() * 150));
+									} else if (xpos > 371) {
+										xpos = (int) (371 - Math.ceil(generator.nextDouble() * 150));
+									}
 								}
 								summon.setPosition(new Point(xpos, ypos));
 								summon.setSpawnEffect(skill.getSummonEffect());
@@ -172,8 +175,9 @@ public final class MonsterStatusEffectTools {
 						duration = 0;
 						break;
 					default:
-						if (!e.getEffects().isEmpty())
+						if (!e.getEffects().isEmpty()) {
 							DiseaseTools.applyDebuff(p, (short) skill.getDataId(), skill.getLevel());
+						}
 						duration = e.getDuration();
 						break;
 				}
@@ -213,19 +217,22 @@ public final class MonsterStatusEffectTools {
 				duration = 0;
 				break;
 		}
-		if (m.areEffectsActive(e))
+		if (m.areEffectsActive(e)) {
 			m.removeCancelEffectTask(e);
+		}
 		return duration;
 	}
 
 	private static boolean applyEffectsAndShowVisualsInternal(final Mob m, final GameCharacter p, final MonsterStatusEffectsData e) {
 		Map<MonsterStatusEffect, Short> updatedStats = new EnumMap<>(MonsterStatusEffect.class);
 		int duration = applyEffects(updatedStats, m, p, e);
-		if (duration == -1)
+		if (duration == -1) {
 			return false;
+		}
 		byte[] effect = getCastEffect(m, e, updatedStats);
-		if (m.isVisible() && effect != null)
+		if (m.isVisible() && effect != null) {
 			m.getMap().sendToAll(effect);
+		}
 		m.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(new Runnable() {
 			@Override
 			public void run() {
@@ -238,8 +245,9 @@ public final class MonsterStatusEffectTools {
 	public static boolean applyEffectsAndShowVisuals(final Mob m, final GameCharacter p, final MonsterStatusEffectsData e) {
 		if (e.getSourceType() == StatusEffectsData.EffectSource.MOB_SKILL && ((MobSkillEffectsData) e).isAoe()) {
 			for (MapEntity neighbor : m.getMap().getMapEntitiesInRect(e.getBoundingBox(m.getPosition(), m.getStance() % 2 != 0), EnumSet.of(MapEntity.EntityType.MONSTER)))
-				if (!applyEffectsAndShowVisualsInternal((Mob) neighbor, p, e))
+				if (!applyEffectsAndShowVisualsInternal((Mob) neighbor, p, e)) {
 					return false;
+				}
 			return true;
 		} else {
 			return applyEffectsAndShowVisualsInternal(m, p, e);
@@ -252,34 +260,38 @@ public final class MonsterStatusEffectTools {
 			case MOB_SKILL: {
 				for (MonsterStatusEffect buff : e.getMonsterEffects()) {
 					MonsterStatusEffectValues v = m.removeFromActiveEffects(buff);
-					if (v != null)
+					if (v != null) {
 						dispelEffect(m, buff, v);
+					}
 				}
 				break;
 			}
 			case PLAYER_SKILL: {
 				for (MonsterStatusEffect buff : e.getMonsterEffects()) {
 					MonsterStatusEffectValues v = m.removeFromActiveEffects(buff);
-					if (v != null)
+					if (v != null) {
 						dispelEffect(m, buff, v);
+					}
 				}
 				break;
 			}
 		}
 		byte[] effect = getDispelEffect(m, e);
-		if (m.isVisible() && effect != null)
+		if (m.isVisible() && effect != null) {
 			m.getMap().sendToAll(effect);
+		}
 	}
 
 	private static void schedulePoisonDamage(final Mob m, final GameCharacter p, final MonsterStatusEffectsData e, final short damage) {
 		m.setPoisonTask(Scheduler.getInstance().runRepeatedly(new Runnable() {
 			@Override
 			public void run() {
-				if (m.getHp() > damage)
+				if (m.getHp() > damage) {
 					//TODO: not thread-safe
 					m.hurt(p, damage);
-				else
+				} else {
 					dispelEffectsAndShowVisuals(m, e);
+				}
 			}
 		}, 0, 1000));
 	}
@@ -326,26 +338,31 @@ public final class MonsterStatusEffectTools {
 							@Override
 							public void run() {
 								MonsterStatusEffectValues value = m.getEffectValue(MonsterStatusEffect.POISON);
-								if (value == null)
+								if (value == null) {
 									return;
+								}
 
 								ScheduledFuture<?> f = m.removePoisonTask();
-								if (f != null)
+								if (f != null) {
 									f.cancel(false);
+								}
 								m.decrementVenom();
 								short newMod = value.getModifier();
 								newMod -= damage;
-								if (newMod <= 0)
+								if (newMod <= 0) {
 									return;
+								}
 
 								schedulePoisonDamage(m, p, value.getEffectsData(), newMod);
 								m.addToActiveEffects(MonsterStatusEffect.POISON, new MonsterStatusEffectValues(value.getEffectsData(), newMod));
 								byte[] effect = getDispelEffect(m, e);
-								if (m.isVisible() && effect != null)
+								if (m.isVisible() && effect != null) {
 									m.getMap().sendToAll(effect);
+								}
 								effect = getCastEffect(m, e, Collections.singletonMap(MonsterStatusEffect.POISON, Short.valueOf(newMod)));
-								if (m.isVisible() && effect != null)
+								if (m.isVisible() && effect != null) {
 									m.getMap().sendToAll(effect);
+								}
 
 								m.setVenomDecrementTask(Scheduler.getInstance().runAfterDelay(decrementVenomTask.get(), m.nextVenomExpire()));
 							}
@@ -410,14 +427,16 @@ public final class MonsterStatusEffectTools {
 				break;
 			case POISON: {
 				ScheduledFuture<?> f = m.removePoisonTask();
-				if (f != null)
+				if (f != null) {
 					f.cancel(false);
+				}
 				if (value.getSource() == Skills.VENOMOUS_STAR || value.getSource() == Skills.VENOMOUS_STAB) {
 					m.resetVenom();
 					m.removeVenomOwner();
 					f = m.removeVenomDecrementTask();
-					if (f != null)
+					if (f != null) {
 						f.cancel(false);
+					}
 				}
 				break;
 			}
@@ -447,8 +466,9 @@ public final class MonsterStatusEffectTools {
 		//Dispel can NOT override: Damage Reflection, Cancel W.Attack and Cancel M.Attack"
 		for (MonsterStatusEffect buff : new MonsterStatusEffect[] { MonsterStatusEffect.WATK, MonsterStatusEffect.WDEF, MonsterStatusEffect.MATK, MonsterStatusEffect.MDEF, MonsterStatusEffect.ACC, MonsterStatusEffect.AVOID, MonsterStatusEffect.SPEED }) {
 			MonsterStatusEffectValues v = m.getEffectValue(buff);
-			if (v != null)
+			if (v != null) {
 				MonsterStatusEffectTools.dispelEffectsAndShowVisuals(m, v.getEffectsData());
+			}
 		}
 	}
 

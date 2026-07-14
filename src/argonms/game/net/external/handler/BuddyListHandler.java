@@ -71,8 +71,9 @@ public final class BuddyListHandler {
 					+ "WHERE `c`.`id` = ?");
 			ps.setInt(1, playerId);
 			rs = ps.executeQuery();
-			if (!rs.next())
+			if (!rs.next()) {
 				return false;
+			}
 			//if logged into login or shop, treat as if offline since they don't
 			//overwrite the buddyentries SQL table
 			return rs.getByte(1) == RemoteClient.STATUS_INGAME;
@@ -95,10 +96,12 @@ public final class BuddyListHandler {
 			ps.setInt(1, inviter);
 			ps.setInt(2, invitee);
 			rs = ps.executeQuery();
-			if (!rs.next())
+			if (!rs.next()) {
 				return -1;
-			if (rs.getBoolean(1))
+			}
+			if (rs.getBoolean(1)) {
 				return THEIR_LIST_FULL;
+			}
 			//assert row retrieved in subquery for `readd` had `status` == STATUS_HALF_OPEN
 			boolean reAdd = rs.getBoolean(2);
 			ps.close();
@@ -275,12 +278,13 @@ public final class BuddyListHandler {
 			PreparedStatement ps = null;
 			try {
 				con = DatabaseManager.getConnection(DatabaseType.STATE);
-				if (!tryRetractInvite)
+				if (!tryRetractInvite) {
 					ps = con.prepareStatement("UPDATE `buddyentries` SET `status` = " + BuddyListEntry.STATUS_HALF_OPEN
-							+ " WHERE `owner` = ? AND `buddy` = ?");
-				else
+						+ " WHERE `owner` = ? AND `buddy` = ?");
+				} else {
 					ps = con.prepareStatement("DELETE FROM `buddyentries`"
-							+ " WHERE `owner` = ? AND `buddy` = ?");
+						+ " WHERE `owner` = ? AND `buddy` = ?");
+				}
 					//assert no rows deleted or deleted row had `status` == STATUS_INVITED.
 				ps.setInt(1, deletedId);
 				ps.setInt(2, p.getId());

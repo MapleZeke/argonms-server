@@ -62,8 +62,9 @@ public class ScriptReactor extends PlayerScriptInteraction {
 		for (int i = 0; i + 1 < itemsAndChances.length; i+= 2) {
 			if (generator.nextInt(1000000) < ((long) itemsAndChances[i + 1] * multiplier)) {
 				InventorySlot item = InventoryTools.makeItemWithId(itemsAndChances[i]);
-				if (item.getType() == ItemType.EQUIP)
+				if (item.getType() == ItemType.EQUIP) {
 					InventoryTools.randomizeStats((Equip) item);
+				}
 				drops.add(new ItemDrop(item));
 			}
 		}

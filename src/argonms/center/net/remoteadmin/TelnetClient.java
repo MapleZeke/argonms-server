@@ -108,23 +108,18 @@ public class TelnetClient implements SessionDataModel {
 				break;
 			case DO:
 				delta++;
-				switch (array[index + 1]) {
-					case ECHO:
-						flags.add(TelnetOptions.ECHO);
-						session.send(new byte[] { IAC, WILL, ECHO });
-						break;
-					case SUPPRESS_GO_AHEAD:
-						session.send(new byte[] { IAC, WILL, SUPPRESS_GO_AHEAD });
-						break;
+				if (array[index + 1] == ECHO) {
+					flags.add(TelnetOptions.ECHO);
+					session.send(new byte[]{IAC, WILL, ECHO});
+				} else if (array[index + 1] == SUPPRESS_GO_AHEAD) {
+					session.send(new byte[]{IAC, WILL, SUPPRESS_GO_AHEAD});
 				}
 				break;
 			case DONT:
 				delta++;
-				switch (array[index + 1]) {
-					case ECHO:
-						flags.remove(TelnetOptions.ECHO);
-						session.send(new byte[] { IAC, WONT, ECHO });
-						break;
+				if (array[index + 1] == ECHO) {
+					flags.remove(TelnetOptions.ECHO);
+					session.send(new byte[]{IAC, WONT, ECHO});
 				}
 				break;
 		}
@@ -184,8 +179,9 @@ public class TelnetClient implements SessionDataModel {
 					irs = ips.executeQuery();
 					if (irs.next()) {
 						long thisBanExpire = irs.getLong(1);
-						if (thisBanExpire > banExpire)
+						if (thisBanExpire > banExpire) {
 							banExpire = thisBanExpire;
+						}
 					}
 				} finally {
 					DatabaseManager.cleanup(DatabaseType.STATE, irs, ips, null);

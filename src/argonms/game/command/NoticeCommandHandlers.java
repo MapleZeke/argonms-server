@@ -47,10 +47,12 @@ public class NoticeCommandHandlers implements CommandCollection<CommandCaller> {
 		}
 
 		private ChatHandler.TextStyle getStyle(String option) {
-			if (option.equalsIgnoreCase("POPUP"))
+			if ("POPUP".equalsIgnoreCase(option)) {
 				return ChatHandler.TextStyle.OK_BOX;
-			if (option.equalsIgnoreCase("CHAT"))
+			}
+			if ("CHAT".equalsIgnoreCase(option)) {
 				return ChatHandler.TextStyle.LIGHT_BLUE_TEXT_CLEAR_BG;
+			}
 			return null;
 		}
 
@@ -93,10 +95,11 @@ public class NoticeCommandHandlers implements CommandCollection<CommandCaller> {
 		@Override
 		public void execute(CommandCaller caller, CommandArguments args, CommandOutput resp) {
 			String message;
-			if (args.hasNext())
+			if (args.hasNext()) {
 				message = args.restOfString();
-			else
+			} else {
 				message = "";
+			}
 
 			GameServer.getChannel(caller.getChannel()).getCrossServerInterface().sendWorldWideNotice(ChatHandler.TextStyle.TICKER.byteValue(), message);
 		}

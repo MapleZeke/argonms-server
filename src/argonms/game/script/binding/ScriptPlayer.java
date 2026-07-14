@@ -42,7 +42,7 @@ import org.mozilla.javascript.NativeArray;
  * @author GoldenKevin
  */
 public class ScriptPlayer {
-	private WeakReference<GameCharacter> player;
+	private final WeakReference<GameCharacter> player;
 
 	public ScriptPlayer(GameCharacter player) {
 		this.player = new WeakReference<>(player);
@@ -115,10 +115,12 @@ public class ScriptPlayer {
 	public void loseItem(int itemId) {
 		Inventory.InventoryType type = InventoryTools.getCategory(itemId);
 		int quantity = InventoryTools.getAmountOfItem(getPlayer().getInventory(type), itemId);
-		if (type == Inventory.InventoryType.EQUIP)
+		if (type == Inventory.InventoryType.EQUIP) {
 			quantity += InventoryTools.getAmountOfItem(getPlayer().getInventory(Inventory.InventoryType.EQUIPPED), itemId);
-		if (quantity > 0)
+		}
+		if (quantity > 0) {
 			loseItem(itemId, quantity);
+		}
 	}
 
 	public boolean hasMesos(int min) {
@@ -135,8 +137,9 @@ public class ScriptPlayer {
 
 	public boolean revivePet(long uniqueId) {
 		Pet pet = PetTools.revivePet(getPlayer(), uniqueId);
-		if (pet == null)
+		if (pet == null) {
 			return false;
+		}
 
 		PetTools.updatePet(getPlayer(), pet);
 		return true;
@@ -144,8 +147,9 @@ public class ScriptPlayer {
 
 	public boolean evolveBossPet() {
 		Pet pet = getPlayer().getPets()[0];
-		if (pet == null)
+		if (pet == null) {
 			return false;
+		}
 
 		PetTools.evolvePet(getPlayer(), pet, (byte) 0);
 		PetTools.updatePet(getPlayer(), pet);
@@ -323,15 +327,17 @@ public class ScriptPlayer {
 	public byte getPetCount() {
 		byte count = 0;
 		Pet[] pets = getPlayer().getPets();
-		for (int i = 0; i < 3 && pets[i] != null; i++)
+		for (int i = 0; i < 3 && pets[i] != null; i++) {
 			count++;
+		}
 		return count;
 	}
 
 	public void gainCloseness(short gain) {
 		Pet pet = getPlayer().getPets()[0];
-		if (pet != null)
+		if (pet != null) {
 			PetTools.gainCloseness(getPlayer(), (byte) 0, pet, gain);
+		}
 	}
 
 	public void setEvent(ScriptEvent event) {
@@ -364,15 +370,17 @@ public class ScriptPlayer {
 
 	public byte getGuildRank() {
 		GuildList guild = getPlayer().getGuild();
-		if (guild == null)
+		if (guild == null) {
 			return 5;
+		}
 		return guild.getMember(getPlayer().getId()).getRank();
 	}
 
 	public int getGuildCapacity() {
 		GuildList guild = getPlayer().getGuild();
-		if (guild == null)
+		if (guild == null) {
 			return 0;
+		}
 		return guild.getCapacity();
 	}
 
@@ -382,8 +390,9 @@ public class ScriptPlayer {
 
 	public boolean hasGuildEmblem() {
 		GuildList guild = getPlayer().getGuild();
-		if (guild == null)
+		if (guild == null) {
 			return false;
+		}
 		return guild.getEmblemBackground() != 0 || guild.getEmblemBackgroundColor() != 0
 				&& guild.getEmblemDesign() != 0 || guild.getEmblemDesignColor() != 0;
 	}
@@ -398,8 +407,9 @@ public class ScriptPlayer {
 
 	public byte getAllianceRank() {
 		GuildList guild = getPlayer().getGuild();
-		if (guild == null)
+		if (guild == null) {
 			throw new UnsupportedOperationException("TODO: IMPLEMENT");
+		}
 		return guild.getMember(getPlayer().getId()).getAllianceRank();
 	}
 

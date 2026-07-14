@@ -135,17 +135,21 @@ public class ShopChannelSynchronization extends CrossProcessSynchronization {
 		ShopPlayerContinuation context = new ShopPlayerContinuation();
 		int playerId = packet.readInt();
 		byte count = packet.readByte();
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++) {
 			context.addItemBuff(packet.readInt(), packet.readLong());
+		}
 		count = packet.readByte();
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++) {
 			context.addSkillBuff(packet.readInt(), packet.readByte(), packet.readLong());
+		}
 		count = packet.readByte();
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++) {
 			context.addMonsterDebuff(packet.readShort(), packet.readByte(), packet.readLong());
+		}
 		count = packet.readByte();
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++) {
 			context.addActiveSummon(packet.readInt(), packet.readPos(), packet.readByte());
+		}
 		context.setEnergyCharge(packet.readShort());
 		context.setChatroomId(packet.readInt());
 		context.setEnteringCashShop(packet.readBool());
@@ -175,10 +179,11 @@ public class ShopChannelSynchronization extends CrossProcessSynchronization {
 
 		byte result;
 		ShopCharacter p = ShopServer.getInstance().getPlayerByName(name);
-		if (p == null)
+		if (p == null) {
 			result = ChannelSynchronizationOps.SCAN_PLAYER_CHANNEL_NO_MATCH;
-		else
+		} else {
 			result = ChannelSynchronizationOps.SCAN_PLAYER_CHANNEL_FOUND;
+		}
 
 		LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(9);
 		writeShopChannelSynchronizationPacketHeader(lew, ChannelSynchronizationOps.PLAYER_SEARCH_RESPONSE);
@@ -193,8 +198,9 @@ public class ShopChannelSynchronization extends CrossProcessSynchronization {
 		writeShopChannelSynchronizationPacketHeader(lew, ChannelSynchronizationOps.BUDDY_ONLINE);
 		lew.writeInt(sender);
 		lew.writeByte((byte) recipients.length);
-		for (int i = 0; i < recipients.length; i++)
+		for (int i = 0; i < recipients.length; i++) {
 			lew.writeInt(recipients[i]);
+		}
 
 		writeShopChannelSynchronizationPacket(lew.getBytes());
 	}
@@ -203,13 +209,15 @@ public class ShopChannelSynchronization extends CrossProcessSynchronization {
 		int sender = packet.readInt();
 		byte receiversCount = packet.readByte();
 		int[] receivers = new int[receiversCount];
-		for (int i = 0; i < receiversCount; i++)
+		for (int i = 0; i < receiversCount; i++) {
 			receivers[i] = packet.readInt();
+		}
 
 		List<Integer> localRecipients = new ArrayList<>();
 		for (int recipient : receivers)
-			if (ShopServer.getInstance().getPlayerById(recipient) != null)
+			if (ShopServer.getInstance().getPlayerById(recipient) != null) {
 				localRecipients.add(Integer.valueOf(recipient));
+			}
 
 		sendReturnBuddyLogInNotifications(sender, localRecipients, false);
 	}
@@ -241,8 +249,9 @@ public class ShopChannelSynchronization extends CrossProcessSynchronization {
 		byte style = packet.readByte();
 		String message = packet.readLengthPrefixedString();
 
-		if (style == (byte) 4)
+		if (style == (byte) 4) {
 			ShopServer.getInstance().setNewsTickerMessage(message);
+		}
 
 		ShopServer.getInstance().serverWideMessage(style, message);
 	}

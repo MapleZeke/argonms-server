@@ -121,24 +121,27 @@ public abstract class ItemDataLoader {
 
 	public int getWholePrice(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		Integer ret = wholePrice.get(oId);
 		return ret != null ? ret.intValue() : 0;
 	}
 
 	public double getUnitPrice(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		Double ret = unitPrice.get(oId);
 		return ret != null ? ret.doubleValue() : -1;
 	}
 
 	public short getSlotMax(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		Short ret = slotMax.get(oId);
 		return ret != null ? ret.shortValue() : (short)
 				(InventoryTools.isEquip(itemId) ||
@@ -147,22 +150,25 @@ public abstract class ItemDataLoader {
 
 	public boolean isTradeBlocked(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		return tradeBlocked.contains(oId);
 	}
 
 	public boolean isOnlyOne(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		return onlyOne.contains(oId);
 	}
 
 	public boolean isQuestItem(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		return questItem.contains(oId);
 	}
 
@@ -173,16 +179,18 @@ public abstract class ItemDataLoader {
 
 	public short getReqLevel(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		short[] ret = reqStats.get(oId);
 		return ret != null ? ret[StatEffect.Level] : 0;
 	}
 
 	public short[] getBonusStats(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		short[] ret = bonusStats.get(oId);
 		//don't trust the caller not to alter the array for the rest of us...
 		return ret != null ? ret.clone() : null;
@@ -216,8 +224,9 @@ public abstract class ItemDataLoader {
 
 	public boolean isCashEquip(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		return cash.contains(oId);
 	}
 
@@ -228,93 +237,101 @@ public abstract class ItemDataLoader {
 
 	public boolean isRateCardOperating(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		Calendar now = TimeTool.currentDateTime();
 		int today = now.get(Calendar.DAY_OF_WEEK);
 		int thisHour = now.get(Calendar.HOUR_OF_DAY);
 		for (byte[] t : operatingHours.get(oId))
 			if ((t[0] == today || t[0] == 8 && isHoliday(now))
-					&& thisHour >= t[1] && thisHour <= t[2])
+				&& thisHour >= t[1] && thisHour <= t[2]) {
 				return true;
+			}
 		return false;
 	}
 
 	public boolean isConsumeOnPickup(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		return useOnPickup.contains(oId);
 	}
 
 	public ItemEffectsData getEffect(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		return statEffects.get(oId);
 	}
 
 	public byte getUpgradeSlots(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		Byte ret = tuc.get(oId);
 		return ret != null ? ret.byteValue() : 7;
 	}
 
 	public int[] getPetCommand(int itemId, byte act) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		Map<Byte, int[]> commands = petCommands.get(oId);
 		return commands.get(act);
 	}
 
 	public int getPetHunger(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		return petHunger.get(oId).intValue();
 	}
 
 	public byte getPetPeriod(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		return petPeriod.get(oId).byteValue();
 	}
 
 	public byte getPetFullnessRecover(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		return petFullnessRecover.get(oId).byteValue();
 	}
 
 	public List<int[]> getPetEvolveChoices(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		return evolveChoices.get(oId);
 	}
 
 	public boolean isEquippablePet(int itemId) {
 		//also when info/evolReqItemID exists and == 0
 		Integer oId = Integer.valueOf(itemId);
-		if (!loaded.contains(oId))
+		if (!loaded.contains(oId)) {
 			load(itemId);
+		}
 		return petHunger.containsKey(oId);
 	}
 
 	public static void setInstance(DataFileType wzType, String wzPath) {
 		if (instance == null) {
-			switch (wzType) {
-				case KVJ:
-					instance = new KvjItemDataLoader(wzPath);
-					break;
-				case MCDB:
-					instance = new McdbItemDataLoader();
-					break;
+			if (wzType == DataFileType.KVJ) {
+				instance = new KvjItemDataLoader(wzPath);
+			} else if (wzType == DataFileType.MCDB) {
+				instance = new McdbItemDataLoader();
 			}
 		}
 	}

@@ -93,8 +93,9 @@ public class LoginClient extends RemoteClient {
 		//since singed ints can only hold 31-bit without overflow, and Java
 		//doesn't have unsigned int, use signed long (63-bit)
 		long longValue = 0;
-		for (int byt = 0, bitShift = 24; byt < 4; byt++, bitShift -= 8)
+		for (int byt = 0, bitShift = 24; byt < 4; byt++, bitShift -= 8) {
 			longValue += (long) (bigEndian[byt] & 0xFF) << bitShift;
+		}
 		return longValue;
 	}
 
@@ -371,8 +372,9 @@ public class LoginClient extends RemoteClient {
 	}
 
 	public byte deleteCharacter(int characterid, int enteredBirthday) {
-		if (birthday != 0 && birthday != enteredBirthday)
+		if (birthday != 0 && birthday != enteredBirthday) {
 			return DELETE_ERROR_WRONG_BIRTHDAY;
+		}
 
 		Connection con = null;
 		PreparedStatement ps = null;
@@ -383,18 +385,20 @@ public class LoginClient extends RemoteClient {
 			ps.setInt(1, characterid);
 			rs = ps.executeQuery();
 			rs.next();
-			if (rs.getBoolean(1))
+			if (rs.getBoolean(1)) {
 				return DELETE_ERROR_GUILD_MASTER;
+			}
 			rs.close();
 			ps.close();
 
 			ps = con.prepareStatement("DELETE FROM `characters` WHERE `id` = ?");
 			ps.setInt(1, characterid);
 			int rowsUpdated = ps.executeUpdate();
-			if (rowsUpdated != 0)
+			if (rowsUpdated != 0) {
 				return DELETE_OKAY;
-			else
+			} else {
 				return DELETE_ERROR_SYSTEM;
+			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not delete character " + characterid + " of account " + getAccountId(), ex);
 			return DELETE_ERROR_SYSTEM;
@@ -408,8 +412,9 @@ public class LoginClient extends RemoteClient {
 		//hexadecimal bytes in big endian, delimited by a single character
 		//(hyphens in MapleStory)
 		byte[] bytes = new byte[6];
-		for (int byt = 0, strStart = 0; byt < 6; byt++, strStart += 3)
+		for (int byt = 0, strStart = 0; byt < 6; byt++, strStart += 3) {
 			bytes[byt] = (byte) Short.parseShort(str.substring(strStart, strStart + 2), 16);
+		}
 		return bytes;
 	}
 
@@ -446,17 +451,20 @@ public class LoginClient extends RemoteClient {
 			ps.close();
 
 			ps = con.prepareStatement(checkBanQuery.toString());
-			for (int i = 0; i < macListArray.length; i++)
+			for (int i = 0; i < macListArray.length; i++) {
 				ps.setBytes(i + 1, macListArray[i]);
+			}
 			rs = ps.executeQuery();
 			//don't load duplicate ban ids
 			Set<Integer> banIds = new HashSet<>();
-			while (rs.next())
+			while (rs.next()) {
 				banIds.add(Integer.valueOf(rs.getInt(1)));
+			}
 			for (Integer banId : banIds) {
 				loadBanStatusFromBanId(con, banId.intValue());
-				if (banExpire > System.currentTimeMillis())
+				if (banExpire > System.currentTimeMillis()) {
 					return true;
+				}
 			}
 			return false;
 		} catch (SQLException e) {
@@ -494,7 +502,8 @@ public class LoginClient extends RemoteClient {
 				}
 			});
 		}
-		if (!isMigrating() && getAccountId() != 0)
+		if (!isMigrating() && getAccountId() != 0) {
 			updateState(STATUS_NOTLOGGEDIN);
+		}
 	}
 }

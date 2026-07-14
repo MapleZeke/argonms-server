@@ -67,8 +67,9 @@ public final class WorldlistHandler {
 			ps.setInt(1, c.getAccountId());
 			ps.setInt(2, c.getWorld());
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				players.add(LoginCharacter.loadPlayer(c, rs.getInt(1)));
+			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load characters of account " + c.getAccountId(), ex);
 		} finally {
@@ -106,12 +107,13 @@ public final class WorldlistHandler {
 
 		//each channel can hold 2400
 		int max = 2400 * w.getChannelCount();
-		if (collectiveLoads >= max)
+		if (collectiveLoads >= max) {
 			lew.writeShort(SERVERSTATUS_MAX);
-		else if (collectiveLoads >= 0.9 * max) // >90% full
+		} else if (collectiveLoads >= 0.9 * max) { // >90% full
 			lew.writeShort(SERVERSTATUS_WARNING);
-		else
+		} else {
 			lew.writeShort(SERVERSTATUS_OK);
+		}
 		lc.getSession().send(lew.getBytes());
 	}
 
@@ -244,22 +246,27 @@ public final class WorldlistHandler {
 		byte luk = packet.readByte();
 
 		boolean valid = allowedName(name);
-		if (str + dex + _int + luk != 25 || str < 4 || dex < 4 || _int < 4 || luk < 4)
+		if (str + dex + _int + luk != 25 || str < 4 || dex < 4 || _int < 4 || luk < 4) {
 			valid = false;
-		if (gender == 0)
+		}
+		if (gender == 0) {
 			if ((eyes < 20000 || eyes > 20002) || (hair != 30000 && hair != 30020 && hair != 30030) ||
-					(top != 1040002 && top != 1040006 && top != 1040010) || (bottom != 1060006 && bottom != 1060002))
+				(top != 1040002 && top != 1040006 && top != 1040010) || (bottom != 1060006 && bottom != 1060002)) {
 				valid = false;
-		else if (gender == 1)
-			if ((eyes < 21000 || eyes > 21002) || (hair != 31000 && hair != 31040 && hair != 31050) ||
-					(top != 1041002 && top != 1041006 && top != 1041010 && top != 1041011) || (bottom != 1061002 && bottom != 1061008))
-				valid = false;
-		else
-			valid = false;
+			} else if (gender == 1) {
+				if ((eyes < 21000 || eyes > 21002) || (hair != 31000 && hair != 31040 && hair != 31050) ||
+					(top != 1041002 && top != 1041006 && top != 1041010 && top != 1041011) || (bottom != 1061002 && bottom != 1061008)) {
+					valid = false;
+				} else {
+					valid = false;
+				}
+			}
+		}
 		if ((skin < 0 || skin > 3) || (weapon != 1302000 && weapon != 1322005 && weapon != 1312004) ||
-				(shoes != 1072001 && shoes != 1072005 && shoes != 1072037 && shoes != 1072038) ||
-				(hairColor != 0 && hairColor != 2 && hairColor != 3 && hairColor != 7))
+			(shoes != 1072001 && shoes != 1072005 && shoes != 1072037 && shoes != 1072038) ||
+			(hairColor != 0 && hairColor != 2 && hairColor != 3 && hairColor != 7)) {
 			valid = false;
+		}
 
 		LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter();
 		lew.writeShort(ClientSendOps.CHAR_CREATED);

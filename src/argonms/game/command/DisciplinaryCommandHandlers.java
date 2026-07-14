@@ -129,7 +129,7 @@ public class DisciplinaryCommandHandlers implements CommandCollection<CommandCal
 					}
 					expireTimestamp = expireCal.getTimeInMillis();
 				} catch (NumberFormatException e) {
-					if (!param.equalsIgnoreCase("perm")) {
+					if (!"perm".equalsIgnoreCase(param)) {
 						resp.printErr("Expire date must be in the form of YYYYMMDD.");
 						resp.printErr(getUsage());
 						return;

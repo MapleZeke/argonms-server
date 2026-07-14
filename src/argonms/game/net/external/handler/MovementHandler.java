@@ -84,8 +84,9 @@ public final class MovementHandler {
 	 * @return
 	 */
 	private static int ceil(int x, int y) {
-		if (x == 0)
+		if (x == 0) {
 			return 0;
+		}
 		return ((x - 1) / y) + 1;
 	}
 
@@ -117,8 +118,9 @@ public final class MovementHandler {
 
 		GameCharacter player = gc.getPlayer();
 		byte slot = player.indexOfPet(uniqueId);
-		if (slot == -1)
+		if (slot == -1) {
 			return;
+		}
 
 		Pet pet = player.getPets()[slot];
 		Point startPos = packet.readPos();
@@ -137,8 +139,9 @@ public final class MovementHandler {
 		GameCharacter player = gc.getPlayer();
 		//PlayerSkillSummon summon = p.getSummonBySkill(p.getEffectValue(PlayerStatusEffect.SUMMON).getSource());
 		PlayerSkillSummon summon = (PlayerSkillSummon) player.getMap().getEntityById(EntityType.SUMMON, entId);
-		if (summon == null)
+		if (summon == null) {
 			return;
+		}
 
 		Point startPos = packet.readPos();
 		List<LifeMovementFragment> res = parseMovement(packet);
@@ -158,8 +161,9 @@ public final class MovementHandler {
 		//TODO: Synchronize on the mob (for the canUseSkill, which gets Hp, and
 		//the aggro things)
 		final Mob monster = (Mob) player.getMap().getEntityById(EntityType.MONSTER, entId);
-		if (monster == null)
+		if (monster == null) {
 			return;
+		}
 
 		List<LifeMovementFragment> res;
 		boolean useSkill = packet.readBool();
@@ -179,23 +183,27 @@ public final class MovementHandler {
 					switch (skillToUse.getSkill()) {
 						case MobSkills.WATK_UP:
 						case MobSkills.WATK_UP_AOE:
-							if (monster.isEffectActive(MonsterStatusEffect.WATK))
+							if (monster.isEffectActive(MonsterStatusEffect.WATK)) {
 								skillToUse = null;
+							}
 							break;
 						case MobSkills.MATK_UP:
 						case MobSkills.MATK_UP_AOE:
-							if (monster.isEffectActive(MonsterStatusEffect.MATK))
+							if (monster.isEffectActive(MonsterStatusEffect.MATK)) {
 								skillToUse = null;
+							}
 							break;
 						case MobSkills.WDEF_UP:
 						case MobSkills.WDEF_UP_AOE:
-							if (monster.isEffectActive(MonsterStatusEffect.WDEF))
+							if (monster.isEffectActive(MonsterStatusEffect.WDEF)) {
 								skillToUse = null;
+							}
 							break;
 						case MobSkills.MDEF_UP:
 						case MobSkills.MDEF_UP_AOE:
-							if (monster.isEffectActive(MonsterStatusEffect.MDEF))
+							if (monster.isEffectActive(MonsterStatusEffect.MDEF)) {
 								skillToUse = null;
+							}
 							break;
 						case MobSkills.PHYSICAL_IMMUNITY:
 						case MobSkills.MAGIC_IMMUNITY:
@@ -205,15 +213,18 @@ public final class MovementHandler {
 								//skillToUse = null;
 							break;
 						case MobSkills.MONSTER_CARNIVAL_SPEED_UP:
-							if (monster.isEffectActive(MonsterStatusEffect.SPEED))
+							if (monster.isEffectActive(MonsterStatusEffect.SPEED)) {
 								skillToUse = null;
+							}
 							break;
 						case MobSkills.SUMMON: {
 							short limit = skillToUseEffect.getSummonLimit();
-							if (limit == 5000) // Custom limit based on number of players on map
+							if (limit == 5000) { // Custom limit based on number of players on map
 								limit = (short) (30 + monster.getMap().getPlayerCount() * 2);
-							if (monster.getSpawnedSummons() >= limit)
+							}
+							if (monster.getSpawnedSummons() >= limit) {
 								skillToUse = null;
+							}
 							break;
 						}
 					}
@@ -258,13 +269,15 @@ public final class MovementHandler {
 		}
 		boolean aggro = monster.controllerHasAggro();
 
-		if (skillToUse != null)
+		if (skillToUse != null) {
 			gc.getSession().send(moveMonsterResponse(entId, moveid, monster.getMp(), aggro, skillToUse.getSkill(), skillToUse.getLevel()));
-		else
+		} else {
 			gc.getSession().send(moveMonsterResponse(entId, moveid, monster.getMp(), aggro, (short) 0, (byte) 0));
+		}
 
-		if (aggro)
+		if (aggro) {
 			monster.setControllerKnowsAboutAggro(true);
+		}
 
 		Point startPos = packet.readPos();
 		res = parseMovement(packet);

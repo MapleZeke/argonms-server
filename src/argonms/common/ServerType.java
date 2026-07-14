@@ -45,14 +45,18 @@ public final class ServerType {
 	}
 
 	public static String getName(byte serverId) {
-		if (isGame(serverId))
+		if (isGame(serverId)) {
 			return "Game" + serverId;
-		if (isLogin(serverId))
+		}
+		if (isLogin(serverId)) {
 			return "Login";
-		if (isShop(serverId))
+		}
+		if (isShop(serverId)) {
 			return "Shop";
-		if (isCenter(serverId))
+		}
+		if (isCenter(serverId)) {
 			return "Center";
+		}
 		return null;
 	}
 

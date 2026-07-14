@@ -73,7 +73,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
  *
  * @author GoldenKevin
  */
-public class GameServer implements LocalServer {
+public final class GameServer implements LocalServer {
 	private static final Logger LOG = Logger.getLogger(GameServer.class.getName());
 
 	private static GameServer instance;
@@ -205,8 +205,9 @@ public class GameServer implements LocalServer {
 							System.exit(3);
 							return;
 						}
-						if (realGameVersion != GlobalConstants.MAPLE_VERSION) //carry on despite the warning...
-							LOG.log(Level.WARNING, "Your copy of MCDB is based on an incongruent version of the WZ files. ArgonMS: {0} MCDB: {1}", new Object[] { GlobalConstants.MAPLE_VERSION, realGameVersion });
+						if (realGameVersion != GlobalConstants.MAPLE_VERSION) { //carry on despite the warning...
+							LOG.log(Level.WARNING, "Your copy of MCDB is based on an incongruent version of the WZ files. ArgonMS: {0} MCDB: {1}", new Object[]{GlobalConstants.MAPLE_VERSION, realGameVersion});
+						}
 					}
 				} finally {
 					DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
@@ -227,8 +228,9 @@ public class GameServer implements LocalServer {
 			System.exit(3);
 			return;
 		} finally {
-			if (scan != null)
+			if (scan != null) {
 				scan.close();
+			}
 		}
 
 		Scheduler.enable(true, true);
@@ -308,13 +310,15 @@ public class GameServer implements LocalServer {
 				boolean doingWork = false;
 				for (WorldChannel ch : channels.values()) {
 					ch.listen(useNio);
-					if (ch.getPort() != -1)
+					if (ch.getPort() != -1) {
 						doingWork = true;
+					}
 				}
-				if (doingWork)
+				if (doingWork) {
 					gci.serverReady();
-				else
+				} else {
 					System.exit(5);
+				}
 			}
 		}, "data-preloader-thread").start();
 	}
@@ -388,15 +392,17 @@ public class GameServer implements LocalServer {
 
 	public byte channelOfPlayer(int characterid) {
 		for (Entry<Byte, WorldChannel> entry : channels.entrySet())
-			if (entry.getValue().isPlayerConnected(characterid))
+			if (entry.getValue().isPlayerConnected(characterid)) {
 				return entry.getKey().byteValue();
+			}
 		return -1;
 	}
 
 	public byte channelOfPlayer(String characterName) {
 		for (Entry<Byte, WorldChannel> entry : channels.entrySet())
-			if (entry.getValue().getPlayerByName(characterName) != null)
+			if (entry.getValue().getPlayerByName(characterName) != null) {
 				return entry.getKey().byteValue();
+			}
 		return -1;
 	}
 

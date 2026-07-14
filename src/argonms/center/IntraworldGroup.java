@@ -103,8 +103,9 @@ public abstract class IntraworldGroup<T extends IntraworldGroup.Member> {
 	 */
 	public Collection<T> getMembersOfChannel(byte channel) {
 		Map<Integer, T> members = channelMembers.get(Byte.valueOf(channel));
-		if (members == null)
+		if (members == null) {
 			return Collections.emptyList();
+		}
 		return members.values();
 	}
 
@@ -145,8 +146,9 @@ public abstract class IntraworldGroup<T extends IntraworldGroup.Member> {
 		}
 		othersOnChannel.put(Integer.valueOf(member.getPlayerId()), member);
 
-		if (!transition)
+		if (!transition) {
 			allMembers.put(oId, member);
+		}
 	}
 
 	/**
@@ -164,8 +166,9 @@ public abstract class IntraworldGroup<T extends IntraworldGroup.Member> {
 			success = true;
 			Map<Integer, T> others = channelMembers.get(Byte.valueOf(removed.getChannel()));
 			others.remove(Integer.valueOf(playerId));
-			if (others.isEmpty())
+			if (others.isEmpty()) {
 				channelMembers.remove(Byte.valueOf(removed.getChannel()));
+			}
 		} else {
 			success = false;
 		}

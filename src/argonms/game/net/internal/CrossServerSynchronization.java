@@ -180,8 +180,9 @@ public class CrossServerSynchronization {
 		lockWrite();
 		try {
 			CrossProcessCrossChannelSynchronization cpccs = remoteChannelsInWorld.get(Byte.valueOf(channel));
-			if (cpccs != null)
+			if (cpccs != null) {
 				cpccs.setPort(port);
+			}
 		} finally {
 			unlockWrite();
 		}
@@ -250,10 +251,11 @@ public class CrossServerSynchronization {
 	}
 
 	public void sendChannelChangeAcceptance(byte destCh, int playerId) {
-		if (destCh != ChannelSynchronizationOps.CHANNEL_CASH_SHOP)
+		if (destCh != ChannelSynchronizationOps.CHANNEL_CASH_SHOP) {
 			allChannelsInWorld.getWhenSafe(Byte.valueOf(destCh)).sendChannelChangeAcceptance(playerId);
-		else
+		} else {
 			shopServer.sendChannelChangeAcceptance(playerId);
+		}
 	}
 
 	/* package-private */ void receivedChannelChangeAcceptance(byte srcCh, int playerId) {
@@ -270,13 +272,15 @@ public class CrossServerSynchronization {
 				ccs.callPlayerExistsCheck(queue, name);
 				Pair<Byte, Object> result;
 				//address any results that have since responded, for a possibility of early out
-				while ((result = queue.poll()) != null)
-					if ((findResult = ((Byte) result.right).byteValue()) == ChannelSynchronizationOps.SCAN_PLAYER_CHANNEL_NO_MATCH)
+				while ((result = queue.poll()) != null) {
+					if ((findResult = ((Byte) result.right).byteValue()) == ChannelSynchronizationOps.SCAN_PLAYER_CHANNEL_NO_MATCH) {
 						remaining--;
-					else if (!ignoreHidden || findResult == ChannelSynchronizationOps.SCAN_PLAYER_CHANNEL_FOUND)
+					} else if (!ignoreHidden || findResult == ChannelSynchronizationOps.SCAN_PLAYER_CHANNEL_FOUND) {
 						return result.left.byteValue();
-					else //if (ignoreHidden && value == SCAN_PLAYER_HIDDEN)
+					} else { //if (ignoreHidden && value == SCAN_PLAYER_HIDDEN)
 						return ChannelSynchronizationOps.CHANNEL_OFFLINE;
+					}
+				}
 				remaining++;
 			}
 			if (shopServer != null) {
@@ -291,12 +295,13 @@ public class CrossServerSynchronization {
 					LOG.log(Level.FINE, "Cross process player search timeout after " + BLOCKING_CALL_TIMEOUT + " milliseconds");
 					return ChannelSynchronizationOps.CHANNEL_OFFLINE;
 				}
-				if ((findResult = ((Byte) result.right).byteValue()) == ChannelSynchronizationOps.SCAN_PLAYER_CHANNEL_NO_MATCH)
+				if ((findResult = ((Byte) result.right).byteValue()) == ChannelSynchronizationOps.SCAN_PLAYER_CHANNEL_NO_MATCH) {
 					remaining--;
-				else if (!ignoreHidden || findResult == ChannelSynchronizationOps.SCAN_PLAYER_CHANNEL_FOUND)
+				} else if (!ignoreHidden || findResult == ChannelSynchronizationOps.SCAN_PLAYER_CHANNEL_FOUND) {
 					return result.left.byteValue();
-				else //if (ignoreHidden && value == SCAN_PLAYER_HIDDEN)
+				} else { //if (ignoreHidden && value == SCAN_PLAYER_HIDDEN)
 					return ChannelSynchronizationOps.CHANNEL_OFFLINE;
+				}
 			}
 			return ChannelSynchronizationOps.CHANNEL_OFFLINE;
 		} catch (InterruptedException e) {
@@ -311,10 +316,12 @@ public class CrossServerSynchronization {
 
 	/* package-private */ byte makePlayerExistsResult(String name) {
 		GameCharacter p = self.getPlayerByName(name);
-		if (p == null)
-			return ChannelSynchronizationOps.SCAN_PLAYER_CHANNEL_NO_MATCH;
-		if (!p.isVisible())
-			return ChannelSynchronizationOps.SCAN_PLAYER_CHANNEL_HIDDEN;
+	if (p == null) {
+		return ChannelSynchronizationOps.SCAN_PLAYER_CHANNEL_NO_MATCH;
+	}
+	if (!p.isVisible()) {
+		return ChannelSynchronizationOps.SCAN_PLAYER_CHANNEL_HIDDEN;
+	}
 		return ChannelSynchronizationOps.SCAN_PLAYER_CHANNEL_FOUND;
 	}
 
@@ -339,8 +346,9 @@ public class CrossServerSynchronization {
 				break;
 			}
 			case PRIVATE_CHAT_TYPE_PARTY: {
-				if (p.getParty() == null)
+				if (p.getParty() == null) {
 					return;
+				}
 
 				peerChannels = new HashMap<>();
 				for (int member : recipients) {
@@ -355,8 +363,9 @@ public class CrossServerSynchronization {
 				break;
 			}
 			case PRIVATE_CHAT_TYPE_GUILD: {
-				if (p.getGuild() == null)
+				if (p.getGuild() == null) {
 					return;
+				}
 
 				peerChannels = new HashMap<>();
 				for (int member : recipients) {
@@ -399,8 +408,9 @@ public class CrossServerSynchronization {
 		GameCharacter p;
 		for (int i = 0; i < recipients.length; i++) {
 			p = self.getPlayerById(recipients[i]);
-			if (p != null)
+			if (p != null) {
 				p.getClient().getSession().send(GamePackets.writePrivateChatMessage(type, name, message));
+			}
 		}
 	}
 
@@ -413,11 +423,13 @@ public class CrossServerSynchronization {
 				ccs.callSendWhisper(queue, recipient, sender.getName(), message);
 				Pair<Byte, Object> result;
 				//address any results that have since responded, for a possibility of early out
-				while ((result = queue.poll()) != null)
-					if (((Boolean) result.right).booleanValue())
+				while ((result = queue.poll()) != null) {
+					if (((Boolean) result.right).booleanValue()) {
 						return true;
-					else
+					} else {
 						remaining--;
+					}
+				}
 				remaining++;
 			}
 
@@ -428,10 +440,11 @@ public class CrossServerSynchronization {
 					LOG.log(Level.FINE, "Cross process whisper timeout after " + BLOCKING_CALL_TIMEOUT + " milliseconds");
 					return false;
 				}
-				if (((Boolean) result.right).booleanValue())
+				if (((Boolean) result.right).booleanValue()) {
 					return true;
-				else
+				} else {
 					remaining--;
+				}
 			}
 			return false;
 		} catch (InterruptedException e) {
@@ -446,8 +459,9 @@ public class CrossServerSynchronization {
 
 	/* package-private */ boolean makeWhisperResult(String recipient, String sender, String message, byte srcCh) {
 		GameCharacter p = self.getPlayerByName(recipient);
-		if (p == null)
-			return false;
+	if (p == null) {
+		return false;
+	}
 
 		p.getClient().getSession().send(GamePackets.writeWhisperMessage(sender, message, srcCh));
 		return p.isVisible();
@@ -457,14 +471,16 @@ public class CrossServerSynchronization {
 		//perhaps we should compare spouse's name with p.getSpouseId()?
 		String name = p.getName();
 		int recipient = p.getSpouseId();
-		if (recipient == 0)
+		if (recipient == 0) {
 			return;
+		}
 
 		lockRead();
 		try {
 			for (CrossChannelSynchronization ccs : allChannelsInWorld.values())
-				if (ccs.sendSpouseChat(recipient, name, message))
+				if (ccs.sendSpouseChat(recipient, name, message)) {
 					break;
+				}
 		} finally {
 			unlockRead();
 		}
@@ -472,8 +488,9 @@ public class CrossServerSynchronization {
 
 	/* package-private */ boolean receivedSpouseChat(int recipient, String sender, String message) {
 		GameCharacter p = self.getPlayerById(recipient);
-		if (p == null)
-			return false;
+	if (p == null) {
+		return false;
+	}
 
 		p.getClient().getSession().send(GamePackets.writeSpouseChatMessage(sender, message));
 		return true;
@@ -489,11 +506,13 @@ public class CrossServerSynchronization {
 				ccs.callSendBuddyInvite(queue, recipientId, sender.getId(), sender.getName());
 				Pair<Byte, Object> result;
 				//address any results that have since responded, for a possibility of early out
-				while ((result = queue.poll()) != null)
-					if (((inviteResult = (Byte) result.right).byteValue()) != -1)
+				while ((result = queue.poll()) != null) {
+					if (((inviteResult = (Byte) result.right).byteValue()) != -1) {
 						return new Pair<>(result.left, inviteResult);
-					else
+					} else {
 						remaining--;
+					}
+				}
 				remaining++;
 			}
 
@@ -504,10 +523,11 @@ public class CrossServerSynchronization {
 					LOG.log(Level.FINE, "Cross process buddy invite timeout after " + BLOCKING_CALL_TIMEOUT + " milliseconds");
 					return new Pair<>(Byte.valueOf((byte) -1), Byte.valueOf((byte) -1));
 				}
-				if (((inviteResult = (Byte) result.right).byteValue()) != -1)
+				if (((inviteResult = (Byte) result.right).byteValue()) != -1) {
 					return new Pair<>(result.left, inviteResult);
-				else
+				} else {
 					remaining--;
+				}
 			}
 			return new Pair<>(Byte.valueOf((byte) -1), Byte.valueOf((byte) -1));
 		} catch (InterruptedException e) {
@@ -522,12 +542,14 @@ public class CrossServerSynchronization {
 
 	/* package-private */ byte makeBuddyInviteResult(int recipientId, byte srcCh, int senderId, String senderName) {
 		GameCharacter p = self.getPlayerById(recipientId);
-		if (p == null)
-			return -1;
+	if (p == null) {
+		return -1;
+	}
 
 		BuddyList bList = p.getBuddyList();
-		if (bList.isFull())
-			return BuddyListHandler.THEIR_LIST_FULL;
+	if (bList.isFull()) {
+		return BuddyListHandler.THEIR_LIST_FULL;
+	}
 		BuddyListEntry existing = bList.getBuddy(senderId);
 		if (existing != null) {
 			assert (existing.getStatus() == BuddyListEntry.STATUS_HALF_OPEN);
@@ -546,8 +568,9 @@ public class CrossServerSynchronization {
 		lockRead();
 		try {
 			for (CrossChannelSynchronization ccs : allChannelsInWorld.values())
-				if (ccs.sendBuddyInviteRetracted(p.getId(), deletedId))
+				if (ccs.sendBuddyInviteRetracted(p.getId(), deletedId)) {
 					return true;
+				}
 		} finally {
 			unlockRead();
 		}
@@ -556,8 +579,9 @@ public class CrossServerSynchronization {
 
 	/* package-private */ boolean receivedBuddyInviteRetracted(int recipient, int sender) {
 		GameCharacter p = self.getPlayerById(recipient);
-		if (p == null)
-			return false;
+	if (p == null) {
+		return false;
+	}
 
 		p.getBuddyList().removeInvite(sender);
 		return true;
@@ -569,34 +593,39 @@ public class CrossServerSynchronization {
 
 	/* package-private */ void receivedReturnedBuddyLogInNotifications(int recipient, List<Integer> senders, boolean bubble, byte srcCh) {
 		GameCharacter p = self.getPlayerById(recipient);
-		//in case we logged off or something like that?
-		if (p == null)
-			return;
+	//in case we logged off or something like that?
+	if (p == null) {
+		return;
+	}
 
 		BuddyList bList = p.getBuddyList();
 		for (Integer sender : senders) {
 			BuddyListEntry entry = bList.getBuddy(sender.intValue());
 			//in case we deleted the entry in the meantime...
-			if (entry == null)
+			if (entry == null) {
 				continue;
+			}
 
 			entry.setChannel(srcCh != ChannelSynchronizationOps.CHANNEL_CASH_SHOP ? srcCh : BuddyListEntry.CASH_SHOP_CHANNEL);
-			if (bubble)
+			if (bubble) {
 				p.getClient().getSession().send(GamePackets.writeBuddyLoggedIn(entry));
+			}
 		}
 		p.getClient().getSession().send(GamePackets.writeBuddyList(BuddyListHandler.ADD, bList));
 	}
 
 	public void sendExchangeBuddyLogInNotifications(GameCharacter p) {
 		Collection<BuddyListEntry> buddies = p.getBuddyList().getBuddies();
-		if (buddies.isEmpty())
+		if (buddies.isEmpty()) {
 			return;
+		}
 		int[] recipients = new int[buddies.size()];
 		int i = 0;
 		int remaining = buddies.size();
 		for (BuddyListEntry buddy : buddies)
-			if (buddy.getStatus() == BuddyListEntry.STATUS_MUTUAL)
+			if (buddy.getStatus() == BuddyListEntry.STATUS_MUTUAL) {
 				recipients[i++] = buddy.getId();
+			}
 		if (recipients.length != i) {
 			//just trim recipients of extra 0s
 			int[] temp = new int[i];
@@ -607,10 +636,12 @@ public class CrossServerSynchronization {
 		lockRead();
 		try {
 			for (CrossChannelSynchronization ccs : allChannelsInWorld.values())
-				if ((remaining -= ccs.exchangeBuddyLogInNotifications(p.getId(), recipients)) <= 0)
+				if ((remaining -= ccs.exchangeBuddyLogInNotifications(p.getId(), recipients)) <= 0) {
 					break;
-			if (remaining > 0 && shopServer != null)
+				}
+			if (remaining > 0 && shopServer != null) {
 				shopServer.exchangeBuddyLogInNotifications(p.getId(), recipients);
+			}
 		} finally {
 			unlockRead();
 		}
@@ -620,23 +651,26 @@ public class CrossServerSynchronization {
 		List<Integer> localRecipients = new ArrayList<>();
 		for (int recipient : recipients) {
 			GameCharacter p = self.getPlayerById(recipient);
-			if (p == null)
+			if (p == null) {
 				continue;
+			}
 
 			localRecipients.add(Integer.valueOf(recipient));
 			BuddyList bList = p.getBuddyList();
 			BuddyListEntry entry = bList.getBuddy(sender);
 			//in case we deleted the entry in the meantime...
-			if (entry == null)
+			if (entry == null) {
 				continue;
+			}
 
 			entry.setChannel(srcCh != ChannelSynchronizationOps.CHANNEL_CASH_SHOP ? srcCh : BuddyListEntry.CASH_SHOP_CHANNEL);
 			p.getClient().getSession().send(GamePackets.writeBuddyLoggedIn(entry));
 			p.getClient().getSession().send(GamePackets.writeBuddyList(BuddyListHandler.ADD, bList));
 		}
 
-		if (srcCh > ChannelSynchronizationOps.CHANNEL_CASH_SHOP)
-			sendReturnBuddyLogInNotifications(srcCh, sender, localRecipients, false);
+	if (srcCh > ChannelSynchronizationOps.CHANNEL_CASH_SHOP) {
+		sendReturnBuddyLogInNotifications(srcCh, sender, localRecipients, false);
+	}
 		return localRecipients.size();
 	}
 
@@ -644,8 +678,9 @@ public class CrossServerSynchronization {
 		lockRead();
 		try {
 			for (CrossChannelSynchronization ccs : allChannelsInWorld.values())
-				if (ccs.sendBuddyInviteAccepted(p.getId(), recipient))
+				if (ccs.sendBuddyInviteAccepted(p.getId(), recipient)) {
 					return true;
+				}
 		} finally {
 			unlockRead();
 		}
@@ -654,14 +689,16 @@ public class CrossServerSynchronization {
 
 	/* package-private */ boolean receivedBuddyInviteAccepted(int sender, int recipient, byte srcCh) {
 		GameCharacter p = self.getPlayerById(recipient);
-		if (p == null)
-			return false;
+	if (p == null) {
+		return false;
+	}
 
 		BuddyList bList = p.getBuddyList();
 		BuddyListEntry entry = bList.getBuddy(sender);
-		//in case we deleted the entry in the meantime...
-		if (entry == null)
-			return true;
+	//in case we deleted the entry in the meantime...
+	if (entry == null) {
+		return true;
+	}
 
 		entry.setStatus(BuddyListEntry.STATUS_MUTUAL);
 		entry.setChannel(srcCh);
@@ -674,12 +711,14 @@ public class CrossServerSynchronization {
 
 	public void sendBuddyLogOffNotifications(GameCharacter p) {
 		Collection<BuddyListEntry> buddies = p.getBuddyList().getBuddies();
-		if (buddies.isEmpty())
+		if (buddies.isEmpty()) {
 			return;
+		}
 		Map<Byte, List<Integer>> buddyChannels = new HashMap<>();
 		for (BuddyListEntry buddy : buddies) {
-			if (buddy.getChannel() == BuddyListEntry.OFFLINE_CHANNEL)
+			if (buddy.getChannel() == BuddyListEntry.OFFLINE_CHANNEL) {
 				continue;
+			}
 
 			Byte ch = Byte.valueOf(buddy.getChannel());
 			List<Integer> buddiesOnChannel = buddyChannels.get(ch);
@@ -702,14 +741,16 @@ public class CrossServerSynchronization {
 		for (int recipient : recipients) {
 			GameCharacter p = self.getPlayerById(recipient);
 			//in case we logged off or something like that?
-			if (p == null)
+			if (p == null) {
 				continue;
+			}
 
 			BuddyList bList = p.getBuddyList();
 			BuddyListEntry entry = bList.getBuddy(sender);
 			//in case we deleted the entry in the meantime...
-			if (entry == null)
+			if (entry == null) {
 				continue;
+			}
 
 			entry.setChannel(BuddyListEntry.OFFLINE_CHANNEL);
 			p.getClient().getSession().send(GamePackets.writeBuddyList(BuddyListHandler.REMOVE, bList));
@@ -722,15 +763,17 @@ public class CrossServerSynchronization {
 
 	/* package-private */ void receivedBuddyDeleted(int recipient, int sender) {
 		GameCharacter p = self.getPlayerById(recipient);
-		//in case we logged off or something like that?
-		if (p == null)
-			return;
+	//in case we logged off or something like that?
+	if (p == null) {
+		return;
+	}
 
 		BuddyList bList = p.getBuddyList();
 		BuddyListEntry entry = bList.getBuddy(sender);
-		//in case we deleted the entry in the meantime...
-		if (entry == null)
-			return;
+	//in case we deleted the entry in the meantime...
+	if (entry == null) {
+		return;
+	}
 
 		entry.setStatus(BuddyListEntry.STATUS_HALF_OPEN);
 		entry.setChannel(BuddyListEntry.OFFLINE_CHANNEL);
@@ -780,10 +823,11 @@ public class CrossServerSynchronization {
 				return;
 			}
 			for (PartyList.Member mem : (PartyList.Member[]) result.right)
-				if (mem instanceof PartyList.LocalMember member)
+				if (mem instanceof PartyList.LocalMember member) {
 					party.addPlayer(member);
-				else if (mem instanceof PartyList.RemoteMember member)
+				} else if (mem instanceof PartyList.RemoteMember member) {
 					party.addPlayer(member);
+				}
 		} catch (InterruptedException e) {
 			//propagate the interrupted status further up to our worker
 			//executor service and see if they care - we don't care about it
@@ -837,10 +881,11 @@ public class CrossServerSynchronization {
 				return;
 			}
 			for (GuildList.Member mem : (GuildList.Member[]) result.right)
-				if (mem instanceof GuildList.LocalMember member)
+				if (mem instanceof GuildList.LocalMember member) {
 					guild.addPlayer(member);
-				else if (mem instanceof GuildList.RemoteMember member)
+				} else if (mem instanceof GuildList.RemoteMember member) {
 					guild.addPlayer(member);
+				}
 		} catch (InterruptedException e) {
 			//propagate the interrupted status further up to our worker
 			//executor service and see if they care - we don't care about it
@@ -925,11 +970,13 @@ public class CrossServerSynchronization {
 				ccs.callSendChatroomInvite(queue, invitee, roomId, inviter);
 				Pair<Byte, Object> result;
 				//address any results that have since responded, for a possibility of early out
-				while ((result = queue.poll()) != null)
-					if (((Boolean) result.right).booleanValue())
+				while ((result = queue.poll()) != null) {
+					if (((Boolean) result.right).booleanValue()) {
 						return true;
-					else
+					} else {
 						remaining--;
+					}
+				}
 				remaining++;
 			}
 
@@ -940,10 +987,11 @@ public class CrossServerSynchronization {
 					LOG.log(Level.FINE, "Cross process buddy invite timeout after " + BLOCKING_CALL_TIMEOUT + " milliseconds");
 					return false;
 				}
-				if (((Boolean) result.right).booleanValue())
+				if (((Boolean) result.right).booleanValue()) {
 					return true;
-				else
+				} else {
 					remaining--;
+				}
 			}
 			return false;
 		} catch (InterruptedException e) {
@@ -958,8 +1006,9 @@ public class CrossServerSynchronization {
 
 	/* package-private */ boolean makeChatroomInviteResult(String invitee, int roomId, String inviter) {
 		GameCharacter p = self.getPlayerByName(invitee);
-		if (p == null)
-			return false;
+	if (p == null) {
+		return false;
+	}
 		p.getClient().getSession().send(GamePackets.writeChatroomInvite(inviter, roomId));
 		return true;
 	}
@@ -968,8 +1017,9 @@ public class CrossServerSynchronization {
 		lockRead();
 		try {
 			for (CrossChannelSynchronization ccs : allChannelsInWorld.values())
-				if (ccs.sendChatroomDecline(invitee, inviter))
+				if (ccs.sendChatroomDecline(invitee, inviter)) {
 					break;
+				}
 		} finally {
 			unlockRead();
 		}
@@ -977,8 +1027,9 @@ public class CrossServerSynchronization {
 
 	/* package-private */ boolean receivedChatroomDecline(String invitee, String inviter) {
 		GameCharacter p = self.getPlayerByName(inviter);
-		if (p == null)
-			return false;
+	if (p == null) {
+		return false;
+	}
 		p.getClient().getSession().send(GamePackets.writeChatroomInviteResponse(Chatroom.ACT_DECLINE, invitee, false));
 		return true;
 	}
@@ -998,16 +1049,18 @@ public class CrossServerSynchronization {
 
 	/* package-private */ void receivedChatroomText(String text, int roomId, int sender) {
 		Chatroom room = intraworldGroups.getChatRoom(roomId);
-		if (room == null)
-			return;
+	if (room == null) {
+		return;
+	}
 
 		room.lockRead();
 		try {
 			for (Byte pos : room.localChannelSlots()) {
 				int playerId = room.getAvatar(pos.byteValue()).getPlayerId();
 				GameCharacter p = self.getPlayerById(playerId);
-				if (playerId != sender && p != null)
+				if (playerId != sender && p != null) {
 					p.getClient().getSession().send(GamePackets.writeChatroomText(text));
+				}
 			}
 		} finally {
 			room.unlockRead();
@@ -1032,8 +1085,9 @@ public class CrossServerSynchronization {
 
 	/* package-private*/ void receivedCrossChannelCommandCharacterManipulation(String recipient, List<CommandTarget.CharacterManipulation> updates) {
 		GameCharacter p = self.getPlayerByName(recipient);
-		if (p != null)
-			new LocalChannelCommandTarget(p).mutate(updates);
+	if (p != null) {
+		new LocalChannelCommandTarget(p).mutate(updates);
+	}
 	}
 
 	public Object sendCrossChannelCommandCharacterAccess(byte destCh, String target, CommandTarget.CharacterProperty key) {
@@ -1057,8 +1111,9 @@ public class CrossServerSynchronization {
 
 	/* package-private*/ Object makeCrossChannelCommandCharacterAccessResult(String target, CommandTarget.CharacterProperty key) {
 		GameCharacter p = self.getPlayerByName(target);
-		if (p != null)
-			return new LocalChannelCommandTarget(p).access(key);
+	if (p != null) {
+		return new LocalChannelCommandTarget(p).access(key);
+	}
 		return null;
 	}
 
@@ -1073,8 +1128,9 @@ public class CrossServerSynchronization {
 					triedGameServers.add(Byte.valueOf(ccs.getServerId()));
 				}
 			}
-			if (shopServer != null)
+			if (shopServer != null) {
 				shopServer.sendWorldWideNotice(style, message);
+			}
 			//TODO: ticker must be sent to all worlds
 		} finally {
 			unlockRead();
@@ -1082,8 +1138,9 @@ public class CrossServerSynchronization {
 	}
 
 	/* package-private*/ void receivedWorldWideNotice(byte style, String message) {
-		if (style == ChatHandler.TextStyle.TICKER.byteValue())
-			GameServer.getVariables().setNewsTickerMessage(message);
+	if (style == ChatHandler.TextStyle.TICKER.byteValue()) {
+		GameServer.getVariables().setNewsTickerMessage(message);
+	}
 
 		GameServer.getInstance().serverWideMessage(style, message);
 	}
@@ -1106,12 +1163,13 @@ public class CrossServerSynchronization {
 
 	/* package-private*/ void receivedServerShutdown(boolean halt, boolean restart, boolean cancel, int seconds, String message) {
 		String reason;
-		if (restart)
-			reason = "restart";
-		else if (halt)
-			reason = "halt";
-		else
-			reason = "maintenance";
+	if (restart) {
+		reason = "restart";
+	} else if (halt) {
+		reason = "halt";
+	} else {
+		reason = "maintenance";
+	}
 		String formattedTime = seconds == 0 ? "NOW" : ("in " + seconds + " seconds");
 
 		if (!cancel) {
@@ -1198,8 +1256,9 @@ public class CrossServerSynchronization {
 	/* package-private*/ String makeRetrieveConnectedPlayersListResult(byte privilegeLevelLimit) {
 		StringBuilder sb = new StringBuilder();
 		for (GameCharacter c : GameServer.getChannel(self.getChannelId()).getConnectedPlayers())
-			if (c.getPrivilegeLevel() >= privilegeLevelLimit)
+			if (c.getPrivilegeLevel() >= privilegeLevelLimit) {
 				sb.append(c.getName()).append(',');
+			}
 		return sb.toString();
 	}
 }

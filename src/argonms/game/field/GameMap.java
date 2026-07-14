@@ -109,20 +109,16 @@ public class GameMap {
 		this.portalOverrides = new ConcurrentHashMap<>();
 		this.occupiedChairs = Collections.newSetFromMap(new ConcurrentHashMap<Short, Boolean>());
 		for (SpawnData spawnData : stats.getLife().values()) {
-			switch (spawnData.getType()) {
-				case 'm':
-					addMonsterSpawn(MobDataLoader.getInstance().getMobStats(spawnData.getDataId()), new Point(spawnData.getX(), spawnData.getY()), spawnData.getFoothold(), spawnData.getMobTime());
-					break;
-				case 'n': {
-					Npc n = new Npc(spawnData.getDataId());
-					n.setFoothold(spawnData.getFoothold());
-					n.setPosition(new Point(spawnData.getX(), spawnData.getY()));
-					n.setCy(spawnData.getCy());
-					n.setRx(spawnData.getRx0(), spawnData.getRx1());
-					n.setStance((byte) (spawnData.isF() ? 0 : 1));
-					spawnEntity(n);
-					break;
-				}
+			if (spawnData.getType() == 'm') {
+				addMonsterSpawn(MobDataLoader.getInstance().getMobStats(spawnData.getDataId()), new Point(spawnData.getX(), spawnData.getY()), spawnData.getFoothold(), spawnData.getMobTime());
+			} else if (spawnData.getType() == 'n') {
+				Npc n = new Npc(spawnData.getDataId());
+				n.setFoothold(spawnData.getFoothold());
+				n.setPosition(new Point(spawnData.getX(), spawnData.getY()));
+				n.setCy(spawnData.getCy());
+				n.setRx(spawnData.getRx0(), spawnData.getRx1());
+				n.setStance((byte) (spawnData.isF() ? 0 : 1));
+				spawnEntity(n);
 			}
 		}
 		for (ReactorData r : stats.getReactors().values()) {
@@ -132,19 +128,22 @@ public class GameMap {
 			reactor.setDelay(r.getReactorTime());
 			spawnEntity(reactor);
 		}
-		if (stats.getTimeLimit() > 0 && stats.getForcedReturn() != GlobalConstants.NULL_MAP)
+		if (stats.getTimeLimit() > 0 && stats.getForcedReturn() != GlobalConstants.NULL_MAP) {
 			timeLimitTasks = new ConcurrentHashMap<>();
-		else
+		} else {
 			timeLimitTasks = null;
-		if (stats.getDecHp() > 0)
+		}
+		if (stats.getDecHp() > 0) {
 			decHpTasks = new ConcurrentHashMap<>();
-		else
+		} else {
 			decHpTasks = null;
+		}
 
 		TreeSet<Byte> mysticDoorSpots = new TreeSet<>();
 		for (Map.Entry<Byte, PortalData> portal : stats.getPortals().entrySet())
-			if (portal.getValue().getPortalType() == 6)
+			if (portal.getValue().getPortalType() == 6) {
 				mysticDoorSpots.add(portal.getKey());
+			}
 		// There are two maps that have less than 6 door spots in v62: Lith
 		// Harbor (104000000, 5 spots) and Haunted House (682000000, 3 spots).
 		// The latter may have issues with the door spawning on top of existing
@@ -197,8 +196,9 @@ public class GameMap {
 
 	public Point getPortalPosition(byte portal) {
 		PortalData p = stats.getPortals().get(Byte.valueOf(portal));
-		if (p != null)
+		if (p != null) {
 			return p.getPosition();
+		}
 		return null;
 	}
 
@@ -243,14 +243,17 @@ public class GameMap {
 	}
 
 	private void updateMonsterController(Mob monster) {
-		if (!monster.isAlive())
+		if (!monster.isAlive()) {
 			return;
+		}
 		GameCharacter controller = monster.getController();
-		if (controller != null)
-			if (controller.getMap() == this)
+		if (controller != null) {
+			if (controller.getMap() == this) {
 				return;
-			else
+			} else {
 				controller = null;
+			}
+		}
 		int minControlled = Integer.MAX_VALUE;
 		int count;
 		EntityPool players = entPools.get(EntityType.PLAYER);
@@ -289,33 +292,34 @@ public class GameMap {
 
 	public final void spawnEntity(MapEntity ent) {
 		addEntity(ent);
-		if (ent.isVisible())
+		if (ent.isVisible()) {
 			sendToAll(ent.getShowNewSpawnMessage());
+		}
 	}
 
 	public void spawnExistingEntity(MapEntity ent) {
 		addEntity(ent);
-		if (ent.isVisible())
+		if (ent.isVisible()) {
 			sendToAll(ent.getShowExistingSpawnMessage());
+		}
 	}
 
 	private void sendEntityData(MapEntity ent, GameCharacter p) {
 		if (ent.isVisible()) {
 			p.getClient().getSession().send(ent.getShowExistingSpawnMessage());
-			switch (ent.getEntityType()) {
-				case NPC:
-					if (((Npc) ent).isPlayerNpc())
-						p.getClient().getSession().send(GamePackets.writePlayerNpcLook((PlayerNpc) ent));
-					break;
-				case MONSTER:
-					updateMonsterController((Mob) ent);
-					break;
+			if (ent.getEntityType() == MapEntity.EntityType.NPC) {
+				if (((Npc) ent).isPlayerNpc()) {
+					p.getClient().getSession().send(GamePackets.writePlayerNpcLook((PlayerNpc) ent));
+				}
+			} else if (ent.getEntityType() == MapEntity.EntityType.MONSTER) {
+				updateMonsterController((Mob) ent);
 			}
 		} else if (ent.getEntityType() == EntityType.DOOR) {
 			assert ((MysticDoor) ent).isInTown();
 			GameCharacter owner = ((MysticDoor) ent).getOwner();
-			if (owner.getParty() == null && owner == p)
+			if (owner.getParty() == null && owner == p) {
 				p.getClient().getSession().send(GamePackets.writeSpawnPortal((MysticDoor) ent));
+			}
 		}
 	}
 
@@ -323,15 +327,17 @@ public class GameMap {
 		EntityPool players = entPools.get(EntityType.PLAYER);
 		players.lockWrite();
 		try { //write lock allows us to read in mutex, so no need for a readLock
-			if (p.isVisible()) //show ourself to other clients if we are not hidden
+			if (p.isVisible()) { //show ourself to other clients if we are not hidden
 				sendToAll(p.getShowNewSpawnMessage());
+			}
 			players.add(p);
 			for (EntityPool pool : entPools.values()) {
 				pool.lockRead();
 				try {
 					for (MapEntity ent : pool.allEnts())
-						if (p != ent)
+						if (p != ent) {
 							sendEntityData(ent, p);
+						}
 				} finally {
 					pool.unlockRead();
 				}
@@ -342,8 +348,9 @@ public class GameMap {
 		for (PlayerSkillSummon summon : p.getAllSummons().values())
 			spawnExistingEntity(summon);
 		p.spawnCurrentPets();
-		if (stats.hasClock())
+		if (stats.hasClock()) {
 			p.getClient().getSession().send(GamePackets.writeClock());
+		}
 		if (timeLimitTasks != null) {
 			//TODO: I heard that ScheduledFutures still hold onto strong references
 			//when canceled, so should we just use a WeakReference to player?
@@ -409,8 +416,9 @@ public class GameMap {
 	 */
 	private void drop(ItemDrop d) {
 		spawnEntity(d);
-		if (d.getDropType() == ItemDrop.ITEM)
+		if (d.getDropType() == ItemDrop.ITEM) {
 			checkForItemTriggeredReactors(d);
+		}
 		final Integer eid = Integer.valueOf(d.getId());
 		Scheduler.getInstance().runAfterDelay(new Runnable() {
 			@Override
@@ -437,10 +445,11 @@ public class GameMap {
 	public void drop(ItemDrop drop, int dropperMobId, GameCharacter dropper, byte pickupAllow, int owner, boolean undroppable) {
 		Point pos = dropper.getPosition();
 		drop.init(dropperMobId, owner, calcDropPos(pos, pos), pos, pickupAllow);
-		if (!undroppable)
+		if (!undroppable) {
 			drop(drop);
-		else //sendToAll or just dropper.getClient().getSession().send(...)?
+		} else { //sendToAll or just dropper.getClient().getSession().send(...)?
 			sendToAll(drop.getDisappearMessage());
+		}
 	}
 
 	public void drop(List<ItemDrop> drops, MapEntity ent, byte pickupAllow, int owner) {
@@ -453,10 +462,11 @@ public class GameMap {
 		for (ItemDrop drop : drops) {
 			dropNum++;
 			delta = width * (dropNum / 2);
-			if (dropNum % 2 == 0) //drop even numbered drops right
+			if (dropNum % 2 == 0) { //drop even numbered drops right
 				dropPos.x = entX + delta;
-			else //drop odd numbered drops left
+			} else { //drop odd numbered drops left
 				dropPos.x = entX - delta;
+			}
 			drop.init(ent instanceof Mob ? ent.getId() : 0, owner, calcDropPos(dropPos, entPos), entPos, pickupAllow);
 			drop(drop);
 		}
@@ -473,8 +483,9 @@ public class GameMap {
 		} else {
 			MonsterSpawn sp = new MonsterSpawn(stats, pos, fh, mobTime);
 			monsterSpawns.addWhenSafe(sp);
-			if (sp.shouldSpawn())
+			if (sp.shouldSpawn()) {
 				spawnMonster(sp.getNewSpawn());
+			}
 		}
 	}
 
@@ -488,8 +499,9 @@ public class GameMap {
 			@Override
 			public void run() {
 				destroyEntity(mist);
-				if (periodicTask != null)
+				if (periodicTask != null) {
 					periodicTask.cancel(false);
+				}
 			}
 		}, duration);
 	}
@@ -501,8 +513,9 @@ public class GameMap {
 
 	public void destroyEntity(MapEntity ent) {
 		entPools.get(ent.getEntityType()).removeByIdSafely(Integer.valueOf(ent.getId()));
-		if (ent.isVisible())
+		if (ent.isVisible()) {
 			sendToAll(ent.getDestructionMessage());
+		}
 	}
 
 	public void removePlayer(GameCharacter p) {
@@ -525,24 +538,28 @@ public class GameMap {
 		}
 		if (timeLimitTasks != null) {
 			ScheduledFuture<?> future = timeLimitTasks.remove(p);
-			if (future != null)
+			if (future != null) {
 				future.cancel(false);
+			}
 		}
 		if (decHpTasks != null) {
 			ScheduledFuture<?> future = decHpTasks.remove(p);
-			if (future != null)
+			if (future != null) {
 				future.cancel(false);
+			}
 		}
 	}
 
 	public void killMonster(Mob monster, GameCharacter killer) {
 		GameCharacter controller = monster.getController();
-		if (controller != null)
+		if (controller != null) {
 			controller.uncontrolMonster(monster);
-		if (killer != null)
+		}
+		if (killer != null) {
 			monster.died(killer);
-		else
+		} else {
 			monster.fireDeathEventNoRewards();
+		}
 		destroyEntity(monster);
 		monsters.decrementAndGet();
 	}
@@ -619,19 +636,22 @@ public class GameMap {
 		//don't get ConcurrentModificationException when we spawn reactors
 		for (MapEntity ent : getAllEntities(EntityType.REACTOR)) {
 			Reactor r = (Reactor) ent;
-			if (!r.isAlive())
+			if (!r.isAlive()) {
 				spawnEntity(r);
+			}
 			r.reset();
 		}
 	}
 
 	public void respawnMobs() {
-		if (entPools.get(EntityType.PLAYER).getSizeSafely() == 0 || disableSpawn)
+		if (entPools.get(EntityType.PLAYER).getSizeSafely() == 0 || disableSpawn) {
 			return;
+		}
 		monsterSpawns.lockRead();
 		try {
-			if (monsterSpawns.isEmpty())
+			if (monsterSpawns.isEmpty()) {
 				return;
+			}
 			Collections.shuffle(monsterSpawns);
 			int numShouldSpawn = Math.round((monsterSpawns.size() - monsters.get()) * stats.getMobRate());
 			if (numShouldSpawn > 0) {
@@ -641,8 +661,9 @@ public class GameMap {
 						spawnMonster(spawnPoint.getNewSpawn());
 						spawned++;
 					}
-					if (spawned >= numShouldSpawn)
+					if (spawned >= numShouldSpawn) {
 						break;
+					}
 				}
 			}
 		} finally {
@@ -662,10 +683,11 @@ public class GameMap {
 				Reactor r = (Reactor) ent;
 				Pair<Integer, Short> itemTrigger = r.getItemTrigger();
 				if (itemTrigger != null
-						&& itemTrigger.left.intValue() == itemId
-						&& itemTrigger.right.shortValue() == quantity
-						&& r.getItemTriggerZone().contains(pos))
+					&& itemTrigger.left.intValue() == itemId
+					&& itemTrigger.right.shortValue() == quantity
+					&& r.getItemTriggerZone().contains(pos)) {
 					r.hit(p, (byte) 0);
+				}
 			}
 		} finally {
 			reactors.unlockRead();
@@ -709,21 +731,24 @@ public class GameMap {
 
 	public void damageMonster(GameCharacter p, Mob m, int damage) {
 		m.hurt(p, damage);
-		if (!m.isAlive())
+		if (!m.isAlive()) {
 			killMonster(m, p);
+		}
 	}
 
 	public byte getPortalIdByName(String portalName) {
 		for (Entry<Byte, PortalData> portal : stats.getPortals().entrySet())
-			if (portal.getValue().getPortalName().equals(portalName))
+			if (portal.getValue().getPortalName().equals(portalName)) {
 				return portal.getKey().byteValue();
+			}
 		return -1;
 	}
 
 	public boolean enterPortal(GameCharacter p, String portalName) {
 		for (Entry<Byte, PortalData> portal : stats.getPortals().entrySet())
-			if (portal.getValue().getPortalName().equals(portalName))
+			if (portal.getValue().getPortalName().equals(portalName)) {
 				return enterPortal(p, portal.getKey().byteValue(), portal.getValue());
+			}
 		return false;
 	}
 
@@ -734,8 +759,9 @@ public class GameMap {
 
 	private boolean enterPortal(GameCharacter p, byte portalId, PortalData portal) {
 		String scriptName = portalOverrides.get(portal.getPortalName());
-		if (scriptName == null || scriptName.isEmpty())
+		if (scriptName == null || scriptName.isEmpty()) {
 			scriptName = portal.getScript();
+		}
 		if (scriptName != null && !scriptName.isEmpty()) {
 			return PortalScriptManager.getInstance().runScript(scriptName, portalId, p);
 		} else {
@@ -743,8 +769,9 @@ public class GameMap {
 			GameMap toMap = GameServer.getChannel(p.getClient().getChannel()).getMapFactory().getMap(tm);
 			if (tm != GlobalConstants.NULL_MAP && toMap != null) {
 				byte targetPortalId = toMap.getPortalIdByName(portal.getTargetName());
-				if (targetPortalId != -1)
+				if (targetPortalId != -1) {
 					return p.changeMap(tm, targetPortalId);
+				}
 				//WZs are broken. Destination map doesn't have the matching portal
 				//so just warp to the default portal.
 				LOG.log(Level.WARNING, "Invalid destination for portal {0} ({1}) on map {2} -> warping to default portal.",
@@ -769,8 +796,9 @@ public class GameMap {
 		try {
 			for (MapEntity ent : reactors.allEnts()) {
 				Reactor r = (Reactor) ent;
-				if (reactorName.equals(r.getName()))
+				if (reactorName.equals(r.getName())) {
 					r.overrideScript(script);
+				}
 			}
 		} finally {
 			reactors.unlockRead();
@@ -779,8 +807,9 @@ public class GameMap {
 
 	public Point calcPointBelow(Point initial) {
 		Foothold fh = stats.getFootholds().findBelow(initial);
-		if (fh == null)
+		if (fh == null) {
 			return null;
+		}
 		int dropY = fh.getY1();
 		if (!fh.isWall() && fh.getY1() != fh.getY2()) {
 			double s1 = Math.abs(fh.getY2() - fh.getY1());
@@ -789,10 +818,11 @@ public class GameMap {
 			double alpha = Math.atan(s2 / s1);
 			double beta = Math.atan(s1 / s2);
 			double s5 = Math.cos(alpha) * (s4 / Math.cos(beta));
-			if (fh.getY2() < fh.getY1())
+			if (fh.getY2() < fh.getY1()) {
 				dropY = fh.getY1() - (int) s5;
-			else
+			} else {
 				dropY = fh.getY1() + (int) s5;
+			}
 		}
 		return new Point(initial.x, dropY);
 	}
@@ -825,8 +855,9 @@ public class GameMap {
 		players.lockRead();
 		try {
 			for (MapEntity p : players.allEnts())
-				if (!p.equals(source))
+				if (!p.equals(source)) {
 					((GameCharacter) p).getClient().getSession().send(message);
+				}
 		} finally {
 			players.unlockRead();
 		}
@@ -839,8 +870,9 @@ public class GameMap {
 			pool.lockRead();
 			try {
 				for (MapEntity ent : pool.allEnts())
-					if (box.contains(ent.getPosition()))
+					if (box.contains(ent.getPosition())) {
 						ret.add(ent);
+					}
 			} finally {
 				pool.unlockRead();
 			}
@@ -884,8 +916,9 @@ public class GameMap {
 		}
 
 		public boolean shouldSpawn() {
-			if (mobTime < 0 || ((mobTime != 0 || immobile) && spawnedMonsters.get() > 0) || spawnedMonsters.get() > 2)
+			if (mobTime < 0 || ((mobTime != 0 || immobile) && spawnedMonsters.get() > 0) || spawnedMonsters.get() > 2) {
 				return false;
+			}
 			return nextPossibleSpawn <= System.currentTimeMillis();
 		}
 
@@ -909,8 +942,9 @@ public class GameMap {
 					spawnedMonsters.decrementAndGet();
 				}
 			});
-			if (mobTime == 0)
+			if (mobTime == 0) {
 				nextPossibleSpawn = System.currentTimeMillis() + 5000;
+			}
 			return mob;
 		}
 	}
@@ -974,7 +1008,8 @@ public class GameMap {
 
 		public int nextEntId() {
 			//reserve eId of 0 = nonexistent entity
-			while (entities.containsKey(Integer.valueOf(++nextEntId)) || nextEntId == 0); //avoid collisions/entId=0 when the entity id overflows
+			while (entities.containsKey(Integer.valueOf(++nextEntId)) || nextEntId == 0) { //avoid collisions/entId=0 when the entity id overflows
+			}
 			return nextEntId;
 		}
 

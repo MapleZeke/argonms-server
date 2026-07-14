@@ -46,20 +46,23 @@ public final class ChatHandler {
 		String message = packet.readLengthPrefixedString();
 		byte show = packet.readByte();
 		GameCharacter p = gc.getPlayer();
-		if (!commandProcessed(p, message) && p.isVisible())
+		if (!commandProcessed(p, message) && p.isVisible()) {
 			p.getMap().sendToAll(writeMapChat(p, message, show, p.getPrivilegeLevel() > UserPrivileges.USER));
+		}
 	}
 
 	public static void handlePrivateChat(LittleEndianReader packet, GameClient gc) {
 		byte type = packet.readByte(); // 0 for buddys, 1 for partys, 2 for guilds
 		byte numRecipients = packet.readByte();
 		int[] recipients = new int[numRecipients];
-		for (byte i = 0; i < numRecipients; i++)
+		for (byte i = 0; i < numRecipients; i++) {
 			recipients[i] = packet.readInt();
+		}
 		String message = packet.readLengthPrefixedString();
 		GameCharacter p = gc.getPlayer();
-		if (!commandProcessed(p, message))
+		if (!commandProcessed(p, message)) {
 			GameServer.getChannel(gc.getChannel()).getCrossServerInterface().sendPrivateChat(type, recipients, p, message);
+		}
 	}
 
 	public static void handleClientCommand(LittleEndianReader reader, GameClient gc) {
@@ -67,14 +70,15 @@ public final class ChatHandler {
 			case COMMAND_FIND: {
 				String toFind = reader.readLengthPrefixedString();
 				byte channel = GameServer.getChannel(gc.getChannel()).getCrossServerInterface().scanChannelOfPlayer(toFind, true);
-				if (channel == gc.getChannel())
+				if (channel == gc.getChannel()) {
 					gc.getSession().send(writeFindResultSameChannel(toFind, GameServer.getChannel(channel).getPlayerByName(toFind).getMapId()));
-				else if (channel == ChannelSynchronizationOps.CHANNEL_CASH_SHOP)
+				} else if (channel == ChannelSynchronizationOps.CHANNEL_CASH_SHOP) {
 					gc.getSession().send(writeFindResultCashShop(toFind));
-				else if (channel == ChannelSynchronizationOps.CHANNEL_OFFLINE)
+				} else if (channel == ChannelSynchronizationOps.CHANNEL_OFFLINE) {
 					gc.getSession().send(writeWhisperOutcome(toFind, false));
-				else
+				} else {
 					gc.getSession().send(writeFindResultDiffChannel(toFind, channel));
+				}
 				break;
 			}
 			case COMMAND_WHISPER: {
@@ -95,8 +99,9 @@ public final class ChatHandler {
 		String recipient = packet.readLengthPrefixedString();
 		String message = packet.readLengthPrefixedString();
 		GameCharacter p = gc.getPlayer();
-		if (!commandProcessed(p, message))
+		if (!commandProcessed(p, message)) {
 			GameServer.getChannel(gc.getChannel()).getCrossServerInterface().sendSpouseChat(recipient, p, message);
+		}
 	}
 
 	private static byte[] writeMapChat(GameCharacter p, String message, byte show, boolean gm) {
@@ -114,8 +119,9 @@ public final class ChatHandler {
 
 	private static boolean commandProcessed(GameCharacter p, String chat) {
 		char first = chat.charAt(0);
-		if (first != '!' && first != '@')
+		if (first != '!' && first != '@') {
 			return false;
+		}
 		CommandProcessor.getInstance().process(p, chat);
 		return true;
 	}

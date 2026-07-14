@@ -72,12 +72,14 @@ public final class DealDamageHandler {
 	private enum AttackType { MELEE, RANGED, MAGIC, SUMMON, CHARGE }
 
 	private static int getMaxBaseDamage(GameCharacter p, int additionalWatk, PlayerSkillEffectsData attackSkill) {
-		if (p.getWatk() == 0)
+		if (p.getWatk() == 0) {
 			return 1;
+		}
 
 		Equip weapon = (Equip) p.getInventory(InventoryType.EQUIPPED).get((short) -11);
-		if (weapon == null)
+		if (weapon == null) {
 			return 0;
+		}
 
 		Equip.WeaponType type = InventoryTools.getWeaponType(weapon.getDataId());
 		int mainStat;
@@ -115,8 +117,9 @@ public final class DealDamageHandler {
 				break;
 		}
 		int damage = (int) ((type.getMaxDamageMultiplier() * mainStat + secondaryStat) * (p.getWatk() + additionalWatk) / 100);
-		if (attackSkill != null)
+		if (attackSkill != null) {
 			damage = damage * attackSkill.getDamage() / 100;
+		}
 		return damage;
 	}
 
@@ -150,14 +153,17 @@ public final class DealDamageHandler {
 		} else { //skill
 			//check if it uses more than one piece of ammo
 			useQty = e.getBulletConsume();
-			if (useQty == 0)
+			if (useQty == 0) {
 				useQty = e.getBulletCount();
-			if (useQty == 0)
+			}
+			if (useQty == 0) {
 				useQty = 1; //skill uses same amount of ammo as regular attack
+			}
 		}
-		if (p.isEffectActive(PlayerStatusEffect.SHADOW_PARTNER))
+		if (p.isEffectActive(PlayerStatusEffect.SHADOW_PARTNER)) {
 			useQty *= 2; //freakily enough, shadow partner doubles ALL ranged attacks
 
+		}
 		boolean soulArrow = (attack.weaponClass == WeaponClass.BOW || attack.weaponClass == WeaponClass.CROSSBOW) && p.isEffectActive(PlayerStatusEffect.SOUL_ARROW);
 		if (!soulArrow) {
 			boolean shadowStars = attack.weaponClass == WeaponClass.CLAW && p.isEffectActive(PlayerStatusEffect.SHADOW_STARS);
@@ -199,8 +205,9 @@ public final class DealDamageHandler {
 		int additionalWatk = 0;
 		if (attack.ammoItemId != 0) {
 			short[] bonusStats = ItemDataLoader.getInstance().getBonusStats(attack.ammoItemId);
-			if (bonusStats != null)
+			if (bonusStats != null) {
 				additionalWatk = bonusStats[StatEffect.PAD];
+			}
 		}
 		getMaxBaseDamage(p, additionalWatk, attack.getAttackEffect(p));
 		applyAttack(attack, AttackType.RANGED, p);
@@ -219,18 +226,16 @@ public final class DealDamageHandler {
 
 		final PlayerSkillEffectsData e = attack.getAttackEffect(p);
 		if (e != null) {
-			switch (attack.skill) {
-				case Skills.POISON_MIST:
-					final Mist mist = new Mist(p, e);
-					ScheduledFuture<?> poisonSchedule = Scheduler.getInstance().runRepeatedly(new Runnable() {
-						@Override
-						public void run() {
-							for (MapEntity mo : p.getMap().getMapEntitiesInRect(mist.getBox(), EnumSet.of(EntityType.MONSTER)))
-								MonsterStatusEffectTools.applyEffectsAndShowVisuals((Mob) mo, p, e);
-						}
-					}, 2000, 2500);
-					p.getMap().spawnMist(mist, e.getDuration(), poisonSchedule);
-					break;
+			if (attack.skill == Skills.POISON_MIST) {
+				final Mist mist = new Mist(p, e);
+				ScheduledFuture<?> poisonSchedule = Scheduler.getInstance().runRepeatedly(new Runnable() {
+					@Override
+					public void run() {
+						for (MapEntity mo : p.getMap().getMapEntitiesInRect(mist.getBox(), EnumSet.of(EntityType.MONSTER)))
+							MonsterStatusEffectTools.applyEffectsAndShowVisuals((Mob) mo, p, e);
+					}
+				}, 2000, 2500);
+				p.getMap().spawnMist(mist, e.getDuration(), poisonSchedule);
 			}
 		}
 	}
@@ -304,8 +309,9 @@ public final class DealDamageHandler {
 			ret.cashAmmoSlot = packet.readShort();
 			/*aoe = */packet.readBool();
 
-			if (p.isEffectActive(PlayerStatusEffect.SHADOW_STARS))
+			if (p.isEffectActive(PlayerStatusEffect.SHADOW_STARS)) {
 				ret.ammoItemId = packet.readInt();
+			}
 		}
 
 		byte numDamaged = ret.numDamage;
@@ -314,16 +320,19 @@ public final class DealDamageHandler {
 			packet.skip(4);
 			/*mobPos = */packet.readPos();
 			/*damagePos = */packet.readPos();
-			if (ret.skill != Skills.MESO_EXPLOSION)
+			if (ret.skill != Skills.MESO_EXPLOSION) {
 				/*distance = */packet.readShort();
-			else
+			} else {
 				numDamaged = packet.readByte();
+			}
 
 			int[] allDamageNumbers = new int[numDamaged];
-			for (int j = 0; j < numDamaged; j++)
+			for (int j = 0; j < numDamaged; j++) {
 				allDamageNumbers[j] = packet.readInt();
-			if (type != AttackType.SUMMON)
+			}
+			if (type != AttackType.SUMMON) {
 				packet.skip(4);
+			}
 			ret.allDamage.put(Integer.valueOf(mobEid), allDamageNumbers);
 		}
 		/*playerPos = */packet.readPos();
@@ -400,13 +409,15 @@ public final class DealDamageHandler {
 		//max per mob. I guess this is why post-BB venom is not stackable...)
 		if (type == AttackType.RANGED && weaponClass == WeaponClass.CLAW && (level = player.getSkillLevel(Skills.VENOMOUS_STAR)) > 0) {
 			e = SkillDataLoader.getInstance().getSkill(Skills.VENOMOUS_STAR).getLevel(level);
-			for (int i = 0; i < attackCount; i++)
+			for (int i = 0; i < attackCount; i++) {
 				MonsterStatusEffectTools.applyEffectsAndShowVisuals(monster, player, e);
+			}
 		}
 		if (type == AttackType.MELEE && weaponClass == WeaponClass.ONE_HANDED_MELEE && (level = player.getSkillLevel(Skills.VENOMOUS_STAB)) > 0) {
 			e = SkillDataLoader.getInstance().getSkill(Skills.VENOMOUS_STAB).getLevel(level);
-			for (int i = 0; i < attackCount; i++)
+			for (int i = 0; i < attackCount; i++) {
 				MonsterStatusEffectTools.applyEffectsAndShowVisuals(monster, player, e);
+			}
 		}
 
 		//MP Eater - just stack them until the monster has no MP if we leveled more than one of them!
@@ -485,10 +496,11 @@ public final class DealDamageHandler {
 			if (attack.skill != Skills.HEAL) {
 				//heal is both an attack (against undead) and a cast skill (healing)
 				//so just apply skill costs in the cast skill part
-				if (player.isAlive())
+				if (player.isAlive()) {
 					SkillTools.useAttackSkill(player, attack.skill, attackEffect.getLevel());
-				else
+				} else {
 					player.getClient().getSession().send(GamePackets.writeEnableActions());
+				}
 			}
 			switch (attack.skill) {
 				case Skills.MESO_EXPLOSION: {
@@ -499,8 +511,9 @@ public final class DealDamageHandler {
 							Scheduler.getInstance().runAfterDelay(new Runnable() {
 								@Override
 								public void run() {
-									if (drop.isAlive())
+									if (drop.isAlive()) {
 										map.mesoExplosion(drop, player);
+									}
 								}
 							}, delay);
 							delay += 100;
@@ -515,8 +528,9 @@ public final class DealDamageHandler {
 						return;
 					}
 					byte advancedBlowLvl = player.getSkillLevel(Skills.ADVANCED_CHARGE_BLOW);
-					if (advancedBlowLvl == 0 || Rng.getGenerator().nextInt(100) >= SkillDataLoader.getInstance().getSkill(Skills.ADVANCED_CHARGE_BLOW).getLevel(advancedBlowLvl).getX())
+					if (advancedBlowLvl == 0 || Rng.getGenerator().nextInt(100) >= SkillDataLoader.getInstance().getSkill(Skills.ADVANCED_CHARGE_BLOW).getLevel(advancedBlowLvl).getX()) {
 						StatusEffectTools.dispelEffectsAndShowVisuals(player, chargeBuff.getEffectsData());
+					}
 					break;
 				}
 				case Skills.SWORD_PANIC:
@@ -535,8 +549,9 @@ public final class DealDamageHandler {
 		}
 		if (combo != null && !attack.allDamage.isEmpty()) { //TODO: make sure to increment counter for final attack as well
 			short counter = combo.getModifier();
-			if ((counter - 1) < ((PlayerSkillEffectsData) combo.getEffectsData()).getX())
+			if ((counter - 1) < ((PlayerSkillEffectsData) combo.getEffectsData()).getX()) {
 				StatusEffectTools.updateComboCounter(player, combo, (short) (counter + 1));
+			}
 		}
 
 		for (Entry<Integer, int[]> oned : attack.allDamage.entrySet()) {
@@ -575,9 +590,11 @@ public final class DealDamageHandler {
 					case Skills.IL_ELEMENT_COMPOSITION:
 					default:
 						//see if the attack skill can give the monster a disease
-						if (totDamageToOneMonster > 0 && monster.isAlive() && attackEffect != null)
-							if (!attackEffect.getMonsterEffects().isEmpty())
+						if (totDamageToOneMonster > 0 && monster.isAlive() && attackEffect != null) {
+							if (!attackEffect.getMonsterEffects().isEmpty()) {
 								MonsterStatusEffectTools.applyEffectsAndShowVisuals(monster, player, attackEffect);
+							}
+						}
 						break;
 				}
 				if (player.isEffectActive(PlayerStatusEffect.PICKPOCKET)) {
@@ -646,10 +663,11 @@ public final class DealDamageHandler {
 								skills.add(Integer.valueOf(Skills.PAGE_SWORD_MASTERY));
 								break;
 							default:
-								if (p.getSkillLevel(Skills.CRUSADER_SWORD_MASTERY) > p.getSkillLevel(Skills.PAGE_SWORD_MASTERY))
+								if (p.getSkillLevel(Skills.CRUSADER_SWORD_MASTERY) > p.getSkillLevel(Skills.PAGE_SWORD_MASTERY)) {
 									skills.add(Integer.valueOf(Skills.CRUSADER_SWORD_MASTERY));
-								else
+								} else {
 									skills.add(Integer.valueOf(Skills.PAGE_SWORD_MASTERY));
+								}
 								break;
 						}
 						break;
@@ -699,8 +717,9 @@ public final class DealDamageHandler {
 		byte sum = 0;
 		for (Integer skillId : skills) {
 			PlayerSkillEffectsData skillData = SkillDataLoader.getInstance().getSkill(skillId.intValue()).getLevel(p.getSkillLevel(skillId.intValue()));
-			if (skillData != null)
+			if (skillData != null) {
 				sum += skillData.getMastery();
+			}
 		}
 		return sum;
 	}
@@ -711,8 +730,9 @@ public final class DealDamageHandler {
 		if (info.skill > 0) {
 			lew.writeByte((byte) 0xFF); // too low and some skills don't work (?)
 			lew.writeInt(info.skill);
-		} else
+		} else {
 			lew.writeByte((byte) 0);
+		}
 
 		lew.writeByte((byte) 0);
 		lew.writeByte(info.stance);
@@ -731,10 +751,11 @@ public final class DealDamageHandler {
 	private static byte[] writeMeleeAttack(int cid, AttackInfo info, byte mastery) {
 		LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter();
 		lew.writeShort(ClientSendOps.MELEE_ATTACK);
-		if (info.skill == Skills.MESO_EXPLOSION)
+		if (info.skill == Skills.MESO_EXPLOSION) {
 			writeMesoExplosion(lew, cid, info);
-		else
+		} else {
 			writeAttackData(lew, cid, info, mastery);
+		}
 		return lew.getBytes();
 	}
 
@@ -749,8 +770,9 @@ public final class DealDamageHandler {
 		LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter();
 		lew.writeShort(ClientSendOps.MAGIC_ATTACK);
 		writeAttackData(lew, cid, info, mastery);
-		if (info.charge != 0)
+		if (info.charge != 0) {
 			lew.writeInt(info.charge);
+		}
 		return lew.getBytes();
 	}
 
@@ -814,16 +836,18 @@ public final class DealDamageHandler {
 				skillId = skill;
 			} else if (summonId != 0) {
 				PlayerSkillSummon summon = (PlayerSkillSummon) p.getMap().getEntityById(EntityType.SUMMON, summonId);
-				if (summon == null)
+				if (summon == null) {
 					return null;
+				}
 				skillId = summon.getSkillId();
 			} else {
 				return null;
 			}
 			SkillStats skillStats = SkillDataLoader.getInstance().getSkill(skillId);
 			byte skillLevel = p.getSkillLevel(skillId);
-			if (skillLevel == 0)
+			if (skillLevel == 0) {
 				return null;
+			}
 			return skillStats.getLevel(skillLevel);
 		}
 

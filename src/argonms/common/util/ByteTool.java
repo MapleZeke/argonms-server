@@ -66,8 +66,9 @@ public final class ByteTool {
 	 */
 	public static byte[] multiplyBytes(byte[] in, int count, int mul) {
 		byte[] ret = new byte[count * mul];
-		for (int i = 0; i < mul; i++)
+		for (int i = 0; i < mul; i++) {
 			System.arraycopy(in, 0, ret, i * count, count);
+		}
 		return ret;
 	}
 

@@ -75,8 +75,9 @@ public class ShopCenterPacketProcessor extends GameOrShopPacketProcessor {
 		lew.writeBytes(packet.readBytes(packet.available()));
 		byte[] message = lew.getBytes();
 		for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(world, ServerType.UNDEFINED))
-			if (cgi.isOnline() && cgi.getChannels().contains(Byte.valueOf(channel)))
+			if (cgi.isOnline() && cgi.getChannels().contains(Byte.valueOf(channel))) {
 				cgi.getSession().send(message);
+			}
 	}
 
 	private void processCenterServerSynchronization(LittleEndianReader packet) {

@@ -29,7 +29,7 @@ import org.mozilla.javascript.Scriptable;
  * @author GoldenKevin
  */
 public class ScriptPlayerNpc extends ScriptNpc {
-	private PlayerNpc npc;
+	private final PlayerNpc npc;
 
 	public ScriptPlayerNpc(PlayerNpc npc, GameClient client, Scriptable globalScope) {
 		super(npc.getDataId(), client, globalScope);

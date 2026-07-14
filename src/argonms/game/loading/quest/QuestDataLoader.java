@@ -69,18 +69,21 @@ public abstract class QuestDataLoader {
 	public List<String> getSimilarNamedQuests(String reference) {
 		List<String> retSkills = new ArrayList<>();
 		for (Entry<Short, String> name : questNames.entrySet())
-			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT)))
+			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT))) {
 				retSkills.add(name.getKey() + " - " + name.getValue());
+			}
 		return retSkills;
 	}
 
 	public byte startRequirementError(GameCharacter p, short questId) {
 		QuestChecks qc = startReqs.get(Short.valueOf(questId));
-		if (!qc.isRepeatable() && !p.isQuestInactive(questId))
+		if (!qc.isRepeatable() && !p.isQuestInactive(questId)) {
 			return -1;
+		}
 
-		if (qc != null)
+		if (qc != null) {
 			return qc.requirementError(p);
+		}
 		//MCDB doesn't have a quest entry if there are no mob, item, or quest requirements
 		//hope that questId is a real quest because we can't check if it is.
 		return 0;
@@ -88,18 +91,21 @@ public abstract class QuestDataLoader {
 
 	public short startedQuest(GameCharacter p, short questId) {
 		QuestRewards qr = startRewards.get(Short.valueOf(questId));
-		if (qr != null)
+		if (qr != null) {
 			return qr.giveRewards(p, -1);
+		}
 		return 0;
 	}
 
 	public byte completeRequirementError(GameCharacter p, short questId) {
 		QuestChecks qc = completeReqs.get(Short.valueOf(questId));
-		if (!p.isQuestStarted(questId))
+		if (!p.isQuestStarted(questId)) {
 			return -1;
+		}
 
-		if (qc != null)
+		if (qc != null) {
 			return qc.requirementError(p);
+		}
 		//MCDB doesn't have a quest entry if there are no mob, item, or quest requirements
 		//hope that questId is a real quest because we can't check if it is.
 		return 0;
@@ -107,8 +113,9 @@ public abstract class QuestDataLoader {
 
 	public short finishedQuest(GameCharacter p, short questId, int selection) {
 		QuestRewards qr = completeRewards.get(Short.valueOf(questId));
-		if (qr != null)
+		if (qr != null) {
 			return qr.giveRewards(p, selection);
+		}
 		return 0;
 	}
 
@@ -118,27 +125,26 @@ public abstract class QuestDataLoader {
 
 	public String getStartScriptName(short questId) {
 		QuestChecks qc = startReqs.get(Short.valueOf(questId));
-		if (qc != null)
+		if (qc != null) {
 			return qc.getStartScriptName();
+		}
 		return null;
 	}
 
 	public String getEndScriptName(short questId) {
 		QuestChecks qc = completeReqs.get(Short.valueOf(questId));
-		if (qc != null)
+		if (qc != null) {
 			return qc.getEndScriptName();
+		}
 		return null;
 	}
 
 	public static void setInstance(DataFileType wzType, String wzPath) {
 		if (instance == null) {
-			switch (wzType) {
-				case KVJ:
-					instance = new KvjQuestDataLoader(wzPath);
-					break;
-				case MCDB:
-					instance = new McdbQuestDataLoader();
-					break;
+			if (wzType == DataFileType.KVJ) {
+				instance = new KvjQuestDataLoader(wzPath);
+			} else if (wzType == DataFileType.MCDB) {
+				instance = new McdbQuestDataLoader();
 			}
 		}
 	}

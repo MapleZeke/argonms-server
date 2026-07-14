@@ -111,13 +111,15 @@ public final class ClientEncryption {
 			int fullBlocks = pieceSize / myIv.length;
 			for (int i = 0; i < fullBlocks; i++) {
 				ciph.processBlock(myIv, 0, myIv, 0); //encrypt IV with key and copy output back to IV
-				for (int j = 0; j < myIv.length; j++)
+				for (int j = 0; j < myIv.length; j++) {
 					data[offset + i * myIv.length + j] ^= myIv[j]; //XOR input block with encrypted IV and key
+				}
 			}
 			//OFB the final, incomplete block - OFB doesn't need block size aligned input
 			ciph.processBlock(myIv, 0, myIv, 0);
-			for (int i = pieceSize % myIv.length - 1; i >= 0; i--)
+			for (int i = pieceSize % myIv.length - 1; i >= 0; i--) {
 				data[offset + fullBlocks * myIv.length + i] ^= myIv[i];
+			}
 		}
 	}
 

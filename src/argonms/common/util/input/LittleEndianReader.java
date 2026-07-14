@@ -76,8 +76,9 @@ public abstract class LittleEndianReader {
 	public String readNullTerminatedString() {
 		StringBuilder builder = new StringBuilder();
 
-		for (char current = readChar(); current != '\0'; current = readChar())
+		for (char current = readChar(); current != '\0'; current = readChar()) {
 			builder.append(current);
+		}
 
 		return builder.toString();
 	}
@@ -89,8 +90,9 @@ public abstract class LittleEndianReader {
 		//uses O(2n) memory, but takes half as long than alternatives
 		byte[] bytes = read(n);
 		char[] ret = new char[n];
-		for (int x = 0; x < n; x++)
+		for (int x = 0; x < n; x++) {
 			ret[x] = (char) bytes[x];
+		}
 		return String.valueOf(ret);
 	}
 

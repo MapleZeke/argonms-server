@@ -124,10 +124,12 @@ public class GameClient extends RemoteClient {
 	public void disconnected() {
 		final boolean quickCleanup = GameServer.getInstance().isTerminated();
 		final boolean changingChannels = isMigrating();
-		if (npc != null)
+		if (npc != null) {
 			npc.endConversation();
-		if (npcRoom instanceof NpcStorageKeeper && player != null)
+		}
+		if (npcRoom instanceof NpcStorageKeeper && player != null) {
 			player.getStorageInventory().collapse();
+		}
 		if (getSession().getQueuedReads() == 0) {
 			dissociate(quickCleanup, changingChannels);
 		} else {
@@ -138,7 +140,8 @@ public class GameClient extends RemoteClient {
 				}
 			});
 		}
-		if (!quickCleanup && !changingChannels)
+		if (!quickCleanup && !changingChannels) {
 			updateState(STATUS_NOTLOGGEDIN);
+		}
 	}
 }

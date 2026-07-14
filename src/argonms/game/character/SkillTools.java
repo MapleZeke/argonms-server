@@ -87,8 +87,9 @@ public final class SkillTools {
 			p.getClient().getSession().send(GamePackets.writeCooldown(e.getDataId(), e.getCooltime()));
 			p.addCooldown(e.getDataId(), e.getCooltime());
 		}
-		if (e.getDuration() > 0)
+		if (e.getDuration() > 0) {
 			buffSpecificCosts(p, e);
+		}
 		return ret;
 	}
 
@@ -98,8 +99,9 @@ public final class SkillTools {
 		//worry about them here. only do buffs
 		int itemId;
 		short quantity = e.getBulletConsume();
-		if (quantity == 0)
+		if (quantity == 0) {
 			quantity = e.getBulletCount();
+		}
 		if (quantity != 0) { //buff skill uses bullets
 			int ammoFactor;
 			int ammoPrefix;
@@ -140,10 +142,11 @@ public final class SkillTools {
 					itemId = slot.getDataId();
 					if ((itemId / ammoFactor) == ammoPrefix) {
 						Short amount = canUse.get(Integer.valueOf(itemId));
-						if (amount == null)
+						if (amount == null) {
 							amount = Short.valueOf(slot.getQuantity());
-						else
+						} else {
 							amount = Short.valueOf((short) (amount.shortValue() + slot.getQuantity()));
+						}
 						canUse.put(Integer.valueOf(itemId), amount);
 						if (amount.shortValue() >= quantity) {
 							removeItemId = itemId;
@@ -244,8 +247,9 @@ public final class SkillTools {
 	}
 
 	public static void applyTimeLeap(GameCharacter p, boolean caster, PlayerSkillEffectsData e) {
-		if (!caster)
+		if (!caster) {
 			StatusEffectTools.applyEffectsAndShowVisuals(p, StatusEffectTools.PASSIVE_BUFF, e, (byte) -1);
+		}
 		p.cancelCooldowns();
 		//Time Leap's cooldown should always be applied after this method returns
 	}
@@ -258,23 +262,27 @@ public final class SkillTools {
 	}
 
 	public static void applyDispel(GameCharacter p, boolean caster, PlayerSkillEffectsData e) {
-		if (!caster)
+		if (!caster) {
 			StatusEffectTools.applyEffectsAndShowVisuals(p, StatusEffectTools.PASSIVE_BUFF, e, (byte) -1);
+		}
 		//"Dispel can cure: Weakness, Poison, Seal, Curse and Darkness
 		//Dispel can NOT cure: Confusion, Zombify, Seduction, Ice Seduction, Implanted bombs, Freezing, Darkness Damage and Stun"
 		for (PlayerStatusEffect debuff : new PlayerStatusEffect[] { PlayerStatusEffect.POISON, PlayerStatusEffect.SEAL, PlayerStatusEffect.DARKNESS, PlayerStatusEffect.WEAKNESS, PlayerStatusEffect.CURSE }) {
 			PlayerStatusEffectValues v = p.getEffectValue(debuff);
-			if (v != null)
+			if (v != null) {
 				StatusEffectTools.dispelEffectsAndShowVisuals(p, v.getEffectsData());
+			}
 		}
 	}
 
 	public static void applyHealAndDispel(GameCharacter p, boolean caster, PlayerSkillEffectsData e) {
-		if (!caster)
+		if (!caster) {
 			StatusEffectTools.applyEffectsAndShowVisuals(p, StatusEffectTools.PASSIVE_BUFF, e, (byte) -1);
+		}
 
-		if (p.getHp() == 0)
+		if (p.getHp() == 0) {
 			p.setStance((byte) 0);
+		}
 		p.setHp(p.getCurrentMaxHp());
 
 		//just cancel all debuffs and not just the ones Bishop Dispel cancels
@@ -283,8 +291,9 @@ public final class SkillTools {
 	}
 
 	public static int applyHeal(GameCharacter p, boolean caster, PlayerSkillEffectsData e, int recover) {
-		if (!caster)
+		if (!caster) {
 			StatusEffectTools.applyEffectsAndShowVisuals(p, StatusEffectTools.PASSIVE_BUFF, e, (byte) -1);
+		}
 
 		short start = p.getHp();
 		p.gainHp(recover);
@@ -302,8 +311,9 @@ public final class SkillTools {
 		//for each level should be the same. That's all we need to call
 		//Player.dispelEffect...
 		byte skillLevel = p.getSkillLevel(skillId);
-		if (skillLevel <= 0) //casted a skill if we don't have any levels in it
+		if (skillLevel <= 0) { //casted a skill if we don't have any levels in it
 			skillLevel = 1; //it happens!
+		}
 		cancelBuffSkill(p, skillId, skillLevel);
 	}
 

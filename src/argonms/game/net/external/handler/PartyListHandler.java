@@ -62,29 +62,33 @@ public final class PartyListHandler {
 		PartyList currentParty = p.getParty();
 		switch (packet.readByte()) {
 			case CREATE: {
-				if (currentParty == null)
+				if (currentParty == null) {
 					GameServer.getChannel(gc.getChannel()).getCrossServerInterface().sendMakeParty(p);
-				else
+				} else {
 					gc.getSession().send(GamePackets.writeSimplePartyListMessage(ALREADY_IN_PARTY));
+				}
 				break;
 			}
 			case LEAVE: {
-				if (currentParty != null)
-					if (currentParty.getLeader() == p.getId())
+				if (currentParty != null) {
+					if (currentParty.getLeader() == p.getId()) {
 						GameServer.getChannel(gc.getChannel()).getCrossServerInterface().sendDisbandParty(currentParty.getId());
-					else
+					} else {
 						GameServer.getChannel(gc.getChannel()).getCrossServerInterface().sendLeaveParty(p, currentParty.getId());
-				else
+					}
+				} else {
 					gc.getSession().send(GamePackets.writeSimplePartyListMessage(NOT_IN_PARTY));
+				}
 				break;
 			}
 			case JOIN: {
 				//TODO: check if player was actually invited
 				int partyId = packet.readInt();
-				if (currentParty == null)
+				if (currentParty == null) {
 					GameServer.getChannel(gc.getChannel()).getCrossServerInterface().sendJoinParty(p, partyId);
-				else
+				} else {
 					gc.getSession().send(GamePackets.writeSimplePartyListMessage(ALREADY_IN_PARTY));
+				}
 				break;
 			}
 			case INVITE: {
@@ -93,19 +97,23 @@ public final class PartyListHandler {
 				//another pending party invitation
 				String name = packet.readLengthPrefixedString();
 				GameCharacter invited = GameServer.getChannel(gc.getChannel()).getPlayerByName(name);
-				if (currentParty != null)
-					if (!currentParty.isFull())
-						if (invited != null)
-							if (invited.getParty() == null)
+				if (currentParty != null) {
+					if (!currentParty.isFull()) {
+						if (invited != null) {
+							if (invited.getParty() == null) {
 								invited.getClient().getSession().send(writePartyInvite(currentParty.getId(), p.getName()));
-							else
+							} else {
 								gc.getSession().send(GamePackets.writeSimplePartyListMessage(ALREADY_IN_PARTY));
-						else
+							}
+						} else {
 							gc.getSession().send(GamePackets.writeSimplePartyListMessage(CANNOT_FIND));
-					else
+						}
+					} else {
 						gc.getSession().send(GamePackets.writeSimplePartyListMessage(PARTY_FULL));
-				else
+					}
+				} else {
 					gc.getSession().send(GamePackets.writeSimplePartyListMessage(NOT_IN_PARTY));
+				}
 				break;
 			}
 			case EXPEL: {
@@ -124,10 +132,11 @@ public final class PartyListHandler {
 			}
 			case CHANGE_LEADER: {
 				int newLeader = packet.readInt();
-				if (currentParty != null && currentParty.getLeader() == p.getId())
-					GameServer.getChannel(gc.getChannel()).getCrossServerInterface().sendChangePartyLeader(currentParty.getId(), newLeader);	
-				else
+				if (currentParty != null && currentParty.getLeader() == p.getId()) {
+					GameServer.getChannel(gc.getChannel()).getCrossServerInterface().sendChangePartyLeader(currentParty.getId(), newLeader);
+				} else {
 					gc.getSession().send(GamePackets.writeSimplePartyListMessage(NOT_IN_PARTY));
+				}
 				break;
 			}
 		}
@@ -138,8 +147,9 @@ public final class PartyListHandler {
 		String from = packet.readLengthPrefixedString();
 		String to = packet.readLengthPrefixedString();
 		GameCharacter inviter = GameServer.getChannel(gc.getChannel()).getPlayerByName(from);
-		if (inviter != null) //check if inviter changed channels or logged off
+		if (inviter != null) { //check if inviter changed channels or logged off
 			inviter.getClient().getSession().send(writePartyInviteRejected(to));
+		}
 	}
 
 	private static byte[] writePartyInviteRejected(String name) {

@@ -148,10 +148,11 @@ public final class MiniroomHandler {
 		switch (MiniroomType.valueOf(packet.readByte())) {
 			case OMOK: {
 				text = packet.readLengthPrefixedString();
-				if (packet.readBool()) //private room
+				if (packet.readBool()) { //private room
 					pwd = packet.readLengthPrefixedString();
-				else
+				} else {
 					pwd = null;
+				}
 				byte subType = packet.readByte();
 				room = new Omok(p, text, pwd, subType);
 				p.getClient().getSession().send(room.getFirstPersonJoinMessage(p));
@@ -159,10 +160,11 @@ public final class MiniroomHandler {
 			}
 			case MATCH_CARDS: {
 				text = packet.readLengthPrefixedString();
-				if (packet.readBool()) //private room
+				if (packet.readBool()) { //private room
 					pwd = packet.readLengthPrefixedString();
-				else
+				} else {
 					pwd = null;
+				}
 				byte subType = packet.readByte();
 				room = new MatchCards(p, text, pwd, subType);
 				p.getClient().getSession().send(room.getFirstPersonJoinMessage(p));
@@ -175,10 +177,11 @@ public final class MiniroomHandler {
 			}
 			case PLAYER_SHOP: {
 				text = packet.readLengthPrefixedString();
-				if (packet.readBool()) //private room
+				if (packet.readBool()) { //private room
 					pwd = packet.readLengthPrefixedString();
-				else
+				} else {
 					pwd = null;
+				}
 				short slot = packet.readShort();
 				int itemId = packet.readInt();
 				if (p.getInventory(InventoryType.CASH).getItemSlots(itemId).contains(Short.valueOf(slot))) {
@@ -192,10 +195,11 @@ public final class MiniroomHandler {
 			}
 			case HIRED_MERCHANT: {
 				text = packet.readLengthPrefixedString();
-				if (packet.readBool()) //private room
+				if (packet.readBool()) { //private room
 					pwd = packet.readLengthPrefixedString();
-				else
+				} else {
 					pwd = null;
+				}
 				short slot = packet.readShort();
 				int itemId = packet.readInt();
 				if (p.getInventory(InventoryType.CASH).getItemSlots(itemId).contains(Short.valueOf(slot))) {
@@ -210,17 +214,19 @@ public final class MiniroomHandler {
 		}
 		p.setMiniRoom(room);
 		p.getMap().spawnEntity(room);
-		if (room instanceof Trade trade) //can't put it in the switch because room wouldn't be spawned in map yet
+		if (room instanceof Trade trade) { //can't put it in the switch because room wouldn't be spawned in map yet
 			RoomInviteQueue.getInstance().processQueuedTradeInvites(p, trade);
+		}
 	}
 
 	private static void inviteToRoom(GameCharacter p, LittleEndianReader packet) {
 		int pId = packet.readInt();
 		Trade room = (Trade) p.getMiniRoom();
-		if (room == null)
+		if (room == null) {
 			RoomInviteQueue.getInstance().queueTradeInvite(p, pId);
-		else
+		} else {
 			RoomInviteQueue.getInstance().inviteToTrade(p, pId, room);
+		}
 	}
 
 	private static void declineInvite(GameCharacter p, LittleEndianReader packet) {
@@ -239,16 +245,17 @@ public final class MiniroomHandler {
 	private static void joinRoom(GameCharacter p, LittleEndianReader packet) {
 		int entId = packet.readInt();
 		Miniroom room = (Miniroom) p.getMap().getEntityById(EntityType.MINI_ROOM, entId);
-		if (room == null)
+		if (room == null) {
 			p.getClient().getSession().send(writeJoinError(Miniroom.JOIN_ERROR_ALREADY_CLOSED));
-		else if (!p.isAlive())
+		} else if (!p.isAlive()) {
 			p.getClient().getSession().send(writeJoinError(Miniroom.JOIN_ERROR_DEAD));
-		else if (room.isPlayerBanned(p))
+		} else if (room.isPlayerBanned(p)) {
 			p.getClient().getSession().send(writeJoinError(Miniroom.JOIN_ERROR_BANNED));
-		else if (packet.available() > 0 && packet.readBool() && !packet.readLengthPrefixedString().equals(room.getPassword()))
+		} else if (packet.available() > 0 && packet.readBool() && !packet.readLengthPrefixedString().equals(room.getPassword())) {
 			p.getClient().getSession().send(writeJoinError(Miniroom.JOIN_ERROR_INCORRECT_PASSWORD));
-		else if (!room.joinRoom(p))
+		} else if (!room.joinRoom(p)) {
 			p.getClient().getSession().send(writeJoinError(Miniroom.JOIN_ERROR_FULL));
+		}
 	}
 
 	private static void chat(GameCharacter p, LittleEndianReader packet) {
@@ -364,10 +371,11 @@ public final class MiniroomHandler {
 	private static void gameDoTie(GameCharacter p, LittleEndianReader packet) {
 		Minigame room = (Minigame) p.getMiniRoom();
 		byte opponentPos = (byte) ((room.positionOf(p) + 1) % 2);
-		if (packet.readBool()) //accepted
+		if (packet.readBool()) { //accepted
 			room.endGame(MinigameResult.TIE, opponentPos);
-		else
+		} else {
 			room.getPlayerByPosition(opponentPos).getClient().getSession().send(writeSimpleMessage(Miniroom.ACT_ANSWER_TIE));
+		}
 	}
 
 	private static void gameSkipByTimer(GameCharacter p) {

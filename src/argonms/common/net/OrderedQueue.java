@@ -101,8 +101,9 @@ public class OrderedQueue {
 				for (int i = firstToPop; i == lastPopped.getKey().intValue(); i++) {
 					consecutive.add(lastPopped.getValue());
 					elements.remove();
-					if (elements.hasNext())
+					if (elements.hasNext()) {
 						lastPopped = elements.next();
+					}
 				}
 			} else if (smallestKey < firstToPop) {
 				//nextPushCursor overflowed while we still have keys from before

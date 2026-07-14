@@ -63,21 +63,25 @@ public class MobSkillEffectsData implements MonsterStatusEffectsData {
 		switch (skillid) {
 			case MobSkills.WATK_UP_AOE:
 				aoe = true;
+				break;
 			case MobSkills.WATK_UP:
 				monsterBuff = MonsterStatusEffect.WATK;
 				break;
 			case MobSkills.MATK_UP_AOE:
 				aoe = true;
+				break;
 			case MobSkills.MATK_UP:
 				monsterBuff = MonsterStatusEffect.MATK;
 				break;
 			case MobSkills.WDEF_UP_AOE:
 				aoe = true;
+				break;
 			case MobSkills.WDEF_UP:
 				monsterBuff = MonsterStatusEffect.WDEF;
 				break;
 			case MobSkills.MDEF_UP_AOE:
 				aoe = true;
+				break;
 			case MobSkills.MDEF_UP:
 				monsterBuff = MonsterStatusEffect.MDEF;
 				break;
@@ -195,8 +199,7 @@ public class MobSkillEffectsData implements MonsterStatusEffectsData {
 		}
 		lty = lt.y + posFrom.y;
 		rby = rb.y + posFrom.y;
-		Rectangle bounds = new Rectangle(ltx, lty, rbx - ltx, rby - lty);
-		return bounds;
+		return new Rectangle(ltx, lty, rbx - ltx, rby - lty);
 	}
 
 	public short getProp() {
@@ -244,10 +247,11 @@ public class MobSkillEffectsData implements MonsterStatusEffectsData {
 
 	@Override
 	public Set<MonsterStatusEffect> getMonsterEffects() {
-		if (monsterBuff == null)
+		if (monsterBuff == null) {
 			return Collections.emptySet();
-		else
+		} else {
 			return Collections.singleton(monsterBuff);
+		}
 	}
 
 	@Override
@@ -257,8 +261,9 @@ public class MobSkillEffectsData implements MonsterStatusEffectsData {
 
 	@Override
 	public Set<PlayerStatusEffect> getEffects() {
-		if (playerDisease != null)
+		if (playerDisease != null) {
 			return EnumSet.of(playerDisease);
+		}
 		return EnumSet.noneOf(PlayerStatusEffect.class);
 	}
 }

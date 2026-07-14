@@ -76,14 +76,17 @@ public class LocalChannelCommandTarget implements CommandTarget {
 			switch (update.getKey()) {
 				case CHANGE_MAP: {
 					MapValue value = (MapValue) update.getValue();
-					if (value.mapId / 100 == MapValue.FREE_MARKET_MAP_ID / 100 && target.getRememberedMap(MapMemoryVariable.FREE_MARKET).left.intValue() == GlobalConstants.NULL_MAP)
+					if (value.mapId / 100 == MapValue.FREE_MARKET_MAP_ID / 100 && target.getRememberedMap(MapMemoryVariable.FREE_MARKET).left.intValue() == GlobalConstants.NULL_MAP) {
 						target.rememberMap(MapMemoryVariable.FREE_MARKET);
-					if (value.mapId == MapValue.JAIL_MAP_ID && target.getRememberedMap(MapMemoryVariable.JAIL).left.intValue() == GlobalConstants.NULL_MAP)
+					}
+					if (value.mapId == MapValue.JAIL_MAP_ID && target.getRememberedMap(MapMemoryVariable.JAIL).left.intValue() == GlobalConstants.NULL_MAP) {
 						target.rememberMap(MapMemoryVariable.JAIL);
-					if (value.channel == MapValue.NO_CHANNEL_CHANGE || value.channel == target.getClient().getChannel())
+					}
+					if (value.channel == MapValue.NO_CHANNEL_CHANGE || value.channel == target.getClient().getChannel()) {
 						target.changeMap(value.mapId, value.spawnPoint);
-					else
+					} else {
 						target.changeMapAndChannel(value.mapId, value.spawnPoint, value.channel);
+					}
 					break;
 				}
 				case CHANGE_CHANNEL:
@@ -91,17 +94,19 @@ public class LocalChannelCommandTarget implements CommandTarget {
 					break;
 				case ADD_LEVEL:
 					target.setLevel((short) Math.min(target.getLevel() + getShort(update), GlobalConstants.MAX_LEVEL));
-					if (target.getLevel() < GlobalConstants.MAX_LEVEL)
+					if (target.getLevel() < GlobalConstants.MAX_LEVEL) {
 						target.setExp(Math.min(target.getExp(), ExpTables.getExpForPlayerLevel(target.getLevel()) - 1));
-					else
+					} else {
 						target.setExp(0);
+					}
 					break;
 				case SET_LEVEL:
 					target.setLevel(getShort(update));
-					if (target.getLevel() < GlobalConstants.MAX_LEVEL)
+					if (target.getLevel() < GlobalConstants.MAX_LEVEL) {
 						target.setExp(Math.min(target.getExp(), ExpTables.getExpForPlayerLevel(target.getLevel()) - 1));
-					else
+					} else {
 						target.setExp(0);
+					}
 					break;
 				case SET_JOB:
 					target.setJob(getShort(update));
@@ -173,16 +178,18 @@ public class LocalChannelCommandTarget implements CommandTarget {
 					target.setFame(getShort(update));
 					break;
 				case ADD_EXP:
-					if (target.getLevel() < GlobalConstants.MAX_LEVEL)
+					if (target.getLevel() < GlobalConstants.MAX_LEVEL) {
 						target.setExp(Math.min((int) Math.min((long) target.getExp() + getInt(update), Integer.MAX_VALUE), ExpTables.getExpForPlayerLevel(target.getLevel()) - 1));
-					else if (target.getExp() + getInt(update) == 0)
+					} else if (target.getExp() + getInt(update) == 0) {
 						target.setExp(0);
+					}
 					break;
 				case SET_EXP:
-					if (target.getLevel() < GlobalConstants.MAX_LEVEL)
+					if (target.getLevel() < GlobalConstants.MAX_LEVEL) {
 						target.setExp(Math.min(getInt(update), ExpTables.getExpForPlayerLevel(target.getLevel()) - 1));
-					else if (getInt(update) == 0)
+					} else if (getInt(update) == 0) {
 						target.setExp(0);
+					}
 					break;
 				case ADD_MESO:
 					target.setMesos((int) Math.min((long) target.getMesos() + getInt(update), Integer.MAX_VALUE));
@@ -230,8 +237,9 @@ public class LocalChannelCommandTarget implements CommandTarget {
 						int quantity;
 						if (value.quantity == Integer.MIN_VALUE) {
 							quantity = InventoryTools.getAmountOfItem(inv, value.itemId);
-							if (type == Inventory.InventoryType.EQUIP)
+							if (type == Inventory.InventoryType.EQUIP) {
 								quantity += InventoryTools.getAmountOfItem(inv, value.itemId);
+							}
 						} else {
 							quantity = -value.quantity;
 						}
@@ -252,8 +260,9 @@ public class LocalChannelCommandTarget implements CommandTarget {
 					PlayerStatusEffect[] effects = (PlayerStatusEffect[]) update.getValue();
 					for (PlayerStatusEffect e : effects) {
 						PlayerStatusEffectValues v = target.getEffectValue(e);
-						if (v != null)
+						if (v != null) {
 							DiseaseTools.cancelDebuff(target, (short) v.getSource(), v.getLevelWhenCast());
+						}
 					}
 					break;
 				}
@@ -282,6 +291,7 @@ public class LocalChannelCommandTarget implements CommandTarget {
 							target.getClient().getSession().send(CommonPackets.writeInventoryUpdateEquipStats(item.getKey().shortValue(), e));
 						}
 					}
+					break;
 				}
 				case MAX_INVENTORY_SLOTS: {
 					for (Inventory.InventoryType type : new Inventory.InventoryType[] { Inventory.InventoryType.EQUIP, Inventory.InventoryType.USE, Inventory.InventoryType.SETUP, Inventory.InventoryType.ETC, Inventory.InventoryType.CASH }) {
@@ -313,10 +323,11 @@ public class LocalChannelCommandTarget implements CommandTarget {
 				case STUN: {
 					boolean start = ((Boolean) update.getValue()).booleanValue();
 					MobSkillEffectsData e = SkillDataLoader.getInstance().getMobSkill(MobSkills.STUN).getLevel((byte) 1);
-					if (start)
+					if (start) {
 						StatusEffectTools.applyEffectsAndShowVisuals(target, StatusEffectTools.ACTIVE_BUFF, e, (byte) -1, Integer.MAX_VALUE);
-					else //stop
+					} else { //stop
 						StatusEffectTools.dispelEffectsAndShowVisuals(target, e);
+					}
 					break;
 				}
 				case CLEAR_INVENTORY_SLOTS: {
@@ -335,8 +346,9 @@ public class LocalChannelCommandTarget implements CommandTarget {
 				case RETURN_TO_REMEMBERED_MAP: {
 					MapMemoryVariable value = (MapMemoryVariable) update.getValue();
 					Pair<Integer, Byte> location = target.resetRememberedMap(value);
-					if (location.left.intValue() != GlobalConstants.NULL_MAP && location.right.byteValue() != -1)
+					if (location.left.intValue() != GlobalConstants.NULL_MAP && location.right.byteValue() != -1) {
 						target.changeMap(location.left.intValue(), location.right.byteValue());
+					}
 					break;
 				}
 			}

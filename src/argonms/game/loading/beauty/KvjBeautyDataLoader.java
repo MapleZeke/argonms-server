@@ -39,11 +39,13 @@ public class KvjBeautyDataLoader extends BeautyDataLoader {
 		String dir = dataPath + "Character.wz" + File.separatorChar;
 		try {
 			LittleEndianReader reader = new LittleEndianByteArrayReader(new File(dir + "Face.kvj"));
-			while (reader.available() != 0)
+			while (reader.available() != 0) {
 				eyeStyles.add(Short.valueOf(reader.readShort()));
+			}
 			reader = new LittleEndianByteArrayReader(new File(dir + "Hair.kvj"));
-			while (reader.available() != 0)
+			while (reader.available() != 0) {
 				hairStyles.add(Short.valueOf(reader.readShort()));
+			}
 			return true;
 		} catch (IOException ex) {
 			return false;

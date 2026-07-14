@@ -80,16 +80,18 @@ public abstract class StringDataLoader {
 	public List<String> getSimilarNamedItems(String reference) {
 		List<String> retItems = new ArrayList<>();
 		for (Entry<Integer, String> name : itemNames.entrySet())
-			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT)))
+			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT))) {
 				retItems.add(name.getKey() + " - " + name.getValue());
+			}
 		return retItems;
 	}
 
 	public List<String> getSimilarNamedSkills(String reference) {
 		List<String> retSkills = new ArrayList<>();
 		for (Entry<Integer, String> name : skillNames.entrySet())
-			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT)))
+			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT))) {
 				retSkills.add(name.getKey() + " - " + name.getValue());
+			}
 		return retSkills;
 	}
 
@@ -97,12 +99,14 @@ public abstract class StringDataLoader {
 		List<String> retMaps = new ArrayList<>();
 		for (Entry<Integer, String> name : mapNames.entrySet()) {
 			String streetAndMap = streetNames != null ? streetNames.get(name.getKey()) : null;
-			if (streetAndMap != null)
+			if (streetAndMap != null) {
 				streetAndMap += ": " + name.getValue();
-			else
+			} else {
 				streetAndMap = name.getValue();
-			if (streetAndMap.toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT)))
+			}
+			if (streetAndMap.toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT))) {
 				retMaps.add(name.getKey() + " - " + streetAndMap);
+			}
 		}
 		return retMaps;
 	}
@@ -110,28 +114,27 @@ public abstract class StringDataLoader {
 	public List<String> getSimilarNamedMobs(String reference) {
 		List<String> retMobs = new ArrayList<>();
 		for (Entry<Integer, String> name : mobNames.entrySet())
-			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT)))
+			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT))) {
 				retMobs.add(name.getKey() + " - " + name.getValue());
+			}
 		return retMobs;
 	}
 
 	public List<String> getSimilarNamedNpcs(String reference) {
 		List<String> retNpcs = new ArrayList<>();
 		for (Entry<Integer, String> name : npcNames.entrySet())
-			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT)))
+			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT))) {
 				retNpcs.add(name.getKey() + " - " + name.getValue());
+			}
 		return retNpcs;
 	}
 
 	public static void setInstance(DataFileType wzType, String wzPath) {
 		if (instance == null) {
-			switch (wzType) {
-				case KVJ:
-					instance = new KvjStringDataLoader(wzPath);
-					break;
-				case MCDB:
-					instance = new McdbStringDataLoader();
-					break;
+			if (wzType == DataFileType.KVJ) {
+				instance = new KvjStringDataLoader(wzPath);
+			} else if (wzType == DataFileType.MCDB) {
+				instance = new McdbStringDataLoader();
 			}
 		}
 	}

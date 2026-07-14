@@ -77,8 +77,9 @@ public class KvjItemDataLoader extends ItemDataLoader {
 	protected void load(int itemid) {
 		File f = getFile(itemid);
 		try {
-			if (f.exists())
+			if (f.exists()) {
 				doWork(itemid, new LittleEndianByteArrayReader(f));
+			}
 		} catch (IOException e) {
 			LOG.log(Level.WARNING, "Could not read KVJ data file for item " + itemid, e);
 		}
@@ -91,7 +92,7 @@ public class KvjItemDataLoader extends ItemDataLoader {
 			File root = new File(dataPath + "Item.wz");
 			for (String cat : root.list()) {
 				File catFolder = new File(root.getAbsolutePath() + File.separatorChar + cat);
-				if (cat.equals("Pet")) {
+				if ("Pet".equals(cat)) {
 					for (String kvj : catFolder.list()) {
 						int itemid = Integer.parseInt(kvj.substring(0, kvj.lastIndexOf(".img.kvj")));
 						doWork(itemid, new LittleEndianByteArrayReader(new File(catFolder.getAbsolutePath() + File.separatorChar + kvj)));
@@ -111,7 +112,7 @@ public class KvjItemDataLoader extends ItemDataLoader {
 			root = new File(dataPath + "Character.wz");
 			for (String cat : root.list()) {
 				File catFolder = new File(root.getAbsolutePath() + File.separatorChar + cat);
-				if (!cat.equals("Afterimage") && !cat.equals("Face.kvj") && !cat.equals("Hair.kvj")) {
+				if (!"Afterimage".equals(cat) && !"Face.kvj".equals(cat) && !"Hair.kvj".equals(cat)) {
 					for (String kvj : catFolder.list()) {
 						int itemid = Integer.parseInt(kvj.substring(0, kvj.lastIndexOf(".img.kvj")));
 						doWork(itemid, new LittleEndianByteArrayReader(new File(catFolder.getAbsolutePath() + File.separatorChar + kvj)));
@@ -136,14 +137,15 @@ public class KvjItemDataLoader extends ItemDataLoader {
 		File f;
 		String id = String.format(Locale.ROOT, "%08d", iid);
 		String cat = InventoryTools.getCategoryName(iid);
-		if (cat == null)
+		if (cat == null) {
 			f = null;
-		else if (cat.equals("Pet"))
-			f = new File(new StringBuilder(dataPath).append("Item.wz").append(File.separator).append(cat).append(File.separator).append(String.format(Locale.ROOT, "%07d", iid)).append(".img.kvj").toString());
-		else if (cat.equals("Equip"))
-			f = new File(new StringBuilder(dataPath).append("Character.wz").append(File.separator).append(InventoryTools.getCharCat(iid)).append(File.separator).append(id).append(".img.kvj").toString());
-		else
-			f = new File(new StringBuilder(dataPath).append("Item.wz").append(File.separator).append(cat).append(File.separator).append(id.substring(0, 4)).append(".img").append(File.separator).append(id).append(".kvj").toString());
+		} else if ("Pet".equals(cat)) {
+			f = new File(dataPath + "Item.wz" + (File.separator) + cat + (File.separator) + String.format(Locale.ROOT, "%07d", iid) + ".img.kvj");
+		} else if ("Equip".equals(cat)) {
+			f = new File(dataPath + "Character.wz" + (File.separator) + InventoryTools.getCharCat(iid) + (File.separator) + id + ".img.kvj");
+		} else {
+			f = new File(dataPath + "Item.wz" + (File.separator) + cat + (File.separator) + id.substring(0, 4) + ".img" + (File.separator) + id + ".kvj");
+		}
 		return f;
 	}
 
@@ -167,13 +169,15 @@ public class KvjItemDataLoader extends ItemDataLoader {
 					questItem.add(oId);
 					break;
 				case BONUS_STAT:
-					if (!bonusStats.containsKey(oId))
+					if (!bonusStats.containsKey(oId)) {
 						bonusStats.put(oId, new short[16]);
+					}
 					processBonusStat(reader, oId);
 					break;
 				case SUMMON:
-					if (!summons.containsKey(oId))
+					if (!summons.containsKey(oId)) {
 						summons.put(oId, new ArrayList<int[]>());
+					}
 					summons.get(oId).add(processSummon(reader));
 					break;
 				case SUCCESS:
@@ -198,21 +202,24 @@ public class KvjItemDataLoader extends ItemDataLoader {
 					cash.add(oId);
 					break;
 				case OPERATING_HOURS:
-					if (!operatingHours.containsKey(oId))
+					if (!operatingHours.containsKey(oId)) {
 						operatingHours.put(oId, new ArrayList<byte[]>());
+					}
 					operatingHours.get(oId).add(processOperatingHours(reader));
 					break;
 				case SKILL:
-					if (!skills.containsKey(oId))
+					if (!skills.containsKey(oId)) {
 						skills.put(oId, new ArrayList<Integer>());
+					}
 					skills.get(oId).add(Integer.valueOf(reader.readInt()));
 					break;
 				case UNIT_PRICE:
 					unitPrice.put(oId, Double.valueOf(reader.readDouble()));
 					break;
 				case REQ_STAT:
-					if (!reqStats.containsKey(oId))
+					if (!reqStats.containsKey(oId)) {
 						reqStats.put(oId, new short[16]);
+					}
 					processReqStat(reader, oId);
 					break;
 				case UPGRADE_SLOTS:
@@ -232,8 +239,9 @@ public class KvjItemDataLoader extends ItemDataLoader {
 					break;
 
 				case PET_COMMAND:
-					if (!petCommands.containsKey(oId))
+					if (!petCommands.containsKey(oId)) {
 						petCommands.put(oId, new HashMap<Byte, int[]>());
+					}
 					processPetCmd(reader, oId);
 					break;
 				case PET_HUNGER:
@@ -243,8 +251,9 @@ public class KvjItemDataLoader extends ItemDataLoader {
 					petPeriod.put(oId, Byte.valueOf(reader.readByte()));
 					break;
 				case PET_EVOLVE:
-					if (!evolveChoices.containsKey(oId))
+					if (!evolveChoices.containsKey(oId)) {
 						evolveChoices.put(oId, new ArrayList<int[]>());
+					}
 					evolveChoices.get(oId).add(processPetEvolve(reader));
 					break;
 
@@ -269,8 +278,9 @@ public class KvjItemDataLoader extends ItemDataLoader {
 
 	private List<Integer> processScrollReqs(LittleEndianReader reader) {
 		List<Integer> reqs = new ArrayList<>();
-		for (int i = reader.readInt(); i > 0; i--)
+		for (int i = reader.readInt(); i > 0; i--) {
 			reqs.add(Integer.valueOf(reader.readInt()));
+		}
 		return reqs;
 	}
 

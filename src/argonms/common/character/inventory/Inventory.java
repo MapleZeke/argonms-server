@@ -125,8 +125,9 @@ public class Inventory implements IInventory {
 		Set<Short> positions = new TreeSet<>();
 		synchronized(slots) {
 			for (Entry<Short, InventorySlot> entry : slots.entrySet())
-				if (entry.getValue().getDataId() == itemid)
+				if (entry.getValue().getDataId() == itemid) {
 					positions.add(entry.getKey());
+				}
 		}
 		return positions;
 	}
@@ -147,23 +148,26 @@ public class Inventory implements IInventory {
 		List<Short> empty = new LinkedList<>();
 		for (short i = 1; i <= maxSlots.get() && empty.size() < needed; i++) {
 			Short slot = Short.valueOf(i);
-			if (!slots.containsKey(slot))
+			if (!slots.containsKey(slot)) {
 				empty.add(slot);
+			}
 		}
 		return empty;
 	}
 
 	public boolean hasItem(int itemid, int minQty) {
-		if (minQty < 0)
+		if (minQty < 0) {
 			throw new IllegalArgumentException("Domain error. Quantity must be >= 0");
+		}
 		int remaining = minQty;
 		for (InventorySlot i : slots.values()) {
 			if (i.getDataId() == itemid) {
 				remaining -= i.getQuantity();
-				if (remaining <= 0)
+				if (remaining <= 0) {
 					//true if our purpose was to find it we have enough of the item.
 					//false if our purpose was to find if we have none of the item.
 					return minQty != 0;
+				}
 			}
 		}
 		//false if our purpose was to find it we have enough of the item.
@@ -199,8 +203,9 @@ public class Inventory implements IInventory {
 		while (true) {
 			int current = i.get();
 			int next = Math.min(Math.max(current + delta, min), max);
-			if (i.compareAndSet(current, next))
+			if (i.compareAndSet(current, next)) {
 				return next;
+			}
 		}
 	}
 

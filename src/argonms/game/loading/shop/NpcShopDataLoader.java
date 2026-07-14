@@ -44,20 +44,18 @@ public abstract class NpcShopDataLoader {
 
 	public NpcShop getShopByNpc(int id) {
 		//value could be null, so check if the key exists
-		if (!loadedShops.containsKey(Integer.valueOf(id)))
+		if (!loadedShops.containsKey(Integer.valueOf(id))) {
 			load(id);
+		}
 		return loadedShops.get(Integer.valueOf(id));
 	}
 
 	public static void setInstance(DataFileType wzType, String wzPath) {
 		if (instance == null) {
-			switch (wzType) {
-				case MCDB:
-					instance = new McdbNpcShopDataLoader();
-					break;
-				default:
-					instance = new DefaultNpcShopDataLoader();
-					break;
+			if (wzType == DataFileType.MCDB) {
+				instance = new McdbNpcShopDataLoader();
+			} else {
+				instance = new DefaultNpcShopDataLoader();
 			}
 		}
 	}

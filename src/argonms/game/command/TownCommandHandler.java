@@ -104,14 +104,15 @@ public class TownCommandHandler extends AbstractCommandDefinition<CommandCaller>
 		}
 		String name = args.restOfString();
 
-		if (name.equalsIgnoreCase("list")) {
+		if ("list".equalsIgnoreCase(name)) {
 			resp.printOut("Valid locations: " + getList());
 		} else {
 			Integer mapId = lookup.get(name.toLowerCase(Locale.ROOT));
-			if (mapId != null)
+			if (mapId != null) {
 				target.mutate(Collections.singletonList(new CommandTarget.CharacterManipulation(CommandTarget.CharacterManipulationKey.CHANGE_MAP, new CommandTarget.MapValue(mapId))));
-			else
+			} else {
 				resp.printErr(name + " is not a recognized location. Type \"!town list\" for a list of locations.");
+			}
 		}
 	}
 }

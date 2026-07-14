@@ -40,14 +40,16 @@ public class KvjCashShopDataLoader extends CashShopDataLoader {
 		LittleEndianReader reader;
 		try {
 			reader = new LittleEndianByteArrayReader(new File(dir + "Commodity.img.kvj"));
-			for (int serialNumber = reader.readInt(); serialNumber != -1; serialNumber = reader.readInt())
+			for (int serialNumber = reader.readInt(); serialNumber != -1; serialNumber = reader.readInt()) {
 				commodities.put(Integer.valueOf(serialNumber), new Commodity(reader.readInt(), reader.readShort(), reader.readInt(), reader.readByte(), reader.readByte(), reader.readBool()));
+			}
 
 			reader = new LittleEndianByteArrayReader(new File(dir + "CashPackage.img.kvj"));
 			for (int packageNumber = reader.readInt(); packageNumber != -1; packageNumber = reader.readInt()) {
 				int[] serialNumbers = new int[reader.readByte()];
-				for (int i = 0; i < serialNumbers.length; i++)
+				for (int i = 0; i < serialNumbers.length; i++) {
 					serialNumbers[i] = reader.readInt();
+				}
 				packages.put(Integer.valueOf(packageNumber), serialNumbers);
 			}
 			return true;

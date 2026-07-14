@@ -52,7 +52,7 @@ import java.util.logging.Logger;
  *
  * @author GoldenKevin
  */
-public class ShopCharacter extends LoggedInPlayer {
+public final class ShopCharacter extends LoggedInPlayer {
 	private static final Logger LOG = Logger.getLogger(ShopCharacter.class.getName());
 
 	public static final int PAYPAL_NX = 1;
@@ -86,8 +86,9 @@ public class ShopCharacter extends LoggedInPlayer {
 			@Override
 			protected void onExpire(long uniqueId) {
 				InventorySlot item = shopInventory.getByUniqueId(uniqueId);
-				if (item != null && expireItem(item))
+				if (item != null && expireItem(item)) {
 					shopInventory.removeByUniqueId(uniqueId);
+				}
 			}
 		};
 	}
@@ -141,11 +142,13 @@ public class ShopCharacter extends LoggedInPlayer {
 		long now = System.currentTimeMillis();
 		for (Iterator<InventorySlot> iter = getCashShopInventory().getAllValues().iterator(); iter.hasNext(); ) {
 			InventorySlot item = iter.next();
-			if (item.getExpiration() != 0)
-				if (now < item.getExpiration())
+			if (item.getExpiration() != 0) {
+				if (now < item.getExpiration()) {
 					itemExpireTask.addExpire(item.getExpiration(), item.getUniqueId());
-				else if (expireItem(item))
+				} else if (expireItem(item)) {
 					iter.remove();
+				}
+			}
 		}
 	}
 
@@ -235,19 +238,23 @@ public class ShopCharacter extends LoggedInPlayer {
 	}
 
 	public void prepareChannelChange() {
-		if (partyId != 0)
+		if (partyId != 0) {
 			ShopServer.getInstance().getCrossServerInterface().sendPartyMemberLogOffNotifications(this, false);
-		if (guildId != 0)
+		}
+		if (guildId != 0) {
 			ShopServer.getInstance().getCrossServerInterface().sendGuildMemberLogOffNotifications(this, false);
+		}
 		prepareExitServer();
 	}
 
 	public void prepareLogOff() {
 		ShopServer.getInstance().getCrossServerInterface().sendBuddyLogOffNotifications(this);
-		if (partyId != 0)
+		if (partyId != 0) {
 			ShopServer.getInstance().getCrossServerInterface().sendPartyMemberLogOffNotifications(this, true);
-		if (guildId != 0)
+		}
+		if (guildId != 0) {
 			ShopServer.getInstance().getCrossServerInterface().sendGuildMemberLogOffNotifications(this, true);
+		}
 		prepareExitServer();
 	}
 
@@ -330,9 +337,10 @@ public class ShopCharacter extends LoggedInPlayer {
 			ps.setShort(6, getInventory(InventoryType.CASH).getMaxSlots());
 			ps.setInt(7, getDataId());
 			int updateRows = ps.executeUpdate();
-			if (updateRows < 1)
+			if (updateRows < 1) {
 				LOG.log(Level.WARNING, "Updating a deleted character with name {0} of account {1}.",
-						new Object[] { name, client.getAccountId() });
+					new Object[]{name, client.getAccountId()});
+			}
 		} catch (SQLException e) {
 			throw new SQLException("Failed to save stats of character " + name, e);
 		} finally {
@@ -470,8 +478,9 @@ public class ShopCharacter extends LoggedInPlayer {
 					+ "FROM `skills` WHERE `characterid` = ?");
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				p.skills.put(Integer.valueOf(rs.getInt(1)), new SkillEntry(rs.getByte(2), rs.getByte(3)));
+			}
 			rs.close();
 			ps.close();
 
@@ -479,8 +488,9 @@ public class ShopCharacter extends LoggedInPlayer {
 					+ "FROM `cooldowns` WHERE `characterid` = ?");
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				p.addCooldown(rs.getInt(1), rs.getShort(2));
+			}
 			rs.close();
 			ps.close();
 
@@ -493,8 +503,9 @@ public class ShopCharacter extends LoggedInPlayer {
 			rs = ps.executeQuery();
 			while (rs.next()) {
 				byte status = rs.getByte(3);
-				if (status != BuddyListEntry.STATUS_INVITED)
+				if (status != BuddyListEntry.STATUS_INVITED) {
 					buddies.add(new BuddyListEntry(rs.getInt(1), rs.getString(2), status));
+				}
 			}
 			rs.close();
 			ps.close();
@@ -503,16 +514,18 @@ public class ShopCharacter extends LoggedInPlayer {
 			ps = con.prepareStatement("SELECT `partyid` FROM `parties` WHERE `characterid` = ?");
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				p.partyId = rs.getInt(1);
+			}
 			rs.close();
 			ps.close();
 
 			ps = con.prepareStatement("SELECT `g`.`id` FROM `guilds` `g` LEFT JOIN `guildmembers` `m` ON `g`.`id` = `m`.`guildid` WHERE `m`.`characterid` = ?");
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				p.guildId = rs.getInt(1);
+			}
 			rs.close();
 			ps.close();
 
@@ -533,8 +546,9 @@ public class ShopCharacter extends LoggedInPlayer {
 					mrs = null;
 					try {
 						mrs = mps.executeQuery();
-						while (mrs.next())
+						while (mrs.next()) {
 							mobProgress.put(Integer.valueOf(mrs.getInt(1)), new AtomicInteger(mrs.getShort(2)));
+						}
 					} finally {
 						DatabaseManager.cleanup(DatabaseType.STATE, mrs, null, null);
 					}
@@ -549,8 +563,9 @@ public class ShopCharacter extends LoggedInPlayer {
 			ps = con.prepareStatement("SELECT `sn` FROM `wishlists` WHERE `characterid` = ?");
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				p.wishList.add(Integer.valueOf(rs.getInt(1)));
+			}
 			return p;
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load character " + id + " from database", ex);
@@ -570,8 +585,9 @@ public class ShopCharacter extends LoggedInPlayer {
 			ps = con.prepareStatement("SELECT `a`.`id` FROM `characters` `c` LEFT JOIN `accounts` `a` ON `c`.`accountid` = `a`.`id` WHERE `c`.`name` = ?");
 			ps.setString(1, name);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				id = rs.getInt(1);
+			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not find account id of character " + name, ex);
 		} finally {

@@ -62,7 +62,7 @@ public class KvjMapDataLoader extends MapDataLoader {
 
 		MapStats stats = null;
 		try {
-			File f = new File(new StringBuilder(dataPath).append("Map.wz").append(File.separator).append("Map").append(File.separator).append("Map").append(id.substring(0, 1)).append(File.separator).append(id).append(".img.kvj").toString());
+			File f = new File(dataPath + "Map.wz" + (File.separator) + "Map" + (File.separator) + "Map" + id.substring(0, 1) + (File.separator) + id + ".img.kvj");
 			if (f.exists()) {
 				stats = new MapStats(mapid);
 				doWork(new LittleEndianByteArrayReader(f), stats);
@@ -98,10 +98,11 @@ public class KvjMapDataLoader extends MapDataLoader {
 
 	@Override
 	public boolean canLoad(int mapid) {
-		if (mapStats.containsKey(Integer.valueOf(mapid)))
+		if (mapStats.containsKey(Integer.valueOf(mapid))) {
 			return true;
+		}
 		String id = String.format(Locale.ROOT, "%09d", mapid);
-		File f = new File(new StringBuilder(dataPath).append("Map.wz").append(File.separator).append("Map").append(File.separator).append("Map").append(id.substring(0, 1)).append(id).append(".img.kvj").toString());
+		File f = new File(dataPath + "Map.wz" + (File.separator) + "Map" + (File.separator) + "Map" + id.substring(0, 1) + id + ".img.kvj");
 		return f.exists();
 	}
 

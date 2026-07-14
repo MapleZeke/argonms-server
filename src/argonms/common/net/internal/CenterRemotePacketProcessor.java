@@ -35,10 +35,11 @@ public abstract class CenterRemotePacketProcessor {
 
 	protected void processAuthResponse(LittleEndianReader packet, LocalServer ls) {
 		String error = packet.readLengthPrefixedString();
-		if (!error.isEmpty())
+		if (!error.isEmpty()) {
 			LOG.log(Level.SEVERE, "Unable to auth with Center server: {0}", error);
-		else
+		} else {
 			ls.registerCenter();
+		}
 	}
 
 	protected static byte[] pongMessage() {

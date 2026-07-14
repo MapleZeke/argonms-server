@@ -49,34 +49,35 @@ public abstract class SkillDataLoader {
 	public abstract boolean canLoadMobSkill(short skillid);
 
 	public SkillStats getSkill(int skillid) {
-		if (skillid == 0)
+		if (skillid == 0) {
 			return null;
+		}
 
 		Integer oId = Integer.valueOf(skillid);
-		if (!skillStats.containsKey(oId))
+		if (!skillStats.containsKey(oId)) {
 			loadPlayerSkill(skillid);
+		}
 		return skillStats.get(oId);
 	}
 
 	public MobSkillStats getMobSkill(short skillid) {
-		if (skillid == 0)
+		if (skillid == 0) {
 			return null;
+		}
 
 		Short oId = Short.valueOf(skillid);
-		if (!mobSkillStats.containsKey(oId))
+		if (!mobSkillStats.containsKey(oId)) {
 			loadMobSkill(skillid);
+		}
 		return mobSkillStats.get(oId);
 	}
 
 	public static void setInstance(DataFileType wzType, String wzPath) {
 		if (instance == null) {
-			switch (wzType) {
-				case KVJ:
-					instance = new KvjSkillDataLoader(wzPath);
-					break;
-				case MCDB:
-					instance = new McdbSkillDataLoader();
-					break;
+			if (wzType == DataFileType.KVJ) {
+				instance = new KvjSkillDataLoader(wzPath);
+			} else if (wzType == DataFileType.MCDB) {
+				instance = new McdbSkillDataLoader();
 			}
 		}
 	}

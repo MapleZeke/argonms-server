@@ -205,17 +205,17 @@ public class CashShopHandler {
 					case USE:
 					case ETC:
 						max += 4;
-						if (PlayerJob.getAdvancement(job) > 1)
+						if (PlayerJob.getAdvancement(job) > 1) {
 							max += 4;
+						}
 						break;
 				}
 				break;
 			case PlayerJob.CLASS_MAGICIAN:
-				switch (type) {
-					case ETC:
-						if (PlayerJob.getAdvancement(job) > 1)
-							max += 4;
-						break;
+				if (type == Inventory.InventoryType.ETC) {
+					if (PlayerJob.getAdvancement(job) > 1) {
+						max += 4;
+					}
 				}
 				break;
 			case PlayerJob.CLASS_BOWMAN:
@@ -225,8 +225,9 @@ public class CashShopHandler {
 						max += 4;
 						break;
 					case ETC:
-						if (PlayerJob.getAdvancement(job) > 1)
+						if (PlayerJob.getAdvancement(job) > 1) {
 							max += 4;
+						}
 						break;
 				}
 				break;
@@ -238,8 +239,9 @@ public class CashShopHandler {
 						max += 4;
 						break;
 					case USE:
-						if (PlayerJob.getAdvancement(job) > 1)
+						if (PlayerJob.getAdvancement(job) > 1) {
 							max += 4;
+						}
 						break;
 				}
 				break;
@@ -371,8 +373,9 @@ public class CashShopHandler {
 
 		if (item.getType() == InventorySlot.ItemType.PET) {
 			byte petSlot = p.indexOfPet(uniqueId);
-			if (petSlot != -1)
+			if (petSlot != -1) {
 				p.removePet(petSlot);
+			}
 		}
 		CashShopStaging inv = p.getCashShopInventory();
 		CashShopStaging.CashPurchaseProperties props = CashShopStaging.CashPurchaseProperties.loadFromDatabase(uniqueId, item.getDataId(), p.getClient().getAccountId());
@@ -497,14 +500,16 @@ public class CashShopHandler {
 
 		for (int individualSerialNumber : serialNumbers) {
 			c = CashShopDataLoader.getInstance().getCommodity(individualSerialNumber);
-			if (c == null || ShopServer.getInstance().getBlockedSerials().contains(Integer.valueOf(serialNumber)))
+			if (c == null || ShopServer.getInstance().getBlockedSerials().contains(Integer.valueOf(serialNumber))) {
 				continue;
+			}
 
 			lc = LimitedCommodityDataLoader.getInstance().getLimitedCommodity(c.itemDataId);
 			if (lc != null && lc.getSerialNumbers().contains(Integer.valueOf(individualSerialNumber))) {
 				synchronized (lc) {
-					if (lc.getRemainingStock() == 0)
+					if (lc.getRemainingStock() == 0) {
 						continue;
+					}
 
 					LimitedCommodityDataLoader.getInstance().commitUsed(c.itemDataId, lc.incrementUsed());
 				}
@@ -568,14 +573,16 @@ public class CashShopHandler {
 		CashShopStaging.giveGift(p.getClient().getAccountId(), p.getName(), recipientAcct, serialNumbers, message, new CashShopStaging.ItemManipulator() {
 			@Override
 			public boolean manipulate(InventorySlot partnersRing, int serialNumber, Commodity c) {
-				if (c == null || ShopServer.getInstance().getBlockedSerials().contains(Integer.valueOf(serialNumber)))
+				if (c == null || ShopServer.getInstance().getBlockedSerials().contains(Integer.valueOf(serialNumber))) {
 					return false;
+				}
 
 				LimitedCommodity lc = LimitedCommodityDataLoader.getInstance().getLimitedCommodity(c.itemDataId);
 				if (lc != null && lc.getSerialNumbers().contains(Integer.valueOf(serialNumber))) {
 					synchronized (lc) {
-						if (lc.getRemainingStock() == 0)
+						if (lc.getRemainingStock() == 0) {
 							return false;
+						}
 
 						LimitedCommodityDataLoader.getInstance().commitUsed(c.itemDataId, lc.incrementUsed());
 					}

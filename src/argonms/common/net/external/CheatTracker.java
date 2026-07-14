@@ -161,8 +161,9 @@ public abstract class CheatTracker {
 		//since singed ints can only hold 31-bit without overflow, and Java
 		//doesn't have unsigned int, use signed long (63-bit)
 		long longValue = 0;
-		for (int byt = 0, bitShift = 24; byt < 4; byt++, bitShift -= 8)
+		for (int byt = 0, bitShift = 24; byt < 4; byt++, bitShift -= 8) {
 			longValue += (long) (b[byt] & 0xFF) << bitShift;
+		}
 		return longValue;
 	}
 
@@ -179,8 +180,9 @@ public abstract class CheatTracker {
 					+ "WHERE `accountid` = ? AND `pardoned` = 0 AND `expiredate` > (UNIX_TIMESTAMP() * 1000)");
 			ps.setInt(1, getAccountId());
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				totalPoints += rs.getShort(1);
+			}
 			infractionsLoaded = true;
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load cheatlog for account "
@@ -192,9 +194,11 @@ public abstract class CheatTracker {
 
 	private boolean excludeMacBan(byte[] mac) {
 		String macStr = HexTool.macAddressBytesToString(mac);
-		for (int i = 0; i < macBanBlacklist.length; i++)
-			if (macBanBlacklist[i].matcher(macStr).matches())
+		for (int i = 0; i < macBanBlacklist.length; i++) {
+			if (macBanBlacklist[i].matcher(macStr).matches()) {
 				return true;
+			}
+		}
 		return false;
 	}
 
@@ -202,8 +206,9 @@ public abstract class CheatTracker {
 	//ban a player if they exceed the tolerance. it's pointless to just choose
 	//one as they can be easily bypassed individually.
 	private void ban(Connection con) throws SQLException {
-		if (!banned.compareAndSet(false, true))
+		if (!banned.compareAndSet(false, true)) {
 			return;
+		}
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -247,8 +252,9 @@ public abstract class CheatTracker {
 	}
 
 	private void addInfraction(Infraction reason, Assigner type, String reporter, String message, long overrideExpire, short overridePoints, boolean dcOnBan) {
-		if (banned.get())
+		if (banned.get()) {
 			return;
+		}
 
 		long now = System.currentTimeMillis();
 		short points = overridePoints == -1 ? reason.points() : overridePoints;
@@ -258,8 +264,9 @@ public abstract class CheatTracker {
 			//determine if the user has reached its infraction limit). that way,
 			//we don't have to do an expensive SQL query if we're only getting
 			//an instance of CheatTracker to log timestamps
-			if (!infractionsLoaded)
+			if (!infractionsLoaded) {
 				load();
+			}
 		} finally {
 			loadLock.unlock();
 		}
@@ -271,10 +278,11 @@ public abstract class CheatTracker {
 			ps = con.prepareStatement("INSERT INTO `infractions` (`accountid`,`characterid`,`receivedate`,`expiredate`,`assignertype`,`assignername`,`assignercomment`,`reason`,`severity`) VALUES (?,?,?,?,?,?,?,?,?)");
 			ps.setInt(1, getAccountId());
 			int cid = getCharacterId();
-			if (cid != -1)
+			if (cid != -1) {
 				ps.setInt(2, cid);
-			else
+			} else {
 				ps.setNull(2, Types.INTEGER);
+			}
 			ps.setLong(3, now);
 			ps.setLong(4, overrideExpire == -1L ? (now + reason.duration()) : overrideExpire);
 			ps.setString(5, type.sqlName());
@@ -285,8 +293,9 @@ public abstract class CheatTracker {
 			ps.executeUpdate();
 			if (totalPoints >= TOLERANCE) {
 				ban(con);
-				if (dcOnBan)
+				if (dcOnBan) {
 					disconnectClient();
+				}
 			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load cheatlog for account "
@@ -303,8 +312,9 @@ public abstract class CheatTracker {
 
 	public void ban(Infraction reason, String callerName, String details, Calendar expire) {
 		long expireTimeStamp = -1L;
-		if (expire != null)
+		if (expire != null) {
 			expireTimeStamp = expire.getTimeInMillis();
+		}
 		addInfraction(reason, Assigner.GM, callerName, details, expireTimeStamp, TOLERANCE, true);
 	}
 
@@ -322,7 +332,7 @@ public abstract class CheatTracker {
 		return t != null ? t.longValue() : 0;
 	}
 
-	private static class OnlineCheatTracker extends CheatTracker {
+	private static final class OnlineCheatTracker extends CheatTracker {
 		private final RemoteClient client;
 
 		private OnlineCheatTracker(RemoteClient rc) {
@@ -360,15 +370,16 @@ public abstract class CheatTracker {
 		}
 	}
 
-	private static class OfflineCheatTracker extends CheatTracker {
+	private static final class OfflineCheatTracker extends CheatTracker {
 		private final int accountId;
 		private final int characterId;
 		private final byte[] ipAddress;
 
 		private byte[] longToByteArray(long longValue) {
 			byte[] bigEndian = new byte[4];
-			for (int byt = 0, bitShift = 24; byt < 4; byt++, bitShift -= 8)
+			for (int byt = 0, bitShift = 24; byt < 4; byt++, bitShift -= 8) {
 				bigEndian[byt] = (byte) ((longValue >>> bitShift) & 0xFF);
+			}
 			return bigEndian;
 		}
 
@@ -427,8 +438,9 @@ public abstract class CheatTracker {
 			ps = con.prepareStatement("SELECT `a`.`id`,`c`.`id`,`a`.`recentip` FROM `characters` `c` LEFT JOIN `accounts` `a` ON `c`.`accountid` = `a`.`id` WHERE `c`.`name` = ?");
 			ps.setString(1, characterName);
 			rs = ps.executeQuery();
-			if (!rs.next())
+			if (!rs.next()) {
 				return null;
+			}
 
 			return new OfflineCheatTracker(rs.getInt(1), rs.getInt(2), rs.getLong(3));
 		} catch (SQLException ex) {
@@ -445,11 +457,13 @@ public abstract class CheatTracker {
 		while (scan.hasNext()) {
 			String line = scan.nextLine();
 			int comment = line.indexOf('#');
-			if (comment != -1)
+			if (comment != -1) {
 				line = line.substring(0, comment);
+			}
 			line = line.trim();
-			if (!line.isEmpty())
+			if (!line.isEmpty()) {
 				blacklist.add(Pattern.compile(line));
+			}
 		}
 		macBanBlacklist = blacklist.toArray(new Pattern[blacklist.size()]);
 	}

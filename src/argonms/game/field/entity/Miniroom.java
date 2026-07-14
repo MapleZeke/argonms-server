@@ -184,8 +184,9 @@ public abstract class Miniroom extends AbstractEntity {
 				sendToAll(getThirdPersonJoinMessage(p, i));
 				occupants[i] = p;
 				p.getClient().getSession().send(getFirstPersonJoinMessage(p));
-				if (openToMap)
+				if (openToMap) {
 					p.getMap().sendToAll(getUpdateBalloonMessage());
+				}
 				return true;
 			}
 		}
@@ -206,8 +207,9 @@ public abstract class Miniroom extends AbstractEntity {
 		} else {
 			occupants[pos] = null;
 			sendToAll(getThirdPersonLeaveMessage(pos));
-			if (openToMap)
+			if (openToMap) {
 				p.getMap().sendToAll(getUpdateBalloonMessage());
+			}
 		}
 	}
 
@@ -227,17 +229,21 @@ public abstract class Miniroom extends AbstractEntity {
 	}
 
 	public byte positionOf(GameCharacter p) {
-		for (byte i = 0; i < occupants.length; i++)
-			if (occupants[i] == p)
+		for (byte i = 0; i < occupants.length; i++) {
+			if (occupants[i] == p) {
 				return i;
+			}
+		}
 		return -1;
 	}
 
 	public byte getAmountOfPlayers() {
 		byte count = 0;
-		for (int i = 0; i < occupants.length; i++)
-			if (occupants[i] != null)
+		for (int i = 0; i < occupants.length; i++) {
+			if (occupants[i] != null) {
 				count++;
+			}
+		}
 		return count;
 	}
 
@@ -251,8 +257,9 @@ public abstract class Miniroom extends AbstractEntity {
 
 	public void sendToAll(byte[] message) {
 		for (GameCharacter p : occupants)
-			if (p != null)
+			if (p != null) {
 				p.getClient().getSession().send(message);
+			}
 	}
 
 	public void openRoom(GameMap map) {

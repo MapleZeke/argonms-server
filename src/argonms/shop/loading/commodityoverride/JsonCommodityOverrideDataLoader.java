@@ -62,22 +62,22 @@ public class JsonCommodityOverrideDataLoader extends CommodityOverrideDataLoader
 				Map<CommodityMod, Object> properties = new EnumMap<>(CommodityMod.class);
 				for (Map.Entry<Object, Object> property : ((NativeObject) commodity.getValue()).entrySet()) {
 					String propKey = (String) property.getKey();
-					if (propKey.equals("itemId")) {
+					if ("itemId".equals(propKey)) {
 						assert property.getValue() instanceof Number;
 						properties.put(CommodityMod.ITEM_ID, property.getValue());
-					} else if (propKey.equals("count")) {
+					} else if ("count".equals(propKey)) {
 						assert property.getValue() instanceof Number;
 						properties.put(CommodityMod.COUNT, property.getValue());
-					} else if (propKey.equals("price")) {
+					} else if ("price".equals(propKey)) {
 						assert property.getValue() instanceof Number;
 						properties.put(CommodityMod.SALE_PRICE, property.getValue());
-					} else if (propKey.equals("priority")) {
+					} else if ("priority".equals(propKey)) {
 						assert property.getValue() instanceof Number;
 						properties.put(CommodityMod.PRIORITY, property.getValue());
-					} else if (propKey.equals("onSale")) {
+					} else if ("onSale".equals(propKey)) {
 						assert property.getValue() instanceof Number;
 						properties.put(CommodityMod.ON_SALE, property.getValue());
-					} else if (propKey.equals("class")) {
+					} else if ("class".equals(propKey)) {
 						assert property.getValue() instanceof Number;
 						properties.put(CommodityMod.CLASS, property.getValue());
 					}

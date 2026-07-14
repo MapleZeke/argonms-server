@@ -29,7 +29,7 @@ import org.mozilla.javascript.Scriptable;
  * @author GoldenKevin
  */
 public class ScriptPortal extends PlayerScriptInteraction {
-	private byte portalId;
+	private final byte portalId;
 	private boolean warped;
 
 	public ScriptPortal(byte portalId, GameClient gameClient, Scriptable globalScope) {
@@ -70,10 +70,12 @@ public class ScriptPortal extends PlayerScriptInteraction {
 	}
 
 	private static byte[] writeHintBalloon(String message, short width, short height) {
-		if (width < 1)
+		if (width < 1) {
 			width = (short) Math.max(message.length() * 10, 40);
-		if (height < 5)
+		}
+		if (height < 5) {
 			height = 5;
+		}
 
 		LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(9
 				+ message.length());

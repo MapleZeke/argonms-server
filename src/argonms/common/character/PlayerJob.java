@@ -81,16 +81,19 @@ public final class PlayerJob {
 
 	public static boolean isJobInBitString(short job, short bitstring) {
 		int jobPath = getJobPath(job);
-		if (jobPath == CLASS_GAMEMASTER)
+		if (jobPath == CLASS_GAMEMASTER) {
 			return true;
+		}
 		return (bitstring & (1 << jobPath)) != 0;
 	}
 
 	public static int getAdvancement(short jobid) {
-		if (jobid == JOB_BEGINNER)
+		if (jobid == JOB_BEGINNER) {
 			return 0; //no job advancement
-		if (jobid % 100 == 0)
+		}
+		if (jobid % 100 == 0) {
 			return 1; //first job advancement
+		}
 		switch (jobid % 10) {
 			case 0:
 				return 2; //second job advancement

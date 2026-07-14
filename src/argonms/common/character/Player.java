@@ -316,9 +316,11 @@ public abstract class Player {
 	}
 
 	private static byte indexOf(Pet[] pets, Pet search) {
-		for (byte i = 0; i < 3; i++)
-			if (pets[i] == search)
+		for (byte i = 0; i < 3; i++) {
+			if (pets[i] == search) {
 				return i;
+			}
+		}
 		return -1;
 	}
 
@@ -556,8 +558,9 @@ public abstract class Player {
 							pet.setCloseness(irs.getShort(6));
 							pet.setFullness(irs.getByte(7));
 							byte pos = irs.getByte(3);
-							if (pos >= 0 && pos < 3)
+							if (pos >= 0 && pos < 3) {
 								pets[pos] = pet;
+							}
 						}
 						irs.close();
 						ips.close();
@@ -571,8 +574,9 @@ public abstract class Player {
 					ips = con.prepareStatement("SELECT `uniqueid` FROM `cashshoppurchases` WHERE `inventoryitemid` = ?");
 					ips.setInt(1, inventoryKey);
 					irs = ips.executeQuery();
-					if (irs.next())
+					if (irs.next()) {
 						item.setUniqueId(irs.getLong(1));
+					}
 					irs.close();
 					ips.close();
 				}
@@ -599,8 +603,9 @@ public abstract class Player {
 			ps = con.prepareStatement("SELECT `name` FROM `characters` WHERE `id` = ?");
 			ps.setInt(1, characterid);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				name = rs.getString(1);
+			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not find name of character " + characterid, ex);
 		} finally {
@@ -619,8 +624,9 @@ public abstract class Player {
 			ps = con.prepareStatement("SELECT `id` FROM `characters` WHERE `name` = ?");
 			ps.setString(1, name);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				id = rs.getInt(1);
+			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not find id of character " + name, ex);
 		} finally {

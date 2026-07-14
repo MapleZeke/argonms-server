@@ -75,11 +75,7 @@ public abstract class CommodityOverrideDataLoader {
 
 	public static void setInstance(DataFileType wzType, String wzPath) {
 		if (instance == null) {
-			switch (wzType) {
-				default:
-					instance = new JsonCommodityOverrideDataLoader();
-					break;
-			}
+			instance = new JsonCommodityOverrideDataLoader();
 		}
 	}
 

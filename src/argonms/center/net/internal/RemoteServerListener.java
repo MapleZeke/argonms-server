@@ -60,10 +60,12 @@ public class RemoteServerListener implements SessionCreator {
 			@Override
 			public Thread newThread(Runnable r) {
 				Thread t = new Thread(group, r, "internal-boss-thread", 0);
-				if (t.isDaemon())
+				if (t.isDaemon()) {
 					t.setDaemon(false);
-				if (t.getPriority() != Thread.NORM_PRIORITY)
+				}
+				if (t.getPriority() != Thread.NORM_PRIORITY) {
 					t.setPriority(Thread.NORM_PRIORITY);
+				}
 				return t;
 			}
 		});
@@ -78,10 +80,12 @@ public class RemoteServerListener implements SessionCreator {
 			@Override
 			public Thread newThread(Runnable r) {
 				Thread t = new Thread(group, r, "internal-worker-pool-thread-" + threadNumber.getAndIncrement(), 0);
-				if (t.isDaemon())
+				if (t.isDaemon()) {
 					t.setDaemon(false);
-				if (t.getPriority() != Thread.NORM_PRIORITY)
+				}
+				if (t.getPriority() != Thread.NORM_PRIORITY) {
 					t.setPriority(Thread.NORM_PRIORITY);
+				}
 				return t;
 			}
 		});
@@ -157,9 +161,11 @@ public class RemoteServerListener implements SessionCreator {
 												session.close(ex.getMessage());
 											}
 										}
-										if (key.isValid() && key.isWritable())
-											if (session.tryFlushSendQueue() == 1)
+										if (key.isValid() && key.isWritable()) {
+											if (session.tryFlushSendQueue() == 1) {
 												key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
+											}
+										}
 									} catch (CancelledKeyException e) {
 										//don't worry about it - session is already closed
 									}
@@ -185,10 +191,11 @@ public class RemoteServerListener implements SessionCreator {
 			} catch (IOException ex) {
 				LOG.log(Level.WARNING, "Error while unbinding internal facing selector (" + listener.socket().getLocalSocketAddress() + ")", ex);
 			}
-			if (reasonExc == null)
-				LOG.log(Level.FINE, "Internal facing selector ({0}) closed: {1}", new Object[] { listener.socket().getLocalSocketAddress(), reason });
-			else
+			if (reasonExc == null) {
+				LOG.log(Level.FINE, "Internal facing selector ({0}) closed: {1}", new Object[]{listener.socket().getLocalSocketAddress(), reason});
+			} else {
 				LOG.log(Level.FINE, "Internal facing selector (" + listener.socket().getLocalSocketAddress() + ") closed: " + reason, reasonExc);
+			}
 			bossThreadPool.shutdown();
 			workerThreadPool.shutdown();
 		}

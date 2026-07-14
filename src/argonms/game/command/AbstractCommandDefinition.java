@@ -30,9 +30,11 @@ public abstract class AbstractCommandDefinition<T extends CommandCaller> {
 
 	public static boolean isNumber(String s) {
 		char[] array = s.toCharArray();
-		for (int i = array.length - 1; i > 0; --i)
-			if (array[i] > '9' || array[i] < '0')
+		for (int i = array.length - 1; i > 0; --i) {
+			if (array[i] > '9' || array[i] < '0') {
 				return false;
+			}
+		}
 		return true;
 	}
 }

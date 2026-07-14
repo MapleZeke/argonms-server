@@ -44,7 +44,7 @@ import java.util.logging.Logger;
  *
  * @author GoldenKevin
  */
-public class LoginCharacter extends Player {
+public final class LoginCharacter extends Player {
 	private static final Logger LOG = Logger.getLogger(LoginCharacter.class.getName());
 
 	private static final Map<Byte, KeyBinding> defaultBindings;
@@ -287,8 +287,9 @@ public class LoginCharacter extends Player {
 			ps.setByte(12, account.getGm());
 			ps.executeUpdate();
 			rs = ps.getGeneratedKeys();
-			if (rs.next())
+			if (rs.next()) {
 				p.setId(rs.getInt(1));
+			}
 			rs.close();
 			ps.close();
 

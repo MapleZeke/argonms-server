@@ -112,8 +112,9 @@ public class QuestEntry {
 		while (true) {
 			int current = i.get();
 			int next = Math.min(Math.max(current + delta, min), max);
-			if (i.compareAndSet(current, next))
+			if (i.compareAndSet(current, next)) {
 				return next;
+			}
 		}
 	}
 

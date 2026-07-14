@@ -66,8 +66,9 @@ public class UnorderedQueue {
 	public List<ByteBuffer> pop() {
 		List<ByteBuffer> consecutive = new ArrayList<>();
 		ByteBuffer last;
-		while ((last = queued.poll()) != null)
+		while ((last = queued.poll()) != null) {
 			consecutive.add(last);
+		}
 		return consecutive;
 	}
 }

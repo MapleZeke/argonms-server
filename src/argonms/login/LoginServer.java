@@ -61,7 +61,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
  *
  * @author GoldenKevin
  */
-public class LoginServer implements LocalServer {
+public final class LoginServer implements LocalServer {
 	private static final Logger LOG = Logger.getLogger(LoginServer.class.getName());
 
 	private static LoginServer instance;
@@ -104,8 +104,9 @@ public class LoginServer implements LocalServer {
 
 			startIndex = str.indexOf(':', endIndex) + 1;
 			endIndex = str.indexOf(',', startIndex);
-			if (endIndex == -1)
+			if (endIndex == -1) {
 				endIndex = str.length();
+			}
 			worldListMessages.add(new BalloonMessage(new Point(x, y), str.substring(startIndex, endIndex).trim()));
 		} while (endIndex != str.length());
 	}
@@ -136,16 +137,19 @@ public class LoginServer implements LocalServer {
 				for (String id : temp.split(",")) {
 					Byte world = Byte.valueOf(Byte.parseByte(id));
 					temp = prop.getString("argonms.login.world." + id + ".flag");
-					if (temp != null)
+					if (temp != null) {
 						worldFlags.put(world, Byte.valueOf(Byte.parseByte(temp)));
+					}
 					temp = prop.getString("argonms.login.world." + id + ".message");
-					if (temp != null)
+					if (temp != null) {
 						worldMessages.put(world, temp);
+					}
 				}
 			}
 			temp = prop.getString("argonms.login.balloons").trim();
-			if (!temp.isEmpty())
+			if (!temp.isEmpty()) {
 				parseBalloonMessages(temp);
+			}
 			temp = prop.getString("argonms.login.tz");
 			//always set default TimeZone setting last in this block so the
 			//timezone of logged messages that caught exceptions from this block
@@ -204,8 +208,9 @@ public class LoginServer implements LocalServer {
 							System.exit(3);
 							return;
 						}
-						if (realGameVersion != GlobalConstants.MAPLE_VERSION) //carry on despite the warning...
-							LOG.log(Level.WARNING, "Your copy of MCDB is based on an incongruent version of the WZ files. ArgonMS: {0} MCDB: {1}", new Object[] { GlobalConstants.MAPLE_VERSION, realGameVersion });
+						if (realGameVersion != GlobalConstants.MAPLE_VERSION) { //carry on despite the warning...
+							LOG.log(Level.WARNING, "Your copy of MCDB is based on an incongruent version of the WZ files. ArgonMS: {0} MCDB: {1}", new Object[]{GlobalConstants.MAPLE_VERSION, realGameVersion});
+						}
 					}
 				} finally {
 					DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
@@ -226,8 +231,9 @@ public class LoginServer implements LocalServer {
 			System.exit(3);
 			return;
 		} finally {
-			if (scan != null)
+			if (scan != null) {
 				scan.close();
+			}
 		}
 
 		Scheduler.enable(true, true);
@@ -305,8 +311,9 @@ public class LoginServer implements LocalServer {
 		Byte oW = Byte.valueOf(world);
 		LoginWorld w = onlineWorlds.get(oW);
 		w.removeGameServer(serverId);
-		if (w.getChannelCount() == 0)
+		if (w.getChannelCount() == 0) {
 			onlineWorlds.remove(oW);
+		}
 	}
 
 	public void changePopulation(byte world, byte channel, short now) {

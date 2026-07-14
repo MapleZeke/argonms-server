@@ -96,8 +96,9 @@ public class ScriptEvent {
 
 	public void stopTimer(String key) {
 		ScheduledFuture<?> future = timers.remove(key);
-		if (future != null)
+		if (future != null) {
 			future.cancel(false);
+		}
 	}
 
 	public void stopTimers() {
@@ -106,9 +107,10 @@ public class ScriptEvent {
 	}
 
 	public void destroyEvent() {
-		if (name == null)
+		if (name == null) {
 			GameServer.getChannel(channel).getEventManager().endScript(this, hooks);
-		else
+		} else {
 			GameServer.getChannel(channel).getEventManager().endScript(name);
+		}
 	}
 }

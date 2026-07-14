@@ -58,7 +58,7 @@ import org.apache.commons.configuration2.PropertiesConfiguration;
 public final class DatabaseManager {
 	public enum DatabaseType { STATE, WZ }
 
-	private final static Logger LOG = Logger.getLogger(DatabaseManager.class.getName());
+	private static final Logger LOG = Logger.getLogger(DatabaseManager.class.getName());
 
 	private static final Map<DatabaseType, ConnectionPool> connections;
 	private static String driver;

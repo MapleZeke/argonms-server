@@ -37,7 +37,7 @@ import java.lang.ref.WeakReference;
  *
  * @author GoldenKevin
  */
-public class MysticDoor extends AbstractEntity {
+public final class MysticDoor extends AbstractEntity {
 	public static final byte OUT_OF_TOWN_PORTAL_ID = (byte) 0x80;
 
 	public static final byte SPAWN_ANIMATION_FALL = 0;
@@ -157,8 +157,9 @@ public class MysticDoor extends AbstractEntity {
 			}
 		}
 		byte destinationPortal = destinationMap.getMysticDoorPortalId(partyPosition);
-		if (destinationPortal == -1)
+		if (destinationPortal == -1) {
 			return null;
+		}
 
 		final MysticDoor source = new MysticDoor(owner, sourceMap, position, OUT_OF_TOWN_PORTAL_ID);
 		final MysticDoor destination = new MysticDoor(owner, destinationMap, destinationMap.getPortalPosition(destinationPortal), destinationPortal);
@@ -197,11 +198,13 @@ public class MysticDoor extends AbstractEntity {
 	public static void close(GameCharacter owner) {
 		MysticDoor door = owner.getDoor();
 		PartyList party = owner.getParty();
-		if (door == null)
+		if (door == null) {
 			return;
+		}
 
-		if (!door.isInTown())
+		if (!door.isInTown()) {
 			door = door.pipe;
+		}
 		door.map.destroyEntity(door);
 		door.pipe.map.destroyEntity(door.pipe);
 		owner.setDoor(null);
@@ -214,16 +217,18 @@ public class MysticDoor extends AbstractEntity {
 				for (PartyList.LocalMember mem : party.getMembersInLocalChannel()) {
 					GameCharacter memPlayer = mem.getPlayer();
 					memPlayer.getClient().getSession().send(updatedParty);
-					if (memPlayer.getMapId() == door.getMapId())
+					if (memPlayer.getMapId() == door.getMapId()) {
 						memPlayer.getClient().getSession().send(destroyPacket);
+					}
 				}
 			} finally {
 				party.unlockRead();
 			}
 		} else {
 			owner.getClient().getSession().send(GamePackets.writeRemovePortal());
-			if (owner.getMapId() == door.getMapId())
+			if (owner.getMapId() == door.getMapId()) {
 				owner.getClient().getSession().send(destroyPacket);
+			}
 		}
 	}
 }

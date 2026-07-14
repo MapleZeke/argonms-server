@@ -46,8 +46,9 @@ public class PlayerContinuation extends AbstractPlayerContinuation {
 
 	public PlayerContinuation(GameCharacter p) {
 		super(p.activeItemsList(), p.activeSkillsList(), p.activeMobSkillsList(), p.getClient().getChannel(), p.getEnergyCharge());
-		if (p.getChatRoom() != null)
+		if (p.getChatRoom() != null) {
 			setChatroomId(p.getChatRoom().getRoomId());
+		}
 		activeSummons = p.getAllSummons();
 	}
 
@@ -104,7 +105,8 @@ public class PlayerContinuation extends AbstractPlayerContinuation {
 			p.resetEnergyCharge();
 			p.addToEnergyCharge(getEnergyCharge());
 		}
-		if (getChatroomId() != 0)
+		if (getChatroomId() != 0) {
 			GameServer.getChannel(p.getClient().getChannel()).getCrossServerInterface().sendChatroomPlayerChangedChannels(p, getChatroomId());
+		}
 	}
 }

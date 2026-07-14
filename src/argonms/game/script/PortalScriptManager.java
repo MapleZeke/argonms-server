@@ -39,7 +39,7 @@ import org.mozilla.javascript.Scriptable;
  *
  * @author GoldenKevin
  */
-public class PortalScriptManager {
+public final class PortalScriptManager {
 	private static final Logger LOG = Logger.getLogger(PortalScriptManager.class.getName());
 
 	private static PortalScriptManager singleton;
@@ -53,8 +53,9 @@ public class PortalScriptManager {
 	}
 
 	public boolean runScript(String scriptName, byte portalId, GameCharacter p) {
-		if (playersBeingFulfilled.putIfAbsent(Integer.valueOf(p.getId()), Boolean.TRUE) != null)
+		if (playersBeingFulfilled.putIfAbsent(Integer.valueOf(p.getId()), Boolean.TRUE) != null) {
 			return false;
+		}
 
 		Context cx = Context.enter();
 		try {

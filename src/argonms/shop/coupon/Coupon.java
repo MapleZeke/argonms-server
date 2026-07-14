@@ -113,8 +113,9 @@ public class Coupon {
 		CashShopDataLoader csdl = CashShopDataLoader.getInstance();
 		Commodity c;
 		for (Integer sn : items)
-			if ((c = csdl.getCommodity(sn.intValue())) != null)
+			if ((c = csdl.getCommodity(sn.intValue())) != null) {
 				instances.add(CashShopStaging.createItem(c, sn.intValue(), accountId, null));
+			}
 		return instances;
 	}
 

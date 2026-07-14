@@ -90,7 +90,8 @@ public class Guild extends IntraworldGroup<Guild.Member> {
 
 	public byte getLowestRank() {
 		byte i;
-		for (i = 5; i >= 4 && titles[i - 1].isEmpty(); --i);
+		for (i = 5; i >= 4 && titles[i - 1].isEmpty(); --i) {
+		}
 		return i;
 	}
 

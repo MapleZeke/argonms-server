@@ -76,16 +76,18 @@ public class EventManager {
 			event = new ScriptEvent(associateWithName ? scriptName : null, channel, delegator, globalScope);
 			delegator.setVariables(event.getVariables());
 
-			if (associateWithName && activatedEvents.putIfAbsent(scriptName, new Pair<ScriptEvent, EventManipulator>(event, delegator)) != null)
+			if (associateWithName && activatedEvents.putIfAbsent(scriptName, new Pair<ScriptEvent, EventManipulator>(event, delegator)) != null) {
 				return null;
+			}
 
 			globalScope.put("event", globalScope, Context.javaToJS(event, globalScope));
 			cx.evaluateReader(globalScope, reader, "events/" + scriptName + ".js", 1, null);
 			reader.close();
 
 			Object f = globalScope.get("init", globalScope);
-			if (f != Scriptable.NOT_FOUND)
-				((Function) f).call(cx, globalScope, globalScope, new Object[] { attachment });
+			if (f != Scriptable.NOT_FOUND) {
+				((Function) f).call(cx, globalScope, globalScope, new Object[]{attachment});
+			}
 		} catch (FileNotFoundException ex) {
 			LOG.log(Level.WARNING, "Missing event script {0}", scriptName);
 			return null;
@@ -105,8 +107,9 @@ public class EventManager {
 	 */
 	public ScriptEvent getRunningScript(String scriptName) {
 		Pair<ScriptEvent, EventManipulator> event = activatedEvents.get(scriptName);
-		if (event == null)
+		if (event == null) {
 			return null;
+		}
 
 		return event.left;
 	}
@@ -118,8 +121,9 @@ public class EventManager {
 	 */
 	public EventManipulator getScriptInterface(String scriptName) {
 		Pair<ScriptEvent, EventManipulator> event = activatedEvents.get(scriptName);
-		if (event == null)
+		if (event == null) {
 			return null;
+		}
 
 		return event.right;
 	}
@@ -136,8 +140,9 @@ public class EventManager {
 	 */
 	public void endScript(String scriptName) {
 		Pair<ScriptEvent, EventManipulator> event = activatedEvents.remove(scriptName);
-		if (event == null)
+		if (event == null) {
 			return;
+		}
 
 		endScript(event.left, event.right);
 	}

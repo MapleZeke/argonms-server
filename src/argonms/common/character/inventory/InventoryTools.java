@@ -82,36 +82,38 @@ public final class InventoryTools {
 		public static WeaponClass getForPlayer(Player p) {
 			WeaponClass wClass;
 			InventorySlot weapon = p.getInventory(InventoryType.EQUIPPED).get((short) -11);
-			if (weapon == null)
+			if (weapon == null) {
 				return null;
+			}
 			int itemId = weapon.getDataId();
-			if (itemId >= 1300000 && itemId < 1340000)
+			if (itemId >= 1300000 && itemId < 1340000) {
 				wClass = WeaponClass.ONE_HANDED_MELEE;
-			else if (itemId >= 1370000 && itemId < 1390000)
+			} else if (itemId >= 1370000 && itemId < 1390000) {
 				wClass = WeaponClass.WAND_STAFF;
-			else if (itemId >= 1400000 && itemId < 1430000)
+			} else if (itemId >= 1400000 && itemId < 1430000) {
 				wClass = WeaponClass.TWO_HANDED_MELEE;
-			else if (itemId >= 1430000 && itemId < 1450000)
+			} else if (itemId >= 1430000 && itemId < 1450000) {
 				wClass = WeaponClass.SPEAR_POLEARM;
-			else if (itemId >= 1450000 && itemId < 1460000)
+			} else if (itemId >= 1450000 && itemId < 1460000) {
 				wClass = WeaponClass.BOW;
-			else if (itemId >= 1460000 && itemId < 1470000)
+			} else if (itemId >= 1460000 && itemId < 1470000) {
 				wClass = WeaponClass.CROSSBOW;
-			else if (itemId >= 1470000 && itemId < 1480000)
+			} else if (itemId >= 1470000 && itemId < 1480000) {
 				wClass = WeaponClass.CLAW;
-			else if (itemId >= 1480000 && itemId < 1490000)
+			} else if (itemId >= 1480000 && itemId < 1490000) {
 				wClass = WeaponClass.KNUCKLE;
-			else if (itemId >= 1490000 && itemId < 1500000)
+			} else if (itemId >= 1490000 && itemId < 1500000) {
 				wClass = WeaponClass.GUN;
-			else
+			} else {
 				wClass = null;
+			}
 			return wClass;
 		}
 	}
 
 	private static final Logger LOG = Logger.getLogger(InventoryTools.class.getName());
 
-	private static Map<Integer, Equip> equipCache;
+	private static final Map<Integer, Equip> equipCache;
 
 	static {
 		equipCache = new HashMap<>();
@@ -124,36 +126,43 @@ public final class InventoryTools {
 	 * @return
 	 */
 	private static int ceil(int x, int y) {
-		if (x == 0)
+		if (x == 0) {
 			return 0;
+		}
 		return ((x - 1) / y) + 1;
 	}
 
 	public static int slotsNeeded(Inventory inv, int itemid, int remQty, boolean breakRechargeableStack) {
-		if (remQty <= 0)
+		if (remQty <= 0) {
 			return 0;
+		}
 
-		if (isRechargeable(itemid) && !breakRechargeableStack)
+		if (isRechargeable(itemid) && !breakRechargeableStack) {
 			//rechargeables can go beyond even a personal slot max (e.g. if
 			//the personal slot max of the giving player is higher than the
 			//receiving player because of higher claw/gun mastery for).
 			//the item will be stacked to the given quantity in one slot.
 			return 1;
+		}
 
-		if (isCashItem(itemid))
+		if (isCashItem(itemid)) {
 			return ceil(remQty, ItemDataLoader.getInstance().getSlotMax(itemid));
+		}
 
 		//TODO: use getPersonalSlotMax, but this is in argonms.common. X.X
 		short slotMax = ItemDataLoader.getInstance().getSlotMax(itemid);
 		for (Short s : inv.getItemSlots(itemid)) {
 			InventorySlot slot = inv.get(s.shortValue());
-			if (slot.getQuantity() < slotMax)
+			if (slot.getQuantity() < slotMax) {
 				remQty -= slotMax - slot.getQuantity();
-			if (remQty <= 0)
+			}
+			if (remQty <= 0) {
 				break;
+			}
 		}
-		if (remQty <= 0)
+		if (remQty <= 0) {
 			return 0;
+		}
 
 		return ((remQty - 1) / slotMax) + 1; //ceiling of (remQty / slotMax)
 	}
@@ -163,18 +172,21 @@ public final class InventoryTools {
 	}
 
 	public static int slotsFreed(Inventory inv, int itemid, int remQty) {
-		if (remQty <= 0)
+		if (remQty <= 0) {
 			return 0;
+		}
 
 		int slots = 0;
 		for (Short s : inv.getItemSlots(itemid)) {
 			InventorySlot slot = inv.get(s.shortValue());
 			remQty -= slot.getQuantity();
-			if (remQty < 0)
+			if (remQty < 0) {
 				break;
+			}
 			slots++;
-			if (remQty == 0)
+			if (remQty == 0) {
 				break;
+			}
 		}
 		return slots;
 	}
@@ -274,18 +286,21 @@ public final class InventoryTools {
 				if (!cashItem) {
 					for (Map.Entry<Short, InventorySlot> entry : slots.entrySet()) {
 						slotItem = entry.getValue();
-						if (slotItem.getDataId() != itemid)
+						if (slotItem.getDataId() != itemid) {
 							continue;
+						}
 						slotQty = slotItem.getQuantity();
 						qtyDelta = Math.min(slotMax - slotQty, quantity);
-						if (qtyDelta <= 0)
+						if (qtyDelta <= 0) {
 							continue;
+						}
 						quantity -= qtyDelta;
 						//assert (!equip && !pet);
 						slotItem.setQuantity((short) (slotQty + qtyDelta));
 						modifiedSlots.add(entry.getKey());
-						if (quantity == 0)
+						if (quantity == 0) {
 							break;
+						}
 					}
 				}
 				for (short i = 1; i <= invEnd && quantity != 0; i++) {
@@ -306,8 +321,9 @@ public final class InventoryTools {
 
 						qtyDelta = Math.min(slotMax, quantity);
 						quantity -= qtyDelta;
-						if (!equip && !pet)
+						if (!equip && !pet) {
 							item.setQuantity((short) qtyDelta);
+						}
 						insertedSlots.add(i);
 
 						assert (!cashItem || quantity == 0);
@@ -368,8 +384,9 @@ public final class InventoryTools {
 								slot = src; //overwrite our overall with the pants
 								removeOld = false;
 							} else { //we have top and pants equipped already
-								if (!canFitEntirely(equips, bottom.getDataId(), bottom.getQuantity(), true))
+								if (!canFitEntirely(equips, bottom.getDataId(), bottom.getQuantity(), true)) {
 									return null;
+								}
 								slot = equips.getFreeSlots(1).get(0);
 							}
 							unequip(equipped, equips, (short) -6, slot);
@@ -388,8 +405,9 @@ public final class InventoryTools {
 							slot = src; //overwrite our pants with the overall
 							removeOld = false;
 						} else { //we have overall and pants equipped already (impossible! O.O)
-							if (!canFitEntirely(equips, top.getDataId(), top.getQuantity(), true))
+							if (!canFitEntirely(equips, top.getDataId(), top.getQuantity(), true)) {
 								return null;
+							}
 							slot = equips.getFreeSlots(1).get(0);
 						}
 						unequip(equipped, equips, (short) -5, slot);
@@ -407,8 +425,9 @@ public final class InventoryTools {
 							slot = src; //overwrite our shield with two handed weapon
 							removeOld = false;
 						} else { //we have shield and two handed weapon equipped already (impossible! O.O)
-							if (!canFitEntirely(equips, weapon.getDataId(), weapon.getQuantity(), true))
+							if (!canFitEntirely(equips, weapon.getDataId(), weapon.getQuantity(), true)) {
 								return null;
+							}
 							slot = equips.getFreeSlots(1).get(0);
 						}
 						unequip(equipped, equips, (short) -11, slot);
@@ -427,8 +446,9 @@ public final class InventoryTools {
 								slot = src; //overwrite our weapon with the shield
 								removeOld = false;
 							} else { //we have weapon and shield equipped already
-								if (!canFitEntirely(equips, shield.getDataId(), shield.getQuantity(), true))
+								if (!canFitEntirely(equips, shield.getDataId(), shield.getQuantity(), true)) {
 									return null;
+								}
 								slot = equips.getFreeSlots(1).get(0);
 							}
 							unequip(equipped, equips, (short) -10, slot);
@@ -439,10 +459,11 @@ public final class InventoryTools {
 				break;
 			}
 		}
-		if (existing != null)
+		if (existing != null) {
 			equips.put(src, existing);
-		else if (removeOld)
+		} else if (removeOld) {
 			equips.remove(src);
+		}
 		equipped.put(dest, toEquip);
 		return otherChange;
 	}
@@ -475,8 +496,9 @@ public final class InventoryTools {
 				changed.add(slot);
 			}
 			quantity -= delta;
-			if (quantity == 0)
+			if (quantity == 0) {
 				break;
+			}
 		}
 		return new UpdatedSlots(changed, removed);
 	}
@@ -491,8 +513,9 @@ public final class InventoryTools {
 			UpdatedSlots updatedSlots = removeFromInventory(inv, itemId, quantity, false);
 			int end = getAmountOfItem(inv, itemId);
 			quantity -= start - end;
-			if (quantity > 0)
+			if (quantity > 0) {
 				updatedSlots.union(removeFromInventory(p.getInventory(InventoryType.EQUIPPED), itemId, quantity, false));
+			}
 			return updatedSlots;
 		}
 	}
@@ -513,8 +536,9 @@ public final class InventoryTools {
 	public static boolean unequip(Inventory equipped, Inventory equips, short src) {
 		synchronized(equips.getAll()) {
 			List<Short> freeSlots = equips.getFreeSlots(1);
-			if (freeSlots.isEmpty())
+			if (freeSlots.isEmpty()) {
 				return false;
+			}
 			unequip(equipped, equips, src, freeSlots.get(0));
 		}
 		return true;
@@ -529,33 +553,37 @@ public final class InventoryTools {
 
 	public static boolean hasItem(Player p, int itemId, int quantity) {
 		InventoryType type = getCategory(itemId);
-		if (type != InventoryType.EQUIP)
+		if (type != InventoryType.EQUIP) {
 			return p.getInventory(type).hasItem(itemId, quantity);
-		else
-			if (quantity == 0)
+		} else
+			if (quantity == 0) {
 				return p.getInventory(type).hasItem(itemId, quantity) && p.getInventory(InventoryType.EQUIPPED).hasItem(itemId, quantity);
-			else if (quantity > 0)
-				if (p.getInventory(InventoryType.EQUIPPED).hasItem(itemId, 1)) //assert that we can't equip two of the same items at once
-					if (quantity == 1)
+			} else if (quantity > 0) {
+				if (p.getInventory(InventoryType.EQUIPPED).hasItem(itemId, 1)) { //assert that we can't equip two of the same items at once
+					if (quantity == 1) {
 						return true;
-					else
+					} else {
 						return p.getInventory(type).hasItem(itemId, quantity - 1);
-				else
+					}
+				} else {
 					return p.getInventory(type).hasItem(itemId, quantity);
-			else
+				}
+			} else {
 				throw new IllegalArgumentException("Domain error. Quantity must be >= 0");
+			}
 	}
 
 	public static Equip getCleanEquip(int itemId) {
 		Integer oId = Integer.valueOf(itemId);
 		if (!equipCache.containsKey(oId)) {
 			Equip e;
-			if (isPartnerRing(itemId))
+			if (isPartnerRing(itemId)) {
 				e = new Ring(itemId);
-			else if (isMount(itemId))
+			} else if (isMount(itemId)) {
 				e = new TamingMob(itemId);
-			else
+			} else {
 				e = new Equip(itemId);
+			}
 			short[] statUps = ItemDataLoader.getInstance().getBonusStats(itemId);
 			e.setUpgradeSlots(ItemDataLoader.getInstance().getUpgradeSlots(itemId));
 			if (statUps != null) {
@@ -580,8 +608,9 @@ public final class InventoryTools {
 	}
 
 	private static short makeRandStat(short original, int maxDiff) {
-		if (original == 0)
+		if (original == 0) {
 			return 0;
+		}
 
 		//max difference allowed between clean stat and rand stat
 		maxDiff = Math.min((int) Math.ceil(original * 0.1), maxDiff);
@@ -619,10 +648,11 @@ public final class InventoryTools {
 					equip.setUpgradeSlots((byte) (equip.getUpgradeSlots() + 1));
 					result = 1;
 				} else {
-					if (itemData.makeCurseChanceResult(scrollItemId))
+					if (itemData.makeCurseChanceResult(scrollItemId)) {
 						result = -2;
-					else
+					} else {
 						result = 0;
+					}
 				}
 			} else {
 				result = -1;
@@ -634,40 +664,56 @@ public final class InventoryTools {
 
 					equip.setUpgradeSlots((byte) (equip.getUpgradeSlots() - 1));
 					equip.setLevel((byte) (equip.getLevel() + 1));
-					if (equip.getStr() != 0)
+					if (equip.getStr() != 0) {
 						equip.setStr((short) Math.max(equip.getStr() + r.nextInt(11) - 5, 0));
-					if (equip.getDex() != 0)
+					}
+					if (equip.getDex() != 0) {
 						equip.setDex((short) Math.max(equip.getDex() + r.nextInt(11) - 5, 0));
-					if (equip.getInt() != 0)
+					}
+					if (equip.getInt() != 0) {
 						equip.setInt((short) Math.max(equip.getInt() + r.nextInt(11) - 5, 0));
-					if (equip.getLuk() != 0)
+					}
+					if (equip.getLuk() != 0) {
 						equip.setLuk((short) Math.max(equip.getLuk() + r.nextInt(11) - 5, 0));
-					if (equip.getHp() != 0)
+					}
+					if (equip.getHp() != 0) {
 						equip.setHp((short) Math.max(equip.getHp() + r.nextInt(11) - 5, 0));
-					if (equip.getMp() != 0)
+					}
+					if (equip.getMp() != 0) {
 						equip.setMp((short) Math.max(equip.getMp() + r.nextInt(11) - 5, 0));
-					if (equip.getWatk() != 0)
+					}
+					if (equip.getWatk() != 0) {
 						equip.setWatk((short) Math.max(equip.getWatk() + r.nextInt(11) - 5, 0));
-					if (equip.getMatk() != 0)
+					}
+					if (equip.getMatk() != 0) {
 						equip.setMatk((short) Math.max(equip.getMatk() + r.nextInt(11) - 5, 0));
-					if (equip.getWdef() != 0)
+					}
+					if (equip.getWdef() != 0) {
 						equip.setWdef((short) Math.max(equip.getWdef() + r.nextInt(11) - 5, 0));
-					if (equip.getMdef() != 0)
+					}
+					if (equip.getMdef() != 0) {
 						equip.setMdef((short) Math.max(equip.getMdef() + r.nextInt(11) - 5, 0));
-					if (equip.getAcc() != 0)
+					}
+					if (equip.getAcc() != 0) {
 						equip.setAcc((short) Math.max(equip.getAcc() + r.nextInt(11) - 5, 0));
-					if (equip.getAvoid() != 0)
+					}
+					if (equip.getAvoid() != 0) {
 						equip.setAvoid((short) Math.max(equip.getAvoid() + r.nextInt(11) - 5, 0));
-					if (equip.getHands() != 0)
+					}
+					if (equip.getHands() != 0) {
 						equip.setHands((short) Math.max(equip.getHands() + r.nextInt(11) - 5, 0));
-					if (equip.getSpeed() != 0)
+					}
+					if (equip.getSpeed() != 0) {
 						equip.setSpeed((short) Math.max(equip.getSpeed() + r.nextInt(11) - 5, 0));
-					if (equip.getJump() != 0)
+					}
+					if (equip.getJump() != 0) {
 						equip.setJump((short) Math.max(equip.getJump() + r.nextInt(11) - 5, 0));
+					}
 					result = 1;
 				} else {
-					if (!useWhiteScroll)
+					if (!useWhiteScroll) {
 						equip.setUpgradeSlots((byte) (equip.getUpgradeSlots() - 1));
+					}
 					result = 0;
 				}
 			} else {
@@ -712,8 +758,9 @@ public final class InventoryTools {
 					if (itemData.makeCurseChanceResult(scrollItemId)) {
 						result = -2;
 					} else {
-						if (!useWhiteScroll)
+						if (!useWhiteScroll) {
 							equip.setUpgradeSlots((byte) (equip.getUpgradeSlots() - 1));
+						}
 						result = 0;
 					}
 				}
@@ -765,8 +812,9 @@ public final class InventoryTools {
 	}
 
 	public static boolean isCashItem(int itemId) {
-		if (isEquip(itemId))
+		if (isEquip(itemId)) {
 			return ItemDataLoader.getInstance().isCashEquip(itemId);
+		}
 		return itemId >= 5000000 && itemId < 6000000;
 	}
 
@@ -881,10 +929,11 @@ public final class InventoryTools {
 			case 4:
 				return "Etc";
 			case 5:
-				if (itemid >= 5000000 && itemid <= 5000100)
+				if (itemid >= 5000000 && itemid <= 5000100) {
 					return "Pet";
-				else
+				} else {
 					return "Cash";
+				}
 			default:
 				return null;
 		}
@@ -954,21 +1003,21 @@ public final class InventoryTools {
 	}
 
 	public static byte getDayByteFromString(String str) {
-		if (str.equals("SUN")) {
+		if ("SUN".equals(str)) {
 			return Calendar.SUNDAY;
-		} else if (str.equals("MON")) {
+		} else if ("MON".equals(str)) {
 			return Calendar.MONDAY;
-		} else if (str.equals("TUE")) {
+		} else if ("TUE".equals(str)) {
 			return Calendar.TUESDAY;
-		} else if (str.equals("WED")) {
+		} else if ("WED".equals(str)) {
 			return Calendar.WEDNESDAY;
-		} else if (str.equals("THU")) {
+		} else if ("THU".equals(str)) {
 			return Calendar.THURSDAY;
-		} else if (str.equals("FRI")) {
+		} else if ("FRI".equals(str)) {
 			return Calendar.FRIDAY;
-		} else if (str.equals("SAT")) {
+		} else if ("SAT".equals(str)) {
 			return Calendar.SATURDAY;
-		} else if (str.equals("HOL")) {
+		} else if ("HOL".equals(str)) {
 			return 8;
 		} else {
 			return 0;

@@ -35,7 +35,7 @@ public final class Rng {
 	//make this ThreadLocal to improve performance.
 	//In addition, in section 15.3 of Java Concurrency in Practice, the graphs
 	//clearly show the increased throughput of ThreadLocal RNGs.
-	private final static ThreadLocal<Random> GENERATOR;
+	private static final ThreadLocal<Random> GENERATOR;
 
 	static {
 		GENERATOR = new ThreadLocal<>() {

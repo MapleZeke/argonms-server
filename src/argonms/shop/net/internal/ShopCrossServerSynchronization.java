@@ -95,8 +95,9 @@ public class ShopCrossServerSynchronization {
 			Map<Byte, ShopChannelSynchronization> worldChannels = allChannels.get(Byte.valueOf(world));
 			if (worldChannels != null) {
 				worldChannels.keySet().removeAll(channels);
-				if (worldChannels.isEmpty())
+				if (worldChannels.isEmpty()) {
 					intraworldGroups.remove(Byte.valueOf(world));
+				}
 			}
 		} finally {
 			unlockWrite();
@@ -109,8 +110,9 @@ public class ShopCrossServerSynchronization {
 			Map<Byte, ShopChannelSynchronization> worldChannels = allChannels.get(Byte.valueOf(world));
 			if (worldChannels != null) {
 				ShopChannelSynchronization cpccs = worldChannels.get(Byte.valueOf(channel));
-				if (cpccs != null)
+				if (cpccs != null) {
 					cpccs.setPort(port);
+				}
 			}
 		} finally {
 			unlockWrite();
@@ -149,13 +151,15 @@ public class ShopCrossServerSynchronization {
 
 	public void sendBuddyLogInNotifications(ShopCharacter p) {
 		Collection<BuddyListEntry> buddies = p.getBuddyList().getBuddies();
-		if (buddies.isEmpty())
+		if (buddies.isEmpty()) {
 			return;
+		}
 		int[] recipients = new int[buddies.size()];
 		int i = 0;
 		for (BuddyListEntry buddy : buddies)
-			if (buddy.getStatus() == BuddyListEntry.STATUS_MUTUAL)
+			if (buddy.getStatus() == BuddyListEntry.STATUS_MUTUAL) {
 				recipients[i++] = buddy.getId();
+			}
 		if (recipients.length != i) {
 			//just trim recipients of extra 0s
 			int[] temp = new int[i];
@@ -174,13 +178,15 @@ public class ShopCrossServerSynchronization {
 
 	public void sendBuddyLogOffNotifications(ShopCharacter p) {
 		Collection<BuddyListEntry> buddies = p.getBuddyList().getBuddies();
-		if (buddies.isEmpty())
+		if (buddies.isEmpty()) {
 			return;
+		}
 		int[] recipients = new int[buddies.size()];
 		int i = 0;
 		for (BuddyListEntry buddy : buddies)
-			if (buddy.getStatus() == BuddyListEntry.STATUS_MUTUAL)
+			if (buddy.getStatus() == BuddyListEntry.STATUS_MUTUAL) {
 				recipients[i++] = buddy.getId();
+			}
 		lockRead();
 		try {
 			for (ShopChannelSynchronization scs : allChannels.get(Byte.valueOf(p.getClient().getWorld())).values())

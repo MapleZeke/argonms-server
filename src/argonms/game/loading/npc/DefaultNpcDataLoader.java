@@ -75,8 +75,9 @@ public class DefaultNpcDataLoader extends NpcDataLoader {
 			ps = con.prepareStatement("SELECT `script` FROM `npcscriptnames` WHERE `npcid` = ?");
 			ps.setInt(1, npcId);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				scriptNames.put(Integer.valueOf(npcId), rs.getString(1));
+			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not read script name for NPC " + npcId, e);
 		} finally {

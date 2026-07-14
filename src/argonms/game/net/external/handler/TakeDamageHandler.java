@@ -55,8 +55,9 @@ public final class TakeDamageHandler {
 		byte attack = packet.readByte();
 		/*byte elem = */packet.readByte();
 		int damage = packet.readInt();
-		if (damage != 0)
+		if (damage != 0) {
 			CheatTracker.get(gc).logTime("hpr", System.currentTimeMillis() + 5000);
+		}
 
 		int mobid = 0;
 		int ent = 0;
@@ -99,21 +100,19 @@ public final class TakeDamageHandler {
 					pgmr.setPosition(packet.readPos());
 					pgmr.setDamage(damage);
 					int hurtDmg = damage * reduction / 100;
-					if (pgmr.isPhysical())
+					if (pgmr.isPhysical()) {
 						damage = damage - hurtDmg;
-					switch (pgmr.getSkill()) {
-						case 0:
-							if (!p.isEffectActive(PlayerStatusEffect.MANA_REFLECTION)) {
-								CheatTracker.get(gc).suspicious(CheatTracker.Infraction.POSSIBLE_PACKET_EDITING, "Tried to power guard without having mana reflection cast");
-								return;
-							}
-							break;
-						case 6:
-							if (!p.isEffectActive(PlayerStatusEffect.POWER_GUARD)) {
-								CheatTracker.get(gc).suspicious(CheatTracker.Infraction.POSSIBLE_PACKET_EDITING, "Tried to power guard without having power guard cast");
-								return;
-							}
-							break;
+					}
+					if (pgmr.getSkill() == 0) {
+						if (!p.isEffectActive(PlayerStatusEffect.MANA_REFLECTION)) {
+							CheatTracker.get(gc).suspicious(CheatTracker.Infraction.POSSIBLE_PACKET_EDITING, "Tried to power guard without having mana reflection cast");
+							return;
+						}
+					} else if (pgmr.getSkill() == 6) {
+						if (!p.isEffectActive(PlayerStatusEffect.POWER_GUARD)) {
+							CheatTracker.get(gc).suspicious(CheatTracker.Infraction.POSSIBLE_PACKET_EDITING, "Tried to power guard without having power guard cast");
+							return;
+						}
 					}
 					m.hurt(p, hurtDmg);
 					p.getMap().sendToAll(writeHurtMonster(m, hurtDmg, false));
@@ -126,8 +125,9 @@ public final class TakeDamageHandler {
 			}
 		}
 
-		if (diseaseSkill > 0)
+		if (diseaseSkill > 0) {
 			DiseaseTools.applyDebuff(p, diseaseSkill, diseaseLevel);
+		}
 
 		if (damage == -1) {
 			switch (p.getJob()) {
@@ -181,15 +181,17 @@ public final class TakeDamageHandler {
 				hpBurn += mpOverage;
 			}
 			p.gainHp(-hpBurn);
-			if (mpBurn > 0)
+			if (mpBurn > 0) {
 				p.gainMp(-mpBurn);
+			}
 			//TODO: morph dispel, battleship hurt...
 		} else {
 			p.setHp((short) 1);
 			p.setMp((short) 1);
 		}
-		if (p.isVisible())
+		if (p.isVisible()) {
 			p.getMap().sendToAll(writeHurtPlayer(p, attack, damage, pgmr, mobid, direction, stance, noDamageId), p);
+		}
 	}
 
 	public static void handlePuppetTakeDamage(LittleEndianReader packet, GameClient gc) {
@@ -204,8 +206,9 @@ public final class TakeDamageHandler {
 		PlayerSkillSummon puppet = p.getSummonBySkill(skillId);*/
 		PlayerSkillSummon puppet = (PlayerSkillSummon) p.getMap().getEntityById(EntityType.SUMMON, summonEntId);
 		int skillId = puppet.getSkillId();
-		if (puppet.hurt(damage)) //died
+		if (puppet.hurt(damage)) { //died
 			SkillTools.cancelBuffSkill(p, skillId);
+		}
 		p.getMap().sendToAll(writeHurtPuppet(p, puppet, misc, damage, mobEid));
 	}
 
@@ -222,8 +225,9 @@ public final class TakeDamageHandler {
 			//TODO: Fix formula
 			int damage = attacker.getLevel() * Rng.getGenerator().nextInt(100) / 10;
 			p.getMap().damageMonster(null, attacked, damage);
-			if (p.getEvent() != null)
+			if (p.getEvent() != null) {
 				p.getEvent().friendlyMobHurt(attacked, p.getMapId());
+			}
 			p.getMap().sendToAll(writeHurtMonster(attacked, damage, true));
 		}
 	}
@@ -258,8 +262,9 @@ public final class TakeDamageHandler {
 			}
 			lew.writeByte(stance);
 			lew.writeInt(damage);
-			if (noDamageSkill > 0)
+			if (noDamageSkill > 0) {
 				lew.writeInt(noDamageSkill);
+			}
 		} else { //repetitive much?
 			lew.writeInt(damage);
 			lew.writeInt(damage);

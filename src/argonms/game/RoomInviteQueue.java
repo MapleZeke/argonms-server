@@ -68,8 +68,9 @@ public final class RoomInviteQueue {
 
 	public void processQueuedTradeInvites(GameCharacter sender, Trade room) {
 		Integer recipient = queuedTrades.remove(Integer.valueOf(sender.getId()));
-		if (recipient != null)
+		if (recipient != null) {
 			inviteToTrade(sender, recipient.intValue(), room);
+		}
 	}
 
 	public void cancelAll(GameCharacter p) {
@@ -89,7 +90,8 @@ public final class RoomInviteQueue {
 
 	public void processQueuedChatInvites(GameCharacter sender, Chatroom room) {
 		String recipient = queuedChats.remove(Integer.valueOf(sender.getId()));
-		if (recipient != null)
+		if (recipient != null) {
 			inviteToChat(sender, recipient, room);
+		}
 	}
 }

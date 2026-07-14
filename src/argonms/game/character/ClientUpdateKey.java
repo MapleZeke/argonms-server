@@ -59,8 +59,9 @@ public enum ClientUpdateKey {
 	public static Set<ClientUpdateKey> valueOf(int mask) {
 		EnumSet<ClientUpdateKey> included = EnumSet.noneOf(ClientUpdateKey.class);
 		for (ClientUpdateKey key : values())
-			if ((mask & key.intValue()) == key.intValue())
+			if ((mask & key.intValue()) == key.intValue()) {
 				included.add(key);
+			}
 		return included;
 	}
 }

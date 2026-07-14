@@ -64,8 +64,9 @@ public abstract class Minigame extends Miniroom {
 	public void leaveRoom(GameCharacter p) {
 		byte pos = positionOf(p);
 		exitAfterFinish[pos] = false;
-		if (inProgress)
+		if (inProgress) {
 			endGame(MinigameResult.LOSS, (byte) ((pos + 1) % 2));
+		}
 		super.leaveRoom(p);
 	}
 
@@ -135,8 +136,9 @@ public abstract class Minigame extends Miniroom {
 		lew.writeShort(ClientSendOps.MINIROOM_ACT);
 		lew.writeByte(ACT_FINISH_GAME);
 		lew.writeByte(result.byteValue());
-		if (result != MinigameResult.TIE)
+		if (result != MinigameResult.TIE) {
 			lew.writeByte(winnerPos);
+		}
 		writeMinigameScores(lew, getPlayerByPosition((byte) 0), getMiniroomType());
 		writeMinigameScores(lew, getPlayerByPosition((byte) 1), getMiniroomType());
 		return lew.getBytes();
@@ -153,9 +155,11 @@ public abstract class Minigame extends Miniroom {
 		lew.writeByte(getMaxPlayers());
 		lew.writeByte(positionOf(p));
 
-		for (byte i = 0; i < getMaxPlayers(); i++)
-			if ((v = getPlayerByPosition(i)) != null)
+		for (byte i = 0; i < getMaxPlayers(); i++) {
+			if ((v = getPlayerByPosition(i)) != null) {
 				writeMiniroomAvatar(lew, v, i);
+			}
+		}
 		lew.writeByte((byte) 0xFF);
 
 		for (byte i = 0; i < getMaxPlayers(); i++) {
@@ -198,8 +202,9 @@ public abstract class Minigame extends Miniroom {
 		}
 
 		private MoveResult getResult(int x, int y, byte playerNum) {
-			if (board[x][y] != 0)
+			if (board[x][y] != 0) {
 				return MoveResult.OCCUPIED;
+			}
 
 			int horizontal = 1;
 			int vertical = 1;
@@ -208,42 +213,56 @@ public abstract class Minigame extends Miniroom {
 			int nextX;
 			int nextY;
 
-			for (nextX = x + 1; nextX < COLUMNS && board[nextX][y] == playerNum; nextX++)
+			for (nextX = x + 1; nextX < COLUMNS && board[nextX][y] == playerNum; nextX++) {
 				horizontal++;
-			for (nextX = x - 1; nextX >= 0 && board[nextX][y] == playerNum; nextX--)
+			}
+			for (nextX = x - 1; nextX >= 0 && board[nextX][y] == playerNum; nextX--) {
 				horizontal++;
+			}
 
-			for (nextY = y + 1; nextY < ROWS && board[x][nextY] == playerNum; nextY++)
+			for (nextY = y + 1; nextY < ROWS && board[x][nextY] == playerNum; nextY++) {
 				vertical++;
-			for (nextY = y - 1; nextY >= 0 && board[x][nextY] == playerNum; nextY--)
+			}
+			for (nextY = y - 1; nextY >= 0 && board[x][nextY] == playerNum; nextY--) {
 				vertical++;
+			}
 
-			for (nextX = x + 1, nextY = y + 1; nextX < COLUMNS && nextY < ROWS && board[nextX][nextY] == playerNum; nextX++, nextY++)
+			for (nextX = x + 1, nextY = y + 1; nextX < COLUMNS && nextY < ROWS && board[nextX][nextY] == playerNum; nextX++, nextY++) {
 				mainDiagonal++;
-			for (nextX = x - 1, nextY = y - 1; nextX >= 0 && nextY >= 0 && board[nextX][nextY] == playerNum; nextX--, nextY--)
+			}
+			for (nextX = x - 1, nextY = y - 1; nextX >= 0 && nextY >= 0 && board[nextX][nextY] == playerNum; nextX--, nextY--) {
 				mainDiagonal++;
+			}
 
-			for (nextX = x + 1, nextY = y - 1; nextX < COLUMNS && nextY >= 0 && board[nextX][nextY] == playerNum; nextX++, nextY--)
+			for (nextX = x + 1, nextY = y - 1; nextX < COLUMNS && nextY >= 0 && board[nextX][nextY] == playerNum; nextX++, nextY--) {
 				antiDiagonal++;
-			for (nextX = x - 1, nextY = y + 1; nextX >= 0 && nextY < ROWS && board[nextX][nextY] == playerNum; nextX--, nextY++)
+			}
+			for (nextX = x - 1, nextY = y + 1; nextX >= 0 && nextY < ROWS && board[nextX][nextY] == playerNum; nextX--, nextY++) {
 				antiDiagonal++;
+			}
 
-			if (horizontal > 5 || vertical > 5 || mainDiagonal > 5 || antiDiagonal > 5)
+			if (horizontal > 5 || vertical > 5 || mainDiagonal > 5 || antiDiagonal > 5) {
 				return MoveResult.OVERLINE;
+			}
 			if (horizontal == 3 && (vertical == 3 || mainDiagonal == 3 || antiDiagonal == 3)
-					|| vertical == 3 && (mainDiagonal == 3 || antiDiagonal == 3)
-					|| mainDiagonal == 3 && antiDiagonal == 3)
+				|| vertical == 3 && (mainDiagonal == 3 || antiDiagonal == 3)
+				|| mainDiagonal == 3 && antiDiagonal == 3) {
 				return MoveResult.DOUBLE_THREES;
+			}
 
 			lastLastMove = lastMove;
 			lastMove = new int[] { x, y };
 			board[x][y] = playerNum;
-			if (horizontal == 5 || vertical == 5 || mainDiagonal == 5 || antiDiagonal == 5)
+			if (horizontal == 5 || vertical == 5 || mainDiagonal == 5 || antiDiagonal == 5) {
 				return MoveResult.MOVE_AND_WIN;
-			for (int i = 0; i < COLUMNS; i++)
-				for (int j = 0; j < ROWS; j++)
-					if (board[i][j] == 0)
+			}
+			for (int i = 0; i < COLUMNS; i++) {
+				for (int j = 0; j < ROWS; j++) {
+					if (board[i][j] == 0) {
 						return MoveResult.MOVE;
+					}
+				}
+			}
 			return MoveResult.MOVE_AND_TIE;
 		}
 
@@ -281,8 +300,9 @@ public abstract class Minigame extends Miniroom {
 			if (agree) {
 				byte amountToRemove = (byte) (pos == 0 ^ currentPos == 0 ? 2 : 1);
 				board[lastMove[0]][lastMove[1]] = 0;
-				if (amountToRemove == 2)
+				if (amountToRemove == 2) {
 					board[lastLastMove[0]][lastLastMove[1]] = 0;
+				}
 				sendToAll(writeRedoAccept(amountToRemove, opponentPos));
 			} else {
 				getPlayerByPosition(opponentPos).getClient().getSession().send(writeRedoDecline());
@@ -296,9 +316,11 @@ public abstract class Minigame extends Miniroom {
 
 		@Override
 		protected void reset() {
-			for (int i = 0; i < COLUMNS; i++)
-				for (int j = 0; j < ROWS; j++)
+			for (int i = 0; i < COLUMNS; i++) {
+				for (int j = 0; j < ROWS; j++) {
 					board[i][j] = 0;
+				}
+			}
 		}
 
 		@Override
@@ -372,8 +394,9 @@ public abstract class Minigame extends Miniroom {
 					break;
 			}
 			cards = new int[matchesCount * 2];
-			for (int i = 0; i < matchesCount; i++)
+			for (int i = 0; i < matchesCount; i++) {
 				cards[i] = cards[i + matchesCount] = i;
+			}
 			matches = new int[2];
 		}
 
@@ -399,8 +422,9 @@ public abstract class Minigame extends Miniroom {
 				} else {
 					sendToAll(writeSecondSelect(firstSelect, card, currentPos == 0 ? MOVE_RESULT_OWNER_MATCH : MOVE_RESULT_VISITOR_MATCH));
 					matches[currentPos]++;
-					if (matches[0] + matches[1] == cards.length / 2)
+					if (matches[0] + matches[1] == cards.length / 2) {
 						endGame(matches[0] != matches[1] ? MinigameResult.WIN : MinigameResult.TIE, (byte) (matches[0] > matches[1] ? 0 : 1));
+					}
 				}
 			}
 		}
@@ -423,8 +447,9 @@ public abstract class Minigame extends Miniroom {
 			lew.writeByte(ACT_START);
 			lew.writeBool(ownerMovesFirst);
 			lew.writeByte((byte) cards.length);
-			for (int i = 0; i < cards.length; i++)
+			for (int i = 0; i < cards.length; i++) {
 				lew.writeInt(cards[i]);
+			}
 			return lew.getBytes();
 		}
 

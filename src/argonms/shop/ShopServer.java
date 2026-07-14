@@ -70,7 +70,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
  *
  * @author GoldenKevin
  */
-public class ShopServer implements LocalServer {
+public final class ShopServer implements LocalServer {
 	private static final Logger LOG = Logger.getLogger(ShopServer.class.getName());
 	private static final int CHANNEL_CHANGE_TIMEOUT = 2000;
 
@@ -110,11 +110,13 @@ public class ShopServer implements LocalServer {
 		while (scan.hasNext()) {
 			String line = scan.nextLine();
 			int comment = line.indexOf('#');
-			if (comment != -1)
+			if (comment != -1) {
 				line = line.substring(0, comment);
+			}
 			line = line.trim();
-			if (!line.isEmpty())
+			if (!line.isEmpty()) {
 				blockedSerials.add(Integer.valueOf(Integer.parseInt(line)));
+			}
 		}
 	}
 
@@ -200,8 +202,9 @@ public class ShopServer implements LocalServer {
 							System.exit(3);
 							return;
 						}
-						if (realGameVersion != GlobalConstants.MAPLE_VERSION) //carry on despite the warning...
-							LOG.log(Level.WARNING, "Your copy of MCDB is based on an incongruent version of the WZ files. ArgonMS: {0} MCDB: {1}", new Object[] { GlobalConstants.MAPLE_VERSION, realGameVersion });
+						if (realGameVersion != GlobalConstants.MAPLE_VERSION) { //carry on despite the warning...
+							LOG.log(Level.WARNING, "Your copy of MCDB is based on an incongruent version of the WZ files. ArgonMS: {0} MCDB: {1}", new Object[]{GlobalConstants.MAPLE_VERSION, realGameVersion});
+						}
 					}
 				} finally {
 					DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
@@ -225,8 +228,9 @@ public class ShopServer implements LocalServer {
 			System.exit(3);
 			return;
 		} finally {
-			if (scan != null)
+			if (scan != null) {
 				scan.close();
+			}
 		}
 
 		Scheduler.enable(true, true);
@@ -318,8 +322,9 @@ public class ShopServer implements LocalServer {
 		Byte oW = Byte.valueOf(world);
 		ShopWorld w = onlineWorlds.get(oW);
 		worldComm.removeChannels(world, w.removeGameServer(serverId));
-		if (w.getChannelCount() == 0)
+		if (w.getChannelCount() == 0) {
 			onlineWorlds.remove(oW);
+		}
 	}
 
 	/**

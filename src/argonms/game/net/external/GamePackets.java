@@ -127,8 +127,9 @@ public final class GamePackets {
 					break;
 				case PET: { //TODO: there's no reason why one update key should have three bits set. figure out what each bit means?
 					Pet[] pets = (Pet[]) statupdate.getValue();
-					for (int i = 0; i < 3; i++)
+					for (int i = 0; i < 3; i++) {
 						lew.writeLong(pets[i] == null ? 0 : pets[i].getUniqueId());
+					}
 					lew.writeByte((byte) 0);
 					break;
 				}
@@ -260,12 +261,14 @@ public final class GamePackets {
 		Ring friendshipRing = null;
 		synchronized(equippedInv) {
 			for (InventorySlot item : equippedInv.values())
-				if (item.getType() == ItemType.RING)
-					if (InventoryTools.isCoupleRing(item.getDataId()))
+				if (item.getType() == ItemType.RING) {
+					if (InventoryTools.isCoupleRing(item.getDataId())) {
 						coupleRing = (Ring) item;
-					else if (InventoryTools.isFriendshipRing(item.getDataId()))
+					} else if (InventoryTools.isFriendshipRing(item.getDataId())) {
 						friendshipRing = (Ring) item;
-					else if (InventoryTools.isWeddingRing(item.getDataId())){}
+					} else if (InventoryTools.isWeddingRing(item.getDataId())) {
+					}
+				}
 		}
 		if (coupleRing != null) {
 			lew.writeByte((byte) 1);
@@ -315,10 +318,12 @@ public final class GamePackets {
 		lew.writeInt(p.getId());
 		lew.writeByte(effectType);
 		lew.writeInt(skillId);
-		if (skillLevel != -1)
+		if (skillLevel != -1) {
 			lew.writeByte(skillLevel);
-		if (direction != -1)
+		}
+		if (direction != -1) {
 			lew.writeByte(direction);
+		}
 
 		return lew.getBytes();
 	}
@@ -355,8 +360,9 @@ public final class GamePackets {
 		lew.writeLong(updateMask);
 		for (Entry<PlayerStatusEffect, Short> statupdate : stats.entrySet()) {
 			lew.writeShort(statupdate.getValue().shortValue());
-			if (statupdate.getKey() == PlayerStatusEffect.MORPH)
+			if (statupdate.getKey() == PlayerStatusEffect.MORPH) {
 				lew.writeByte((byte) 0);
+			}
 		}
 		lew.writeByte((byte) 0);
 		lew.writeShort((short) 0);
@@ -440,8 +446,9 @@ public final class GamePackets {
 		lew.writeLong(0);
 		lew.writeLong(updateMask);
 		for (Entry<PlayerStatusEffect, Short> statupdate : stats.entrySet()) {
-			if (statupdate.getKey() == PlayerStatusEffect.POISON)
+			if (statupdate.getKey() == PlayerStatusEffect.POISON) {
 				lew.writeShort(statupdate.getValue().shortValue());
+			}
 			lew.writeShort(skillId);
 			lew.writeShort(skillLevel);
 		}
@@ -569,8 +576,9 @@ public final class GamePackets {
 		lew.writeByte((byte) 0);
 		lew.writeShort((short) 0);
 		lew.writeLong(0);
-		if (fromQuest)
+		if (fromQuest) {
 			lew.writeByte((byte) 0);
+		}
 
 		return lew.getBytes();
 	}
@@ -639,8 +647,9 @@ public final class GamePackets {
 		lew.writeByte(effectType);
 		lew.writeInt(skillId);
 		lew.writeByte(skillLevel);
-		if (direction != -1)
+		if (direction != -1) {
 			lew.writeByte(direction);
+		}
 
 		return lew.getBytes();
 	}
@@ -744,8 +753,9 @@ public final class GamePackets {
 		switch (key) {
 			case SPEED:
 				if (v.getSourceType() == StatusEffectsData.EffectSource.PLAYER_SKILL &&
-						(v.getSource() == Skills.SIN_HASTE || v.getSource() == Skills.DIT_HASTE || v.getSource() == Skills.GM_HASTE || v.getSource() == Skills.SUPER_GM_HASTE))
+					(v.getSource() == Skills.SIN_HASTE || v.getSource() == Skills.DIT_HASTE || v.getSource() == Skills.GM_HASTE || v.getSource() == Skills.SUPER_GM_HASTE)) {
 					break;
+				}
 				//fallthrough for non-haste sources
 			case COMBO:
 			case JUMP:
@@ -812,8 +822,9 @@ public final class GamePackets {
 		lew.writeByte((byte) bList.getBuddies().size());
 		for (BuddyListEntry buddy : bList.getBuddies())
 			writeBuddyListEntry(lew, buddy);
-		for (int i = 0; i < bList.getCapacity(); i++)
+		for (int i = 0; i < bList.getCapacity(); i++) {
 			lew.writeInt(0);
+		}
 
 		return lew.getBytes();
 	}
@@ -915,8 +926,9 @@ public final class GamePackets {
 			lew.writeInt(GlobalConstants.NULL_MAP);
 			lew.writeInt(0);
 		} else {
-			if (!leaderDoor.isInTown())
+			if (!leaderDoor.isInTown()) {
 				leaderDoor = leaderDoor.getComplement();
+			}
 			lew.writeInt(leaderDoor.getMapId());
 			lew.writeInt(leaderDoor.getComplement().getMapId());
 			lew.writePos(leaderDoor.getComplement().getPosition());
@@ -1048,8 +1060,9 @@ public final class GamePackets {
 		lew.writeBool(true);
 		lew.writeInt(guild.getId());
 		lew.writeLengthPrefixedString(guild.getName());
-		for (byte i = 0; i < 5; i++)
+		for (byte i = 0; i < 5; i++) {
 			lew.writeLengthPrefixedString(guild.getTitle(i));
+		}
 
 		GuildList.Member[] members = guild.getAllMembers();
 		lew.writeByte((byte) members.length);
@@ -1157,8 +1170,9 @@ public final class GamePackets {
 		lew.writeShort(ClientSendOps.GUILD_LIST);
 		lew.writeByte(GuildListHandler.RANK_TITLES_CHANGED);
 		lew.writeInt(guild.getId());
-		for (byte i = 0; i < 5; i++)
+		for (byte i = 0; i < 5; i++) {
 			lew.writeLengthPrefixedString(guild.getTitle(i));
+		}
 
 		return lew.getBytes();
 	}
@@ -1304,9 +1318,10 @@ public final class GamePackets {
 			@Override
 			public int compare(PlayerStatusEffect k1, PlayerStatusEffect k2) {
 				int diff = k1.getValueOrder() - k2.getValueOrder();
-				if (diff == 0) //if k1 and k2 share the same value order
+				if (diff == 0) { //if k1 and k2 share the same value order
 					//sort by enum order (which should be smallest to biggest)
 					diff = k1.compareTo(k2); //also equivalent to ((int) (k1.longValue() - k2.longValue()))
+				}
 				return diff;
 			}
 		});
@@ -1324,14 +1339,14 @@ public final class GamePackets {
 		lew.writeByte((byte) 0);
 		lew.writeInt(0);
 
-		int CHAR_MAGIC_SPAWN = Rng.getGenerator().nextInt();
-		lew.writeInt(CHAR_MAGIC_SPAWN);
+		int charMagicSpawn = Rng.getGenerator().nextInt();
+		lew.writeInt(charMagicSpawn);
 		lew.writeShort((short) 0);
 		lew.writeLong(0);
-		lew.writeInt(CHAR_MAGIC_SPAWN);
+		lew.writeInt(charMagicSpawn);
 		lew.writeShort((short) 0);
 		lew.writeLong(0);
-		lew.writeInt(CHAR_MAGIC_SPAWN);
+		lew.writeInt(charMagicSpawn);
 		lew.writeShort((short) 0);
 		//TODO: should we only check if a player has an equipped
 		//mount, and not if they have monster riding on?
@@ -1344,20 +1359,20 @@ public final class GamePackets {
 			} else {*/
 				lew.writeInt(1932000);
 				lew.writeInt(5221006);
-				lew.writeInt(CHAR_MAGIC_SPAWN);
+				lew.writeInt(charMagicSpawn);
 			//}
 		} else {
 			lew.writeInt(0);
 			lew.writeInt(0);
-			lew.writeInt(CHAR_MAGIC_SPAWN);
+			lew.writeInt(charMagicSpawn);
 		}
 
 		lew.writeLong(0);
-		lew.writeInt(CHAR_MAGIC_SPAWN);
+		lew.writeInt(charMagicSpawn);
 		lew.writeLong(0);
 		lew.writeInt(0);
 		lew.writeShort((short) 0);
-		lew.writeInt(CHAR_MAGIC_SPAWN);
+		lew.writeInt(charMagicSpawn);
 		lew.writeInt(0);
 		lew.writeShort(p.getJob()); // 40 01?
 		CommonPackets.writeAvatar(lew, p, false);
@@ -1385,10 +1400,11 @@ public final class GamePackets {
 		lew.writeInt(0);
 		lew.writeShort((short) 0);
 		Miniroom room = p.getMiniRoom();
-		if (room != null && room.isVisible() && room.positionOf(p) == 0)
+		if (room != null && room.isVisible() && room.positionOf(p) == 0) {
 			writeMiniroomBalloon(lew, room);
-		else
+		} else {
 			lew.writeByte(MiniroomType.NONE.byteValue());
+		}
 		lew.writeByte((byte) 0);
 		writeRings(lew, p.getInventory(InventoryType.EQUIPPED).getAll());
 		lew.writeByte((byte) 0);
@@ -1508,14 +1524,11 @@ public final class GamePackets {
 		lew.writeInt(updateMask);
 		for (MonsterStatusEffectValues statupdate : stats.values()) {
 			lew.writeShort(statupdate.getModifier());
-			switch (statupdate.getSourceType()) {
-				case MOB_SKILL:
-					lew.writeShort((short) statupdate.getSource());
-					lew.writeShort(statupdate.getLevelWhenCast());
-					break;
-				case PLAYER_SKILL:
-					lew.writeInt(statupdate.getSource());
-					break;
+			if (statupdate.getSourceType() == StatusEffectsData.EffectSource.MOB_SKILL) {
+				lew.writeShort((short) statupdate.getSource());
+				lew.writeShort(statupdate.getLevelWhenCast());
+			} else if (statupdate.getSourceType() == StatusEffectsData.EffectSource.PLAYER_SKILL) {
+				lew.writeInt(statupdate.getSource());
 			}
 			lew.writeShort((short) 0);
 		}
@@ -1574,10 +1587,11 @@ public final class GamePackets {
 		LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter();
 		lew.writeShort(ClientSendOps.CONTROL_MONSTER);
 		lew.writeByte((byte) (monster.isVisible() ? aggro ? 2 : 1 : 0));
-		if (monster.isVisible())
+		if (monster.isVisible()) {
 			writeMonsterData(lew, monster, false, (byte) 0);
-		else
+		} else {
 			lew.writeInt(monster.getId());
+		}
 		return lew.getBytes();
 	}
 
@@ -1722,10 +1736,11 @@ public final class GamePackets {
 		for (ShopSlot item : items) {
 			lew.writeInt(item.itemId);
 			lew.writeInt(item.price);
-			if (!InventoryTools.isRechargeable(item.itemId))
+			if (!InventoryTools.isRechargeable(item.itemId)) {
 				lew.writeShort(item.quantity);
-			else
+			} else {
 				lew.writeDouble(shop.rechargeCost(item.itemId));
+			}
 			lew.writeShort(ItemTools.getPersonalSlotMax(customer, item.itemId));
 		}
 		//lets client know the max quantity of a stack of ammo, for recharging
@@ -1778,8 +1793,9 @@ public final class GamePackets {
 			lew.writeShort((short) 0);
 		}
 
-		if (drop.getDropType() == ItemDrop.ITEM)
+		if (drop.getDropType() == ItemDrop.ITEM) {
 			CommonPackets.writeItemExpire(lew, drop.getItemExpire(), true);
+		}
 		lew.writeBool(true); //allow pet item pickup?
 
 		return lew.getBytes();
@@ -1793,8 +1809,9 @@ public final class GamePackets {
 		lew.writeInt(d.getId());
 		if (animation > ItemDrop.DESTROY_ANIMATION_NONE) {
 			lew.writeInt(d.getOwner());
-			if (animation == ItemDrop.DESTROY_ANIMATION_PET_LOOTED)
+			if (animation == ItemDrop.DESTROY_ANIMATION_PET_LOOTED) {
 				lew.writeByte(d.getPetSlot());
+			}
 		}
 
 		return lew.getBytes();
@@ -2024,13 +2041,15 @@ public final class GamePackets {
 		lew.writeByte(room.getMiniroomType().byteValue());
 		lew.writeInt(room.getId());
 		lew.writeLengthPrefixedString(room.getMessage());
-		if (room.getMiniroomType() != MiniroomType.HIRED_MERCHANT)
+		if (room.getMiniroomType() != MiniroomType.HIRED_MERCHANT) {
 			lew.writeBool(room.getPassword() != null);
+		}
 		lew.writeByte(room.getStyle());
 		lew.writeByte(room.getAmountOfPlayers());
 		lew.writeByte(room.getMaxPlayers());
-		if (room.getMiniroomType() != MiniroomType.HIRED_MERCHANT)
+		if (room.getMiniroomType() != MiniroomType.HIRED_MERCHANT) {
 			lew.writeBool(room.gameInProgress());
+		}
 	}
 
 	public static byte[] writeChatroomAvatar(byte op, byte position, Chatroom.Avatar avatar, boolean entered) {

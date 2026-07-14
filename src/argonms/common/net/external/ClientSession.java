@@ -73,7 +73,7 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	private final SelectionKey selectionKey;
 	private final OrderedQueue sendQueue;
 
-	private KeepAliveTask heartbeatTask;
+	private final KeepAliveTask heartbeatTask;
 	private final Runnable idleTask = new Runnable() {
 		@Override
 		public void run() {
@@ -172,8 +172,9 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	}
 
 	public void readDequeued() {
-		if (queuedReads.decrementAndGet() == 0 && emptyReadQueueHandler != null)
+		if (queuedReads.decrementAndGet() == 0 && emptyReadQueueHandler != null) {
 			emptyReadQueueHandler.run();
+		}
 	}
 
 	public int getQueuedReads() {
@@ -207,9 +208,10 @@ public class ClientSession<T extends RemoteClient> implements Session {
 			}
 			stopPingTask();
 			//this check is thread safe - idleTaskFuture can never be null again after it has been assigned a non-null value
-			if (idleTaskFuture != null)
+			if (idleTaskFuture != null) {
 				//client closed before we could send init packet
 				idleTaskFuture.cancel(false);
+			}
 
 			LOG.log(Level.FINE, "Client {0} ({1}) disconnected: {2}", new Object[] { getAccountName(), getAddress(), reason });
 			client.disconnected();
@@ -226,8 +228,9 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	 * channel is closed.
 	 */
 	/* package-private */ byte tryFlushSendQueue() {
-		if (!sendQueue.shouldWrite())
-			return -1;
+	if (!sendQueue.shouldWrite()) {
+		return -1;
+	}
 		try {
 			do {
 				int success = 0;
@@ -240,8 +243,9 @@ public class ClientSession<T extends RemoteClient> implements Session {
 						} else {
 							int i = sendQueue.currentPopBlock() + success;
 							sendQueue.insert(i++, buf);
-							while (iter.hasNext())
+							while (iter.hasNext()) {
 								sendQueue.insert(i++, iter.next());
+							}
 							return 0;
 						}
 					}
@@ -326,8 +330,9 @@ public class ClientSession<T extends RemoteClient> implements Session {
 				int length = ClientEncryption.getPacketLength(message);
 
 				readBuffer.clear();
-				if (length > readBuffer.remaining())
+				if (length > readBuffer.remaining()) {
 					readBuffer = ByteBuffer.allocate(length);
+				}
 				readBuffer.limit(length);
 				nextMessageType = MessageType.BODY;
 				idleTaskFuture = Scheduler.getWheelTimer().runAfterDelay(idleTask, IDLE_TIME);
@@ -386,8 +391,9 @@ public class ClientSession<T extends RemoteClient> implements Session {
 
 		public void stop() {
 			ScheduledFuture<?> old = future.getAndSet(null);
-			if (old != null)
+			if (old != null) {
 				old.cancel(false);
+			}
 		}
 	}
 }

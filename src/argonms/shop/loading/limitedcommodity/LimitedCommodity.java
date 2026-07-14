@@ -42,8 +42,9 @@ public class LimitedCommodity {
 		for (Object sn : sns) {
 			if (sn instanceof Number number) {
 				serialNumbers.add(number);
-				if (serialNumbers.size() == 10)
+				if (serialNumbers.size() == 10) {
 					break;
+				}
 			}
 		}
 	}

@@ -129,25 +129,27 @@ public class Trade extends Miniroom {
 	}
 
 	private static int subtractTax(int mesos) {
-		if (mesos < 50000)
+		if (mesos < 50000) {
 			return mesos;
-		else if (mesos < 100000)
+		} else if (mesos < 100000) {
 			return round(mesos * 0.995);
-		else if (mesos < 1000000)
+		} else if (mesos < 1000000) {
 			return round(mesos * 0.99);
-		else if (mesos < 5000000)
+		} else if (mesos < 5000000) {
 			return round(mesos * 0.98);
-		else if (mesos < 10000000)
+		} else if (mesos < 10000000) {
 			return round(mesos * 0.97);
-		else
+		} else {
 			return round(mesos * 0.96);
+		}
 	}
 
 	private void giveItemsAndMesos(GameCharacter to, byte from, boolean taxAndShowGain) {
-		if (taxAndShowGain)
+		if (taxAndShowGain) {
 			to.gainMesos(subtractTax(mesos[from]), false);
-		else
+		} else {
 			to.setMesos(to.getMesos() + mesos[from]);
+		}
 		for (InventorySlot item : items[from]) {
 			if (item != null) {
 				InventoryType type = InventoryTools.getCategory(item.getDataId());
@@ -165,8 +167,9 @@ public class Trade extends Miniroom {
 					ses.send(CommonPackets.writeInventoryAddSlot(type, pos, inv.get(pos)));
 				}
 				to.itemCountChanged(item.getDataId());
-				if (taxAndShowGain)
+				if (taxAndShowGain) {
 					ses.send(GamePackets.writeShowItemGain(item.getDataId(), item.getQuantity()));
+				}
 			}
 		}
 	}
@@ -175,10 +178,13 @@ public class Trade extends Miniroom {
 	public void closeRoom(GameMap map) {
 		GameCharacter v;
 		super.closeRoom(map);
-		if (!tradeCompleted)
-			for (byte i = 0; i < getMaxPlayers(); i++)
-				if ((v = getPlayerByPosition(i)) != null)
+		if (!tradeCompleted) {
+			for (byte i = 0; i < getMaxPlayers(); i++) {
+				if ((v = getPlayerByPosition(i)) != null) {
 					giveItemsAndMesos(v, i, false);
+				}
+			}
+		}
 	}
 
 	private void performTrade() {
@@ -226,11 +232,14 @@ public class Trade extends Miniroom {
 	public void confirmTrade(GameCharacter p) {
 		confirmed[positionOf(p)] = true;
 		boolean completeTrade = true;
-		for (int i = 0; i < getMaxPlayers() && completeTrade; i++)
-			if (!confirmed[i])
+		for (int i = 0; i < getMaxPlayers() && completeTrade; i++) {
+			if (!confirmed[i]) {
 				completeTrade = false;
-		if (completeTrade)
+			}
+		}
+		if (completeTrade) {
 			performTrade();
+		}
 	}
 
 	@Override
@@ -250,9 +259,11 @@ public class Trade extends Miniroom {
 		lew.writeByte(getMaxPlayers());
 		lew.writeByte(positionOf(p));
 
-		for (byte i = 0; i < getMaxPlayers(); i++)
-			if ((v = getPlayerByPosition(i)) != null)
+		for (byte i = 0; i < getMaxPlayers(); i++) {
+			if ((v = getPlayerByPosition(i)) != null) {
 				writeMiniroomAvatar(lew, v, i);
+			}
+		}
 		lew.writeByte((byte) 0xFF);
 
 		return lew.getBytes();

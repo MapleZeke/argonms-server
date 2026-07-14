@@ -171,30 +171,36 @@ public abstract class IntraworldGroupList<M extends IntraworldGroupList.Member,
 		@Override
 		public int getDoorTown() {
 			MysticDoor door = player.getDoor();
-			if (door == null)
+			if (door == null) {
 				return GlobalConstants.NULL_MAP;
-			if (door.isInTown())
+			}
+			if (door.isInTown()) {
 				return door.getMapId();
+			}
 			return door.getComplement().getMapId();
 		}
 
 		@Override
 		public int getDoorTarget() {
 			MysticDoor door = player.getDoor();
-			if (door == null)
+			if (door == null) {
 				return GlobalConstants.NULL_MAP;
-			if (!door.isInTown())
+			}
+			if (!door.isInTown()) {
 				return door.getMapId();
+			}
 			return door.getComplement().getMapId();
 		}
 
 		@Override
 		public Point getDoorPosition() {
 			MysticDoor door = player.getDoor();
-			if (door == null)
+			if (door == null) {
 				return new Point();
-			if (!door.isInTown())
+			}
+			if (!door.isInTown()) {
 				return door.getPosition();
+			}
 			return door.getComplement().getPosition();
 		}
 	}
@@ -258,8 +264,9 @@ public abstract class IntraworldGroupList<M extends IntraworldGroupList.Member,
 	public List<GameCharacter> getLocalMembersInMap(int mapId) {
 		List<GameCharacter> filtered = new ArrayList<>();
 		for (L m : localMembers.values())
-			if (m.getMapId() == mapId)
+			if (m.getMapId() == mapId) {
 				filtered.add(m.getPlayer());
+			}
 		return filtered;
 	}
 
@@ -352,8 +359,9 @@ public abstract class IntraworldGroupList<M extends IntraworldGroupList.Member,
 	protected R removePlayer(byte ch, int playerId, boolean transition) {
 		Map<Integer, R> others = remoteMembers.get(Byte.valueOf(ch));
 		R member = others.remove(Integer.valueOf(playerId));
-		if (others.isEmpty())
+		if (others.isEmpty()) {
 			remoteMembers.remove(Byte.valueOf(ch));
+		}
 		return member;
 	}
 
@@ -404,8 +412,9 @@ public abstract class IntraworldGroupList<M extends IntraworldGroupList.Member,
 	 */
 	public R getMember(byte channel, int playerId) {
 		Map<Integer, R> channelMembers = remoteMembers.get(Byte.valueOf(channel));
-		if (channelMembers != null)
+		if (channelMembers != null) {
 			return channelMembers.get(Integer.valueOf(playerId));
+		}
 		return null;
 	}
 

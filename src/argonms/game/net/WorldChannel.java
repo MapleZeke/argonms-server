@@ -218,8 +218,9 @@ public class WorldChannel {
 
 	public byte applyBuffsFromLastChannel(GameCharacter p) {
 		PlayerContinuation context = channelChangeData.remove(Integer.valueOf(p.getId()));
-		if (context == null)
+		if (context == null) {
 			return ChannelSynchronizationOps.CHANNEL_OFFLINE;
+		}
 		context.applyTo(p);
 		return context.getOriginChannel();
 	}

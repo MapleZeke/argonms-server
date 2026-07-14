@@ -50,11 +50,10 @@ public final class StatusEffectTools {
 	public static final byte MOB_BUFF = 11;
 
 	private static byte[] getFirstPersonCastEffect(GameCharacter p, byte effectType, StatusEffectsData e, byte stance) {
-		switch (e.getSourceType()) {
-			case PLAYER_SKILL:
-				if (effectType == PASSIVE_BUFF)
-					return GamePackets.writeSelfVisualEffect(effectType, e.getDataId(), e.getLevel(), stance);
-				break;
+		if (e.getSourceType() == StatusEffectsData.EffectSource.PLAYER_SKILL) {
+			if (effectType == PASSIVE_BUFF) {
+				return GamePackets.writeSelfVisualEffect(effectType, e.getDataId(), e.getLevel(), stance);
+			}
 		}
 		return null;
 	}
@@ -80,9 +79,8 @@ public final class StatusEffectTools {
 	}
 
 	private static byte[] getThirdPersonCastEffect(GameCharacter p, byte effectType, StatusEffectsData e, byte stance) {
-		switch (e.getSourceType()) {
-			case PLAYER_SKILL:
-				return GamePackets.writeBuffMapVisualEffect(p, effectType, e.getDataId(), e.getLevel(), stance);
+		if (e.getSourceType() == StatusEffectsData.EffectSource.PLAYER_SKILL) {
+			return GamePackets.writeBuffMapVisualEffect(p, effectType, e.getDataId(), e.getLevel(), stance);
 		}
 		return null;
 	}
@@ -115,14 +113,16 @@ public final class StatusEffectTools {
 					case Skills.SHADOW_STARS:
 						return GamePackets.writeBuffMapShadowStarsEffect(p, updatedStats, -1, (short) 0);
 					default:
-						if (duration > 0)
+						if (duration > 0) {
 							return GamePackets.writeBuffMapEffect(p, updatedStats);
+						}
 						break;
 				}
 				break;
 			case ITEM:
-				if (duration > 0)
+				if (duration > 0) {
 					return GamePackets.writeBuffMapEffect(p, updatedStats);
+				}
 				break;
 			case MOB_SKILL:
 				return GamePackets.writeDebuffMapEffect(p, updatedStats, (short) e.getDataId(), e.getLevel(), (short) 900);
@@ -150,8 +150,9 @@ public final class StatusEffectTools {
 		Map<PlayerStatusEffect, Short> updatedStats = new EnumMap<>(PlayerStatusEffect.class);
 		for (PlayerStatusEffect buff : e.getEffects()) {
 			PlayerStatusEffectValues v = p.getEffectValue(buff);
-			if (v != null)
+			if (v != null) {
 				dispelEffectsAndShowVisuals(p, v.getEffectsData());
+			}
 			v = applyEffect(p, e, buff);
 			updatedStats.put(buff, Short.valueOf(v.getModifier()));
 			p.addToActiveEffects(buff, v);
@@ -162,17 +163,21 @@ public final class StatusEffectTools {
 	public static void applyEffectsAndShowVisuals(GameCharacter p, byte effectType, StatusEffectsData e, byte stance, int duration) {
 		Map<PlayerStatusEffect, Short> updatedStats = applyEffects(p, e);
 		byte[] effect = getFirstPersonCastEffect(p, effectType, e, stance);
-		if (effect != null)
+		if (effect != null) {
 			p.getClient().getSession().send(effect);
+		}
 		effect = getFirstPersonApplyEffect(p, e, updatedStats, duration);
-		if (effect != null)
+		if (effect != null) {
 			p.getClient().getSession().send(effect);
+		}
 		effect = getThirdPersonCastEffect(p, effectType, e, stance);
-		if (p.isVisible() && effect != null)
+		if (p.isVisible() && effect != null) {
 			p.getMap().sendToAll(effect, p);
+		}
 		effect = getThirdPersonApplyEffect(p, e, updatedStats, duration);
-		if (p.isVisible() && effect != null)
+		if (p.isVisible() && effect != null) {
 			p.getMap().sendToAll(effect, p);
+		}
 	}
 
 	public static void applyEffectsAndShowVisuals(GameCharacter p, byte effectType, StatusEffectsData e, byte stance) {
@@ -183,25 +188,30 @@ public final class StatusEffectTools {
 		p.removeCancelEffectTask(e);
 		for (PlayerStatusEffect buff : e.getEffects()) {
 			PlayerStatusEffectValues v = p.removeFromActiveEffects(buff);
-			if (v != null)
+			if (v != null) {
 				dispelEffect(p, buff, v);
+			}
 		}
 	}
 
 	public static void dispelEffectsAndShowVisuals(GameCharacter p, StatusEffectsData e) {
 		dispelEffects(p, e);
 		byte[] effect = getFirstPersonCancelEffect(p);
-		if (effect != null)
+		if (effect != null) {
 			p.getClient().getSession().send(effect);
+		}
 		effect = getFirstPersonDispelEffect(p, e);
-		if (effect != null)
+		if (effect != null) {
 			p.getClient().getSession().send(effect);
+		}
 		effect = getThirdPersonCancelEffect(p);
-		if (p.isVisible() && effect != null)
+		if (p.isVisible() && effect != null) {
 			p.getMap().sendToAll(effect, p);
+		}
 		effect = getThirdPersonDispelEffect(p, e, e.getEffects());
-		if (p.isVisible() && effect != null)
+		if (p.isVisible() && effect != null) {
 			p.getMap().sendToAll(effect, p);
+		}
 	}
 
 	public static void updateComboCounter(GameCharacter p, PlayerStatusEffectValues v, short m) {
@@ -210,11 +220,13 @@ public final class StatusEffectTools {
 		Map<PlayerStatusEffect, Short> updatedStats = Collections.singletonMap(PlayerStatusEffect.COMBO, Short.valueOf(m));
 		p.addToActiveEffects(PlayerStatusEffect.COMBO, new PlayerStatusEffectValues(v, m));
 		byte[] effect = getFirstPersonApplyEffect(p, v.getEffectsData(), updatedStats, newDuration);
-		if (effect != null)
+		if (effect != null) {
 			p.getClient().getSession().send(effect);
+		}
 		effect = getThirdPersonApplyEffect(p, v.getEffectsData(), updatedStats, newDuration);
-		if (p.isVisible() && effect != null)
+		if (p.isVisible() && effect != null) {
 			p.getMap().sendToAll(effect, p);
+		}
 	}
 
 	private static PlayerStatusEffectValues applyEffect(final GameCharacter p, StatusEffectsData e, PlayerStatusEffect buff) {
@@ -495,15 +507,17 @@ public final class StatusEffectTools {
 			case MONSTER_RIDING:
 				break;
 			case WATK:
-				if (!value.getEffectsData().getEffects().contains(PlayerStatusEffect.SUMMON))
+				if (!value.getEffectsData().getEffects().contains(PlayerStatusEffect.SUMMON)) {
 					p.addWatk(-value.getModifier());
+				}
 				break;
 			case WDEF:
 				p.addWdef(-value.getModifier());
 				break;
 			case MATK:
-				if (!value.getEffectsData().getEffects().contains(PlayerStatusEffect.SUMMON))
+				if (!value.getEffectsData().getEffects().contains(PlayerStatusEffect.SUMMON)) {
 					p.addMatk(-value.getModifier());
+				}
 				break;
 			case MDEF:
 				p.addMdef(-value.getModifier());
@@ -537,8 +551,9 @@ public final class StatusEffectTools {
 				break;
 			case HYPER_BODY_HP:
 				p.recalculateMaxHp((short) 0);
-				if (p.getHp() > p.getCurrentMaxHp())
+				if (p.getHp() > p.getCurrentMaxHp()) {
 					p.setHp(p.getCurrentMaxHp());
+				}
 				break;
 			case HYPER_BODY_MP:
 				p.recalculateMaxMp((short) 0);

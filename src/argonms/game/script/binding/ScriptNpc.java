@@ -51,7 +51,7 @@ import org.mozilla.javascript.Scriptable;
  * @author GoldenKevin
  */
 public class ScriptNpc extends PlayerScriptInteraction {
-	/* package-private */ static class ScriptInterruptedException extends RuntimeException {
+	/* package-private */ static final class ScriptInterruptedException extends RuntimeException {
 		private static final long serialVersionUID = -1302552528821402944L;
 
 		private ScriptInterruptedException(int npc, String player) {
@@ -98,13 +98,17 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	public void say(String message) {
-		if (terminated.get())
+		if (terminated.get()) {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
-		if (!sequence.isEmpty()) //preceded by sayNext, or say after sayNext
-			if (!sequence.showNext()) //not preceded by sayNext
-				clearBackButton(); //cannot go backwards
-			else //preceded by sayNext
-				sequence.add(message, false); //save in sequence in case chat goes backwards and then returns forwards
+		}
+		if (!sequence.isEmpty()) { //preceded by sayNext, or say after sayNext
+			if (!sequence.showNext()) { //not preceded by sayNext
+				clearBackButton();
+			} //cannot go backwards
+			else { //preceded by sayNext
+				sequence.add(message, false);
+			} //save in sequence in case chat goes backwards and then returns forwards
+		}
 		getClient().getSession().send(writeNpcSay(npcId, message, sequence.hasBack(), false));
 		Context cx = Context.enter();
 		try {
@@ -115,11 +119,14 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	public void sayNext(String message) {
-		if (terminated.get())
+		if (terminated.get()) {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
-		if (!sequence.isEmpty()) //preceded by sayNext, or say after sayNext
-			if (!sequence.showNext()) //preceded by say
-				clearBackButton(); //cannot go backwards
+		}
+		if (!sequence.isEmpty()) { //preceded by sayNext, or say after sayNext
+			if (!sequence.showNext()) { //preceded by say
+				clearBackButton();
+			} //cannot go backwards
+		}
 		sequence.add(message, true); //save in sequence in case chat goes backwards
 		getClient().getSession().send(writeNpcSay(npcId, message, sequence.hasBack(), true));
 		Context cx = Context.enter();
@@ -131,8 +138,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	public byte askYesNo(String message) {
-		if (terminated.get())
+		if (terminated.get()) {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
+		}
 		clearBackButton(); //cannot go backwards
 		getClient().getSession().send(writeNpcSimple(npcId, message, ASK_YES_NO));
 		Context cx = Context.enter();
@@ -144,8 +152,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	public byte askAccept(String message) {
-		if (terminated.get())
+		if (terminated.get()) {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
+		}
 		clearBackButton(); //cannot go backwards
 		getClient().getSession().send(writeNpcSimple(npcId, message, ASK_ACCEPT));
 		Context cx = Context.enter();
@@ -157,8 +166,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	public byte askAcceptNoESC(String message) {
-		if (terminated.get())
+		if (terminated.get()) {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
+		}
 		clearBackButton(); //cannot go backwards
 		getClient().getSession().send(writeNpcSimple(npcId, message, ASK_ACCEPT_NO_ESC));
 		Context cx = Context.enter();
@@ -170,8 +180,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	public String askQuiz(byte type, int objectId, int correct, int questions, int time) {
-		if (terminated.get())
+		if (terminated.get()) {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
+		}
 		clearBackButton(); //cannot go backwards
 		getClient().getSession().send(writeNpcQuiz(npcId, type, objectId, correct, questions, time));
 		Context cx = Context.enter();
@@ -184,8 +195,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 
 	public String askQuizQuestion(String title, String problem,
 			String hint, int min, int max, int timeLimit) {
-		if (terminated.get())
+		if (terminated.get()) {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
+		}
 		clearBackButton(); //cannot go backwards
 		getClient().getSession().send(writeNpcQuizQuestion(npcId,
 				title, problem, hint, min, max, timeLimit));
@@ -198,8 +210,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	public String askText(String message, String def, short min, short max) {
-		if (terminated.get())
+		if (terminated.get()) {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
+		}
 		clearBackButton(); //cannot go backwards
 		getClient().getSession().send(writeNpcAskText(npcId, message, def, min, max));
 		Context cx = Context.enter();
@@ -211,8 +224,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	public String askBoxText(String def, short columns, short rows) {
-		if (terminated.get())
+		if (terminated.get()) {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
+		}
 		clearBackButton(); //cannot go backwards
 		getClient().getSession().send(writeNpcBoxText(npcId, def, columns, rows));
 		Context cx = Context.enter();
@@ -224,8 +238,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	public int askNumber(String message, int def, int min, int max) {
-		if (terminated.get())
+		if (terminated.get()) {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
+		}
 		clearBackButton(); //cannot go backwards
 		getClient().getSession().send(writeNpcAskNumber(npcId, message, def, min, max));
 		Context cx = Context.enter();
@@ -237,8 +252,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	public int askMenu(String message) {
-		if (terminated.get())
+		if (terminated.get()) {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
+		}
 		clearBackButton(); //cannot go backwards
 		getClient().getSession().send(writeNpcSimple(npcId, message, ASK_MENU));
 		Context cx = Context.enter();
@@ -250,8 +266,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	public int askAvatar(String message, int... styles) {
-		if (terminated.get())
+		if (terminated.get()) {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
+		}
 		clearBackButton(); //cannot go backwards
 		getClient().getSession().send(writeNpcAskAvatar(npcId, message, styles));
 		Context cx = Context.enter();
@@ -263,14 +280,16 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	public long askDoll(String message) {
-		if (terminated.get())
+		if (terminated.get()) {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
+		}
 		clearBackButton(); //cannot go backwards
 
 		List<Long> expiredPets = new ArrayList<>();
 		for (InventorySlot item : getClient().getPlayer().getInventory(Inventory.InventoryType.CASH).getAll().values())
-			if (InventoryTools.isPet(item.getDataId()) && item.getExpiration() < System.currentTimeMillis())
+			if (InventoryTools.isPet(item.getDataId()) && item.getExpiration() < System.currentTimeMillis()) {
 				expiredPets.add(Long.valueOf(item.getUniqueId()));
+			}
 
 		getClient().getSession().send(writeNpcAskPet(npcId, message, expiredPets));
 		Context cx = Context.enter();
@@ -282,8 +301,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	public boolean sendShop(int shopId) {
-		if (terminated.get())
+		if (terminated.get()) {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
+		}
 		NpcShop shop = NpcShopDataLoader.getInstance().getShopByNpc(shopId);
 		if (shop != null) {
 			endConversation();
@@ -295,8 +315,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	public boolean sendStorage(int npcId) {
-		if (terminated.get())
+		if (terminated.get()) {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
+		}
 		NpcStorageKeeper storage = NpcDataLoader.getInstance().getStorageById(npcId);
 		if (storage != null) {
 			endConversation();
@@ -308,8 +329,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	public void askGuildName() {
-		if (terminated.get())
+		if (terminated.get()) {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
+		}
 		clearBackButton(); //cannot go backwards
 		getClient().getSession().send(GamePackets.writeSimpleGuildListMessage(GuildListHandler.ASK_NAME));
 		Context cx = Context.enter();
@@ -321,8 +343,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	public void askGuildEmblem() {
-		if (terminated.get())
+		if (terminated.get()) {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
+		}
 		clearBackButton(); //cannot go backwards
 		getClient().getSession().send(GamePackets.writeSimpleGuildListMessage(GuildListHandler.ASK_EMBLEM));
 		Context cx = Context.enter();
@@ -334,8 +357,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	private void fireEndChatEvent() {
-		if (terminated.get())
+		if (terminated.get()) {
 			return;
+		}
 		if (!endingChat) {
 			endingChat = true;
 			clearBackButton(); //we probably don't want a back button in the end chat hook...
@@ -387,10 +411,11 @@ public class ScriptNpc extends PlayerScriptInteraction {
 						getClient().getSession().send(writeNpcSay(npcId, sequence.goBackwardAndGet(), sequence.hasBack(), true));
 						break;
 					case 1: //ok/next
-						if (sequence.hasNext())
+						if (sequence.hasNext()) {
 							getClient().getSession().send(writeNpcSay(npcId, sequence.goForwardAndGet(), sequence.hasBack(), sequence.showNext()));
-						else
+						} else {
 							resume(null);
+						}
 						break;
 				}
 				break;
@@ -406,63 +431,45 @@ public class ScriptNpc extends PlayerScriptInteraction {
 				}
 				break;
 			case ASK_TEXT:
-				switch (action) {
-					case 0: //end chat (or esc key)
-						fireEndChatEvent();
-						break;
-					case 1: //ok
-						resume(packet.readLengthPrefixedString());
-						break;
+				if (action == 0) { //end chat (or esc key)
+					fireEndChatEvent();
+				} else if (action == 1) { //ok
+					resume(packet.readLengthPrefixedString());
 				}
 				break;
 			case ASK_BOX_TEXT:
-				switch (action) {
-					case 0: //end chat (or esc key)
-						fireEndChatEvent();
-						break;
-					case 1:
-						resume(packet.readLengthPrefixedString());
-						break;
+				if (action == 0) { //end chat (or esc key)
+					fireEndChatEvent();
+				} else if (action == 1) {
+					resume(packet.readLengthPrefixedString());
 				}
 				break;
 			case ASK_NUMBER:
-				switch (action) {
-					case 0: //end chat (or esc key)
-						fireEndChatEvent();
-						break;
-					case 1: //ok
-						resume(Integer.valueOf(packet.readInt()));
-						break;
+				if (action == 0) { //end chat (or esc key)
+					fireEndChatEvent();
+				} else if (action == 1) { //ok
+					resume(Integer.valueOf(packet.readInt()));
 				}
 				break;
 			case ASK_MENU:
-				switch (action) {
-					case 0: //end chat (or esc key)
-						fireEndChatEvent();
-						break;
-					case 1: //selected a link
-						resume(Integer.valueOf(packet.readInt()));
-						break;
+				if (action == 0) { //end chat (or esc key)
+					fireEndChatEvent();
+				} else if (action == 1) { //selected a link
+					resume(Integer.valueOf(packet.readInt()));
 				}
 				break;
 			case ASK_AVATAR:
-				switch (action) {
-					case 0: //leave store (or esc key) or cancel
-						fireEndChatEvent();
-						break;
-					case 1: //ok
-						resume(Byte.valueOf(packet.readByte()));
-						break;
+				if (action == 0) { //leave store (or esc key) or cancel
+					fireEndChatEvent();
+				} else if (action == 1) { //ok
+					resume(Byte.valueOf(packet.readByte()));
 				}
 				break;
 			case ASK_PET:
-				switch (action) {
-					case 0: //leave store (or esc key) or cancel
-						fireEndChatEvent();
-						break;
-					case 1: //ok
-						resume(Long.valueOf(packet.readLong()));
-						break;
+				if (action == 0) { //leave store (or esc key) or cancel
+					fireEndChatEvent();
+				} else if (action == 1) { //ok
+					resume(Long.valueOf(packet.readLong()));
 				}
 				break;
 			case ASK_ACCEPT:
@@ -518,10 +525,11 @@ public class ScriptNpc extends PlayerScriptInteraction {
 		//this method's pretty expensive with all the copying, but it should
 		//only be called by KIN in the GM map, so it's not going to be used often
 		Set<Short> faces = null;
-		if (getClient().getPlayer().getGender() == 0)
+		if (getClient().getPlayer().getGender() == 0) {
 			faces = BeautyDataLoader.getInstance().getMaleFaces();
-		else if (getClient().getPlayer().getGender() == 1)
+		} else if (getClient().getPlayer().getGender() == 1) {
 			faces = BeautyDataLoader.getInstance().getFemaleFaces();
+		}
 
 		short currentEyes = getClient().getPlayer().getEyes();
 		short color = (short) (currentEyes % 1000 - (currentEyes % 100));
@@ -535,29 +543,32 @@ public class ScriptNpc extends PlayerScriptInteraction {
 			Short eyes = Short.valueOf((short) (style + color));
 			//some eyes don't allow certain colors, and will crash the client if
 			//you try to force one - check if our current eye color is allowed
-			if (faces.contains(eyes))
+			if (faces.contains(eyes)) {
 				styles.add(eyes);
-			else
+			} else {
 				styles.add(Short.valueOf(style));
+			}
 		}
 
 		return Context.javaToJS(new NativeArray(styles.toArray(new Short[styles.size()])), globalScope);
 	}
 
 	public boolean isFaceValid(short face) {
-		if (getClient().getPlayer().getGender() == 0)
+		if (getClient().getPlayer().getGender() == 0) {
 			BeautyDataLoader.getInstance().getMaleFaces().contains(Short.valueOf(face));
-		else if (getClient().getPlayer().getGender() == 1)
+		} else if (getClient().getPlayer().getGender() == 1) {
 			BeautyDataLoader.getInstance().getFemaleFaces().contains(Short.valueOf(face));
+		}
 		return false;
 	}
 
 	public Object getAllEyeColors() {
 		Set<Short> faces = null;
-		if (getClient().getPlayer().getGender() == 0)
+		if (getClient().getPlayer().getGender() == 0) {
 			faces = BeautyDataLoader.getInstance().getMaleFaces();
-		else if (getClient().getPlayer().getGender() == 1)
+		} else if (getClient().getPlayer().getGender() == 1) {
 			faces = BeautyDataLoader.getInstance().getFemaleFaces();
+		}
 
 		short currentEyes = getClient().getPlayer().getEyes();
 		short style = (short) (currentEyes - currentEyes % 1000 + currentEyes % 100);
@@ -566,8 +577,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 			Short eyes = Short.valueOf((short) (style + i * 100));
 			//some eyes don't allow certain colors, and will crash the client if
 			//you try to force one
-			if (faces.contains(eyes))
+			if (faces.contains(eyes)) {
 				colors.add(eyes);
+			}
 		}
 
 		return Context.javaToJS(new NativeArray(colors.toArray(new Short[colors.size()])), globalScope);
@@ -577,10 +589,11 @@ public class ScriptNpc extends PlayerScriptInteraction {
 		//this method's pretty expensive with all the copying, but it should
 		//only be called by KIN in the GM map, so it's not going to be used often
 		Set<Short> hairs = null;
-		if (getClient().getPlayer().getGender() == 0)
+		if (getClient().getPlayer().getGender() == 0) {
 			hairs = BeautyDataLoader.getInstance().getMaleHairs();
-		else if (getClient().getPlayer().getGender() == 1)
+		} else if (getClient().getPlayer().getGender() == 1) {
 			hairs = BeautyDataLoader.getInstance().getFemaleHairs();
+		}
 
 		short currentHair = getClient().getPlayer().getHair();
 		short color = (short) (currentHair % 10);
@@ -594,29 +607,32 @@ public class ScriptNpc extends PlayerScriptInteraction {
 			Short hair = Short.valueOf((short) (style + color));
 			//some hairs don't allow certain colors, and will crash the client
 			//if you try to force one - check if our current eye color is allowed
-			if (hairs.contains(hair))
+			if (hairs.contains(hair)) {
 				styles.add(hair);
-			else
+			} else {
 				styles.add(Short.valueOf(style));
+			}
 		}
 
 		return Context.javaToJS(new NativeArray(styles.toArray(new Short[styles.size()])), globalScope);
 	}
 
 	public boolean isHairValid(short hair) {
-		if (getClient().getPlayer().getGender() == 0)
+		if (getClient().getPlayer().getGender() == 0) {
 			BeautyDataLoader.getInstance().getMaleHairs().contains(Short.valueOf(hair));
-		else if (getClient().getPlayer().getGender() == 1)
+		} else if (getClient().getPlayer().getGender() == 1) {
 			BeautyDataLoader.getInstance().getFemaleHairs().contains(Short.valueOf(hair));
+		}
 		return false;
 	}
 
 	public Object getAllHairColors() {
 		Set<Short> hairs = null;
-		if (getClient().getPlayer().getGender() == 0)
+		if (getClient().getPlayer().getGender() == 0) {
 			hairs = BeautyDataLoader.getInstance().getMaleHairs();
-		else if (getClient().getPlayer().getGender() == 1)
+		} else if (getClient().getPlayer().getGender() == 1) {
 			hairs = BeautyDataLoader.getInstance().getFemaleHairs();
+		}
 
 		short currentHair = getClient().getPlayer().getHair();
 		short style = (short) (currentHair - currentHair % 10);
@@ -625,8 +641,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 			Short hair = Short.valueOf((short) (style + i));
 			//some hairs don't allow certain colors, and will crash the client
 			//if you try to force one
-			if (hairs.contains(hair))
+			if (hairs.contains(hair)) {
 				colors.add(hair);
+			}
 		}
 
 		return Context.javaToJS(new NativeArray(colors.toArray(new Short[colors.size()])), globalScope);
@@ -734,8 +751,9 @@ public class ScriptNpc extends PlayerScriptInteraction {
 				+ 4 * styles.length);
 		writeCommonNpcAction(lew, npcId, ASK_AVATAR, msg);
 		lew.writeByte((byte) styles.length);
-		for (byte i = 0; i < styles.length; i++)
+		for (byte i = 0; i < styles.length; i++) {
 			lew.writeInt(styles[i]);
+		}
 		return lew.getBytes();
 	}
 

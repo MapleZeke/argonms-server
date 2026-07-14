@@ -57,8 +57,9 @@ public final class InventoryHandler {
 			gc.getSession().send(CommonPackets.writeInventoryMoveItem(InventoryType.EQUIP, src, dst, (byte) 1));
 			p.equipChanged((Equip) p.getInventory(InventoryType.EQUIP).get(dst), false, true);
 			p.getMap().sendToAll(GamePackets.writeUpdateAvatar(p), p);
-			if (p.getChatRoom() != null)
+			if (p.getChatRoom() != null) {
 				GameServer.getChannel(p.getClient().getChannel()).getCrossServerInterface().sendChatroomPlayerLookUpdate(p, p.getChatRoom().getRoomId());
+			}
 		} else if (dst < 0) { //equip
 			short[] result = InventoryTools.equip(p.getInventory(InventoryType.EQUIP), p.getInventory(InventoryType.EQUIPPED), src, dst);
 			if (result != null) {
@@ -74,8 +75,9 @@ public final class InventoryHandler {
 				}
 				p.equipChanged((Equip) p.getInventory(InventoryType.EQUIPPED).get(dst), true, true);
 				p.getMap().sendToAll(GamePackets.writeUpdateAvatar(p), p);
-				if (p.getChatRoom() != null)
+				if (p.getChatRoom() != null) {
 					GameServer.getChannel(p.getClient().getChannel()).getCrossServerInterface().sendChatroomPlayerLookUpdate(p, p.getChatRoom().getRoomId());
+				}
 			} else {
 				gc.getSession().send(CommonPackets.writeInventoryNoChange());
 			}
@@ -85,8 +87,9 @@ public final class InventoryHandler {
 			if (item.getType() == ItemType.PET) {
 				byte petSlot = p.indexOfPet(item.getUniqueId());
 				p.setPetItemIgnores(item.getUniqueId(), null);
-				if (petSlot != -1)
+				if (petSlot != -1) {
 					p.removePet(petSlot, (byte) 0);
+				}
 			}
 			InventorySlot toDrop;
 			short newQty = (short) (item.getQuantity() - qty);
@@ -98,8 +101,9 @@ public final class InventoryHandler {
 					//dropped an equipped equip
 					p.equipChanged((Equip) toDrop, false, true);
 					p.getMap().sendToAll(GamePackets.writeUpdateAvatar(p), p);
-					if (p.getChatRoom() != null)
+					if (p.getChatRoom() != null) {
 						GameServer.getChannel(p.getClient().getChannel()).getCrossServerInterface().sendChatroomPlayerLookUpdate(p, p.getChatRoom().getRoomId());
+					}
 				}
 			} else {
 				item.setQuantity(newQty);
@@ -147,19 +151,21 @@ public final class InventoryHandler {
 			return;
 		}
 		changed = InventoryTools.takeFromInventory(inv, slot, (short) 1);
-		if (changed != null)
+		if (changed != null) {
 			gc.getSession().send(CommonPackets.writeInventoryUpdateSlotQuantity(InventoryType.USE, slot, changed));
-		else
+		} else {
 			gc.getSession().send(CommonPackets.writeInventoryClearSlot(InventoryType.USE, slot));
+		}
 		p.itemCountChanged(itemId);
 		//TODO: packet edit check for valid map (can't use victoria island scrolls in orbis e.g.)
 
 		ItemEffectsData e = ItemDataLoader.getInstance().getEffect(itemId);
 		if (e.getMoveTo() != 0) {
-			if (e.getMoveTo() == GlobalConstants.NULL_MAP)
+			if (e.getMoveTo() == GlobalConstants.NULL_MAP) {
 				p.changeMap(p.getMap().getReturnMap());
-			else
+			} else {
 				p.changeMap(e.getMoveTo());
+			}
 		}
 	}
 
@@ -177,10 +183,11 @@ public final class InventoryHandler {
 			return;
 		}
 		Equip equip;
-		if (!legendarySpirit)
+		if (!legendarySpirit) {
 			equip = (Equip) p.getInventory(InventoryType.EQUIPPED).get(equipSlot);
-		else
+		} else {
 			equip = (Equip) p.getInventory(InventoryType.EQUIP).get(equipSlot);
+		}
 		if (equip == null) {
 			CheatTracker.get(gc).suspicious(CheatTracker.Infraction.POSSIBLE_PACKET_EDITING, "Tried to scroll nonexistent equip");
 			return;
@@ -206,14 +213,16 @@ public final class InventoryHandler {
 			p.equipChanged(equip, true, true); //put equip back on
 
 			gc.getSession().send(CommonPackets.writeInventoryNoChange());
-			if (legendarySpirit)
+			if (legendarySpirit) {
 				p.getMap().sendToAll(writeScrollResult(p.getId(), result, false, legendarySpirit));
+			}
 		} else {
 			//remove scrolls
 			scroll = InventoryTools.takeFromInventory(p.getInventory(InventoryType.USE), scrollSlot, (short) 1);
 			InventorySlot whiteScroll = null;
-			if (useWhiteScroll)
+			if (useWhiteScroll) {
 				whiteScroll = InventoryTools.takeFromInventory(p.getInventory(InventoryType.USE), whiteScrollSlot, (short) 1);
+			}
 
 			//update equips
 			boolean cursed;
@@ -275,8 +284,9 @@ public final class InventoryHandler {
 		}
 
 		//don't let pet pick up anything dropped by its owner from inventory
-		if (d.getMob() == 0 && d.getOwner() == p.getId())
+		if (d.getMob() == 0 && d.getOwner() == p.getId()) {
 			return;
+		}
 
 		//check for meso magnet and item pouch
 		Inventory equippedInv = p.getInventory(InventoryType.EQUIPPED);
@@ -317,8 +327,9 @@ public final class InventoryHandler {
 		InventorySlot item1 = inv.remove(src);
 		InventorySlot item2 = inv.remove(dst);
 		inv.put(dst, item1);
-		if (item2 != null)
+		if (item2 != null) {
 			inv.put(src, item2);
+		}
 		p.getClient().getSession().send(CommonPackets.writeInventoryMoveItem(type, src, dst, (byte) -1));
 	}
 

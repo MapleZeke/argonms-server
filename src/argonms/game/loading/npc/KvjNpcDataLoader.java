@@ -48,9 +48,10 @@ public class KvjNpcDataLoader extends NpcDataLoader {
 		String id = String.format(Locale.ROOT, "%07d", npcId);
 
 		try {
-			File f = new File(new StringBuilder(dataPath).append("Npc.wz").append(File.separator).append(id).append(".img.kvj").toString());
-			if (f.exists())
+			File f = new File(dataPath + "Npc.wz" + (File.separator) + id + ".img.kvj");
+			if (f.exists()) {
 				doWork(new LittleEndianByteArrayReader(f), npcId);
+			}
 		} catch (IOException e) {
 			LOG.log(Level.WARNING, "Could not read KVJ data file for NPC " + npcId, e);
 		}
@@ -92,7 +93,8 @@ public class KvjNpcDataLoader extends NpcDataLoader {
 					break;
 			}
 		}
-		if (withdrawCost != 0 || depositCost != 0)
+		if (withdrawCost != 0 || depositCost != 0) {
 			storageCosts.put(Integer.valueOf(npcId), new NpcStorageKeeper(depositCost, withdrawCost));
+		}
 	}
 }

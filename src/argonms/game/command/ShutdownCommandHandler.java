@@ -54,17 +54,17 @@ public class ShutdownCommandHandler extends AbstractCommandDefinition<CommandCal
 				return;
 			}
 			param = args.next();
-			if (param.equalsIgnoreCase("-H")) {
+			if ("-H".equalsIgnoreCase(param)) {
 				restart = false;
 				cancel = false;
 				halt = true;
 				option = true;
-			} else if (param.equalsIgnoreCase("-R")) {
+			} else if ("-R".equalsIgnoreCase(param)) {
 				halt = false;
 				cancel = false;
 				restart = true;
 				option = true;
-			} else if (param.equalsIgnoreCase("-C")) {
+			} else if ("-C".equalsIgnoreCase(param)) {
 				halt = false;
 				restart = false;
 				cancel = true;
@@ -76,7 +76,7 @@ public class ShutdownCommandHandler extends AbstractCommandDefinition<CommandCal
 
 		//TODO: support hh:mm for time
 		int seconds;
-		if (param.equalsIgnoreCase("NOW")) {
+		if ("NOW".equalsIgnoreCase(param)) {
 			seconds = 0;
 		} else {
 			try {
@@ -88,8 +88,9 @@ public class ShutdownCommandHandler extends AbstractCommandDefinition<CommandCal
 		}
 
 		String message = null;
-		if (args.hasNext())
+		if (args.hasNext()) {
 			message = args.restOfString();
+		}
 
 		GameServer.getChannel(caller.getChannel()).getCrossServerInterface().sendServerShutdown(halt, restart, cancel, seconds, message);
 	}

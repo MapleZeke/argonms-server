@@ -74,7 +74,7 @@ public class KvjMobDataLoader extends MobDataLoader {
 
 		MobStats stats = null;
 		try {
-			File f = new File(new StringBuilder(dataPath).append("Mob.wz").append(File.separator).append(id).append(".img.kvj").toString());
+			File f = new File(dataPath + "Mob.wz" + (File.separator) + id + ".img.kvj");
 			if (f.exists()) {
 				stats = new MobStats(mobid);
 				doWork(new LittleEndianByteArrayReader(f), stats);
@@ -107,10 +107,11 @@ public class KvjMobDataLoader extends MobDataLoader {
 
 	@Override
 	public boolean canLoad(int mobid) {
-		if (mobStats.containsKey(mobid))
+		if (mobStats.containsKey(mobid)) {
 			return true;
+		}
 		String id = String.format(Locale.ROOT, "%07d", mobid);
-		File f = new File(new StringBuilder(dataPath).append("Mob.wz").append(File.separator).append(id).append(".img.kvj").toString());
+		File f = new File(dataPath + "Mob.wz" + (File.separator) + id + ".img.kvj");
 		return f.exists();
 	}
 
@@ -190,10 +191,11 @@ public class KvjMobDataLoader extends MobDataLoader {
 					for (int i = amt - 1; i >= 0; --i) {
 						int itemid = reader.readInt();
 						int chance = reader.readInt();
-						if (InventoryTools.isArrowForBow(itemid) || InventoryTools.isArrowForCrossBow(itemid))
+						if (InventoryTools.isArrowForBow(itemid) || InventoryTools.isArrowForCrossBow(itemid)) {
 							stats.addItemDrop(itemid, chance, (short) 10, (short) 25);
-						else
+						} else {
 							stats.addItemDrop(itemid, chance, (short) 1, (short) 1);
+						}
 					}
 					break;
 				}

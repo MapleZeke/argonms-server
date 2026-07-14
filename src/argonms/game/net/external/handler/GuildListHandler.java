@@ -103,27 +103,32 @@ public class GuildListHandler {
 			case CREATE: {
 				String name = packet.readLengthPrefixedString();
 				ScriptNpc npc = gc.getNpc();
-				if (npc != null)
+				if (npc != null) {
 					ScriptObjectManipulator.guildNameReceived(npc, name);
+				}
 				break;
 			}
 			case INVITE: {
 				//invites only check players on current channel
 				String name = packet.readLengthPrefixedString();
 				GameCharacter invited = GameServer.getChannel(gc.getChannel()).getPlayerByName(name);
-				if (currentGuild != null)
-					if (!currentGuild.isFull())
-						if (invited != null)
-							if (invited.getGuild() == null)
+				if (currentGuild != null) {
+					if (!currentGuild.isFull()) {
+						if (invited != null) {
+							if (invited.getGuild() == null) {
 								invited.getClient().getSession().send(writeGuildInvite(currentGuild.getId(), p.getName()));
-							else
+							} else {
 								gc.getSession().send(GamePackets.writeSimpleGuildListMessage(ALREADY_IN_GUILD));
-						else
+							}
+						} else {
 							gc.getSession().send(GamePackets.writeSimpleGuildListMessage(CANNOT_FIND));
-					else
+						}
+					} else {
 						CheatTracker.get(gc).suspicious(CheatTracker.Infraction.POSSIBLE_PACKET_EDITING, "Tried to invite player to full guild");
-				else
+					}
+				} else {
 					CheatTracker.get(gc).suspicious(CheatTracker.Infraction.POSSIBLE_PACKET_EDITING, "Tried to invite player to nonexistent guild");
+				}
 				break;
 			}
 			case JOIN: {
@@ -135,10 +140,11 @@ public class GuildListHandler {
 				}
 				//TODO: check if player was actually invited
 
-				if (currentGuild == null)
+				if (currentGuild == null) {
 					GameServer.getChannel(gc.getChannel()).getCrossServerInterface().sendJoinGuild(p, guildId);
-				else
+				} else {
 					gc.getSession().send(GamePackets.writeSimpleGuildListMessage(ALREADY_IN_GUILD));
+				}
 				break;
 			}
 			case LEAVE: {
@@ -197,8 +203,9 @@ public class GuildListHandler {
 				short design = packet.readShort();
 				byte designColor = packet.readByte();
 				ScriptNpc npc = gc.getNpc();
-				if (npc != null)
+				if (npc != null) {
 					ScriptObjectManipulator.guildEmblemReceived(npc, background, backgroundColor, design, designColor);
+				}
 				break;
 			}
 			case CHANGE_NOTICE: {
@@ -230,8 +237,9 @@ public class GuildListHandler {
 		String from = packet.readLengthPrefixedString();
 		String to = packet.readLengthPrefixedString();
 		GameCharacter inviter = GameServer.getChannel(gc.getChannel()).getPlayerByName(from);
-		if (inviter != null) //check if inviter changed channels or logged off
+		if (inviter != null) { //check if inviter changed channels or logged off
 			inviter.getClient().getSession().send(writeGuildInviteRejected(to));
+		}
 	}
 
 	private static class BbsReply {
@@ -283,8 +291,9 @@ public class GuildListHandler {
 			ps = con.prepareStatement("SELECT `replyid`,`poster`,`posttime`,`content` FROM `guildbbsreplies` WHERE `topicsid` = ?");
 			ps.setInt(1, topicsId);
 			rrs = ps.executeQuery();
-			while (rrs.next())
+			while (rrs.next()) {
 				replies.add(new BbsReply(rrs.getInt(1), rrs.getInt(2), rrs.getLong(3), rrs.getString(4)));
+			}
 		} finally {
 			DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, rrs, ps, null);
 		}
@@ -299,8 +308,9 @@ public class GuildListHandler {
 			ps.setInt(1, guildId);
 			ps.setInt(2, topicId);
 			rs = ps.executeQuery();
-			if (!rs.next())
+			if (!rs.next()) {
 				return null;
+			}
 
 			return loadTopic(con, rs, guildId, topicId);
 		} finally {
@@ -317,8 +327,9 @@ public class GuildListHandler {
 			ps.setInt(1, guildId);
 			ps.setInt(2, page * 10);
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				topics.add(loadTopic(con, rs, guildId, rs.getInt(7)));
+			}
 		} finally {
 			DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, rs, ps, null);
 		}
@@ -334,8 +345,9 @@ public class GuildListHandler {
 			ps.setInt(1, guildId);
 			ps.setInt(2, topicId);
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				replies.add(new BbsReply(rs.getInt(1), rs.getInt(2), rs.getLong(3), rs.getString(4)));
+			}
 		} finally {
 			DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, rs, ps, null);
 		}
@@ -343,16 +355,18 @@ public class GuildListHandler {
 	}
 
 	private static String truncateTo(String str, int maxLength) {
-		if (str.length() > maxLength)
+		if (str.length() > maxLength) {
 			return str.substring(0, maxLength);
+		}
 		return str;
 	}
 
 	private static int getAndIncrement(Connection con, String table, String field, String tableKey1, String tableKey2, int keyValue1, int keyValue2, String description) {
 		int value = -1;
 		String whereClause = "WHERE `" + tableKey1 + "` = ?";
-		if (tableKey2 != null)
+		if (tableKey2 != null) {
 			whereClause += " AND `" + tableKey2 + "` = ?";
+		}
 
 		int prevTransactionIsolation = Connection.TRANSACTION_REPEATABLE_READ;
 		boolean prevAutoCommit = true;
@@ -365,19 +379,22 @@ public class GuildListHandler {
 			con.setAutoCommit(false);
 			ps = con.prepareStatement("SELECT `" + field + "` FROM `" + table + "` " + whereClause + " FOR UPDATE");
 			ps.setInt(1, keyValue1);
-			if (tableKey2 != null)
+			if (tableKey2 != null) {
 				ps.setInt(2, keyValue2);
+			}
 			rs = ps.executeQuery();
-			if (!rs.next())
+			if (!rs.next()) {
 				return value;
+			}
 
 			value = rs.getInt(1);
 			rs.close();
 			ps.close();
 			ps = con.prepareStatement("UPDATE `" + table + "` SET `" + field + "` = `" + field + "` + 1 " + whereClause);
 			ps.setInt(1, keyValue1);
-			if (tableKey2 != null)
+			if (tableKey2 != null) {
 				ps.setInt(2, keyValue2);
+			}
 			ps.executeUpdate();
 			con.commit();
 			return value;
@@ -407,19 +424,22 @@ public class GuildListHandler {
 	public static void handleGuildBbs(LittleEndianReader packet, GameClient gc) {
 		GameCharacter p = gc.getPlayer();
 		GuildList guild = p.getGuild();
-		if (guild == null)
+		if (guild == null) {
 			return; //player has just been expelled from guild or is packet editing
 
+		}
 		switch (packet.readByte()) {
 			case EDIT_TOPIC_STARTER: {
 				BbsTopic topic;
 				guild.lockBbsWrite();
 				try {
 					int topicId = -1; //new topic
-					if (packet.readBool())
+					if (packet.readBool()) {
 						topicId = packet.readInt(); //edit existing topic
-					if (packet.readBool())
+					}
+					if (packet.readBool()) {
 						topicId = 0; //create new notice topic
+					}
 					String subject = truncateTo(packet.readLengthPrefixedString(), 25);
 					String content = truncateTo(packet.readLengthPrefixedString(), 600);
 					int icon = packet.readInt();
@@ -440,10 +460,11 @@ public class GuildListHandler {
 						con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
 						if (topicId == -1 || topicId == 0) {
 							String query = "INSERT INTO `guildbbstopics` (`guildid`,`topicid`,`poster`,`posttime`,`subject`,`content`,`icon`) VALUES (?,?,?,?,?,?,?)";
-							if (topicId == -1)
+							if (topicId == -1) {
 								topicId = getAndIncrement(con, "guilds", "nextbbstopicid", "id", null, guild.getId(), -1, "topic ID");
-							else if (topicId == 0)
+							} else if (topicId == 0) {
 								query += " ON DUPLICATE KEY UPDATE `posttime` = ?, `subject` = ?, `content` = ?, `icon` = ?";
+							}
 							ps = con.prepareStatement(query);
 							ps.setInt(1, guild.getId());
 							ps.setInt(2, topicId);
@@ -459,11 +480,12 @@ public class GuildListHandler {
 								ps.setInt(11, icon);
 							}
 							ps.executeUpdate();
-							if (topicId == -1)
+							if (topicId == -1) {
 								//assume no replies were made yet
 								topic = new BbsTopic(topicId, p.getId(), now, subject, content, icon, Collections.<BbsReply>emptyList());
-							else
+							} else {
 								topic = new BbsTopic(topicId, p.getId(), now, subject, content, icon, loadReplies(con, guild.getId(), topicId));
+							}
 						} else {
 							ps = con.prepareStatement("UPDATE `guildbbstopics` SET `posttime` = ?, `subject` = ?, `content` = ?, `icon` = ? WHERE `guildid` = ? AND `topicid` = ? AND (`poster` = ? OR ?)");
 							ps.setLong(1, now);
@@ -518,7 +540,7 @@ public class GuildListHandler {
 							//guild's master or a junior master
 							CheatTracker.get(gc).suspicious(CheatTracker.Infraction.POSSIBLE_PACKET_EDITING, "Tried to delete BBS topic without permission");
 						}
-					}  catch (SQLException ex) {
+					} catch (SQLException ex) {
 						LOG.log(Level.WARNING, "Could not delete guild BBS topic", ex);
 					} finally {
 						DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, ps, con);
@@ -548,7 +570,7 @@ public class GuildListHandler {
 						rs = ps.executeQuery();
 						rs.next();
 						totalTopics = rs.getInt(1);
-					}  catch (SQLException ex) {
+					} catch (SQLException ex) {
 						LOG.log(Level.WARNING, "Could not list guild BBS topics", ex);
 						return;
 					} finally {
@@ -563,14 +585,15 @@ public class GuildListHandler {
 			}
 			case LOAD_TOPIC: {
 				int topicId = packet.readInt();
-				
+
 				BbsTopic topic;
 				Connection con = null;
 				try {
 					con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
 					topic = loadTopic(con, guild.getId(), topicId);
-					if (topic == null)
+					if (topic == null) {
 						return;
+					}
 				} catch (SQLException ex) {
 					LOG.log(Level.WARNING, "Could not load guild BBS topic", ex);
 					return;
@@ -643,7 +666,7 @@ public class GuildListHandler {
 						}
 
 						topic = loadTopic(con, guild.getId(), topicId);
-					}  catch (SQLException ex) {
+					} catch (SQLException ex) {
 						LOG.log(Level.WARNING, "Could not delete guild BBS reply", ex);
 						return;
 					} finally {
@@ -695,8 +718,9 @@ public class GuildListHandler {
 		lew.writeShort(ClientSendOps.BBS_OPERATION);
 		lew.writeByte(TOPIC_LIST);
 		lew.writeBool(notice != null);
-		if (notice != null)
+		if (notice != null) {
 			writeBbsEntry(lew, notice);
+		}
 		lew.writeInt(totalTopics);
 		lew.writeInt(topics.size());
 		for (BbsTopic topic : topics)

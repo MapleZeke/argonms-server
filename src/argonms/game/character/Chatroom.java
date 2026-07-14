@@ -138,10 +138,11 @@ public class Chatroom {
 	 */
 	public final void setAvatar(byte pos, Avatar a, boolean local) {
 		occupants[pos] = a;
-		if (local && a != null)
+		if (local && a != null) {
 			localAvatarPositions.add(Byte.valueOf(pos));
-		else
+		} else {
 			localAvatarPositions.remove(Byte.valueOf(pos));
+		}
 	}
 
 	/**
@@ -159,9 +160,11 @@ public class Chatroom {
 	 * @return 
 	 */
 	public byte positionOf(int playerId) {
-		for (byte i = 0; i < 3; i++)
-			if (occupants[i] != null && occupants[i].getPlayerId() == playerId)
+		for (byte i = 0; i < 3; i++) {
+			if (occupants[i] != null && occupants[i].getPlayerId() == playerId) {
 				return i;
+			}
+		}
 		return -1;
 	}
 
@@ -171,9 +174,11 @@ public class Chatroom {
 	 */
 	public boolean isFull() {
 		byte occupied = 0;
-		for (byte i = 0; i < 3; i++)
-			if (occupants[i] != null)
+		for (byte i = 0; i < 3; i++) {
+			if (occupants[i] != null) {
 				occupied++;
+			}
+		}
 		return occupied == 3;
 	}
 
@@ -191,9 +196,11 @@ public class Chatroom {
 	 */
 	public Set<Byte> allChannels() {
 		Set<Byte> set = new HashSet<>(3);
-		for (byte i = 0; i < 3; i++)
-			if (occupants[i] != null)
+		for (byte i = 0; i < 3; i++) {
+			if (occupants[i] != null) {
 				set.add(Byte.valueOf(occupants[i].getChannel()));
+			}
+		}
 		return set;
 	}
 

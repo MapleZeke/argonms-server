@@ -42,7 +42,7 @@ import java.util.logging.Logger;
  *
  * @author GoldenKevin
  */
-public class RemoteCenterSession<T extends RemoteCenterInterface> implements Session, SessionCreator {
+public final class RemoteCenterSession<T extends RemoteCenterInterface> implements Session, SessionCreator {
 	private static final Logger LOG = Logger.getLogger(RemoteCenterSession.class.getName());
 	private static final int HEADER_LENGTH = 4;
 	//1kb as the initial buffer size for each client isn't too unreasonable...
@@ -56,7 +56,7 @@ public class RemoteCenterSession<T extends RemoteCenterInterface> implements Ses
 	private ByteBuffer readBuffer;
 	private final T server;
 
-	private KeepAliveTask heartbeatTask;
+	private final KeepAliveTask heartbeatTask;
 	private final Runnable idleTask = new Runnable() {
 		@Override
 		public void run() {
@@ -116,7 +116,8 @@ public class RemoteCenterSession<T extends RemoteCenterInterface> implements Ses
 		try {
 			//spin loop if we don't write the entire buffer (although in
 			//blocking mode, that should never happen...)
-			while (buf.remaining() != commChn.write(buf));
+			while (buf.remaining() != commChn.write(buf)) {
+			}
 		} catch (IOException ex) {
 			//does an IOException in write always mean an invalid channel?
 			close(ex.getMessage());
@@ -146,9 +147,10 @@ public class RemoteCenterSession<T extends RemoteCenterInterface> implements Ses
 			}
 			stopPingTask();
 			//this check is thread safe - idleTaskFuture can never be null again after it has been assigned a non-null value
-			if (idleTaskFuture != null)
+			if (idleTaskFuture != null) {
 				//client closed before we could send init packet
 				idleTaskFuture.cancel(false);
+			}
 
 			LOG.log(Level.FINE, "Disconnected from center server ({0}): {1}", new Object[] { getAddress(), reason });
 			server.disconnected();
@@ -259,8 +261,9 @@ public class RemoteCenterSession<T extends RemoteCenterInterface> implements Ses
 
 		public void stop() {
 			ScheduledFuture<?> old = future.getAndSet(null);
-			if (old != null)
+			if (old != null) {
 				old.cancel(false);
+			}
 		}
 	}
 
@@ -281,10 +284,12 @@ public class RemoteCenterSession<T extends RemoteCenterInterface> implements Ses
 			@Override
 			public Thread newThread(Runnable r) {
 				Thread t = new Thread(group, r, "internal-worker-thread", 0);
-				if (t.isDaemon())
+				if (t.isDaemon()) {
 					t.setDaemon(false);
-				if (t.getPriority() != Thread.NORM_PRIORITY)
+				}
+				if (t.getPriority() != Thread.NORM_PRIORITY) {
 					t.setPriority(Thread.NORM_PRIORITY);
+				}
 				return t;
 			}
 		});

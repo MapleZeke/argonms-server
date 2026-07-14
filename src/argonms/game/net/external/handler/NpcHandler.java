@@ -45,8 +45,9 @@ public final class NpcHandler {
 
 	public static void handleContinueConversation(LittleEndianReader packet, GameClient gc) {
 		ScriptNpc npc = gc.getNpc();
-		if (npc != null)
+		if (npc != null) {
 			ScriptObjectManipulator.npcResponseReceived(npc, packet);
+		}
 	}
 
 	public static void handleQuestAction(LittleEndianReader packet, GameClient gc) {

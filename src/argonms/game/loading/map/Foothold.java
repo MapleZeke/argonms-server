@@ -93,12 +93,13 @@ public class Foothold implements Comparable<Foothold> {
 
 	@Override
 	public int compareTo(Foothold o) {
-		if (y2 < o.getY1())
+		if (y2 < o.getY1()) {
 			return -1;
-		else if (y1 > o.getY2())
+		} else if (y1 > o.getY2()) {
 			return 1;
-		else
+		} else {
 			return 0;
+		}
 	}
 
 	@Override

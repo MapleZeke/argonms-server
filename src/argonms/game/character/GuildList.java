@@ -195,15 +195,15 @@ public class GuildList extends IntraworldGroupList<
 
 	public byte getLowestRank() {
 		byte i;
-		for (i = 5; i >= 4 && titles[i - 1].isEmpty(); --i);
+		for (i = 5; i >= 4 && titles[i - 1].isEmpty(); --i) {
+		}
 		return i;
 	}
 
 	@Override
 	protected LocalMember createLocalMember(GameCharacter p) {
 		Member existing = getMember(p.getId());
-		LocalMember member = new LocalMember(p, existing != null ? existing.getRank() : getLowestRank());
-		return member;
+		return new LocalMember(p, existing != null ? existing.getRank() : getLowestRank());
 	}
 
 	@Override
@@ -222,8 +222,9 @@ public class GuildList extends IntraworldGroupList<
 			@Override
 			public int compare(Member o1, Member o2) {
 				int delta = o1.getRank() - o2.getRank();
-				if (delta == 0)
+				if (delta == 0) {
 					delta = o1.getName().compareTo(o2.getName());
+				}
 				return delta;
 			}
 		});
@@ -239,8 +240,9 @@ public class GuildList extends IntraworldGroupList<
 	protected void removeFromOffline(IntraworldGroupList.Member member) {
 		Map<Integer, RemoteMember> others = remoteMembers.get(Byte.valueOf(OFFLINE_CH));
 		others.remove(Integer.valueOf(member.getPlayerId()));
-		if (others.isEmpty())
+		if (others.isEmpty()) {
 			remoteMembers.remove(Byte.valueOf(OFFLINE_CH));
+		}
 	}
 
 	@Override
@@ -263,12 +265,14 @@ public class GuildList extends IntraworldGroupList<
 	@Override
 	public Member getMember(int playerId) {
 		Member member = localMembers.get(Integer.valueOf(playerId));
-		if (member != null)
+		if (member != null) {
 			return member;
+		}
 		for (Map<Integer, RemoteMember> channel : remoteMembers.values()) {
 			member = channel.get(Integer.valueOf(playerId));
-			if (member != null)
+			if (member != null) {
 				return member;
+			}
 		}
 		return null;
 	}

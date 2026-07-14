@@ -46,26 +46,25 @@ public abstract class NpcDataLoader {
 	public abstract boolean loadAll();
 
 	public NpcStorageKeeper getStorageById(int npcId) {
-		if (!loaded.contains(Integer.valueOf(npcId)))
+		if (!loaded.contains(Integer.valueOf(npcId))) {
 			load(npcId);
+		}
 		return storageCosts.get(Integer.valueOf(npcId));
 	}
 
 	public String getScriptName(int npcId) {
-		if (!loaded.contains(Integer.valueOf(npcId)))
+		if (!loaded.contains(Integer.valueOf(npcId))) {
 			load(npcId);
+		}
 		return scriptNames.get(Integer.valueOf(npcId));
 	}
 
 	public static void setInstance(DataFileType wzType, String wzPath) {
 		if (instance == null) {
-			switch (wzType) {
-				case KVJ:
-					instance = new KvjNpcDataLoader(wzPath);
-					break;
-				default:
-					instance = new DefaultNpcDataLoader();
-					break;
+			if (wzType == DataFileType.KVJ) {
+				instance = new KvjNpcDataLoader(wzPath);
+			} else {
+				instance = new DefaultNpcDataLoader();
 			}
 		}
 	}

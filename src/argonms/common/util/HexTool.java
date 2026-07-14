@@ -72,8 +72,9 @@ public final class HexTool {
 	private static String toString(byte[] input, char delimiter) {
 		char[] output;
 		if (delimiter != '\0') {
-			if (input.length == 0)
+			if (input.length == 0) {
 				return "";
+			}
 
 			output = new char[input.length * 3 - 1];
 			for (int i = 0; i < input.length - 1; i++) {
@@ -145,13 +146,15 @@ public final class HexTool {
 	private static byte[] getByteArrayFromHexString(String hex, boolean delimited) {
 		if (delimited) {
 			byte[] data = new byte[hex.length() / 3 + 1];
-			for (int i = 0; i < data.length; i++)
+			for (int i = 0; i < data.length; i++) {
 				data[i] = (byte) ((Character.digit(hex.charAt(i * 3), 16) << 4) + Character.digit(hex.charAt(i * 3 + 1), 16));
+			}
 			return data;
 		} else {
 			byte[] data = new byte[hex.length() / 2];
-			for (int i = 0; i < data.length; i++)
+			for (int i = 0; i < data.length; i++) {
 				data[i] = (byte) ((Character.digit(hex.charAt(i * 2), 16) << 4) + Character.digit(hex.charAt(i * 2 + 1), 16));
+			}
 			return data;
 		}
 	}

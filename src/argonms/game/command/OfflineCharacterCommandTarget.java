@@ -374,8 +374,9 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 							int quantity;
 							if (value.quantity == Integer.MIN_VALUE) {
 								quantity = InventoryTools.getAmountOfItem(inv, value.itemId);
-								if (type == Inventory.InventoryType.EQUIP)
+								if (type == Inventory.InventoryType.EQUIP) {
 									quantity += InventoryTools.getAmountOfItem(inv, value.itemId);
+								}
 							} else {
 								quantity = -value.quantity;
 							}
@@ -484,8 +485,9 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 
 						Inventory inv = inventories.get(value.type);
 						short upperBound = (short) Math.min(value.endSlot, inv.getMaxSlots());
-						for (short slot = value.startSlot; slot <= upperBound; slot++)
+						for (short slot = value.startSlot; slot <= upperBound; slot++) {
 							inv.remove(slot);
+						}
 
 						ps = con.prepareStatement("DELETE FROM `inventoryitems` WHERE "
 								+ "`characterid` = ? AND `inventorytype` = ?");

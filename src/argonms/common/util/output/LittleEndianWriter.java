@@ -86,8 +86,9 @@ public abstract class LittleEndianWriter {
 	}
 
 	public LittleEndianWriter writeNullTerminatedString(String str) {
-		if (str != null)
+		if (str != null) {
 			writeBytes(str.getBytes(asciiEncoder));
+		}
 		writeChar('\0');
 		return this;
 	}

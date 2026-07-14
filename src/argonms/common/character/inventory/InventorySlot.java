@@ -101,10 +101,11 @@ public abstract class InventorySlot implements Comparable<InventorySlot>, Clonea
 	}
 
 	public void setFlagBit(byte bit, boolean value) {
-		if (value)
+		if (value) {
 			this.flag |= bit;
-		else
+		} else {
 			this.flag &= ~bit;
+		}
 	}
 
 	@Override

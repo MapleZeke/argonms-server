@@ -87,8 +87,9 @@ public class McdbMobDataLoader extends MobDataLoader {
 
 	@Override
 	public boolean canLoad(int mobid) {
-		if (mobStats.containsKey(mobid))
+		if (mobStats.containsKey(mobid)) {
 			return true;
+		}
 		Connection con = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -98,8 +99,9 @@ public class McdbMobDataLoader extends MobDataLoader {
 			ps = con.prepareStatement("SELECT * FROM `mobdata` WHERE `mobid` = ?");
 			ps.setInt(1, mobid);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				exists = true;
+			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not use MCDB to determine whether mob " + mobid + " is valid.", e);
 		} finally {
@@ -113,14 +115,16 @@ public class McdbMobDataLoader extends MobDataLoader {
 		stats.setMaxHp(rs.getInt(3));
 		stats.setMaxMp(rs.getInt(4));
 		stats.setExp(rs.getInt(8));
-		if (rs.getInt(13) != 0)
+		if (rs.getInt(13) != 0) {
 			stats.setUndead();
+		}
 		stats.setElementalAttribute(rs.getString(20));
 		stats.setRemoveAfter(rs.getInt(11));
 		stats.setHpTagColor(rs.getByte(18));
 		stats.setHpTagBgColor(rs.getByte(19));
-		if (rs.getInt(12) != 0)
+		if (rs.getInt(12) != 0) {
 			stats.setBoss();
+		}
 		stats.setSelfDestructHp(rs.getInt(7));
 		PreparedStatement ps = null;
 		ResultSet rs2 = null;
@@ -128,8 +132,9 @@ public class McdbMobDataLoader extends MobDataLoader {
 			ps = con.prepareStatement("SELECT `summonid` FROM `mobsummondata` where `mobid` = ?");
 			ps.setInt(1, mobid);
 			rs2 = ps.executeQuery();
-			while (rs2.next())
+			while (rs2.next()) {
 				stats.addSummon(rs2.getInt(1));
+			}
 			rs2.close();
 			ps.close();
 			ps = con.prepareStatement("SELECT `skillid`,`level`,`effectafter` FROM `mobskilldata` WHERE `mobid` = ?");
@@ -148,11 +153,13 @@ public class McdbMobDataLoader extends MobDataLoader {
 			ps = con.prepareStatement("SELECT `ismesos`,`itemid`,`min`,`max`,`chance` FROM `dropdata` WHERE `dropperid` = ?");
 			ps.setInt(1, mobid);
 			rs2 = ps.executeQuery();
-			while (rs2.next())
-				if (rs2.getBoolean(1))
+			while (rs2.next()) {
+				if (rs2.getBoolean(1)) {
 					stats.setMesoDrop(rs2.getInt(5), rs2.getInt(3), rs2.getInt(4));
-				else
+				} else {
 					stats.addItemDrop(rs2.getInt(2), rs2.getInt(5), rs.getShort(3), rs.getShort(4));
+				}
+			}
 			rs2.close();
 			ps.close();
 			ps = con.prepareStatement("SELECT `attackid`,`mpconsume`,`mpburn`,`disease`,`level`,`deadly` FROM `mobattackdata` WHERE `mobid` = ?");

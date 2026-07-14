@@ -104,7 +104,7 @@ import java.util.logging.Logger;
  *
  * @author GoldenKevin
  */
-public class GameCharacter extends LoggedInPlayer implements MapEntity {
+public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 	private static final Logger LOG = Logger.getLogger(GameCharacter.class.getName());
 
 	private Point pos;
@@ -212,11 +212,13 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 					for (Iterator<Map.Entry<Short, InventorySlot>> iter = inv.getValue().getAll().entrySet().iterator(); iter.hasNext(); ) {
 						Map.Entry<Short, InventorySlot> slotEntry = iter.next();
 						InventorySlot item = slotEntry.getValue();
-						if (item.getUniqueId() != uniqueId)
+						if (item.getUniqueId() != uniqueId) {
 							continue;
+						}
 
-						if (expireItem(inv.getKey(), slotEntry.getKey().shortValue(), item, false))
+						if (expireItem(inv.getKey(), slotEntry.getKey().shortValue(), item, false)) {
 							iter.remove();
+						}
 						return;
 					}
 				}
@@ -330,9 +332,10 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			ps.setByte(32, getPrivilegeLevel());
 			ps.setInt(33, getDataId());
 			int updateRows = ps.executeUpdate();
-			if (updateRows < 1)
+			if (updateRows < 1) {
 				LOG.log(Level.WARNING, "Updating a deleted character with name {0} of account {1}.",
-						new Object[] { name, client.getAccountId() });
+					new Object[]{name, client.getAccountId()});
+			}
 		} catch (SQLException e) {
 			throw new SQLException("Failed to save stats of character " + name, e);
 		} finally {
@@ -392,8 +395,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 						break;
 					}
 				}
-				if (!inInventory)
+				if (!inInventory) {
 					continue;
+				}
 
 				ps.setLong(2, uniqueId);
 				for (int itemId : entry.getValue()) {
@@ -489,9 +493,10 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			ps.setInt(1, getDataId());
 			for (byte pos = 0; pos < skillMacros.length; pos++) {
 				SkillMacro macro = skillMacros[pos];
-				if (macro.getName().isEmpty() && !macro.isSilent() && macro.getFirstSkill() == 0 && macro.getSecondSkill() == 0 && macro.getThirdSkill() == 0)
+				if (macro.getName().isEmpty() && !macro.isSilent() && macro.getFirstSkill() == 0 && macro.getSecondSkill() == 0 && macro.getThirdSkill() == 0) {
 					continue; //placeholder macro
 
+				}
 				ps.setByte(2, pos);
 				ps.setString(3, macro.getName());
 				ps.setBoolean(4, macro.isSilent());
@@ -698,13 +703,13 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		try {
 			con = DatabaseManager.getConnection(DatabaseType.STATE);
 			ps = con.prepareStatement("SELECT `c`.*,`a`.`name`,`a`.`storageslots`,`a`.`storagemesos` "
-					+ "FROM `characters` `c` LEFT JOIN `accounts` `a` ON `c`.`accountid` = `a`.`id` "
-					+ "WHERE `c`.`id` = ?");
+				+ "FROM `characters` `c` LEFT JOIN `accounts` `a` ON `c`.`accountid` = `a`.`id` "
+				+ "WHERE `c`.`id` = ?");
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
 			if (!rs.next()) {
 				LOG.log(Level.WARNING, "Client requested to load a nonexistent character w/ id {0} (account {1}).",
-						new Object[] { id, c.getAccountId() });
+					new Object[]{id, c.getAccountId()});
 				return null;
 			}
 			int accountid = rs.getInt(1);
@@ -712,7 +717,7 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			byte world = rs.getByte(2);
 			if (world != c.getWorld()) { //we are aware of our world
 				LOG.log(Level.WARNING, "Client account {0} is trying to load character {1} on world {2} but exists on world {3}",
-						new Object[] { accountid, id, c.getWorld(), world });
+					new Object[]{accountid, id, c.getWorld(), world});
 				return null;
 			}
 			GameCharacter p = new GameCharacter();
@@ -739,16 +744,17 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			ps = con.prepareStatement("SELECT `key`,`value`,`spawnpoint` FROM `mapmemory` WHERE `characterid` = ?");
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				p.rememberedMaps.put(MapMemoryVariable.valueOf(rs.getString(1)), new Pair<Integer, Byte>(Integer.valueOf(rs.getInt(2)), Byte.valueOf(rs.getByte(3))));
+			}
 			rs.close();
 			ps.close();
 
 			EnumMap<InventoryType, IInventory> invUnion = new EnumMap<>(p.getInventories());
 			invUnion.put(InventoryType.STORAGE, p.storage);
 			ps = con.prepareStatement("SELECT * FROM `inventoryitems` WHERE "
-					+ "`characterid` = ? AND `inventorytype` <= " + InventoryType.CASH.byteValue()
-					+ " OR `accountid` = ? AND `inventorytype` = " + InventoryType.STORAGE.byteValue());
+				+ "`characterid` = ? AND `inventorytype` <= " + InventoryType.CASH.byteValue()
+				+ " OR `accountid` = ? AND `inventorytype` = " + InventoryType.STORAGE.byteValue());
 			ps.setInt(1, id);
 			ps.setInt(2, accountid);
 			rs = ps.executeQuery();
@@ -756,9 +762,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			rs.close();
 			ps.close();
 			ps = con.prepareStatement("SELECT `c`.`uniqueid`,`p`.`ignoreitem` FROM `petignoreitems` `p` "
-					+ "LEFT JOIN `inventoryitems` `i` ON `p`.`petinventoryitemid` = `i`.`inventoryitemid` "
-					+ "LEFT JOIN `cashshoppurchases` `c` ON `i`.`inventoryitemid` = `c`.`inventoryitemid` "
-					+ "WHERE `i`.`characterid` = ? ORDER BY `c`.`uniqueid`");
+				+ "LEFT JOIN `inventoryitems` `i` ON `p`.`petinventoryitemid` = `i`.`inventoryitemid` "
+				+ "LEFT JOIN `cashshoppurchases` `c` ON `i`.`inventoryitemid` = `c`.`inventoryitemid` "
+				+ "WHERE `i`.`characterid` = ? ORDER BY `c`.`uniqueid`");
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
 			if (rs.next()) {
@@ -769,8 +775,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 					long uniqueId = rs.getLong(1);
 					if (currentUniqueId != uniqueId) {
 						int[] array = new int[currentItemsForPet.size()];
-						for (int i = 0; i < array.length; i++)
+						for (int i = 0; i < array.length; i++) {
 							array[i] = currentItemsForPet.get(i).intValue();
+						}
 						p.petIgnoreItems.put(Long.valueOf(currentUniqueId), array);
 						currentUniqueId = uniqueId;
 						currentItemsForPet.clear();
@@ -778,15 +785,17 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 					currentItemsForPet.add(Integer.valueOf(rs.getInt(2)));
 				}
 				int[] array = new int[currentItemsForPet.size()];
-				for (int i = 0; i < array.length; i++)
+				for (int i = 0; i < array.length; i++) {
 					array[i] = currentItemsForPet.get(i).intValue();
+				}
 				p.petIgnoreItems.put(Long.valueOf(currentUniqueId), array);
 			}
 			rs.close();
 			ps.close();
 			Pet[] pets = p.getPets();
-			for (byte i = 0; i < 3 && pets[i] != null; i++)
+			for (byte i = 0; i < 3 && pets[i] != null; i++) {
 				p.createPetFullnessSchedule(pets[i], i);
+			}
 
 			//inventories should still be safe right now, so no need for synchronization...
 			for (InventorySlot equip : p.getInventory(InventoryType.EQUIPPED).getAll().values())
@@ -796,25 +805,27 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			p.remMp = (short) Math.min(p.remMp, p.maxMp);
 
 			ps = con.prepareStatement("SELECT `skillid`,`level`,`mastery` "
-					+ "FROM `skills` WHERE `characterid` = ?");
+				+ "FROM `skills` WHERE `characterid` = ?");
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				p.skillEntries.put(Integer.valueOf(rs.getInt(1)), new SkillEntry(rs.getByte(2), rs.getByte(3)));
+			}
 			rs.close();
 			ps.close();
 
 			ps = con.prepareStatement("SELECT `skillid`,`remaining` "
-					+ "FROM `cooldowns` WHERE `characterid` = ?");
+				+ "FROM `cooldowns` WHERE `characterid` = ?");
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				p.addCooldown(rs.getInt(1), rs.getShort(2));
+			}
 			rs.close();
 			ps.close();
 
 			ps = con.prepareStatement("SELECT `key`,`type`,`action` "
-					+ "FROM `keymaps` WHERE `characterid` = ?");
+				+ "FROM `keymaps` WHERE `characterid` = ?");
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
 			while (rs.next()) {
@@ -827,37 +838,41 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			ps.close();
 
 			ps = con.prepareStatement("SELECT `position`,`name`,`silent`,`skill1`,`skill2`,`skill3` "
-					+ "FROM `skillmacros` WHERE `characterid` = ? ORDER BY `position` DESC");
+				+ "FROM `skillmacros` WHERE `characterid` = ? ORDER BY `position` DESC");
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
 			byte macroPos = 0;
 			for (boolean first = true; rs.next(); first = false) {
 				macroPos = rs.getByte(1);
-				if (first)
+				if (first) {
 					p.skillMacros = new SkillMacro[macroPos + 1];
+				}
 				p.skillMacros[macroPos] = new SkillMacro(rs.getString(2),
-						rs.getBoolean(3), rs.getInt(4), rs.getInt(5),
-						rs.getInt(6));
+					rs.getBoolean(3), rs.getInt(4), rs.getInt(5),
+					rs.getInt(6));
 			}
-			if (p.skillMacros == null)
+			if (p.skillMacros == null) {
 				p.skillMacros = new SkillMacro[0]; //no macros
-			for (macroPos--; macroPos >= 0; macroPos--)
+			}
+			for (macroPos--; macroPos >= 0; macroPos--) {
 				p.skillMacros[macroPos] = new SkillMacro("", false, 0, 0, 0); //placeholder macro
+			}
 			rs.close();
 			ps.close();
 
 			ps = con.prepareStatement("SELECT `e`.`buddy` AS `id`,"
-					+ "IF(ISNULL(`c`.`name`),`e`.`buddyname`,`c`.`name`) AS `name`,`e`.`status` "
-					+ "FROM `buddyentries` `e` LEFT JOIN `characters` `c` ON `c`.`id` = `e`.`buddy` "
-					+ "WHERE `owner` = ?");
+				+ "IF(ISNULL(`c`.`name`),`e`.`buddyname`,`c`.`name`) AS `name`,`e`.`status` "
+				+ "FROM `buddyentries` `e` LEFT JOIN `characters` `c` ON `c`.`id` = `e`.`buddy` "
+				+ "WHERE `owner` = ?");
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
 			while (rs.next()) {
 				byte status = rs.getByte(3);
-				if (status != BuddyListEntry.STATUS_INVITED)
+				if (status != BuddyListEntry.STATUS_INVITED) {
 					p.buddies.addBuddy(new BuddyListEntry(rs.getInt(1), rs.getString(2), status));
-				else
+				} else {
 					p.buddies.addInvite(rs.getInt(1), rs.getString(2));
+				}
 			}
 			rs.close();
 			ps.close();
@@ -865,28 +880,30 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			ps = con.prepareStatement("SELECT `partyid` FROM `parties` WHERE `characterid` = ?");
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				p.party = GameServer.getChannel(c.getChannel()).getCrossServerInterface().sendFetchPartyList(rs.getInt(1));
+			}
 			rs.close();
 			ps.close();
 
 			ps = con.prepareStatement("SELECT `g`.`id` FROM `guilds` `g` LEFT JOIN `guildmembers` `m` ON `g`.`id` = `m`.`guildid` WHERE `m`.`characterid` = ?");
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				p.guild = GameServer.getChannel(c.getChannel()).getCrossServerInterface().sendFetchGuildList(rs.getInt(1));
+			}
 			rs.close();
 			ps.close();
 
 			ps = con.prepareStatement("SELECT `id`,`questid`,`state`,`completed` "
-					+ "FROM `queststatuses` WHERE `characterid` = ?");
+				+ "FROM `queststatuses` WHERE `characterid` = ?");
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
 			PreparedStatement mps = null;
 			ResultSet mrs;
 			try {
 				mps = con.prepareStatement("SELECT `mobid`,`count` "
-						+ "FROM `questmobprogress` WHERE `queststatusid` = ?");
+					+ "FROM `questmobprogress` WHERE `queststatusid` = ?");
 				while (rs.next()) {
 					int questEntryId = rs.getInt(1);
 					short questId = rs.getShort(2);
@@ -897,8 +914,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 						mrs = null;
 						try {
 							mrs = mps.executeQuery();
-							while (mrs.next())
+							while (mrs.next()) {
 								mobProgress.put(Integer.valueOf(mrs.getInt(1)), new AtomicInteger(mrs.getShort(2)));
+							}
 						} finally {
 							DatabaseManager.cleanup(DatabaseType.STATE, mrs, null, null);
 						}
@@ -911,16 +929,18 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 						if (qc != null) {
 							for (Entry<Integer, Short> mob : qc.getReqMobCounts().entrySet())
 								//mob progress cannot be undone, so it's safe to do this
-								if (status.getMobCount(mob.getKey().intValue()) < mob.getValue().shortValue())
+								if (status.getMobCount(mob.getKey().intValue()) < mob.getValue().shortValue()) {
 									p.addToWatchedList(questId, QuestRequirementType.MOB, mob.getKey());
+								}
 							for (QuestItemStats item : qc.getReqItems())
 								p.addToWatchedList(questId, QuestRequirementType.ITEM, item.getItemId());
 							for (Integer petId : qc.getReqPets())
 								p.addToWatchedList(questId, QuestRequirementType.PET, petId);
 							for (Short reqQuestId : qc.getReqQuests().keySet())
 								p.addToWatchedList(questId, QuestRequirementType.QUEST, reqQuestId);
-							if (qc.requiresMesos())
+							if (qc.requiresMesos()) {
 								p.addToWatchedList(questId, QuestRequirementType.MESOS);
+							}
 						}
 					}
 				}
@@ -952,8 +972,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 				//given time >= now - 30 days
 				if (time >= threshold) {
 					p.famesThisMonth.put(Integer.valueOf(rs.getInt(3)), Long.valueOf(time));
-					if (time > p.lastFameGiven)
+					if (time > p.lastFameGiven) {
 						p.lastFameGiven = time;
+					}
 				}
 			}
 			rs.close();
@@ -962,8 +983,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			ps = con.prepareStatement("SELECT `sn` FROM `wishlists` WHERE `characterid` = ?");
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				p.wishList.add(Integer.valueOf(rs.getInt(1)));
+			}
 			return p;
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load character " + id + " from database", ex);
@@ -987,18 +1009,21 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		if (item.getType() == InventorySlot.ItemType.PET) {
 			Pet pet = (Pet) item;
 			byte petSlot = indexOfPet(pet.getUniqueId());
-			if (petSlot != -1)
+			if (petSlot != -1) {
 				removePet(petSlot, (byte) 2);
-			if (!onLogin)
+			}
+			if (!onLogin) {
 				getClient().getSession().send(CommonPackets.writeInventoryUpdatePet(slot, pet));
+			}
 			return false;
 		} else {
 			if (slot < 0) {
 				//expired an equipped equip
 				equipChanged((Equip) item, false, true);
 				getMap().sendToAll(GamePackets.writeUpdateAvatar(GameCharacter.this), GameCharacter.this);
-				if (getChatRoom() != null)
+				if (getChatRoom() != null) {
 					GameServer.getChannel(getClient().getChannel()).getCrossServerInterface().sendChatroomPlayerLookUpdate(GameCharacter.this, getChatRoom().getRoomId());
+				}
 			}
 			getClient().getSession().send(CommonPackets.writeInventoryClearSlot(invType != InventoryType.EQUIPPED ? invType : InventoryType.EQUIP, slot));
 			getClient().getSession().send(GamePackets.writeItemExpired(item.getDataId()));
@@ -1014,12 +1039,14 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 				Map.Entry<Short, InventorySlot> slotEntry = iter.next();
 				InventorySlot item = slotEntry.getValue();
 				if (item.getExpiration() != 0) {
-					if (item.getUniqueId() == 0) //some quest items have expiration times
+					if (item.getUniqueId() == 0) { //some quest items have expiration times
 						item.setUniqueId(generateTransientUniqueIdForQuestItem());
-					if (now < item.getExpiration())
+					}
+					if (now < item.getExpiration()) {
 						itemExpireTask.addExpire(item.getExpiration(), item.getUniqueId());
-					else if (expireItem(inv.getKey(), slotEntry.getKey().shortValue(), item, true))
+					} else if (expireItem(inv.getKey(), slotEntry.getKey().shortValue(), item, true)) {
 						iter.remove();
+					}
 				}
 			}
 		}
@@ -1036,8 +1063,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 
 			Map<ClientUpdateKey, Number> updatedStats = new EnumMap<>(ClientUpdateKey.class);
 			long newExp = (long) exp + gain; //should solve many overflow errors
-			if (newExp >= ExpTables.getExpForPlayerLevel(level))
+			if (newExp >= ExpTables.getExpForPlayerLevel(level)) {
 				newExp = levelUp(newExp, updatedStats);
+			}
 			updatedStats.put(ClientUpdateKey.EXP, Integer.valueOf(exp = (int) newExp));
 			getClient().getSession().send(GamePackets.writeUpdatePlayerStats(updatedStats, false));
 		}
@@ -1084,16 +1112,20 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 					break;
 			}
 			byte skillLevel;
-			if ((skillLevel = getSkillLevel(Skills.IMPROVED_MAXHP_INCREASE)) != 0)
+			if ((skillLevel = getSkillLevel(Skills.IMPROVED_MAXHP_INCREASE)) != 0) {
 				hpInc += SkillDataLoader.getInstance().getSkill(Skills.IMPROVED_MAXHP_INCREASE).getLevel(skillLevel).getX();
-			if ((skillLevel = getSkillLevel(Skills.IMPROVE_MAXHP)) != 0)
+			}
+			if ((skillLevel = getSkillLevel(Skills.IMPROVE_MAXHP)) != 0) {
 				hpInc += SkillDataLoader.getInstance().getSkill(Skills.IMPROVE_MAXHP).getLevel(skillLevel).getX();
-			if ((skillLevel = getSkillLevel(Skills.IMPROVED_MAXMP_INCREASE)) != 0)
+			}
+			if ((skillLevel = getSkillLevel(Skills.IMPROVED_MAXMP_INCREASE)) != 0) {
 				mpInc += SkillDataLoader.getInstance().getSkill(Skills.IMPROVED_MAXMP_INCREASE).getLevel(skillLevel).getX();
+			}
 			apInc += 5;
 			exp -= ExpTables.getExpForPlayerLevel(level++);
-			if (singleLevelOnly && exp >= ExpTables.getExpForPlayerLevel(level))
+			if (singleLevelOnly && exp >= ExpTables.getExpForPlayerLevel(level)) {
 				exp = ExpTables.getExpForPlayerLevel(level) - 1;
+			}
 		} while (level < GlobalConstants.MAX_LEVEL && exp >= ExpTables.getExpForPlayerLevel(level));
 
 		updateMaxHp((short) Math.min(baseMaxHp + hpInc, 30000));
@@ -1116,10 +1148,12 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		stats.put(ClientUpdateKey.AVAILABLESP, Short.valueOf(remSp));
 
 		getMap().sendToAll(GamePackets.writeShowLevelUp(this), this);
-		if (party != null)
+		if (party != null) {
 			GameServer.getChannel(getClient().getChannel()).getCrossServerInterface().sendPartyLevelOrJobUpdate(this, true);
-		if (guild != null)
+		}
+		if (guild != null) {
 			GameServer.getChannel(getClient().getChannel()).getCrossServerInterface().sendGuildLevelOrJobUpdate(this, true);
+		}
 		pushHpToParty();
 
 		return level < GlobalConstants.MAX_LEVEL ? exp : 0;
@@ -1129,13 +1163,16 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	public void setLevel(short newLevel) {
 		boolean levelUp = newLevel > getLevel();
 		super.setLevel(newLevel);
-		if (levelUp)
+		if (levelUp) {
 			getMap().sendToAll(GamePackets.writeShowLevelUp(this), this);
+		}
 		getClient().getSession().send(GamePackets.writeUpdatePlayerStats(Collections.singletonMap(ClientUpdateKey.LEVEL, Short.valueOf(level)), false));
-		if (party != null)
+		if (party != null) {
 			GameServer.getChannel(getClient().getChannel()).getCrossServerInterface().sendPartyLevelOrJobUpdate(this, true);
-		if (guild != null)
+		}
+		if (guild != null) {
 			GameServer.getChannel(getClient().getChannel()).getCrossServerInterface().sendGuildLevelOrJobUpdate(this, true);
+		}
 	}
 
 	@Override
@@ -1143,10 +1180,12 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		super.setJob(newJob);
 		getMap().sendToAll(GamePackets.writeShowJobChange(this), this);
 		getClient().getSession().send(GamePackets.writeUpdatePlayerStats(Collections.singletonMap(ClientUpdateKey.JOB, Short.valueOf(job)), false));
-		if (party != null)
+		if (party != null) {
 			GameServer.getChannel(getClient().getChannel()).getCrossServerInterface().sendPartyLevelOrJobUpdate(this, false);
-		if (guild != null)
+		}
+		if (guild != null) {
 			GameServer.getChannel(getClient().getChannel()).getCrossServerInterface().sendGuildLevelOrJobUpdate(this, false);
+		}
 	}
 
 	public int getCurrentStr() {
@@ -1162,8 +1201,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		super.setHair(newHair);
 		getMap().sendToAll(GamePackets.writeUpdateAvatar(this), this);
 		getClient().getSession().send(GamePackets.writeUpdatePlayerStats(Collections.singletonMap(ClientUpdateKey.HAIR, Short.valueOf(hair)), false));
-		if (chatroom != null)
+		if (chatroom != null) {
 			GameServer.getChannel(getClient().getChannel()).getCrossServerInterface().sendChatroomPlayerLookUpdate(this, chatroom.getRoomId());
+		}
 	}
 
 	@Override
@@ -1171,8 +1211,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		super.setSkin(newSkin);
 		getMap().sendToAll(GamePackets.writeUpdateAvatar(this), this);
 		getClient().getSession().send(GamePackets.writeUpdatePlayerStats(Collections.singletonMap(ClientUpdateKey.SKIN, Byte.valueOf(skin)), false));
-		if (chatroom != null)
+		if (chatroom != null) {
 			GameServer.getChannel(getClient().getChannel()).getCrossServerInterface().sendChatroomPlayerLookUpdate(this, chatroom.getRoomId());
+		}
 	}
 
 	@Override
@@ -1180,8 +1221,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		super.setEyes(newEyes);
 		getMap().sendToAll(GamePackets.writeUpdateAvatar(this), this);
 		getClient().getSession().send(GamePackets.writeUpdatePlayerStats(Collections.singletonMap(ClientUpdateKey.FACE, Short.valueOf(eyes)), false));
-		if (chatroom != null)
+		if (chatroom != null) {
 			GameServer.getChannel(getClient().getChannel()).getCrossServerInterface().sendChatroomPlayerLookUpdate(this, chatroom.getRoomId());
+		}
 	}
 
 	@Override
@@ -1233,10 +1275,11 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	}
 
 	public void setLocalHp(short newHp) {
-		if (newHp < 0)
+		if (newHp < 0) {
 			newHp = 0;
-		else if (newHp > maxHp)
+		} else if (newHp > maxHp) {
 			newHp = maxHp;
+		}
 		this.remHp = newHp;
 		pushHpToParty();
 	}
@@ -1245,8 +1288,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		boolean notAlreadyDead = isAlive();
 		setLocalHp(newHp);
 		getClient().getSession().send(GamePackets.writeUpdatePlayerStats(Collections.singletonMap(ClientUpdateKey.HP, Short.valueOf(remHp)), false));
-		if (notAlreadyDead && remHp == 0)
+		if (notAlreadyDead && remHp == 0) {
 			died();
+		}
 	}
 
 	public void gainHp(int gain) {
@@ -1259,8 +1303,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 
 	public void died() {
 		getClient().getSession().send(GamePackets.writeEnableActions());
-		if (event != null)
+		if (event != null) {
 			event.playerDied(this);
+		}
 
 		byte lossPercent;
 		Inventory inv = getInventory(InventoryType.CASH);
@@ -1284,8 +1329,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		} else {
 			lossPercent = 10;
 		}
-		if (lossPercent != 0)
+		if (lossPercent != 0) {
 			setExp(Math.max(0, exp - (int) ((long) ExpTables.getExpForPlayerLevel(getLevel()) * lossPercent / 100)));
+		}
 	}
 
 	private void updateMaxHp(short newMax) {
@@ -1309,11 +1355,12 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	}
 
 	public void recalculateMaxHp(short hhbPerc) {
-		if (hhbPerc == 0)
+		if (hhbPerc == 0) {
 			this.maxHp = (short) Math.min(30000, baseMaxHp + addMaxHp);
-		else
+		} else {
 			this.maxHp = (short) Math.min(30000, baseMaxHp + addMaxHp
-					+ Math.round((baseMaxHp + addMaxHp) * hhbPerc / 100.0));
+				+ Math.round((baseMaxHp + addMaxHp) * hhbPerc / 100.0));
+		}
 		pushHpToParty();
 	}
 
@@ -1336,10 +1383,11 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	}
 
 	public void setLocalMp(short newMp) {
-		if (newMp < 0)
+		if (newMp < 0) {
 			newMp = 0;
-		else if (newMp > maxMp)
+		} else if (newMp > maxMp) {
 			newMp = maxMp;
+		}
 		this.remMp = newMp;
 	}
 
@@ -1363,8 +1411,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 
 	public void setMaxMp(short newMax) {
 		updateMaxMp(newMax);
-		if (remMp > maxMp)
+		if (remMp > maxMp) {
 			remMp = maxMp;
+		}
 		getClient().getSession().send(GamePackets.writeUpdatePlayerStats(Collections.singletonMap(ClientUpdateKey.MAXMP, Short.valueOf(baseMaxMp)), false));
 	}
 
@@ -1378,11 +1427,12 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	 * @param mhbPerc Mana hyper body percent.
 	 */
 	public void recalculateMaxMp(short mhbPerc) {
-		if (mhbPerc == 0)
+		if (mhbPerc == 0) {
 			this.maxMp = (short) Math.min(30000, baseMaxMp + addMaxMp);
-		else
+		} else {
 			this.maxMp = (short) Math.min(30000, baseMaxMp + addMaxMp
-					+ Math.round((baseMaxMp + addMaxMp) * mhbPerc / 100.0));
+				+ Math.round((baseMaxMp + addMaxMp) * mhbPerc / 100.0));
+		}
 	}
 
 	private void recalculateMaxMp() {
@@ -1412,8 +1462,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 
 	public void gainFame(int gain, boolean fromQuest) {
 		setFame((short) Math.min(fame + gain, Short.MAX_VALUE));
-		if (fromQuest)
+		if (fromQuest) {
 			GamePackets.writeShowPointsGainFromQuest(gain, PacketSubHeaders.STATUS_INFO_FAME);
+		}
 	}
 
 	public StorageInventory getStorageInventory() {
@@ -1446,8 +1497,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		if (newValue <= Integer.MAX_VALUE && newValue >= 0) {
 			setMesos((int) newValue, fromDrop);
 			if (!fromQuest) {
-				if (gain > 0) //don't show when we're dropping mesos, only show when we're picking up
+				if (gain > 0) { //don't show when we're dropping mesos, only show when we're picking up
 					getClient().getSession().send(GamePackets.writeShowMesoGain(gain));
+				}
 			} else {
 				getClient().getSession().send(GamePackets.writeShowPointsGainFromQuest(gain, (byte) 5));
 			}
@@ -1535,15 +1587,17 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 
 	public Pair<Integer, Byte> getRememberedMap(MapMemoryVariable key) {
 		Pair<Integer, Byte> location = rememberedMaps.get(key);
-		if (location == null)
+		if (location == null) {
 			location = new Pair<>(Integer.valueOf(GlobalConstants.NULL_MAP), Byte.valueOf((byte) -1));
+		}
 		return location;
 	}
 
 	public Pair<Integer, Byte> resetRememberedMap(MapMemoryVariable key) {
 		Pair<Integer, Byte> location = rememberedMaps.remove(key);
-		if (location == null)
+		if (location == null) {
 			location = new Pair<>(Integer.valueOf(GlobalConstants.NULL_MAP), Byte.valueOf((byte) -1));
+		}
 		return location;
 	}
 
@@ -1642,15 +1696,17 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		pet.setFoothold(getFoothold());
 		getMap().sendToAll(GamePackets.writeShowPet(pet, getId(), slot, false, PetTools.hasLabelRing(this, slot), PetTools.hasQuoteRing(this, slot)));
 		int[] ignoreItems = getPetItemIgnores(pet.getUniqueId());
-		if (ignoreItems != null)
+		if (ignoreItems != null) {
 			getClient().getSession().send(GamePackets.writePetItemIgnore(this, slot, pet, ignoreItems));
+		}
 		getClient().getSession().send(GamePackets.writeUpdatePlayerStats(Collections.singletonMap(ClientUpdateKey.PET, getPets()), true));
 	}
 
 	private void createPetFullnessSchedule(Pet pet, final byte slot) {
 		ScheduledFuture<?> sch = petFullnessSchedules[slot];
-		if (sch != null)
+		if (sch != null) {
 			sch.cancel(false);
+		}
 		final int hunger = ItemDataLoader.getInstance().getPetHunger(pet.getDataId());
 		petFullnessSchedules[slot] = Scheduler.getInstance().runRepeatedly(new Runnable() {
 			@Override
@@ -1674,11 +1730,13 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 
 	public boolean addFirstPet(Pet pet) {
 		Pet[] pets = getPets();
-		if (pets[2] != null)
+		if (pets[2] != null) {
 			return false;
+		}
 
-		for (int i = 2; i > 0; i--)
+		for (int i = 2; i > 0; i--) {
 			pets[i] = pets[i - 1];
+		}
 		pets[0] = pet;
 		addPet(pet, (byte) 0);
 		return true;
@@ -1686,12 +1744,14 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 
 	public boolean addLastPet(Pet pet) {
 		Pet[] pets = getPets();
-		if (pets[2] != null)
+		if (pets[2] != null) {
 			return false;
+		}
 
 		for (byte i = 0; i < 3; i++) {
-			if (pets[i] != null)
+			if (pets[i] != null) {
 				continue;
+			}
 
 			pets[i] = pet;
 			addPet(pet, i);
@@ -1703,14 +1763,16 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 
 	public void destroyCurrentPets() {
 		Pet[] pets = getPets();
-		for (byte i = 0; i < 3 && pets[i] != null; i++)
+		for (byte i = 0; i < 3 && pets[i] != null; i++) {
 			destroyPet(i, (byte) 0);
+		}
 	}
 
 	public void spawnCurrentPets() {
 		Pet[] pets = getPets();
-		for (byte i = 0; i < 3 && pets[i] != null; i++)
+		for (byte i = 0; i < 3 && pets[i] != null; i++) {
 			spawnPet(pets[i], i);
+		}
 	}
 
 	public int[] getPetItemIgnores(long uniqueId) {
@@ -1718,10 +1780,11 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	}
 
 	public void setPetItemIgnores(long uniqueId, int[] itemIds) {
-		if (itemIds == null)
+		if (itemIds == null) {
 			petIgnoreItems.remove(Long.valueOf(uniqueId));
-		else
+		} else {
 			petIgnoreItems.put(Long.valueOf(uniqueId), itemIds);
+		}
 	}
 
 	public KeyBinding[] getKeyMap() {
@@ -1748,16 +1811,18 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 
 	public int getAutoHpPot() {
 		KeyBinding kb = bindings.get(Byte.valueOf((byte) -1));
-		if (kb == null)
+		if (kb == null) {
 			return 0;
+		}
 
 		return kb.getAction();
 	}
 
 	public int getAutoMpPot() {
 		KeyBinding kb = bindings.get(Byte.valueOf((byte) -2));
-		if (kb == null)
+		if (kb == null) {
 			return 0;
+		}
 
 		return kb.getAction();
 	}
@@ -1781,8 +1846,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	}
 
 	public byte getMasterSkillLevel(int skill) {
-		if (!Skills.isFourthJob(skill))
+		if (!Skills.isFourthJob(skill)) {
 			return SkillDataLoader.getInstance().getSkill(skill).maxLevel();
+		}
 		SkillEntry skillLevel = skillEntries.get(Integer.valueOf(skill));
 		return skillLevel != null ? skillLevel.getMasterLevel() : 0;
 	}
@@ -1797,28 +1863,33 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	 */
 	public void setSkillLevel(int skill, byte level, byte masterLevel, boolean onlyMasterLevel) {
 		byte defaultMasterLevel;
-		if (masterLevel == -1)
-			if (!Skills.isFourthJob(skill))
+		if (masterLevel == -1) {
+			if (!Skills.isFourthJob(skill)) {
 				defaultMasterLevel = SkillDataLoader.getInstance().getSkill(skill).maxLevel();
-			else
+			} else {
 				defaultMasterLevel = 0;
-		else
+			}
+		} else {
 			defaultMasterLevel = masterLevel;
+		}
 
 		SkillEntry skillLevel;
 		SkillEntry newSkillLevel = new SkillEntry(level, defaultMasterLevel);
-		if (level != 0 || masterLevel != -1)
+		if (level != 0 || masterLevel != -1) {
 			skillLevel = skillEntries.putIfAbsent(Integer.valueOf(skill), newSkillLevel);
-		else
+		} else {
 			skillLevel = skillEntries.remove(Integer.valueOf(skill));
+		}
 
 		if (skillLevel == null) {
 			skillLevel = newSkillLevel;
 		} else {
-			if (!onlyMasterLevel)
+			if (!onlyMasterLevel) {
 				skillLevel.changeCurrentLevel(level);
-			if (masterLevel != -1)
+			}
+			if (masterLevel != -1) {
 				skillLevel.changeMasterLevel(masterLevel);
+			}
 		}
 		getClient().getSession().send(GamePackets.writeUpdateSkillLevel(skill, skillLevel.getLevel(), skillLevel.getMasterLevel()));
 	}
@@ -1897,8 +1968,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 				cancelTask = null;
 				break;
 		}
-		if (cancelTask != null)
+		if (cancelTask != null) {
 			cancelTask.right.cancel(false);
+		}
 	}
 
 	public boolean isEffectActive(PlayerStatusEffect buff) {
@@ -1940,8 +2012,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 
 	public long getSkillExpireTime(int skillId) {
 		Pair<SkillState, ScheduledFuture<?>> activeSkill = skillFutures.get(Integer.valueOf(skillId));
-		if (activeSkill == null)
+		if (activeSkill == null) {
 			return 0;
+		}
 
 		return activeSkill.left.endTime;
 	}
@@ -1995,10 +2068,11 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	}
 
 	public void setMapChair(short chairId) {
-		if (chairId == 0)
+		if (chairId == 0) {
 			map.leaveChair(mapChair);
-		else
+		} else {
 			map.occupyChair(chairId);
+		}
 		mapChair = chairId;
 	}
 
@@ -2008,10 +2082,11 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			miniroom = null;
 		}
 		//TODO: close chalkboard
-		if (getItemChair() != 0)
+		if (getItemChair() != 0) {
 			setItemChair(0);
-		else if (mapChair != 0)
+		} else if (mapChair != 0) {
 			setMapChair((short) 0);
+		}
 	}
 
 	private void leaveMapAndSetTo(GameMap goTo, Point initialPosition) {
@@ -2019,14 +2094,16 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		leaveMapRoutines();
 		map.removePlayer(this);
 		map = goTo;
-		if (initialPosition != null)
+		if (initialPosition != null) {
 			setPosition(initialPosition);
+		}
 		setFoothold((short) 0);
 	}
 
 	public void changeMap(GameMap goTo) {
-		if (!isVisible())
+		if (!isVisible()) {
 			getClient().getSession().send(GamePackets.writeShowHide());
+		}
 		map.spawnPlayer(this);
 		if (party != null) {
 			party.lockRead();
@@ -2037,8 +2114,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 				party.unlockRead();
 			}
 		}
-		if (event != null)
+		if (event != null) {
 			event.playerChangedMap(this);
+		}
 	}
 
 	public void changeMap(GameMap goTo, byte initialPortal) {
@@ -2071,22 +2149,25 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		if (goTo != null) {
 			leaveMapAndSetTo(goTo, goTo.getPortalPosition(initialPortal));
 			//party members will get new map when we connect to new channel
-			if (event != null)
+			if (event != null) {
 				event.playerChangedMap(this);
+			}
 			GameServer.getChannel(client.getChannel()).requestChannelChange(this, channel);
 		}
 	}
 
 	private void mapChangeCancelSkills() {
 		PlayerStatusEffectValues v = getEffectValue(PlayerStatusEffect.PUPPET);
-		if (v != null)
+		if (v != null) {
 			StatusEffectTools.dispelEffectsAndShowVisuals(this, v.getEffectsData());
+		}
 	}
 
 	public void channelChangeCancelSkills() {
 		PlayerStatusEffectValues v = getEffectValue(PlayerStatusEffect.PUPPET);
-		if (v != null)
+		if (v != null) {
 			StatusEffectTools.dispelEffectsAndShowVisuals(this, v.getEffectsData());
+		}
 		v = getEffectValue(PlayerStatusEffect.MYSTIC_DOOR);
 		if (v != null) {
 			door.setNoDestroyAnimation();
@@ -2096,8 +2177,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 
 	public void logOffCancelSkills() {
 		PlayerStatusEffectValues v = getEffectValue(PlayerStatusEffect.PUPPET);
-		if (v != null)
+		if (v != null) {
 			StatusEffectTools.dispelEffectsAndShowVisuals(this, v.getEffectsData());
+		}
 		v = getEffectValue(PlayerStatusEffect.MYSTIC_DOOR);
 		if (v != null) {
 			door.setNoDestroyAnimation();
@@ -2115,42 +2197,52 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		for (Pair<MobSkillState, ScheduledFuture<?>> cancelTask : diseaseFutures.values())
 			cancelTask.right.cancel(false);
 		itemExpireTask.cancel();
-		for (int i = 0; i < 3 && petFullnessSchedules[i] != null; i++)
+		for (int i = 0; i < 3 && petFullnessSchedules[i] != null; i++) {
 			petFullnessSchedules[i].cancel(false);
+		}
 
 		for (Cooldown cooling : cooldowns.values())
 			cooling.cancel();
 
 		if (!quickCleanup) {
 			leaveMapRoutines();
-			if (map != null)
+			if (map != null) {
 				map.removePlayer(this);
+			}
 			saveCharacter();
 		}
 	}
 
 	public void prepareChannelChange() {
-		if (event != null)
+		if (event != null) {
 			event.playerDisconnected(this);
-		if (party != null)
+		}
+		if (party != null) {
 			GameServer.getChannel(client.getChannel()).getCrossServerInterface().sendPartyMemberLogOffNotifications(this, false);
-		if (guild != null)
+		}
+		if (guild != null) {
 			GameServer.getChannel(client.getChannel()).getCrossServerInterface().sendGuildMemberLogOffNotifications(this, false);
-		if (chatroom != null)
+		}
+		if (chatroom != null) {
 			GameServer.getChannel(getClient().getChannel()).getCrossServerInterface().chatroomPlayerChangingChannels(getId(), chatroom);
+		}
 		prepareExitChannel(false);
 	}
 
 	public void prepareLogOff(boolean quickCleanup) {
-		if (event != null)
+		if (event != null) {
 			event.playerDisconnected(this);
+		}
 		GameServer.getChannel(client.getChannel()).getCrossServerInterface().sendBuddyLogOffNotifications(this);
-		if (party != null)
+		if (party != null) {
 			GameServer.getChannel(client.getChannel()).getCrossServerInterface().sendPartyMemberLogOffNotifications(this, true);
-		if (guild != null)
+		}
+		if (guild != null) {
 			GameServer.getChannel(client.getChannel()).getCrossServerInterface().sendGuildMemberLogOffNotifications(this, true);
-		if (chatroom != null)
+		}
+		if (chatroom != null) {
 			GameServer.getChannel(getClient().getChannel()).getCrossServerInterface().sendLeaveChatroom(this);
+		}
 		prepareExitChannel(quickCleanup);
 	}
 
@@ -2167,8 +2259,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	}
 
 	public void setParty(PartyList party) {
-		if (party == null && event != null)
+		if (party == null && event != null) {
 			event.partyMemberDischarged(this);
+		}
 		this.party = party;
 	}
 
@@ -2268,8 +2361,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			watched = Collections.synchronizedMap(new HashMap<Number, List<Short>>());
 			questSubscriptions.put(type, watched);
 		}
-		if (canCompleteQuest(questId))
+		if (canCompleteQuest(questId)) {
 			completableQuests.add(Short.valueOf(questId));
+		}
 		List<Short> questList = watched.get(id);
 		if (questList == null) {
 			questList = Collections.synchronizedList(new ArrayList<Short>());
@@ -2293,8 +2387,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		} else {
 			questList = watched.get(null);
 		}
-		if (canCompleteQuest(questId))
+		if (canCompleteQuest(questId)) {
 			completableQuests.add(Short.valueOf(questId));
+		}
 		questList.add(Short.valueOf(questId));
 	}
 
@@ -2310,11 +2405,13 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			List<Short> questList = watched.get(id);
 			if (questList != null) {
 				questList.remove(Short.valueOf(questId));
-				if (questList.isEmpty())
+				if (questList.isEmpty()) {
 					watched.remove(id);
+				}
 			}
-			if (watched.isEmpty())
+			if (watched.isEmpty()) {
 				questSubscriptions.remove(type);
+			}
 		}
 		completableQuests.remove(Short.valueOf(questId));
 	}
@@ -2329,8 +2426,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		if (watched != null) {
 			List<Short> questList = watched.get(null);
 			questList.remove(Short.valueOf(questId));
-			if (questList.isEmpty())
+			if (questList.isEmpty()) {
 				questSubscriptions.remove(type);
+			}
 		}
 		completableQuests.remove(Short.valueOf(questId));
 	}
@@ -2360,8 +2458,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 					addToWatchedList(questId, QuestRequirementType.PET, petId);
 				for (Short reqQuestId : qc.getReqQuests().keySet())
 					addToWatchedList(questId, QuestRequirementType.QUEST, reqQuestId);
-				if (qc.requiresMesos())
+				if (qc.requiresMesos()) {
 					addToWatchedList(questId, QuestRequirementType.MESOS);
+				}
 			} else {
 				reqMobs = Collections.emptySet();
 			}
@@ -2387,8 +2486,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	 */
 	public byte localStartQuest(short questId) {
 		byte error = (byte) -QuestDataLoader.getInstance().startedQuest(this, questId);
-		if (error != 0)
+		if (error != 0) {
 			return error;
+		}
 
 		updateStatusOfStartedQuest(questId);
 
@@ -2427,8 +2527,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 					removeFromWatchedList(questId, QuestRequirementType.PET, petId);
 				for (Short reqQuestId : qc.getReqQuests().keySet())
 					removeFromWatchedList(questId, QuestRequirementType.QUEST, reqQuestId);
-				if (qc.requiresMesos())
+				if (qc.requiresMesos()) {
 					removeFromWatchedList(questId, QuestRequirementType.MESOS);
+				}
 			} else {
 				reqMobs = Collections.emptySet();
 			}
@@ -2456,8 +2557,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	 */
 	public short localCompleteQuest(short questId, int selection) {
 		short next = QuestDataLoader.getInstance().finishedQuest(this, questId, selection);
-		if (next < 0)
+		if (next < 0) {
 			return next;
+		}
 
 		updateStatusOfCompletedQuest(questId, System.currentTimeMillis());
 
@@ -2505,8 +2607,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 					removeFromWatchedList(questId, QuestRequirementType.PET, petId);
 				for (Short reqQuestId : qc.getReqQuests().keySet())
 					removeFromWatchedList(questId, QuestRequirementType.QUEST, reqQuestId);
-				if (qc.requiresMesos())
+				if (qc.requiresMesos()) {
 					removeFromWatchedList(questId, QuestRequirementType.MESOS);
+				}
 			} else {
 				reqMobs = Collections.emptySet();
 			}
@@ -2531,12 +2634,14 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		try {
 			Short oId = Short.valueOf(questId);
 			Map<Number, List<Short>> watchedQuests = questSubscriptions.get(QuestRequirementType.QUEST);
-			if (watchedQuests == null)
+			if (watchedQuests == null) {
 				return;
+			}
 
 			List<Short> watchingQuests = watchedQuests.get(Short.valueOf(questId));
-			if (watchingQuests == null)
+			if (watchingQuests == null) {
 				return;
+			}
 
 			for (Short quest : watchingQuests) {
 				questId = quest.shortValue();
@@ -2562,13 +2667,15 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		writeLockQuests();
 		try {
 			Map<Number, List<Short>> watchedItems = questSubscriptions.get(QuestRequirementType.ITEM);
-			if (watchedItems == null)
+			if (watchedItems == null) {
 				return;
+			}
 
 			Integer oId = Integer.valueOf(itemId);
 			List<Short> watchingQuests = watchedItems.get(oId);
-			if (watchingQuests == null)
+			if (watchingQuests == null) {
 				return;
+			}
 
 			for (Short quest : watchingQuests) {
 				short questId = quest.shortValue();
@@ -2591,12 +2698,14 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		writeLockQuests();
 		try {
 			Map<Number, List<Short>> watchedPets = questSubscriptions.get(QuestRequirementType.PET);
-			if (watchedPets == null)
+			if (watchedPets == null) {
 				return;
+			}
 
 			List<Short> watchingQuests = watchedPets.get(Integer.valueOf(petItemId));
-			if (watchingQuests == null)
+			if (watchingQuests == null) {
 				return;
+			}
 
 			for (Short questId : watchingQuests) {
 				if (!canCompleteQuest(questId.shortValue())) {
@@ -2618,8 +2727,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		writeLockQuests();
 		try {
 			Map<Number, List<Short>> watchedPetTameness = questSubscriptions.get(QuestRequirementType.PET_TAMENESS);
-			if (watchedPetTameness == null)
+			if (watchedPetTameness == null) {
 				return;
+			}
 
 			List<Short> watchingQuests = watchedPetTameness.get(null);
 			for (Short questId : watchingQuests) {
@@ -2642,8 +2752,9 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		writeLockQuests();
 		try {
 			Map<Number, List<Short>> watchingMesos = questSubscriptions.get(QuestRequirementType.MESOS);
-			if (watchingMesos == null)
+			if (watchingMesos == null) {
 				return;
+			}
 
 			List<Short> watchingQuests = watchingMesos.get(null);
 			for (Short questId : watchingQuests) {
@@ -2666,21 +2777,24 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		writeLockQuests();
 		try {
 			Map<Number, List<Short>> watchedMobs = questSubscriptions.get(QuestRequirementType.MOB);
-			if (watchedMobs == null)
+			if (watchedMobs == null) {
 				return;
+			}
 
 			Integer oId = Integer.valueOf(mobId);
 			List<Short> watchingQuests = watchedMobs.get(oId);
-			if (watchingQuests == null)
+			if (watchingQuests == null) {
 				return;
+			}
 
 			List<Short> mobReqCompleteQuests = new ArrayList<>();
 			for (Short questId : watchingQuests) {
 				QuestEntry status = questStatuses.get(questId);
 				short mobReq = QuestDataLoader.getInstance().getCompleteReqs(questId.shortValue()).getReqMobCounts().get(oId);
 				int progress = status.mobKilled(oId, mobReq);
-				if (progress == mobReq)
+				if (progress == mobReq) {
 					mobReqCompleteQuests.add(questId);
+				}
 				getClient().getSession().send(GamePackets.writeQuestProgress(questId.shortValue(), status.getData()));
 				if (progress != mobReq || !canCompleteQuest(questId.shortValue())) {
 					//completableQuests should not contain questId (mob progress
@@ -2712,18 +2826,20 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			public void monsterKilled(GameCharacter highestDamager, GameCharacter last) {
 				GameCharacter ourself = futureSelf.get();
 				if (ourself == null || ourself.isClosed()
-						|| highestDamager != ourself
-						//I think we had to be the highest damager and
-						//we had to kill it to be recognized for the kill
-						|| last != highestDamager
-						|| ourself.getMapId() != mobMap)
+					|| highestDamager != ourself
+					//I think we had to be the highest damager and
+					//we had to kill it to be recognized for the kill
+					|| last != highestDamager
+					|| ourself.getMapId() != mobMap) {
 					return;
+				}
 
-				if (party == null)
+				if (party == null) {
 					ourself.mobKilled(mobId);
-				else
+				} else {
 					for (GameCharacter mem : party.getLocalMembersInMap(mobMap))
 						mem.mobKilled(mobId);
+				}
 			}
 		};
 	}
@@ -2809,11 +2925,13 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	public boolean canGiveFameToPlayer(int receiver) {
 		synchronized(famesThisMonth) {
 			Long lastTime = famesThisMonth.get(Integer.valueOf(receiver));
-			if (lastTime == null)
+			if (lastTime == null) {
 				return true;
+			}
 			//given time >= now - 30 days
-			if (lastTime.longValue() >= System.currentTimeMillis() - 1000L * 60 * 60 * 24 * 30)
+			if (lastTime.longValue() >= System.currentTimeMillis() - 1000L * 60 * 60 * 24 * 30) {
 				return false;
+			}
 			famesThisMonth.remove(Integer.valueOf(receiver));
 			return true;
 		}

@@ -49,8 +49,9 @@ public class DefaultCashShopDataLoader extends CashShopDataLoader {
 			con = DatabaseManager.getConnection(DatabaseType.STATE);
 			ps = con.prepareStatement("SELECT `sn`,`itemid`,`quantity`,`price`,`period`,`gender`,`onsale` FROM `commodities`");
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				commodities.put(Integer.valueOf(rs.getInt(1)), new Commodity(rs.getInt(2), rs.getShort(3), rs.getInt(4), rs.getByte(5), rs.getByte(6), rs.getBoolean(7)));
+			}
 			rs.close();
 			ps.close();
 
@@ -66,8 +67,9 @@ public class DefaultCashShopDataLoader extends CashShopDataLoader {
 					int packageId = rs.getInt(1);
 					if (currentPackageId != packageId) {
 						int[] array = new int[currentPackage.size()];
-						for (int i = 0; i < array.length; i++)
+						for (int i = 0; i < array.length; i++) {
 							array[i] = currentPackage.get(i).intValue();
+						}
 						packages.put(Integer.valueOf(currentPackageId), array);
 						currentPackageId = packageId;
 						currentPackage.clear();
@@ -75,8 +77,9 @@ public class DefaultCashShopDataLoader extends CashShopDataLoader {
 					currentPackage.add(Integer.valueOf(rs.getInt(2)));
 				}
 				int[] array = new int[currentPackage.size()];
-				for (int i = 0; i < array.length; i++)
+				for (int i = 0; i < array.length; i++) {
 					array[i] = currentPackage.get(i).intValue();
+				}
 				packages.put(Integer.valueOf(currentPackageId), array);
 			}
 			return true;

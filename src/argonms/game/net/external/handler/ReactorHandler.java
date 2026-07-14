@@ -35,8 +35,9 @@ public final class ReactorHandler {
 		short stance = packet.readShort();
 		GameCharacter p = gc.getPlayer();
 		Reactor r = (Reactor) p.getMap().getEntityById(EntityType.REACTOR, entId);
-		if (r != null)
+		if (r != null) {
 			r.hit(p, stance);
+		}
 	}
 
 	public static void handleReactorTouch(LittleEndianReader packet, GameClient gc) {
@@ -45,10 +46,11 @@ public final class ReactorHandler {
 		GameCharacter p = gc.getPlayer();
 		Reactor r = (Reactor) p.getMap().getEntityById(EntityType.REACTOR, entId);
 		if (r != null) {
-			if (enter)
+			if (enter) {
 				r.touched(p);
-			else
+			} else {
 				r.untouched(p);
+			}
 		}
 	}
 

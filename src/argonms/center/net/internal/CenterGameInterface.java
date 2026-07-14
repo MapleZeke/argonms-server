@@ -30,7 +30,7 @@ public class CenterGameInterface extends CenterRemoteInterface {
 	private String host;
 	private byte world;
 	private Map<Byte, Integer> clientPorts;
-	private byte serverId;
+	private final byte serverId;
 	private GameCenterPacketProcessor pp;
 
 	public CenterGameInterface(CenterRemoteSession session, byte serverId) {

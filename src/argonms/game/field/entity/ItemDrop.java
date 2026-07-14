@@ -116,10 +116,11 @@ public class ItemDrop extends AbstractEntity {
 		this.owner = looter;
 		this.petLooter = pet;
 		this.gone = true;
-		if (pet == -1)
+		if (pet == -1) {
 			this.mod = DESTROY_ANIMATION_LOOTED;
-		else
+		} else {
 			this.mod = DESTROY_ANIMATION_PET_LOOTED;
+		}
 	}
 
 	public void explode() {

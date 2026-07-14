@@ -213,17 +213,21 @@ public class CrossProcessCrossChannelSynchronization extends ChannelOrShopSynchr
 		PlayerContinuation context = new PlayerContinuation();
 		int playerId = packet.readInt();
 		byte count = packet.readByte();
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++) {
 			context.addItemBuff(packet.readInt(), packet.readLong());
+		}
 		count = packet.readByte();
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++) {
 			context.addSkillBuff(packet.readInt(), packet.readByte(), packet.readLong());
+		}
 		count = packet.readByte();
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++) {
 			context.addMonsterDebuff(packet.readShort(), packet.readByte(), packet.readLong());
+		}
 		count = packet.readByte();
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++) {
 			context.addActiveSummon(packet.readInt(), playerId, packet.readPos(), packet.readByte());
+		}
 		context.setEnergyCharge(packet.readShort());
 		context.setChatroomId(packet.readInt());
 		context.setOriginChannel(targetCh);
@@ -237,8 +241,9 @@ public class CrossProcessCrossChannelSynchronization extends ChannelOrShopSynchr
 		writeSynchronizationPacketHeader(lew, ChannelSynchronizationOps.MULTI_CHAT);
 		lew.writeByte(type);
 		lew.writeByte((byte) recipients.length);
-		for (byte i = 0; i < recipients.length; i++)
+		for (byte i = 0; i < recipients.length; i++) {
 			lew.writeInt(recipients[i]);
+		}
 		lew.writeLengthPrefixedString(name);
 		lew.writeLengthPrefixedString(message);
 
@@ -249,8 +254,9 @@ public class CrossProcessCrossChannelSynchronization extends ChannelOrShopSynchr
 		byte type = packet.readByte();
 		byte amount = packet.readByte();
 		int[] recipients = new int[amount];
-		for (byte i = 0; i < amount; i++)
+		for (byte i = 0; i < amount; i++) {
 			recipients[i] = packet.readInt();
+		}
 		String name = packet.readLengthPrefixedString();
 		String message = packet.readLengthPrefixedString();
 
@@ -295,9 +301,10 @@ public class CrossProcessCrossChannelSynchronization extends ChannelOrShopSynchr
 		boolean result = packet.readBool();
 
 		BlockingQueue<Pair<Byte, Object>> consumer = blockingCalls.remove(Integer.valueOf(responseId));
-		if (consumer == null)
+		if (consumer == null) {
 			//timed out and garbage collected
 			return;
+		}
 
 		consumer.offer(new Pair<Byte, Object>(Byte.valueOf(targetCh), Boolean.valueOf(result)));
 	}
@@ -360,9 +367,10 @@ public class CrossProcessCrossChannelSynchronization extends ChannelOrShopSynchr
 		byte result = packet.readByte();
 
 		BlockingQueue<Pair<Byte, Object>> consumer = blockingCalls.remove(Integer.valueOf(responseId));
-		if (consumer == null)
+		if (consumer == null) {
 			//timed out and garbage collected
 			return;
+		}
 
 		consumer.offer(new Pair<Byte, Object>(Byte.valueOf(targetCh), Byte.valueOf(result)));
 	}
@@ -483,9 +491,10 @@ public class CrossProcessCrossChannelSynchronization extends ChannelOrShopSynchr
 		boolean result = packet.readBool();
 
 		BlockingQueue<Pair<Byte, Object>> consumer = blockingCalls.remove(Integer.valueOf(responseId));
-		if (consumer == null)
+		if (consumer == null) {
 			//timed out and garbage collected
 			return;
+		}
 
 		consumer.offer(new Pair<Byte, Object>(Byte.valueOf(targetCh), Boolean.valueOf(result)));
 	}
@@ -582,9 +591,10 @@ public class CrossProcessCrossChannelSynchronization extends ChannelOrShopSynchr
 		Object result = CrossChannelCommandTarget.deserialize(key, packet);
 
 		BlockingQueue<Pair<Byte, Object>> consumer = blockingCalls.remove(Integer.valueOf(responseId));
-		if (consumer == null)
+		if (consumer == null) {
 			//timed out and garbage collected
 			return;
+		}
 
 		consumer.offer(new Pair<Byte, Object>(Byte.valueOf(targetCh), result));
 	}
@@ -670,9 +680,10 @@ public class CrossProcessCrossChannelSynchronization extends ChannelOrShopSynchr
 		String result = packet.readLengthPrefixedString();
 
 		BlockingQueue<Pair<Byte, Object>> consumer = blockingCalls.remove(Integer.valueOf(responseId));
-		if (consumer == null)
+		if (consumer == null) {
 			//timed out and garbage collected
 			return;
+		}
 
 		consumer.offer(new Pair<Byte, Object>(Byte.valueOf(targetCh), result));
 	}

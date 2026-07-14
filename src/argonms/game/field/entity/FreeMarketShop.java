@@ -115,9 +115,11 @@ public abstract class FreeMarketShop extends Miniroom {
 			lew.writeByte(getMaxPlayers());
 			lew.writeByte(positionOf(p));
 
-			for (byte i = 0; i < getMaxPlayers(); i++)
-				if ((v = getPlayerByPosition(i)) != null)
+			for (byte i = 0; i < getMaxPlayers(); i++) {
+				if ((v = getPlayerByPosition(i)) != null) {
 					writeMiniroomAvatar(lew, v, i);
+				}
+			}
 			lew.writeByte((byte) 0xFF);
 
 			lew.writeLengthPrefixedString(getMessage());
@@ -196,9 +198,11 @@ public abstract class FreeMarketShop extends Miniroom {
 			lew.writeInt(getStyle() + TYPE_OFFSET);
 			lew.writeLengthPrefixedString("Hired Merchant"); //err, what?
 
-			for (byte i = 0; i < getMaxPlayers(); i++)
-				if ((v = getPlayerByPosition(i)) != null)
+			for (byte i = 0; i < getMaxPlayers(); i++) {
+				if ((v = getPlayerByPosition(i)) != null) {
 					writeMiniroomAvatar(lew, v, i);
+				}
+			}
 			lew.writeByte((byte) 0xFF);
 
 			lew.writeShort((short) 0);

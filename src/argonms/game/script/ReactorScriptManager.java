@@ -39,7 +39,7 @@ import org.mozilla.javascript.Scriptable;
  *
  * @author GoldenKevin
  */
-public class ReactorScriptManager {
+public final class ReactorScriptManager {
 	private static final Logger LOG = Logger.getLogger(ReactorScriptManager.class.getName());
 
 	private static ReactorScriptManager singleton;
@@ -79,8 +79,9 @@ public class ReactorScriptManager {
 	}
 
 	public static void setInstance(String scriptPath) {
-		if (singleton == null)
+		if (singleton == null) {
 			singleton = new ReactorScriptManager(scriptPath);
+		}
 	}
 
 	public static ReactorScriptManager getInstance() {

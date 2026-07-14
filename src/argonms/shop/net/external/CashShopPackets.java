@@ -35,29 +35,29 @@ import java.util.List;
  * @author GoldenKevin
  */
 public class CashShopPackets {
-	private static byte INVENTORY = 0x2F;
-	private static byte GIFTS = 0x31;
-	private static byte DISPLAY_WISH_LIST = 0x33;
-	private static byte UPDATE_WISH_LIST = 0x39;
-	private static byte WISH_LIST_ERROR = 0x3A;
-	private static byte INSERT_TO_STAGING = 0x3B;
-	private static byte BUY_ERROR = 0x3C;
-	private static byte REDEEM_COUPON = 0x3D;
-	private static byte COUPON_ERROR = 0x40;
-	private static byte UPDATE_INVENTORY_SLOTS = 0x44;
-	private static byte INVENTORY_SLOTS_ERROR = 0x45;
-	private static byte UPDATE_STORAGE_SLOTS = 0x46;
-	private static byte STORAGE_SLOTS_ERROR = 0x47;
-	private static byte UPDATE_CHARACTER_SLOTS = 0x48;
-	private static byte CHARACTER_SLOTS_ERROR = 0x49;
-	private static byte MOVE_FROM_STAGING = 0x4A;
-	private static byte MOVE_FROM_STAGING_ERROR = 0x4B;
-	private static byte MOVE_TO_STAGING = 0x4C;
-	private static byte MOVE_TO_STAGING_ERROR = 0x4D;
-	private static byte EXPIRE_ITEM = 0x4E;
-	private static byte SEND_GIFT = 0x6B;
-	private static byte GIFT_ERROR = 0x6C;
-	private static byte BUY_MESO_ITEM = 0x6D;
+	private static final byte INVENTORY = 0x2F;
+	private static final byte GIFTS = 0x31;
+	private static final byte DISPLAY_WISH_LIST = 0x33;
+	private static final byte UPDATE_WISH_LIST = 0x39;
+	private static final byte WISH_LIST_ERROR = 0x3A;
+	private static final byte INSERT_TO_STAGING = 0x3B;
+	private static final byte BUY_ERROR = 0x3C;
+	private static final byte REDEEM_COUPON = 0x3D;
+	private static final byte COUPON_ERROR = 0x40;
+	private static final byte UPDATE_INVENTORY_SLOTS = 0x44;
+	private static final byte INVENTORY_SLOTS_ERROR = 0x45;
+	private static final byte UPDATE_STORAGE_SLOTS = 0x46;
+	private static final byte STORAGE_SLOTS_ERROR = 0x47;
+	private static final byte UPDATE_CHARACTER_SLOTS = 0x48;
+	private static final byte CHARACTER_SLOTS_ERROR = 0x49;
+	private static final byte MOVE_FROM_STAGING = 0x4A;
+	private static final byte MOVE_FROM_STAGING_ERROR = 0x4B;
+	private static final byte MOVE_TO_STAGING = 0x4C;
+	private static final byte MOVE_TO_STAGING_ERROR = 0x4D;
+	private static final byte EXPIRE_ITEM = 0x4E;
+	private static final byte SEND_GIFT = 0x6B;
+	private static final byte GIFT_ERROR = 0x6C;
+	private static final byte BUY_MESO_ITEM = 0x6D;
 
 	public static byte ERROR_UNKNOWN = 0x00;
 	public static byte ERROR_UNKNOWN_THEN_EXIT_TO_CHANNEL_1 = (byte) 0x7F;
@@ -211,8 +211,9 @@ public class CashShopPackets {
 		lew.writeShort(ClientSendOps.CASH_SHOP);
 		lew.writeByte(header);
 		lew.writeByte(message);
-		if (message == ERROR_OUT_OF_STOCK)
+		if (message == ERROR_OUT_OF_STOCK) {
 			lew.writeInt(0);
+		}
 		return lew.getBytes();
 	}
 

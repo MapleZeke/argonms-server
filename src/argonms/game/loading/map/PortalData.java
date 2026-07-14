@@ -89,10 +89,12 @@ public class PortalData {
 	public String toString() {
 		StringBuilder ret = new StringBuilder();
 		ret.append("Name=").append(pn).append(", Type=").append(pt).append(", (").append(pos.x).append(", ").append(pos.y).append("), target=").append(tm);
-		if (!tn.isEmpty())
+		if (!tn.isEmpty()) {
 			ret.append(" (").append(tn).append(")");
-		if (!script.isEmpty())
+		}
+		if (!script.isEmpty()) {
 			ret.append(", Script=").append(script);
+		}
 		return ret.toString();
 	}
 }

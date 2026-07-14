@@ -33,14 +33,14 @@ import org.bouncycastle.crypto.digests.SHA512Digest;
 public final class HashFunctions {
 	public static final Charset ASCII = StandardCharsets.US_ASCII;
 
-	private static ThreadLocal<Digest> sha1digest = new ThreadLocal<>() {
+	private static final ThreadLocal<Digest> sha1digest = new ThreadLocal<>() {
 		@Override
 		public Digest initialValue() {
 			return new SHA1Digest();
 		}
 	};
 
-	private static ThreadLocal<Digest> sha512digest = new ThreadLocal<>() {
+	private static final ThreadLocal<Digest> sha512digest = new ThreadLocal<>() {
 		@Override
 		public Digest initialValue() {
 			return new SHA512Digest();

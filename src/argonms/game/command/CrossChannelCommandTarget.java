@@ -243,8 +243,9 @@ public class CrossChannelCommandTarget implements CommandTarget {
 					long mask = packet.readLong();
 					Set<PlayerStatusEffect> values = EnumSet.noneOf(PlayerStatusEffect.class);
 					for (PlayerStatusEffect e : PlayerStatusEffect.values())
-						if ((mask & e.longValue()) != 0)
+						if ((mask & e.longValue()) != 0) {
 							values.add(e);
+						}
 					value = values.toArray(new PlayerStatusEffect[values.size()]);
 					break;
 				}

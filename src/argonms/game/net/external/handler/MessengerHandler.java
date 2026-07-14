@@ -41,10 +41,11 @@ public class MessengerHandler {
 					return;
 				}
 				int roomId = packet.readInt();
-				if (roomId == 0) //create
+				if (roomId == 0) { //create
 					GameServer.getChannel(gc.getChannel()).getCrossServerInterface().sendMakeChatroom(p);
-				else //join
+				} else { //join
 					GameServer.getChannel(gc.getChannel()).getCrossServerInterface().sendJoinChatroom(p, roomId);
+				}
 				break;
 			}
 			case Chatroom.ACT_EXIT:
@@ -63,9 +64,10 @@ public class MessengerHandler {
 
 				room.lockRead();
 				try {
-					if (room.isFull())
+					if (room.isFull()) {
 						//TODO: send response that room is full
 						return;
+					}
 				} finally {
 					room.unlockRead();
 				}

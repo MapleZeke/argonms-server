@@ -53,13 +53,10 @@ public abstract class CashShopDataLoader {
 
 	public static void setInstance(DataFileType wzType, String wzPath) {
 		if (instance == null) {
-			switch (wzType) {
-				case KVJ:
-					instance = new KvjCashShopDataLoader(wzPath);
-					break;
-				default:
-					instance = new DefaultCashShopDataLoader();
-					break;
+			if (wzType == DataFileType.KVJ) {
+				instance = new KvjCashShopDataLoader(wzPath);
+			} else {
+				instance = new DefaultCashShopDataLoader();
 			}
 		}
 	}

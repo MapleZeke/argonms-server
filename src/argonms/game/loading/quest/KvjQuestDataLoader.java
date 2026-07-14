@@ -90,8 +90,9 @@ public class KvjQuestDataLoader extends QuestDataLoader {
 	protected boolean loadInfo() {
 		try {
 			File f = new File(dataPath + "Quest.wz" + "QuestInfo.img.kvj");
-			if (f.exists())
+			if (f.exists()) {
 				doWork(new LittleEndianByteArrayReader(f));
+			}
 			return true;
 		} catch (IOException e) {
 			LOG.log(Level.WARNING, "Could not read KVJ data file for quest info", e);
@@ -103,8 +104,9 @@ public class KvjQuestDataLoader extends QuestDataLoader {
 	protected boolean loadReq() {
 		try {
 			File f = new File(dataPath + "Quest.wz" + "Check.img.kvj");
-			if (f.exists())
+			if (f.exists()) {
 				doWork(new LittleEndianByteArrayReader(f));
+			}
 			return true;
 		} catch (IOException e) {
 			LOG.log(Level.WARNING, "Could not read KVJ data file for quest checks", e);
@@ -116,8 +118,9 @@ public class KvjQuestDataLoader extends QuestDataLoader {
 	protected boolean loadAct() {
 		try {
 			File f = new File(dataPath + "Quest.wz" + "Act.img.kvj");
-			if (f.exists())
+			if (f.exists()) {
 				doWork(new LittleEndianByteArrayReader(f));
+			}
 			return true;
 		} catch (IOException e) {
 			LOG.log(Level.WARNING, "Could not read KVJ data file for quest actions", e);
@@ -174,25 +177,30 @@ public class KvjQuestDataLoader extends QuestDataLoader {
 		boolean onlyMasterLevel = reader.readBool();
 		SkillReward r = new SkillReward(skillId, skillLevel, masterLevel, onlyMasterLevel);
 		byte amount = reader.readByte();
-		for (int i = 0; i < amount; i++)
+		for (int i = 0; i < amount; i++) {
 			r.addApplicableJob(reader.readShort());
+		}
 		return r;
 	}
 
 	private void processQuestAction(short questId, boolean completionActs, LittleEndianReader reader) {
 		QuestRewards qr = new QuestRewards();
 		byte amount = reader.readByte();
-		for (int i = 0; i < amount; i++)
+		for (int i = 0; i < amount; i++) {
 			qr.addRewardItem(processQuestItem(reader));
+		}
 		amount = reader.readByte();
-		for (int i = 0; i < amount; i++)
+		for (int i = 0; i < amount; i++) {
 			qr.addQuestToChange(reader.readShort(), reader.readByte());
+		}
 		amount = reader.readByte();
-		for (int i = 0; i < amount; i++)
+		for (int i = 0; i < amount; i++) {
 			qr.addJob(reader.readShort());
+		}
 		amount = reader.readByte();
-		for (int i = 0; i < amount; i++)
+		for (int i = 0; i < amount; i++) {
 			qr.addRewardSkill(processQuestSkillAction(reader));
+		}
 		for (byte now = reader.readByte(); now != END_BEHAVIOR; now = reader.readByte()) {
 			switch (now) {
 				case MIN_LEVEL:
@@ -227,10 +235,11 @@ public class KvjQuestDataLoader extends QuestDataLoader {
 					break;
 			}
 		}
-		if (completionActs)
+		if (completionActs) {
 			completeRewards.put(Short.valueOf(questId), qr);
-		else
+		} else {
 			startRewards.put(Short.valueOf(questId), qr);
+		}
 	}
 
 	private void processQuestActions(LittleEndianReader reader) {
@@ -242,23 +251,29 @@ public class KvjQuestDataLoader extends QuestDataLoader {
 	private void processQuestCheck(short questId, boolean completionChecks, LittleEndianReader reader) {
 		QuestChecks qc = new QuestChecks(questId);
 		byte amount = reader.readByte();
-		for (int i = 0; i < amount; i++)
+		for (int i = 0; i < amount; i++) {
 			qc.addReqItem(processQuestItem(reader));
+		}
 		amount = reader.readByte();
-		for (int i = 0; i < amount; i++)
+		for (int i = 0; i < amount; i++) {
 			qc.addReqQuest(reader.readShort(), reader.readByte());
+		}
 		amount = reader.readByte();
-		for (int i = 0; i < amount; i++)
+		for (int i = 0; i < amount; i++) {
 			qc.addReqJob(reader.readShort());
+		}
 		amount = reader.readByte();
-		for (int i = 0; i < amount; i++)
+		for (int i = 0; i < amount; i++) {
 			qc.addReqSkill(reader.readInt(), reader.readInt());
+		}
 		amount = reader.readByte();
-		for (int i = 0; i < amount; i++)
+		for (int i = 0; i < amount; i++) {
 			qc.addReqMobKills(reader.readInt(), reader.readShort());
+		}
 		amount = reader.readByte();
-		for (int i = 0; i < amount; i++)
+		for (int i = 0; i < amount; i++) {
 			qc.addReqPet(reader.readInt());
+		}
 		for (byte now = reader.readByte(); now != END_BEHAVIOR; now = reader.readByte()) {
 			switch (now) {
 				case MIN_LEVEL:
@@ -299,10 +314,11 @@ public class KvjQuestDataLoader extends QuestDataLoader {
 					break;
 			}
 		}
-		if (completionChecks)
+		if (completionChecks) {
 			completeReqs.put(Short.valueOf(questId), qc);
-		else
+		} else {
 			startReqs.put(Short.valueOf(questId), qc);
+		}
 	}
 
 	private void processQuestChecks(LittleEndianReader reader) {
@@ -315,13 +331,10 @@ public class KvjQuestDataLoader extends QuestDataLoader {
 		short questId = reader.readShort();
 		questNames.put(Short.valueOf(questId), reader.readNullTerminatedString());
 		for (byte now = reader.readByte(); now != END_QUEST_INFO; now = reader.readByte()) {
-			switch (now) {
-				case AUTO_START:
-					autoStart.add(Short.valueOf(questId));
-					break;
-				case AUTO_PRE_COMPLETE:
-					autoPreComplete.add(Short.valueOf(questId));
-					break;
+			if (now == AUTO_START) {
+				autoStart.add(Short.valueOf(questId));
+			} else if (now == AUTO_PRE_COMPLETE) {
+				autoPreComplete.add(Short.valueOf(questId));
 			}
 		}
 	}

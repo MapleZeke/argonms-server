@@ -109,7 +109,7 @@ public class InventoryCommandHandlers implements CommandCollection<CommandCaller
 		}
 	}
 
-	private static abstract class ChangeItemQuantityCommandHandler extends AbstractCommandDefinition<CommandCaller> {
+	private abstract static class ChangeItemQuantityCommandHandler extends AbstractCommandDefinition<CommandCaller> {
 		private final int defaultQuantity;
 		private final int factor;
 

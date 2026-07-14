@@ -47,8 +47,9 @@ public class DefaultNpcShopDataLoader extends NpcShopDataLoader {
 			ps = con.prepareStatement("SELECT `itemid`,`price` FROM `shopitems` WHERE `npcid` = ? ORDER BY `position` ASC");
 			ps.setInt(1, npcid);
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				items.add(new NpcShop.ShopSlot(rs.getInt(1), (short) 1, rs.getInt(2)));
+			}
 
 			if (!items.isEmpty()) {
 				NpcShop shop = new NpcShop.DefaultNpcShopStock(items);
@@ -77,8 +78,9 @@ public class DefaultNpcShopDataLoader extends NpcShopDataLoader {
 			while (more || rs.next()) {
 				int npcId = rs.getInt(1);
 				items = new ArrayList<>();
-				do
+				do {
 					items.add(new NpcShop.ShopSlot(rs.getInt(2), (short) 1, rs.getInt(3)));
+				}
 				while ((more = rs.next()) && rs.getInt(1) == npcId);
 				loadedShops.put(Integer.valueOf(npcId), new NpcShop.DefaultNpcShopStock(items));
 			}

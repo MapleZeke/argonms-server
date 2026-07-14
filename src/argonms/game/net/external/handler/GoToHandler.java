@@ -57,8 +57,9 @@ public final class GoToHandler {
 		String portalName = packet.readLengthPrefixedString();
 		GameCharacter p = gc.getPlayer();
 		if (dest == -1) { //entered portal
-			if (!p.getMap().enterPortal(p, portalName))
+			if (!p.getMap().enterPortal(p, portalName)) {
 				gc.getSession().send(GamePackets.writeEnableActions());
+			}
 		} else if (dest == 0 && !p.isAlive()) { //warp when dead and clicked ok
 			p.setHp((short) 50);
 			p.setStance((byte) 0);
@@ -80,8 +81,9 @@ public final class GoToHandler {
 			for (StatusEffectsData e : sources)
 				p.removeCancelEffectTask(e);
 		} else { //client map command
-			if (p.getPrivilegeLevel() <= UserPrivileges.USER || !p.changeMap(dest))
+			if (p.getPrivilegeLevel() <= UserPrivileges.USER || !p.changeMap(dest)) {
 				gc.getSession().send(GamePackets.writeEnableActions());
+			}
 		}
 	}
 
@@ -126,8 +128,9 @@ public final class GoToHandler {
 				CheatTracker.get(gc).suspicious(CheatTracker.Infraction.POSSIBLE_PACKET_EDITING, "Tried to use nonexistent mystic door");
 				return;
 			}
-			if (!door.isInTown())
+			if (!door.isInTown()) {
 				door = door.getComplement();
+			}
 			if (door.getMapId() != p.getMapId() || owner != p && (party == null || party != p.getParty())) {
 				CheatTracker.get(gc).suspicious(CheatTracker.Infraction.POSSIBLE_PACKET_EDITING, "Tried to use nonexistent mystic door");
 				return;

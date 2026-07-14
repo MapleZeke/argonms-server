@@ -78,8 +78,9 @@ public class ShopClient extends RemoteClient {
 
 	private void dissociate() {
 		if (player != null) {
-			if (!isMigrating())
+			if (!isMigrating()) {
 				player.prepareLogOff();
+			}
 			ShopServer.getInstance().removePlayer(player);
 			player = null;
 		}
@@ -99,7 +100,8 @@ public class ShopClient extends RemoteClient {
 				}
 			});
 		}
-		if (!isMigrating())
+		if (!isMigrating()) {
 			updateState(STATUS_NOTLOGGEDIN);
+		}
 	}
 }

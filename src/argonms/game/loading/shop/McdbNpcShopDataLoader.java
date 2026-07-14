@@ -80,8 +80,9 @@ public class McdbNpcShopDataLoader extends NpcShopDataLoader {
 							rps = con.prepareStatement("SELECT `itemid`,`price` FROM `rechargedata` WHERE `id` = ?");
 							rps.setInt(1, rechargeTier);
 							rrs = rps.executeQuery();
-							if (rrs.next())
+							if (rrs.next()) {
 								loadRechargeTier(rechargeTier, rrs);
+							}
 						} finally {
 							DatabaseManager.cleanup(DatabaseType.WZ, rrs, rps, null);
 						}
@@ -96,8 +97,9 @@ public class McdbNpcShopDataLoader extends NpcShopDataLoader {
 					ips = con.prepareStatement("SELECT `itemid`,`quantity`,`price` FROM `shopitemdata` WHERE `shopid` = ? ORDER BY `sort` DESC");
 					ips.setInt(1, rs.getInt(1));
 					irs = ips.executeQuery();
-					while (irs.next())
+					while (irs.next()) {
 						items.add(new NpcShop.ShopSlot(irs.getInt(1), irs.getShort(2), irs.getInt(3)));
+					}
 				} finally {
 					DatabaseManager.cleanup(DatabaseType.WZ, irs, ips, null);
 				}
@@ -127,8 +129,9 @@ public class McdbNpcShopDataLoader extends NpcShopDataLoader {
 			ps = con.prepareStatement("SELECT `id`,`itemid`,`price` FROM `rechargedata` ORDER BY `id` ASC");
 			rs = ps.executeQuery();
 			boolean more = false;
-			while (more || rs.next())
+			while (more || rs.next()) {
 				more = loadRechargeTier(rs.getInt(1), rs);
+			}
 			rs.close();
 			ps.close();
 
@@ -139,8 +142,9 @@ public class McdbNpcShopDataLoader extends NpcShopDataLoader {
 			while (more || rs.next()) {
 				int shopId = rs.getInt(1);
 				items = new ArrayList<>();
-				do
+				do {
 					items.add(new NpcShop.ShopSlot(rs.getInt(2), rs.getShort(3), rs.getInt(4)));
+				}
 				while ((more = rs.next()) && rs.getInt(1) == shopId);
 				shopItems.put(Integer.valueOf(shopId), items);
 			}
@@ -153,8 +157,8 @@ public class McdbNpcShopDataLoader extends NpcShopDataLoader {
 				int shopId = rs.getInt(1);
 				int npcId = rs.getInt(2);
 				int rechargeTier = rs.getInt(3);
-				Map<Integer, Double> rechargeables = rechargeTier != 0 ? rechargeTiers.get(Integer.valueOf(rechargeTier)) : Collections.<Integer, Double>emptyMap();
-				loadedShops.put(Integer.valueOf(npcId), new NpcShop.McdbNpcShopStock(rechargeables != null ? rechargeables : Collections.<Integer, Double>emptyMap(), shopItems.get(Integer.valueOf(shopId))));
+				Map<Integer, Double> rechargeables = rechargeTier != 0 ? rechargeTiers.get(Integer.valueOf(rechargeTier)) : Collections.emptyMap();
+				loadedShops.put(Integer.valueOf(npcId), new NpcShop.McdbNpcShopStock(rechargeables != null ? rechargeables : Collections.emptyMap(), shopItems.get(Integer.valueOf(shopId))));
 			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load all shop data from MCDB.", ex);
@@ -167,11 +171,13 @@ public class McdbNpcShopDataLoader extends NpcShopDataLoader {
 
 	@Override
 	public boolean canLoad(int npcid) {
-		if (loadedShops.get(Integer.valueOf(npcid)) != null)
+		if (loadedShops.get(Integer.valueOf(npcid)) != null) {
 			return true;
+		}
 		//if loadedShops.containsKey npcid but loadedShops.get npcid is null, that means the shop of npcid could not be loaded
-		if (loadedShops.containsKey(Integer.valueOf(npcid)))
+		if (loadedShops.containsKey(Integer.valueOf(npcid))) {
 			return false;
+		}
 		Connection con = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -180,8 +186,9 @@ public class McdbNpcShopDataLoader extends NpcShopDataLoader {
 			ps = con.prepareStatement("SELECT * FROM `shopdata` WHERE `npcid` = ?");
 			ps.setInt(1, npcid);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				return true;
+			}
 			return false;
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not use MCDB to determine whether npc " + npcid + " has a shop.", ex);

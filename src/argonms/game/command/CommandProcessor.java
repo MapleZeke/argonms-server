@@ -49,7 +49,7 @@ import java.util.regex.Pattern;
  *
  * @author GoldenKevin
  */
-public class CommandProcessor {
+public final class CommandProcessor {
 	private static final Pattern argSplit;
 	private static final CommandProcessor singleton;
 	private final Map<String, AbstractCommandDefinition<GameCharacterCommandCaller>> inGameOnlyCommands;
@@ -260,8 +260,9 @@ public class CommandProcessor {
 				param = args.next();
 				try {
 					status = Byte.parseByte(param);
-					if (status < QuestEntry.STATE_NOT_STARTED || status > QuestEntry.STATE_COMPLETED)
+					if (status < QuestEntry.STATE_NOT_STARTED || status > QuestEntry.STATE_COMPLETED) {
 						throw new NumberFormatException();
+					}
 				} catch (NumberFormatException e) {
 					resp.printErr(param + " is not a valid quest status.");
 					resp.printErr(getUsage());
@@ -319,8 +320,9 @@ public class CommandProcessor {
 				try {
 					skillId = Integer.parseInt(param);
 					s = SkillDataLoader.getInstance().getSkill(skillId);
-					if (s == null)
+					if (s == null) {
 						throw new NumberFormatException();
+					}
 				} catch (NumberFormatException e) {
 					resp.printErr(param + " is not a valid skillid.");
 					resp.printErr(getUsage());
@@ -334,8 +336,9 @@ public class CommandProcessor {
 				param = args.next();
 				try {
 					skillLevel = Byte.parseByte(param);
-					if (skillLevel != 0 && s.getLevel(skillLevel) == null)
+					if (skillLevel != 0 && s.getLevel(skillLevel) == null) {
 						throw new NumberFormatException();
+					}
 				} catch (NumberFormatException e) {
 					resp.printErr(param + " is not a valid level of skill " + skillId + ".");
 					resp.printErr(getUsage());
@@ -346,8 +349,9 @@ public class CommandProcessor {
 					param = args.next();
 					try {
 						masterLevel = Byte.parseByte(param);
-						if (masterLevel != 0 && s.getLevel(masterLevel) == null)
+						if (masterLevel != 0 && s.getLevel(masterLevel) == null) {
 							throw new NumberFormatException();
+						}
 					} catch (NumberFormatException e) {
 						resp.printErr(param + " is not a valid master level of skill " + skillId + ".");
 						resp.printErr(getUsage());
@@ -460,10 +464,11 @@ public class CommandProcessor {
 				byte channel = map.channel;
 				StringBuilder sb = new StringBuilder();
 				sb.append("PlayerId=").append(target.access(CommandTarget.CharacterProperty.PLAYER_ID));
-				if (channel != 0)
+				if (channel != 0) {
 					sb.append("; Channel=").append(channel);
-				else
+				} else {
 					sb.append("; Offline");
+				}
 				sb.append("; Map=").append(map.mapId);
 				sb.append("; Position(").append(pos.x).append(",").append(pos.y).append(")");
 				resp.printOut(sb.toString());
@@ -500,11 +505,11 @@ public class CommandProcessor {
 				}
 
 				byte type;
-				if (key.equalsIgnoreCase("exp")) {
+				if ("exp".equalsIgnoreCase(key)) {
 					type = GameRegistry.RATE_EXP;
-				} else if (key.equalsIgnoreCase("meso")) {
+				} else if ("meso".equalsIgnoreCase(key)) {
 					type = GameRegistry.RATE_MESO;
-				} else if (key.equalsIgnoreCase("drop")) {
+				} else if ("drop".equalsIgnoreCase(key)) {
 					type = GameRegistry.RATE_DROP;
 				} else {
 					resp.printErr(getUsage());
@@ -570,8 +575,9 @@ public class CommandProcessor {
 
 			@Override
 			public void doAction(CommandCaller caller, CommandArguments args, CommandOutput resp) {
-				if (args.hasOpt("-gc"))
+				if (args.hasOpt("-gc")) {
 					System.gc();
+				}
 
 				long startMillis = GameServer.getChannel(caller.getChannel()).getTimeStarted();
 				long upTimeMillis = System.currentTimeMillis() - startMillis;
@@ -583,14 +589,18 @@ public class CommandProcessor {
 				long upMinutes = ((upTimeMillis % (1000 * 60 * 60 * 24)) % (1000 * 60 * 60)) / (1000 * 60);
 				long upSeconds = (((upTimeMillis % (1000 * 60 * 60 * 24)) % (1000 * 60 * 60)) % (1000 * 60)) / 1000;
 				String upTimeStr = "It has been up for ";
-				if (upDays > 0)
+				if (upDays > 0) {
 					upTimeStr += upDays + (upDays != 1 ? " days, " : " day, ");
-				if (upHours > 0)
+				}
+				if (upHours > 0) {
 					upTimeStr += upHours + (upHours != 1 ? " hours, " : " hour, ");
-				if (upMinutes > 0)
+				}
+				if (upMinutes > 0) {
 					upTimeStr += upMinutes + (upMinutes != 1 ? " minutes, " : " minute, ");
-				if (upSeconds > 0)
+				}
+				if (upSeconds > 0) {
 					upTimeStr += upSeconds + (upSeconds != 1 ? " seconds, " : " second, ");
+				}
 				resp.printOut(upTimeStr.substring(0, upTimeStr.length() - 2) + ".");
 
 				long heapNow = Runtime.getRuntime().totalMemory() / (1024 * 1024);
@@ -647,25 +657,30 @@ public class CommandProcessor {
 		public void doAction(CommandCaller caller, CommandArguments args, CommandOutput resp) {
 			if (!args.hasNext()) {
 				for (Entry<String, AbstractCommandDefinition<CommandCaller>> entry : universalCommands.entrySet())
-					if (caller.getPrivilegeLevel() >= entry.getValue().minPrivilegeLevel())
+					if (caller.getPrivilegeLevel() >= entry.getValue().minPrivilegeLevel()) {
 						resp.printOut(entry.getKey() + " - " + entry.getValue().getHelpMessage());
+					}
 				if (caller.isInGame()) {
 					for (Entry<String, AbstractCommandDefinition<GameCharacterCommandCaller>> entry : inGameOnlyCommands.entrySet())
-						if (caller.getPrivilegeLevel() >= entry.getValue().minPrivilegeLevel())
+						if (caller.getPrivilegeLevel() >= entry.getValue().minPrivilegeLevel()) {
 							resp.printOut(entry.getKey() + " - " + entry.getValue().getHelpMessage());
+						}
 				} else {
 					for (Entry<String, AbstractCommandDefinition<RemoteAdminCommandCaller>> entry : byTelnetOnlyCommands.entrySet())
-						if (caller.getPrivilegeLevel() >= entry.getValue().minPrivilegeLevel())
+						if (caller.getPrivilegeLevel() >= entry.getValue().minPrivilegeLevel()) {
 							resp.printOut(entry.getKey() + " - " + entry.getValue().getHelpMessage());
+						}
 				}
 			} else {
 				String param = args.next();
 				AbstractCommandDefinition def = universalCommands.get(param.toLowerCase(Locale.ROOT));
-				if (def == null || caller.getPrivilegeLevel() < def.minPrivilegeLevel())
-					if (caller.isInGame())
+				if (def == null || caller.getPrivilegeLevel() < def.minPrivilegeLevel()) {
+					if (caller.isInGame()) {
 						def = inGameOnlyCommands.get(param.toLowerCase(Locale.ROOT));
-					else
+					} else {
 						def = byTelnetOnlyCommands.get(param.toLowerCase(Locale.ROOT));
+					}
+				}
 				if (def == null || caller.getPrivilegeLevel() < def.minPrivilegeLevel()) {
 					resp.printErr(param + " is not a valid command.");
 					resp.printErr(getUsage());

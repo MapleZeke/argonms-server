@@ -65,7 +65,7 @@ public class CenterRemoteSession implements Session {
 	private final SelectionKey selectionKey;
 	private final UnorderedQueue sendQueue;
 
-	private KeepAliveTask heartbeatTask;
+	private final KeepAliveTask heartbeatTask;
 	private final Runnable idleTask = new Runnable() {
 		@Override
 		public void run() {
@@ -160,8 +160,9 @@ public class CenterRemoteSession implements Session {
 			idleTaskFuture.cancel(false);
 
 			LOG.log(Level.FINE, "{0} server ({1}) disconnected: {2}", new Object[] { getServerName(), getAddress(), reason });
-			if (cri != null)
+			if (cri != null) {
 				cri.disconnected();
+			}
 			return true;
 		}
 		return false;
@@ -174,18 +175,19 @@ public class CenterRemoteSession implements Session {
 	 * channel is closed.
 	 */
 	/* package-private */ int tryFlushSendQueue() {
-		if (!sendQueue.shouldWrite())
-			return -1;
+	if (!sendQueue.shouldWrite()) {
+		return -1;
+	}
 		try {
 			do {
 				Iterator<ByteBuffer> iter = sendQueue.pop().iterator();
 				while (iter.hasNext()) {
 					ByteBuffer buf = iter.next();
-					if (buf.remaining() == commChn.write(buf)) {
-					} else {
+					if (buf.remaining() != commChn.write(buf)) {
 						sendQueue.insert(buf);
-						while (iter.hasNext())
+						while (iter.hasNext()) {
 							sendQueue.insert(iter.next());
+						}
 						return 0;
 					}
 				}
@@ -214,18 +216,21 @@ public class CenterRemoteSession implements Session {
 					if (ServerType.isGame(serverId)) {
 						byte world = packet.readByte();
 						byte[] channels = new byte[packet.readByte()];
-						for (int i = 0; i < channels.length; i++)
+						for (int i = 0; i < channels.length; i++) {
 							channels[i] = packet.readByte();
+						}
 						List<CenterGameInterface> servers = CenterServer.getInstance().getAllServersOfWorld(world, serverId);
 						List<Byte> conflicts = new ArrayList<>();
 						for (CenterGameInterface server : servers) {
-							if (server.isShuttingDown())
+							if (server.isShuttingDown()) {
 								continue;
+							}
 
 							for (int i = 0; i < channels.length; i++) {
 								Byte ch = Byte.valueOf(channels[i]);
-								if (server.getChannels().contains(ch))
+								if (server.getChannels().contains(ch)) {
 									conflicts.add(ch);
+								}
 							}
 						}
 						if (!conflicts.isEmpty()) {
@@ -350,8 +355,9 @@ public class CenterRemoteSession implements Session {
 
 		public void stop() {
 			ScheduledFuture<?> old = future.getAndSet(null);
-			if (old != null)
+			if (old != null) {
 				old.cancel(false);
+			}
 		}
 	}
 }

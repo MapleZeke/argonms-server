@@ -50,8 +50,9 @@ public final class EnterHandler {
 	public static void handlePlayerConnection(LittleEndianReader packet, GameClient gc) {
 		int cid = packet.readInt();
 		GameCharacter player = GameCharacter.loadPlayer(gc, cid);
-		if (player == null)
+		if (player == null) {
 			return;
+		}
 		gc.setPlayer(player);
 		boolean allowLogin;
 		byte state = gc.getOnlineState();
@@ -72,23 +73,28 @@ public final class EnterHandler {
 		//track of the PlayerContext in shop so that non-expired buffs from
 		//before we entered the shop could be applied
 		byte originChannel = cserv.applyBuffsFromLastChannel(player);
-		if (player.isVisible() && player.getPrivilegeLevel() > UserPrivileges.USER) //hide
+		if (player.isVisible() && player.getPrivilegeLevel() > UserPrivileges.USER) { //hide
 			SkillTools.useCastSkill(player, Skills.HIDE, (byte) 1, (byte) -1);
+		}
 		player.getMap().spawnPlayer(player);
 
 		//TODO: although shop server is not interchannel, we need to display our
 		//buddies that are online in the shop server
 		BuddyList bList = player.getBuddyList();
-		if (originChannel == ChannelSynchronizationOps.CHANNEL_OFFLINE)
+		if (originChannel == ChannelSynchronizationOps.CHANNEL_OFFLINE) {
 			gc.getSession().send(GamePackets.writeBuddyList(BuddyListHandler.ADD, bList));
-		if (originChannel <= ChannelSynchronizationOps.CHANNEL_CASH_SHOP)
+		}
+		if (originChannel <= ChannelSynchronizationOps.CHANNEL_CASH_SHOP) {
 			for (Entry<Integer, String> invite : bList.getInvites()) //also do this if coming from shop server
 				gc.getSession().send(GamePackets.writeBuddyInvite(invite.getKey().intValue(), invite.getValue()));
+		}
 		cserv.getCrossServerInterface().sendExchangeBuddyLogInNotifications(player);
-		if (player.getParty() != null)
+		if (player.getParty() != null) {
 			cserv.getCrossServerInterface().sendPartyMemberLogInNotifications(player);
-		if (player.getGuild() != null)
+		}
+		if (player.getGuild() != null) {
 			cserv.getCrossServerInterface().sendGuildMemberLogInNotifications(player, originChannel == ChannelSynchronizationOps.CHANNEL_OFFLINE);
+		}
 
 		//player.showNote();
 		gc.getSession().send(writeKeymap(player.getKeyMap()));
@@ -96,8 +102,9 @@ public final class EnterHandler {
 		gc.getSession().send(writeAutoMpPot(player.getAutoMpPot()));
 		gc.getSession().send(writeMacros(player.getMacros()));
 		String serverMessage = GameServer.getVariables().getNewsTickerMessage();
-		if (!serverMessage.isEmpty())
+		if (!serverMessage.isEmpty()) {
 			gc.getSession().send(CommonPackets.writeServerMessage(ChatHandler.TextStyle.TICKER.byteValue(), serverMessage, (byte) -1, true));
+		}
 
 		player.checkForExpiredItems();
 		//player.checkBerserk();
@@ -110,13 +117,10 @@ public final class EnterHandler {
 		String script = mapStats.getShipScript();
 		EventManipulator event = cserv.getEventManager().getScriptInterface(script);
 		if (event != null && ((Boolean) event.getVariable(mapStats.getShipKind() + "docked")).booleanValue()) {
-			switch (mapStats.getShipKind()) {
-				case 0:
-					gc.getSession().send(GamePackets.writeShipEffect((short) 1548));
-					break;
-				case 1:
-					gc.getSession().send(GamePackets.writeShipEffect((short) 1034));
-					break;
+			if (mapStats.getShipKind() == 0) {
+				gc.getSession().send(GamePackets.writeShipEffect((short) 1548));
+			} else if (mapStats.getShipKind() == 1) {
+				gc.getSession().send(GamePackets.writeShipEffect((short) 1034));
 			}
 		}
 	}
