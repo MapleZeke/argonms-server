@@ -65,8 +65,8 @@ public final class MaplePacketDecoder extends ByteToMessageDecoder {
 	}
 
 	private static int readPacketLength(ByteBuf in, int readerIndex) {
-		int scrambledLength = in.getUnsignedShortLE(readerIndex) & 0xFFFF;
-		int sequenceChecksum = in.getUnsignedShortLE(readerIndex + Short.BYTES) & 0xFFFF;
-		return (scrambledLength ^ sequenceChecksum) & 0xFFFF;
+		int versionMask = in.getUnsignedShortLE(readerIndex);
+		int maskedLength = in.getUnsignedShortLE(readerIndex + Short.BYTES);
+		return (versionMask ^ maskedLength) & 0xFFFF;
 	}
 }

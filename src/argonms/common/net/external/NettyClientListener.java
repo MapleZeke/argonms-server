@@ -33,6 +33,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.AttributeKey;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -148,6 +149,8 @@ public final class NettyClientListener<T extends RemoteClient> implements Sessio
 	}
 
 	static void initializeCrypto(Channel channel, byte[] recvIv, byte[] sendIv) {
+		Objects.requireNonNull(recvIv, "recvIv");
+		Objects.requireNonNull(sendIv, "sendIv");
 		channel.attr(RECV_IV_KEY).set(Arrays.copyOf(recvIv, recvIv.length));
 		channel.attr(SEND_IV_KEY).set(Arrays.copyOf(sendIv, sendIv.length));
 	}
