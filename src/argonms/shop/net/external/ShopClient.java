@@ -85,7 +85,7 @@ public class ShopClient extends RemoteClient {
 	}
 
 	@Override
-	public void disconnected() {
+	public void onDisconnected() {
 		if (getSession().getQueuedReads() == 0) {
 			dissociate();
 		} else {

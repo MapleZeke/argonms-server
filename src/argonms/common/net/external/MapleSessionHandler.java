@@ -29,10 +29,51 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Netty {@link ChannelInboundHandlerAdapter} that forms the final stage of the
+ * external-client pipeline and is responsible for the
+ * <strong>session lifecycle</strong> only — it does <em>not</em> decrypt or
+ * frame packets.
+ *
+ * <h2>Pipeline contract (item 1 – protocol separation)</h2>
+ * <pre>
+ *   [wire bytes]
+ *       ↓
+ *   {@link MaplePacketDecoder} – frames &amp; decrypts inbound bytes → {@code byte[]}
+ *       ↓
+ *   {@link MaplePacketEncoder} – encrypts outbound {@code byte[]} → wire frames
+ *       ↓
+ *   MapleSessionHandler      – lifecycle bridge:
+ *                               • {@link #channelActive}   → create {@link ClientSession},
+ *                                 bind {@link MapleClientContext} attr, send v62 Hello
+ *                               • {@link #channelRead}     → dispatch {@code byte[]} payload
+ *                                 to {@link ClientPacketProcessor} on virtual thread
+ *                               • {@link #channelInactive} → tear down session
+ *                               • {@link #exceptionCaught} → log + close
+ * </pre>
+ *
+ * <h2>Correlation IDs (item 6)</h2>
+ * Every log record emitted by this handler is prefixed with the Netty channel's
+ * short ID ({@code [channelId]}) obtained from
+ * {@link io.netty.channel.ChannelId#asShortText()}.  This token can be used to
+ * correlate network events, packet-processor events, and DB persistence events
+ * across log files.
+ *
+ * <h2>Backpressure (item 3)</h2>
+ * {@link #channelRead} passes the current executor queue depth to
+ * {@link SessionMetrics#onPacketArrived}, which logs a {@code WARNING} when
+ * the depth exceeds {@link SessionMetrics#BACKPRESSURE_THRESHOLD}.
+ *
+ * @param <T> the server-module client type (e.g. {@code LoginClient})
+ */
 public final class MapleSessionHandler<T extends RemoteClient> extends ChannelInboundHandlerAdapter {
 	private static final Logger LOG = Logger.getLogger(MapleSessionHandler.class.getName());
 
+	/** Channel attribute key for the bound {@link MapleClientContext}. */
 	public static final AttributeKey<RemoteClient> CLIENT_KEY = AttributeKey.valueOf("ArgonMapleClient");
+
+	/** Channel attribute key for the per-session {@link SessionMetrics}. */
+	public static final AttributeKey<SessionMetrics> METRICS_KEY = AttributeKey.valueOf("ArgonSessionMetrics");
 
 	private final ClientPacketProcessor<T> packetProcessor;
 	private final ClientListener.ClientFactory<T> clientFactory;
@@ -50,6 +91,7 @@ public final class MapleSessionHandler<T extends RemoteClient> extends ChannelIn
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) {
+		var cid = channelId(ctx);
 		ctx.channel().config().setAutoRead(false);
 
 		var client = clientFactory.newInstance();
@@ -57,16 +99,22 @@ public final class MapleSessionHandler<T extends RemoteClient> extends ChannelIn
 		client.setSession(session);
 		session.activate();
 
+		var metrics = SessionMetrics.onConnect();
 		NettyClientListener.setSession(ctx.channel(), session);
 		NettyClientListener.initializeCrypto(ctx.channel(), session.getRecvIv(), session.getSendIv());
 		ctx.channel().attr(CLIENT_KEY).set(client);
+		ctx.channel().attr(METRICS_KEY).set(metrics);
 
+		LOG.log(Level.FINE, "[{0}] Channel active, sending handshake", cid);
 		ctx.writeAndFlush(session.makeInitPacket(ctx.alloc())).addListener(future -> {
 			if (future.isSuccess()) {
+				LOG.log(Level.FINE, "[{0}] Handshake sent successfully", cid);
 				ctx.channel().config().setAutoRead(true);
 				ctx.read();
 			} else {
-				session.close(future.cause() != null ? future.cause().getMessage() : "Failed to send init packet");
+				var reason = future.cause() != null ? future.cause().getMessage() : "Failed to send init packet";
+				LOG.log(Level.WARNING, "[{0}] Handshake write failed: {1}", new Object[]{cid, reason});
+				session.close(reason);
 				clearChannelState(ctx);
 			}
 		});
@@ -90,13 +138,20 @@ public final class MapleSessionHandler<T extends RemoteClient> extends ChannelIn
 			return;
 		}
 
+		var metrics = ctx.channel().attr(METRICS_KEY).get();
 		session.touch();
 		session.readEnqueued();
+		if (metrics != null) {
+			metrics.onPacketArrived(session.getQueuedReads());
+		}
+
+		var cid = channelId(ctx);
 		packetExecutor.submit(() -> {
 			try {
 				packetProcessor.process(new LittleEndianByteArrayReader(payload), client);
 			} catch (Throwable ex) {
-				LOG.log(Level.WARNING, "Uncaught exception while processing packet from client " + session.getAccountName() + " (" + session.getAddress() + ")", ex);
+				LOG.log(Level.WARNING, "[" + cid + "] Uncaught exception while processing packet from "
+						+ session.getAccountName() + " (" + session.getAddress() + ")", ex);
 			} finally {
 				session.readDequeued();
 			}
@@ -105,23 +160,34 @@ public final class MapleSessionHandler<T extends RemoteClient> extends ChannelIn
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) {
+		var cid = channelId(ctx);
 		var session = NettyClientListener.<T>getSession(ctx.channel());
 		if (session != null) {
+			LOG.log(Level.FINE, "[{0}] Channel inactive for {1} ({2}), closing session",
+					new Object[]{cid, session.getAccountName(), session.getAddress()});
 			session.close("EOF received");
+		} else {
+			LOG.log(Level.FINE, "[{0}] Channel inactive (no session)", cid);
+		}
+		var metrics = ctx.channel().attr(METRICS_KEY).get();
+		if (metrics != null) {
+			metrics.onDisconnect();
 		}
 		clearChannelState(ctx);
 	}
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+		var cid = channelId(ctx);
 		var session = NettyClientListener.<T>getSession(ctx.channel());
 		if (session != null) {
 			var socketDrop = cause instanceof IOException;
 			var level = socketDrop ? Level.FINE : Level.WARNING;
-			LOG.log(level, "Connection failure for client " + session.getAccountName() + " (" + session.getAddress() + ")", cause);
+			LOG.log(level, "[" + cid + "] Connection failure for " + session.getAccountName()
+					+ " (" + session.getAddress() + ")", cause);
 			session.close(cause.getMessage());
 		} else {
-			LOG.log(Level.WARNING, "Uncaught exception before session initialization", cause);
+			LOG.log(Level.WARNING, "[" + cid + "] Exception before session initialization", cause);
 		}
 		clearChannelState(ctx);
 		ctx.close();
@@ -129,8 +195,14 @@ public final class MapleSessionHandler<T extends RemoteClient> extends ChannelIn
 
 	private static void clearChannelState(ChannelHandlerContext ctx) {
 		ctx.channel().attr(CLIENT_KEY).set(null);
+		ctx.channel().attr(METRICS_KEY).set(null);
 		ctx.channel().attr(NettyClientListener.SESSION_KEY).set(null);
 		ctx.channel().attr(NettyClientListener.RECV_IV_KEY).set(null);
 		ctx.channel().attr(NettyClientListener.SEND_IV_KEY).set(null);
+	}
+
+	/** Returns the Netty channel short ID used as a per-channel correlation token. */
+	private static String channelId(ChannelHandlerContext ctx) {
+		return ctx.channel().id().asShortText();
 	}
 }

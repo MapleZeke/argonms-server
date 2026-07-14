@@ -117,7 +117,7 @@ public class GameClient extends RemoteClient {
 	}
 
 	@Override
-	public void disconnected() {
+	public void onDisconnected() {
 		final boolean quickCleanup = GameServer.getInstance().isTerminated();
 		final boolean changingChannels = isMigrating();
 		if (npc != null) {
