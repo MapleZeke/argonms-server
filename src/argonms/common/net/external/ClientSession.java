@@ -100,7 +100,7 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	private ClientSession(SocketChannel socketChannel, Channel nettyChannel, SelectionKey key, T client, CloseListener<T> onClose) {
 		closeEventsTriggered = new AtomicBoolean(false);
 		nettyTransport = nettyChannel != null;
-		sendQueue = nettyTransport ? null : new OrderedQueue();
+		sendQueue = new OrderedQueue();
 		heartbeatTask = new KeepAliveTask();
 		queuedReads = new AtomicInteger(0);
 
@@ -247,9 +247,9 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	 * channel is closed.
 	 */
 	/* package-private */ byte tryFlushSendQueue() {
-	if (nettyTransport) {
-		return 1;
-	}
+		if (nettyTransport) {
+			return 1;
+		}
 	if (!sendQueue.shouldWrite()) {
 		return -1;
 	}

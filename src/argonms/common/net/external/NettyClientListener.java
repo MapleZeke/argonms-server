@@ -62,7 +62,7 @@ public final class NettyClientListener<T extends RemoteClient> implements Sessio
 		// default; setting argonms.virtualThreads=false falls back to the legacy
 		// platform-thread worker pool when needed.
 		boolean useVirtualThreads = Boolean.parseBoolean(System.getProperty(VIRTUAL_THREADS_PROPERTY, "true"));
-		int workerThreads = Runtime.getRuntime().availableProcessors() * 2;
+		int workerThreads = workerThreadCount();
 		this.workerThreadPool = useVirtualThreads ? Executors.newVirtualThreadPerTaskExecutor() : Executors.newFixedThreadPool(
 				workerThreads,
 				new ThreadFactory() {
@@ -86,7 +86,7 @@ public final class NettyClientListener<T extends RemoteClient> implements Sessio
 
 	public boolean bind(int port) {
 		boolean useEpoll = Epoll.isAvailable();
-		int workerThreads = Runtime.getRuntime().availableProcessors() * 2;
+		int workerThreads = workerThreadCount();
 		bossGroup = useEpoll ? new EpollEventLoopGroup(1) : new NioEventLoopGroup(1);
 		workerGroup = useEpoll ? new EpollEventLoopGroup(workerThreads) : new NioEventLoopGroup(workerThreads);
 		try {
@@ -142,5 +142,9 @@ public final class NettyClientListener<T extends RemoteClient> implements Sessio
 
 	static void setSession(Channel channel, ClientSession<?> session) {
 		channel.attr(SESSION_KEY).set(session);
+	}
+
+	private static int workerThreadCount() {
+		return Runtime.getRuntime().availableProcessors() * 2;
 	}
 }
