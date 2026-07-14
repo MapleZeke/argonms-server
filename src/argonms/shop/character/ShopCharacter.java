@@ -29,6 +29,7 @@ import argonms.common.character.inventory.Inventory.InventoryType;
 import argonms.common.character.inventory.InventorySlot;
 import argonms.common.util.DatabaseManager;
 import argonms.common.util.DatabaseManager.DatabaseType;
+import argonms.common.util.dao.CharacterDAO;
 import argonms.shop.ShopServer;
 import argonms.shop.net.external.CashShopPackets;
 import argonms.shop.net.external.ShopClient;
@@ -333,63 +334,24 @@ public final class ShopCharacter extends LoggedInPlayer {
 	}
 
 	private void updateDbInventory(Connection con) throws SQLException {
-		String invUpdate = "DELETE FROM `inventoryitems` WHERE "
-				+ "`characterid` = ? AND `inventorytype` <= " + InventoryType.CASH.byteValue()
-				+ " OR `accountid` = ? AND `inventorytype` = " + InventoryType.CASH_SHOP.byteValue();
-		try {
-			try (PreparedStatement ps = con.prepareStatement(invUpdate)) {
-				ps.setInt(1, getDataId());
-				ps.setInt(2, client.getAccountId());
-				ps.executeUpdate();
-			}
+		CharacterDAO.deleteInventoryItems(con, getDataId(), client.getAccountId(),
+				InventoryType.CASH.byteValue(), InventoryType.CASH_SHOP.byteValue());
 
-			EnumMap<InventoryType, IInventory> union = new EnumMap<>(getInventories());
-			union.put(InventoryType.CASH_SHOP, shopInventory);
-			commitInventory(con, union);
-		} catch (SQLException e) {
-			throw new SQLException("Failed to save inventory of character " + name, e);
-		}
+		EnumMap<InventoryType, IInventory> union = new EnumMap<>(getInventories());
+		union.put(InventoryType.CASH_SHOP, shopInventory);
+		commitInventory(con, union);
 	}
 
 	private void updateDbCooldowns(Connection con) throws SQLException {
-		try {
-			try (PreparedStatement ps = con.prepareStatement("DELETE FROM `cooldowns` WHERE `characterid` = ?")) {
-				ps.setInt(1, getDataId());
-				ps.executeUpdate();
-			}
-
-			try (PreparedStatement ps = con.prepareStatement("INSERT INTO `cooldowns` (`characterid`,`skillid`,`remaining`) VALUES (?,?,?)")) {
-				ps.setInt(1, getDataId());
-				for (Map.Entry<Integer, Cooldown> cooling : cooldowns.entrySet()) {
-					ps.setInt(2, cooling.getKey().intValue());
-					ps.setShort(3, cooling.getValue().getSecondsRemaining());
-					ps.addBatch();
-				}
-				ps.executeBatch();
-			}
-		} catch (SQLException e) {
-			throw new SQLException("Failed to save cooldowns of character " + name, e);
+		Map<Integer, Short> cooldownMap = new HashMap<>();
+		for (Map.Entry<Integer, Cooldown> cooling : cooldowns.entrySet()) {
+			cooldownMap.put(cooling.getKey(), cooling.getValue().getSecondsRemaining());
 		}
+		CharacterDAO.replaceCooldowns(con, getDataId(), cooldownMap);
 	}
 
 	private void updateDbWishList(Connection con) throws SQLException {
-		try {
-			try (PreparedStatement ps = con.prepareStatement("DELETE FROM `wishlists` WHERE `characterid` = ?")) {
-				ps.setInt(1, getDataId());
-				ps.executeUpdate();
-			}
-
-			try (PreparedStatement ps = con.prepareStatement("INSERT INTO `wishlists` (`characterid`,`sn`) VALUES (?,?)")) {
-				ps.setInt(1, getDataId());
-				for (Integer sn : wishList) {
-					ps.setInt(2, sn.intValue());
-					ps.addBatch();
-				}
-				ps.executeBatch();
-			}
-		} catch (SQLException e) {
-			throw new SQLException("Failed to save wishlist of character " + name, e);
-		}
+		CharacterDAO.replaceWishlist(con, getDataId(), wishList);
 	}
 
 	@Override
@@ -484,22 +446,14 @@ public final class ShopCharacter extends LoggedInPlayer {
 			}
 			p.buddies = new ShopBuddyList(maxBuddies, buddies);
 
-			try (PreparedStatement ps = con.prepareStatement("SELECT `partyid` FROM `parties` WHERE `characterid` = ?")) {
-				ps.setInt(1, id);
-				try (ResultSet rs = ps.executeQuery()) {
-					if (rs.next()) {
-						p.partyId = rs.getInt(1);
-					}
-				}
+			int partyId = CharacterDAO.loadPartyId(con, id);
+			if (partyId != -1) {
+				p.partyId = partyId;
 			}
 
-			try (PreparedStatement ps = con.prepareStatement("SELECT `g`.`id` FROM `guilds` `g` LEFT JOIN `guildmembers` `m` ON `g`.`id` = `m`.`guildid` WHERE `m`.`characterid` = ?")) {
-				ps.setInt(1, id);
-				try (ResultSet rs = ps.executeQuery()) {
-					if (rs.next()) {
-						p.guildId = rs.getInt(1);
-					}
-				}
+			int guildId = CharacterDAO.loadGuildId(con, id);
+			if (guildId != -1) {
+				p.guildId = guildId;
 			}
 
 			try (PreparedStatement ps = con.prepareStatement("SELECT `id`,`questid`,`state`,`completed` "
@@ -541,18 +495,6 @@ public final class ShopCharacter extends LoggedInPlayer {
 	}
 
 	public static int getAccountIdFromName(String name) {
-		int id = -1;
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-				PreparedStatement ps = con.prepareStatement("SELECT `a`.`id` FROM `characters` `c` LEFT JOIN `accounts` `a` ON `c`.`accountid` = `a`.`id` WHERE `c`.`name` = ?")) {
-			ps.setString(1, name);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					id = rs.getInt(1);
-				}
-			}
-		} catch (SQLException ex) {
-			LOG.log(Level.WARNING, "Could not find account id of character " + name, ex);
-		}
-		return id;
+		return CharacterDAO.getAccountIdFromName(name);
 	}
 }

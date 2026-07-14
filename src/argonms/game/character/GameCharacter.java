@@ -79,7 +79,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
@@ -285,44 +284,19 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 	}
 
 	private void updateDbInventory(Connection con) throws SQLException {
-		String invUpdate = "DELETE FROM `inventoryitems` WHERE "
-				+ "`characterid` = ? AND `inventorytype` <= " + InventoryType.CASH.byteValue()
-				+ " OR `accountid` = ? AND `inventorytype` = " + InventoryType.STORAGE.byteValue();
-		try (PreparedStatement ps = con.prepareStatement(invUpdate)) {
-			ps.setInt(1, getDataId());
-			ps.setInt(2, client.getAccountId());
-			ps.executeUpdate();
-		}
+		CharacterDAO.deleteInventoryItems(con, getDataId(), client.getAccountId(),
+				InventoryType.CASH.byteValue(), InventoryType.STORAGE.byteValue());
 
 		EnumMap<InventoryType, IInventory> union = new EnumMap<>(getInventories());
 		union.put(InventoryType.STORAGE, storage);
 		commitInventory(con, union);
 
 		Inventory cashInv = getInventories().get(InventoryType.CASH);
-		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `petignoreitems` (`petinventoryitemid`,`ignoreitem`) SELECT `inventoryitemid`,? FROM `cashshoppurchases` WHERE `uniqueid` = ?")) {
-			for (Map.Entry<Long, int[]> entry : petIgnoreItems.entrySet()) {
-				long uniqueId = entry.getKey().longValue();
-				boolean inInventory = false;
-				for (InventorySlot item : cashInv.getAll().values()) {
-					if (item.getUniqueId() == uniqueId) {
-						inInventory = true;
-						break;
-					}
-				}
-				if (!inInventory) {
-					continue;
-				}
-
-				ps.setLong(2, uniqueId);
-				for (int itemId : entry.getValue()) {
-					ps.setInt(1, itemId);
-					ps.addBatch();
-				}
-			}
-			ps.executeBatch();
-		} catch (SQLException e) {
-			throw new SQLException("Failed to save inventory of character " + name, e);
+		java.util.Set<Long> validUniqueIds = new java.util.HashSet<>();
+		for (InventorySlot item : cashInv.getAll().values()) {
+			validUniqueIds.add(Long.valueOf(item.getUniqueId()));
 		}
+		CharacterDAO.savePetIgnoreItems(con, petIgnoreItems, validUniqueIds);
 	}
 
 	private void updateDbSkills(Connection con) throws SQLException {
@@ -340,33 +314,16 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 	private void updateDbBindings(Connection con) throws SQLException {
 		CharacterDAO.replaceKeyBindings(con, getDataId(), bindings);
 
-		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `skillmacros` WHERE `characterid` = ?")) {
-			ps.setInt(1, getDataId());
-			ps.executeUpdate();
-		}
-
-		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `skillmacros` "
-				+ "(`characterid`,`position`,`name`,`silent`,`skill1`,`skill2`,`skill3`) "
-				+ "VALUES (?,?,?,?,?,?,?)")) {
-			ps.setInt(1, getDataId());
-			for (byte pos = 0; pos < skillMacros.length; pos++) {
-				SkillMacro macro = skillMacros[pos];
-				if (macro.getName().isEmpty() && !macro.isSilent() && macro.getFirstSkill() == 0 && macro.getSecondSkill() == 0 && macro.getThirdSkill() == 0) {
-					continue; //placeholder macro
-
-				}
-				ps.setByte(2, pos);
-				ps.setString(3, macro.getName());
-				ps.setBoolean(4, macro.isSilent());
-				ps.setInt(5, macro.getFirstSkill());
-				ps.setInt(6, macro.getSecondSkill());
-				ps.setInt(7, macro.getThirdSkill());
-				ps.addBatch();
+		List<CharacterDAO.SkillMacroRecord> macroRecords = new ArrayList<>();
+		for (byte pos = 0; pos < skillMacros.length; pos++) {
+			SkillMacro macro = skillMacros[pos];
+			if (macro.getName().isEmpty() && !macro.isSilent() && macro.getFirstSkill() == 0 && macro.getSecondSkill() == 0 && macro.getThirdSkill() == 0) {
+				continue; //placeholder macro
 			}
-			ps.executeBatch();
-		} catch (SQLException e) {
-			throw new SQLException("Failed to save keymap/macros of character " + name, e);
+			macroRecords.add(new CharacterDAO.SkillMacroRecord(pos, macro.getName(), macro.isSilent(),
+					macro.getFirstSkill(), macro.getSecondSkill(), macro.getThirdSkill()));
 		}
+		CharacterDAO.replaceSkillMacros(con, getDataId(), macroRecords);
 	}
 
 	private void updateDbBuddies(Connection con) throws SQLException {
@@ -381,82 +338,37 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 	}
 
 	private void updateDbParty(Connection con) throws SQLException {
-		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `parties` WHERE `characterid` = ?")) {
-			ps.setInt(1, getDataId());
-			ps.executeUpdate();
-		}
-
+		CharacterDAO.PartyRecord partyRec = null;
 		if (party != null) {
-			try (PreparedStatement ps = con.prepareStatement("INSERT INTO `parties` "
-					+ "(`world`,`partyid`,`characterid`,`leader`) VALUES (?,?,?,?)")) {
-				ps.setByte(1, getClient().getWorld());
-				ps.setInt(2, party.getId());
-				ps.setInt(3, getDataId());
-				ps.setBoolean(4, party.getLeader() == getDataId());
-				ps.executeUpdate();
-			}
+			partyRec = new CharacterDAO.PartyRecord(getClient().getWorld(), party.getId(), party.getLeader() == getDataId());
 		}
+		CharacterDAO.replaceParty(con, getDataId(), partyRec);
 	}
 
 	private void updateDbGuilds(Connection con) throws SQLException {
-		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `guildmembers` WHERE `characterid` = ?")) {
-			ps.setInt(1, getDataId());
-			ps.executeUpdate();
-		}
-
+		CharacterDAO.GuildMemberRecord memberRec = null;
 		if (guild != null) {
-			try (PreparedStatement ps = con.prepareStatement("INSERT INTO `guildmembers` "
-					+ "(`guildid`,`characterid`,`rank`,`signature`,`alliancerank`) VALUES (?,?,?,?,?)")) {
-				ps.setInt(1, guild.getId());
-				ps.setInt(2, getDataId());
-				GuildList.Member member = guild.getMember(getId());
-				ps.setByte(3, member.getRank());
-				ps.setByte(4, member.getSignature());
-				ps.setByte(5, member.getAllianceRank());
-				ps.executeUpdate();
-			}
+			GuildList.Member member = guild.getMember(getId());
+			memberRec = new CharacterDAO.GuildMemberRecord(guild.getId(), member.getRank(), member.getSignature(), member.getAllianceRank());
 		}
+		CharacterDAO.replaceGuildMember(con, getDataId(), memberRec);
 	}
 
 	private void updateDbQuests(Connection con) throws SQLException {
-		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `queststatuses` WHERE `characterid` = ?")) {
-			ps.setInt(1, getDataId());
-			ps.executeUpdate();
-		}
-
-		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `queststatuses` "
-				+ "(`characterid`,`questid`,`state`,`completed`) VALUES (?,?,?,?)",
-				Statement.RETURN_GENERATED_KEYS);
-				PreparedStatement mps = con.prepareStatement("INSERT INTO `questmobprogress` "
-				+ "(`queststatusid`,`mobid`,`count`) VALUES (?,?,?)")) {
-			ps.setInt(1, getDataId());
-			for (Entry<Short, QuestEntry> entry : questStatuses.entrySet()) {
-				QuestEntry status = entry.getValue();
-				ps.setShort(2, entry.getKey().shortValue());
-				ps.setByte(3, status.getState());
-				ps.setLong(4, status.getCompletionTime());
-				if (status.getState() == QuestEntry.STATE_STARTED) {
-					ps.executeUpdate();
-					int questEntryId;
-					try (ResultSet rs = ps.getGeneratedKeys()) {
-						questEntryId = rs.next() ? rs.getInt(1) : -1;
-					}
-
-					mps.setInt(1, questEntryId);
-					for (Entry<Integer, ? extends Number> mobProgress : status.getAllMobCounts().entrySet()) {
-						mps.setInt(2, mobProgress.getKey().intValue());
-						mps.setShort(3, mobProgress.getValue().shortValue());
-						mps.addBatch();
-					}
-				} else {
-					ps.addBatch();
+		List<CharacterDAO.QuestRecord> questRecords = new ArrayList<>();
+		for (Entry<Short, QuestEntry> entry : questStatuses.entrySet()) {
+			QuestEntry status = entry.getValue();
+			Map<Integer, Short> mobProgress = null;
+			if (status.getState() == QuestEntry.STATE_STARTED) {
+				mobProgress = new java.util.LinkedHashMap<>();
+				for (Entry<Integer, ? extends Number> mob : status.getAllMobCounts().entrySet()) {
+					mobProgress.put(mob.getKey(), mob.getValue().shortValue());
 				}
 			}
-			ps.executeBatch();
-			mps.executeBatch();
-		} catch (SQLException e) {
-			throw new SQLException("Failed to save quest states of character " + name, e);
+			questRecords.add(new CharacterDAO.QuestRecord(entry.getKey().shortValue(),
+					status.getState(), status.getCompletionTime(), mobProgress));
 		}
+		CharacterDAO.replaceQuests(con, getDataId(), questRecords);
 	}
 
 	private void updateDbMinigameStats(Connection con) throws SQLException {
@@ -658,22 +570,14 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 				}
 			}
 
-			try (PreparedStatement ps = con.prepareStatement("SELECT `partyid` FROM `parties` WHERE `characterid` = ?")) {
-				ps.setInt(1, id);
-				try (ResultSet rs = ps.executeQuery()) {
-					if (rs.next()) {
-						p.party = GameServer.getChannel(c.getChannel()).getCrossServerInterface().sendFetchPartyList(rs.getInt(1));
-					}
-				}
+			int partyId = CharacterDAO.loadPartyId(con, id);
+			if (partyId != -1) {
+				p.party = GameServer.getChannel(c.getChannel()).getCrossServerInterface().sendFetchPartyList(partyId);
 			}
 
-			try (PreparedStatement ps = con.prepareStatement("SELECT `g`.`id` FROM `guilds` `g` LEFT JOIN `guildmembers` `m` ON `g`.`id` = `m`.`guildid` WHERE `m`.`characterid` = ?")) {
-				ps.setInt(1, id);
-				try (ResultSet rs = ps.executeQuery()) {
-					if (rs.next()) {
-						p.guild = GameServer.getChannel(c.getChannel()).getCrossServerInterface().sendFetchGuildList(rs.getInt(1));
-					}
-				}
+			int guildId = CharacterDAO.loadGuildId(con, id);
+			if (guildId != -1) {
+				p.guild = GameServer.getChannel(c.getChannel()).getCrossServerInterface().sendFetchGuildList(guildId);
 			}
 
 			try (PreparedStatement ps = con.prepareStatement("SELECT `id`,`questid`,`state`,`completed` "

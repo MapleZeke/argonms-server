@@ -26,6 +26,7 @@ import argonms.common.character.inventory.Pet;
 import argonms.common.net.external.CheatTracker;
 import argonms.common.util.DatabaseManager;
 import argonms.common.util.TimeTool;
+import argonms.common.util.dao.CharacterDAO;
 import argonms.game.character.ExpTables;
 import argonms.game.character.MapMemoryVariable;
 import argonms.game.loading.map.MapDataLoader;
@@ -106,88 +107,42 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 
 	private void setValueInCharactersTable(Connection con, String column, short value) throws SQLException {
 		String safeColumn = requireCharacterColumn(column);
-		try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET `" + safeColumn + "` = ? WHERE `name` = ?")) {
-			ps.setShort(1, value);
-			ps.setString(2, target);
-			ps.executeUpdate();
-		}
+		CharacterDAO.setShortColumn(con, target, safeColumn, value);
 	}
 
 	private void addValueInCharactersTable(Connection con, String column, short value, short max) throws SQLException {
 		String safeColumn = requireCharacterColumn(column);
-		try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET `" + safeColumn + "` = LEAST(CAST(`" + safeColumn + "` AS UNSIGNED) + ?, ?) WHERE `name` = ?")) {
-			ps.setShort(1, value);
-			ps.setShort(2, max);
-			ps.setString(3, target);
-			ps.executeUpdate();
-		}
+		CharacterDAO.addShortColumn(con, target, safeColumn, value, max);
 	}
 
 	private void setValueInCharactersTable(Connection con, String column, int value) throws SQLException {
 		String safeColumn = requireCharacterColumn(column);
-		try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET `" + safeColumn + "` = ? WHERE `name` = ?")) {
-			ps.setInt(1, value);
-			ps.setString(2, target);
-			ps.executeUpdate();
-		}
+		CharacterDAO.setIntColumn(con, target, safeColumn, value);
 	}
 
 	private void addValueInCharactersTable(Connection con, String column, int value, int max) throws SQLException {
 		String safeColumn = requireCharacterColumn(column);
-		try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET `" + safeColumn + "` = LEAST(CAST(`" + safeColumn + "` AS UNSIGNED) + ?, ?) WHERE `name` = ?")) {
-			ps.setInt(1, value);
-			ps.setInt(2, max);
-			ps.setString(3, target);
-			ps.executeUpdate();
-		}
+		CharacterDAO.addIntColumn(con, target, safeColumn, value, max);
 	}
 
 	private byte getByteValueInCharactersTable(Connection con, String column) throws SQLException {
 		String safeColumn = requireCharacterColumn(column);
-		try (PreparedStatement ps = con.prepareStatement("SELECT `" + safeColumn + "` FROM `characters` WHERE `name` = ?")) {
-			ps.setString(1, target);
-			try (ResultSet rs = ps.executeQuery()) {
-				rs.next(); //assert this is true
-				return rs.getByte(1);
-			}
-		}
+		return CharacterDAO.getByteColumn(con, target, safeColumn);
 	}
 
 	private int getIntValueInCharactersTable(Connection con, String column) throws SQLException {
 		String safeColumn = requireCharacterColumn(column);
-		try (PreparedStatement ps = con.prepareStatement("SELECT `" + safeColumn + "` FROM `characters` WHERE `name` = ?")) {
-			ps.setString(1, target);
-			try (ResultSet rs = ps.executeQuery()) {
-				rs.next(); //assert this is true
-				return rs.getInt(1);
-			}
-		}
+		return CharacterDAO.getIntColumn(con, target, safeColumn);
 	}
 
 	private short getShortValueInCharactersTable(Connection con, String column) throws SQLException {
 		String safeColumn = requireCharacterColumn(column);
-		try (PreparedStatement ps = con.prepareStatement("SELECT `" + safeColumn + "` FROM `characters` WHERE `name` = ?")) {
-			ps.setString(1, target);
-			try (ResultSet rs = ps.executeQuery()) {
-				rs.next(); //assert this is true
-				return rs.getShort(1);
-			}
-		}
+		return CharacterDAO.getShortColumn(con, target, safeColumn);
 	}
 
 	private short getTotalEquipBonus(Connection con, String column) throws SQLException {
 		String safeColumn = requireEquipColumn(column);
-
-		try (PreparedStatement ps = con.prepareStatement("SELECT LEAST(SUM(`e`.`" + safeColumn + "`), " + Short.MAX_VALUE + ") FROM `inventoryequipment` `e` "
-				+ "LEFT JOIN `inventoryitems` `i` ON `i`.`inventoryitemid` = `e`.`inventoryitemid` "
-				+ "LEFT JOIN `characters` `c` ON `i`.`characterid` = `c`.`id` "
-				+ "WHERE `c`.`name` = ? AND `i`.`inventorytype` = " + Inventory.InventoryType.EQUIPPED.byteValue())) {
-			ps.setString(1, target);
-			try (ResultSet rs = ps.executeQuery()) {
-				rs.next(); //assert this is true
-				return rs.getShort(1);
-			}
-		}
+		return CharacterDAO.getTotalEquipBonus(con, target, safeColumn, Inventory.InventoryType.EQUIPPED.byteValue());
 	}
 
 	private int getInt(CharacterManipulation update) {
@@ -218,21 +173,12 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 							int map = getIntValueInCharactersTable(con, "map");
 							byte spawnPoint = getByteValueInCharactersTable(con, "spawnpoint");
 
-							try (PreparedStatement ps = con.prepareStatement("INSERT INTO `mapmemory` (`characterid`,`key`,`value`,`spawnpoint`) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE `characterid` = `characterid`")) {
-								ps.setInt(1, Player.getIdFromName(target));
-								ps.setString(2, value.mapId == MapValue.JAIL_MAP_ID ? MapMemoryVariable.JAIL.toString() : MapMemoryVariable.FREE_MARKET.toString());
-								ps.setInt(3, map);
-								ps.setByte(4, spawnPoint);
-								ps.executeUpdate();
-							}
+							CharacterDAO.insertMapMemoryIfAbsent(con, Player.getIdFromName(target),
+									value.mapId == MapValue.JAIL_MAP_ID ? MapMemoryVariable.JAIL.toString() : MapMemoryVariable.FREE_MARKET.toString(),
+									map, spawnPoint);
 						}
 
-						try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET `map` = ?, `spawnpoint` = ? WHERE `name` = ?")) {
-							ps.setInt(1, value.mapId);
-							ps.setByte(2, value.spawnPoint);
-							ps.setString(3, target);
-							ps.executeUpdate();
-						}
+						CharacterDAO.updateMapAndSpawn(con, target, value.mapId, value.spawnPoint);
 						break;
 					}
 					case CHANGE_CHANNEL:
@@ -348,39 +294,13 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 					case SET_SKILL_LEVEL: {
 						SkillValue value = (SkillValue) update.getValue();
 						int characterId = Player.getIdFromName(target);
-
-						try (PreparedStatement ps = con.prepareStatement("DELETE FROM `skills` WHERE `characterid` = ? AND `skillid` = ?")) {
-							ps.setInt(1, characterId);
-							ps.setInt(2, value.skillId);
-							ps.executeUpdate();
-						}
-
-						try (PreparedStatement ps = con.prepareStatement("INSERT INTO `skills` (`characterid`,`skillid`,`level`,`mastery`) VALUES (?,?,?,?)")) {
-							ps.setInt(1, characterId);
-							ps.setInt(2, value.skillId);
-							ps.setByte(3, value.skillLevel);
-							ps.setByte(4, value.skillMasterLevel);
-							ps.executeUpdate();
-						}
+						CharacterDAO.replaceSkill(con, characterId, value.skillId, value.skillLevel, value.skillMasterLevel);
 						break;
 					}
 					case SET_QUEST_STATUS: {
 						QuestStatusValue value = (QuestStatusValue) update.getValue();
 						int characterId = Player.getIdFromName(target);
-
-						try (PreparedStatement ps = con.prepareStatement("DELETE FROM `queststatuses` WHERE `characterid` = ? AND `questid` = ?")) {
-							ps.setInt(1, characterId);
-							ps.setShort(2, value.questId);
-							ps.executeUpdate();
-						}
-
-						try (PreparedStatement ps = con.prepareStatement("INSERT INTO `queststatuses` (`characterid`,`questid`,`state`,`completed`) VALUES (?,?,?,?)")) {
-							ps.setInt(1, characterId);
-							ps.setShort(2, value.questId);
-							ps.setByte(3, value.status);
-							ps.setLong(4, value.completionTime);
-							ps.executeUpdate();
-						}
+						CharacterDAO.replaceQuestStatus(con, characterId, value.questId, value.status, value.completionTime);
 						break;
 					}
 					case ADD_ITEM: {
@@ -441,51 +361,14 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 						//offline characters don't have any active status effects
 						break;
 					case MAX_ALL_EQUIP_STATS:
-						try (PreparedStatement ps = con.prepareStatement("UPDATE `inventoryequipment` `e` "
-								+ "LEFT JOIN `inventoryitems` `i` ON `i`.`inventoryitemid` = `e`.`inventoryitemid` "
-								+ "LEFT JOIN `characters` `c` ON `i`.`characterid` = `c`.`id` "
-								+ "SET "
-								+ "`e`.`str` = " + Short.MAX_VALUE + ", "
-								+ "`e`.`dex` = " + Short.MAX_VALUE + ", "
-								+ "`e`.`int` = " + Short.MAX_VALUE + ", "
-								+ "`e`.`luk` = " + Short.MAX_VALUE + ", "
-								+ "`e`.`hp` = 30000, "
-								+ "`e`.`mp` = 30000, "
-								+ "`e`.`watk` = " + Short.MAX_VALUE + ", "
-								+ "`e`.`matk` = " + Short.MAX_VALUE + ", "
-								+ "`e`.`wdef` = " + Short.MAX_VALUE + ", "
-								+ "`e`.`mdef` = " + Short.MAX_VALUE + ", "
-								+ "`e`.`acc` = " + Short.MAX_VALUE + ", "
-								+ "`e`.`avoid` = " + Short.MAX_VALUE + ", "
-								+ "`e`.`hands` = " + Short.MAX_VALUE + ", "
-								+ "`e`.`speed` = 40, "
-								+ "`e`.`jump` = 23 "
-								+ "WHERE `c`.`name` = ? AND `i`.`inventorytype` = " + Inventory.InventoryType.EQUIPPED.byteValue())) {
-							ps.setString(1, target);
-							ps.executeUpdate();
-						}
+						CharacterDAO.maxAllEquipStats(con, target, Inventory.InventoryType.EQUIPPED.byteValue());
 						break;
 					case MAX_INVENTORY_SLOTS:
-						try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET "
-								+ "`equipslots` = 255, `useslots` = 255, `setupslots` = 255, `etcslots` = 255, `cashslots` = 255 "
-								+ "WHERE `name` = ?")) {
-							ps.setString(1, target);
-							ps.executeUpdate();
-						}
-
-						try (PreparedStatement ps = con.prepareStatement("UPDATE `accounts` SET "
-								+ "`storageslots` = 255 "
-								+ "WHERE `id` = (SELECT `accountid` FROM `characters` WHERE `name` = ?)")) {
-							ps.setString(1, target);
-							ps.executeUpdate();
-						}
+						CharacterDAO.maxInventorySlots(con, target);
+						CharacterDAO.maxStorageSlots(con, target);
 						break;
 					case MAX_BUDDY_LIST_SLOTS:
-						try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET "
-								+ "`buddyslots` = 255 WHERE `name` = ?")) {
-							ps.setString(1, target);
-							ps.executeUpdate();
-						}
+						CharacterDAO.maxBuddySlots(con, target);
 						break;
 					case BAN: {
 						BanValue value = (BanValue) update.getValue();
@@ -496,10 +379,7 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 					}
 					case KICK: {
 						//just make sure the character's login status is reset...
-						try (PreparedStatement ps = con.prepareStatement("UPDATE `accounts` `a` LEFT JOIN `characters` `c` ON `c`.`accountid` = `a`.`id` SET `connected` = 0 WHERE `c`.`name` = ?")) {
-							ps.setString(1, target);
-							ps.executeUpdate();
-						}
+						CharacterDAO.resetLoginStatus(con, target);
 						break;
 					}
 					case STUN:
@@ -550,32 +430,15 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 					case RETURN_TO_REMEMBERED_MAP: {
 						MapMemoryVariable value = (MapMemoryVariable) update.getValue();
 						int characterId = Player.getIdFromName(target);
-						int mapId = GlobalConstants.NULL_MAP;
-						byte spawnPoint = -1;
 
-						try (PreparedStatement ps = con.prepareStatement("SELECT `value`,`spawnpoint` FROM `mapmemory` WHERE `characterid` = ? AND `key` = ?")) {
-							ps.setInt(1, characterId);
-							ps.setString(2, value.toString());
-							try (ResultSet rs = ps.executeQuery()) {
-								if (rs.next()) {
-									mapId = rs.getInt(1);
-									spawnPoint = rs.getByte(2);
-								}
-							}
-						}
+						int[] entry = CharacterDAO.loadMapMemoryEntry(con, characterId, value.toString());
 
-						if (mapId != GlobalConstants.NULL_MAP && spawnPoint != -1) {
-							try (PreparedStatement ps = con.prepareStatement("DELETE FROM `mapmemory` WHERE `characterid` = ? AND `key` = ?")) {
-								ps.setInt(1, characterId);
-								ps.setString(2, value.toString());
-								ps.executeUpdate();
-							}
-
-							try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET `map` = ?, `spawnpoint` = ? WHERE `name` = ?")) {
-								ps.setInt(1, mapId);
-								ps.setByte(2, spawnPoint);
-								ps.setString(3, target);
-								ps.executeUpdate();
+						if (entry != null) {
+							int mapId = entry[0];
+							byte spawnPoint = (byte) entry[1];
+							if (mapId != GlobalConstants.NULL_MAP && spawnPoint != -1) {
+								CharacterDAO.deleteMapMemoryEntry(con, characterId, value.toString());
+								CharacterDAO.updateMapAndSpawn(con, target, mapId, spawnPoint);
 							}
 						}
 						break;

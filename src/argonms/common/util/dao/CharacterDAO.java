@@ -449,6 +449,686 @@ public final class CharacterDAO {
 	 */
 	public record MinigameScoreRecord(byte gameType, int wins, int ties, int losses) {}
 
+	// ---- Skill Macros ----
+
+	/**
+	 * Replaces all skill macros for the given character.
+	 *
+	 * @param con         the connection (caller manages transaction)
+	 * @param characterId the character ID
+	 * @param macros      iterable of macro records
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void replaceSkillMacros(Connection con, int characterId, Iterable<SkillMacroRecord> macros) {
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `skillmacros` WHERE `characterid` = ?")) {
+			ps.setInt(1, characterId);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to delete skill macros for character " + characterId, e);
+		}
+
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `skillmacros` "
+				+ "(`characterid`,`position`,`name`,`silent`,`skill1`,`skill2`,`skill3`) "
+				+ "VALUES (?,?,?,?,?,?,?)")) {
+			ps.setInt(1, characterId);
+			for (SkillMacroRecord macro : macros) {
+				ps.setByte(2, macro.position());
+				ps.setString(3, macro.name());
+				ps.setBoolean(4, macro.silent());
+				ps.setInt(5, macro.skill1());
+				ps.setInt(6, macro.skill2());
+				ps.setInt(7, macro.skill3());
+				ps.addBatch();
+			}
+			ps.executeBatch();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to save skill macros for character " + characterId, e);
+		}
+	}
+
+	// ---- Party ----
+
+	/**
+	 * Replaces the party entry for the given character.
+	 *
+	 * @param con         the connection (caller manages transaction)
+	 * @param characterId the character ID
+	 * @param party       the party record, or null if the character is not in a party
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void replaceParty(Connection con, int characterId, PartyRecord party) {
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `parties` WHERE `characterid` = ?")) {
+			ps.setInt(1, characterId);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to delete party for character " + characterId, e);
+		}
+
+		if (party != null) {
+			try (PreparedStatement ps = con.prepareStatement("INSERT INTO `parties` "
+					+ "(`world`,`partyid`,`characterid`,`leader`) VALUES (?,?,?,?)")) {
+				ps.setByte(1, party.world());
+				ps.setInt(2, party.partyId());
+				ps.setInt(3, characterId);
+				ps.setBoolean(4, party.leader());
+				ps.executeUpdate();
+			} catch (SQLException e) {
+				throw new DataAccessException("Failed to save party for character " + characterId, e);
+			}
+		}
+	}
+
+	/**
+	 * Loads the party ID for the given character.
+	 *
+	 * @param con         the connection
+	 * @param characterId the character ID
+	 * @return the party ID, or -1 if not in a party
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static int loadPartyId(Connection con, int characterId) {
+		try (PreparedStatement ps = con.prepareStatement("SELECT `partyid` FROM `parties` WHERE `characterid` = ?")) {
+			ps.setInt(1, characterId);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					return rs.getInt(1);
+				}
+				return -1;
+			}
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to load party for character " + characterId, e);
+		}
+	}
+
+	// ---- Guild Members ----
+
+	/**
+	 * Replaces the guild member entry for the given character.
+	 *
+	 * @param con         the connection (caller manages transaction)
+	 * @param characterId the character ID
+	 * @param member      the guild member record, or null if the character is not in a guild
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void replaceGuildMember(Connection con, int characterId, GuildMemberRecord member) {
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `guildmembers` WHERE `characterid` = ?")) {
+			ps.setInt(1, characterId);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to delete guild member for character " + characterId, e);
+		}
+
+		if (member != null) {
+			try (PreparedStatement ps = con.prepareStatement("INSERT INTO `guildmembers` "
+					+ "(`guildid`,`characterid`,`rank`,`signature`,`alliancerank`) VALUES (?,?,?,?,?)")) {
+				ps.setInt(1, member.guildId());
+				ps.setInt(2, characterId);
+				ps.setByte(3, member.rank());
+				ps.setByte(4, member.signature());
+				ps.setByte(5, member.allianceRank());
+				ps.executeUpdate();
+			} catch (SQLException e) {
+				throw new DataAccessException("Failed to save guild member for character " + characterId, e);
+			}
+		}
+	}
+
+	/**
+	 * Loads the guild ID for the given character.
+	 *
+	 * @param con         the connection
+	 * @param characterId the character ID
+	 * @return the guild ID, or -1 if not in a guild
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static int loadGuildId(Connection con, int characterId) {
+		try (PreparedStatement ps = con.prepareStatement("SELECT `g`.`id` FROM `guilds` `g` "
+				+ "LEFT JOIN `guildmembers` `m` ON `g`.`id` = `m`.`guildid` "
+				+ "WHERE `m`.`characterid` = ?")) {
+			ps.setInt(1, characterId);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					return rs.getInt(1);
+				}
+				return -1;
+			}
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to load guild for character " + characterId, e);
+		}
+	}
+
+	// ---- Wishlists ----
+
+	/**
+	 * Replaces the wishlist entries for the given character.
+	 *
+	 * @param con         the connection (caller manages transaction)
+	 * @param characterId the character ID
+	 * @param serialNumbers the wishlist serial numbers
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void replaceWishlist(Connection con, int characterId, Iterable<Integer> serialNumbers) {
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `wishlists` WHERE `characterid` = ?")) {
+			ps.setInt(1, characterId);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to delete wishlist for character " + characterId, e);
+		}
+
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `wishlists` (`characterid`,`sn`) VALUES (?,?)")) {
+			ps.setInt(1, characterId);
+			for (Integer sn : serialNumbers) {
+				ps.setInt(2, sn.intValue());
+				ps.addBatch();
+			}
+			ps.executeBatch();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to save wishlist for character " + characterId, e);
+		}
+	}
+
+	// ---- Pet Ignore Items ----
+
+	/**
+	 * Saves pet ignore items by linking them to cash shop purchase unique IDs.
+	 *
+	 * @param con            the connection (caller manages transaction)
+	 * @param petIgnoreItems map of unique ID → array of ignored item IDs
+	 * @param validUniqueIds set of unique IDs that are actually in the cash inventory
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void savePetIgnoreItems(Connection con, Map<Long, int[]> petIgnoreItems,
+			java.util.Set<Long> validUniqueIds) {
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `petignoreitems` "
+				+ "(`petinventoryitemid`,`ignoreitem`) SELECT `inventoryitemid`,? "
+				+ "FROM `cashshoppurchases` WHERE `uniqueid` = ?")) {
+			for (Map.Entry<Long, int[]> entry : petIgnoreItems.entrySet()) {
+				long uniqueId = entry.getKey().longValue();
+				if (!validUniqueIds.contains(uniqueId)) {
+					continue;
+				}
+				ps.setLong(2, uniqueId);
+				for (int itemId : entry.getValue()) {
+					ps.setInt(1, itemId);
+					ps.addBatch();
+				}
+			}
+			ps.executeBatch();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to save pet ignore items", e);
+		}
+	}
+
+	// ---- Inventory Deletion ----
+
+	/**
+	 * Deletes character inventory items up to a given inventory type and storage items for the account.
+	 *
+	 * @param con              the connection (caller manages transaction)
+	 * @param characterId      the character ID
+	 * @param accountId        the account ID
+	 * @param maxInvTypeByte   upper bound of inventory type byte for character items
+	 * @param storageTypeByte  the storage inventory type byte value
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void deleteInventoryItems(Connection con, int characterId, int accountId,
+			byte maxInvTypeByte, byte storageTypeByte) {
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `inventoryitems` WHERE "
+				+ "`characterid` = ? AND `inventorytype` <= " + maxInvTypeByte
+				+ " OR `accountid` = ? AND `inventorytype` = " + storageTypeByte)) {
+			ps.setInt(1, characterId);
+			ps.setInt(2, accountId);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to delete inventory items for character " + characterId, e);
+		}
+	}
+
+	// ---- Offline Character Operations ----
+
+	/**
+	 * Sets a column value in the characters table for the given character name.
+	 *
+	 * @param con        the connection (caller manages transaction)
+	 * @param charName   the character name
+	 * @param column     the validated column name
+	 * @param value      the short value to set
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void setShortColumn(Connection con, String charName, String column, short value) {
+		try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET `" + column + "` = ? WHERE `name` = ?")) {
+			ps.setShort(1, value);
+			ps.setString(2, charName);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to set " + column + " for character " + charName, e);
+		}
+	}
+
+	/**
+	 * Sets a column value (int) in the characters table for the given character name.
+	 *
+	 * @param con        the connection (caller manages transaction)
+	 * @param charName   the character name
+	 * @param column     the validated column name
+	 * @param value      the int value to set
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void setIntColumn(Connection con, String charName, String column, int value) {
+		try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET `" + column + "` = ? WHERE `name` = ?")) {
+			ps.setInt(1, value);
+			ps.setString(2, charName);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to set " + column + " for character " + charName, e);
+		}
+	}
+
+	/**
+	 * Adds to a column value in the characters table, capped at a max.
+	 *
+	 * @param con        the connection (caller manages transaction)
+	 * @param charName   the character name
+	 * @param column     the validated column name
+	 * @param value      the short value to add
+	 * @param max        the maximum allowed value
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void addShortColumn(Connection con, String charName, String column, short value, short max) {
+		try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET `" + column
+				+ "` = LEAST(CAST(`" + column + "` AS UNSIGNED) + ?, ?) WHERE `name` = ?")) {
+			ps.setShort(1, value);
+			ps.setShort(2, max);
+			ps.setString(3, charName);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to add to " + column + " for character " + charName, e);
+		}
+	}
+
+	/**
+	 * Adds to a column value (int) in the characters table, capped at a max.
+	 *
+	 * @param con        the connection (caller manages transaction)
+	 * @param charName   the character name
+	 * @param column     the validated column name
+	 * @param value      the int value to add
+	 * @param max        the maximum allowed value
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void addIntColumn(Connection con, String charName, String column, int value, int max) {
+		try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET `" + column
+				+ "` = LEAST(CAST(`" + column + "` AS UNSIGNED) + ?, ?) WHERE `name` = ?")) {
+			ps.setInt(1, value);
+			ps.setInt(2, max);
+			ps.setString(3, charName);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to add to " + column + " for character " + charName, e);
+		}
+	}
+
+	/**
+	 * Reads a byte column from the characters table for the given character name.
+	 *
+	 * @param con        the connection
+	 * @param charName   the character name
+	 * @param column     the validated column name
+	 * @return the byte value
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static byte getByteColumn(Connection con, String charName, String column) {
+		try (PreparedStatement ps = con.prepareStatement("SELECT `" + column + "` FROM `characters` WHERE `name` = ?")) {
+			ps.setString(1, charName);
+			try (ResultSet rs = ps.executeQuery()) {
+				rs.next();
+				return rs.getByte(1);
+			}
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to get " + column + " for character " + charName, e);
+		}
+	}
+
+	/**
+	 * Reads a short column from the characters table for the given character name.
+	 *
+	 * @param con        the connection
+	 * @param charName   the character name
+	 * @param column     the validated column name
+	 * @return the short value
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static short getShortColumn(Connection con, String charName, String column) {
+		try (PreparedStatement ps = con.prepareStatement("SELECT `" + column + "` FROM `characters` WHERE `name` = ?")) {
+			ps.setString(1, charName);
+			try (ResultSet rs = ps.executeQuery()) {
+				rs.next();
+				return rs.getShort(1);
+			}
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to get " + column + " for character " + charName, e);
+		}
+	}
+
+	/**
+	 * Reads an int column from the characters table for the given character name.
+	 *
+	 * @param con        the connection
+	 * @param charName   the character name
+	 * @param column     the validated column name
+	 * @return the int value
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static int getIntColumn(Connection con, String charName, String column) {
+		try (PreparedStatement ps = con.prepareStatement("SELECT `" + column + "` FROM `characters` WHERE `name` = ?")) {
+			ps.setString(1, charName);
+			try (ResultSet rs = ps.executeQuery()) {
+				rs.next();
+				return rs.getInt(1);
+			}
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to get " + column + " for character " + charName, e);
+		}
+	}
+
+	/**
+	 * Computes the total equipment bonus for a character by name.
+	 *
+	 * @param con             the connection
+	 * @param charName        the character name
+	 * @param column          the validated equipment column name (e.g. "hp", "mp")
+	 * @param equippedType    the byte value of the EQUIPPED inventory type
+	 * @return the total equipment bonus (capped at Short.MAX_VALUE)
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static short getTotalEquipBonus(Connection con, String charName, String column, byte equippedType) {
+		try (PreparedStatement ps = con.prepareStatement("SELECT LEAST(SUM(`e`.`" + column + "`), " + Short.MAX_VALUE
+				+ ") FROM `inventoryequipment` `e` "
+				+ "LEFT JOIN `inventoryitems` `i` ON `i`.`inventoryitemid` = `e`.`inventoryitemid` "
+				+ "LEFT JOIN `characters` `c` ON `i`.`characterid` = `c`.`id` "
+				+ "WHERE `c`.`name` = ? AND `i`.`inventorytype` = " + equippedType)) {
+			ps.setString(1, charName);
+			try (ResultSet rs = ps.executeQuery()) {
+				rs.next();
+				return rs.getShort(1);
+			}
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to get total equip bonus for character " + charName, e);
+		}
+	}
+
+	/**
+	 * Inserts or ignores a map memory entry.
+	 *
+	 * @param con         the connection (caller manages transaction)
+	 * @param characterId the character ID
+	 * @param key         the map memory key string
+	 * @param mapId       the map ID
+	 * @param spawnPoint  the spawn point
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void insertMapMemoryIfAbsent(Connection con, int characterId, String key, int mapId, byte spawnPoint) {
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `mapmemory` (`characterid`,`key`,`value`,`spawnpoint`) "
+				+ "VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE `characterid` = `characterid`")) {
+			ps.setInt(1, characterId);
+			ps.setString(2, key);
+			ps.setInt(3, mapId);
+			ps.setByte(4, spawnPoint);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to insert map memory for character " + characterId, e);
+		}
+	}
+
+	/**
+	 * Loads a map memory entry for the given character and key.
+	 *
+	 * @param con         the connection
+	 * @param characterId the character ID
+	 * @param key         the map memory key string
+	 * @return int array of [mapId, spawnPoint], or null if not found
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static int[] loadMapMemoryEntry(Connection con, int characterId, String key) {
+		try (PreparedStatement ps = con.prepareStatement("SELECT `value`,`spawnpoint` FROM `mapmemory` WHERE `characterid` = ? AND `key` = ?")) {
+			ps.setInt(1, characterId);
+			ps.setString(2, key);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					return new int[]{rs.getInt(1), rs.getByte(2)};
+				}
+				return null;
+			}
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to load map memory entry for character " + characterId, e);
+		}
+	}
+
+	/**
+	 * Deletes a map memory entry for the given character and key.
+	 *
+	 * @param con         the connection (caller manages transaction)
+	 * @param characterId the character ID
+	 * @param key         the map memory key string
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void deleteMapMemoryEntry(Connection con, int characterId, String key) {
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `mapmemory` WHERE `characterid` = ? AND `key` = ?")) {
+			ps.setInt(1, characterId);
+			ps.setString(2, key);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to delete map memory entry for character " + characterId, e);
+		}
+	}
+
+	/**
+	 * Updates the map and spawnpoint for a character by name.
+	 *
+	 * @param con        the connection (caller manages transaction)
+	 * @param charName   the character name
+	 * @param mapId      the map ID
+	 * @param spawnPoint the spawn point
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void updateMapAndSpawn(Connection con, String charName, int mapId, byte spawnPoint) {
+		try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET `map` = ?, `spawnpoint` = ? WHERE `name` = ?")) {
+			ps.setInt(1, mapId);
+			ps.setByte(2, spawnPoint);
+			ps.setString(3, charName);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to update map for character " + charName, e);
+		}
+	}
+
+	/**
+	 * Replaces a single skill entry for an offline character.
+	 *
+	 * @param con         the connection (caller manages transaction)
+	 * @param characterId the character ID
+	 * @param skillId     the skill ID
+	 * @param level       the skill level
+	 * @param masterLevel the master level
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void replaceSkill(Connection con, int characterId, int skillId, byte level, byte masterLevel) {
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `skills` WHERE `characterid` = ? AND `skillid` = ?")) {
+			ps.setInt(1, characterId);
+			ps.setInt(2, skillId);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to delete skill for character " + characterId, e);
+		}
+
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `skills` (`characterid`,`skillid`,`level`,`mastery`) VALUES (?,?,?,?)")) {
+			ps.setInt(1, characterId);
+			ps.setInt(2, skillId);
+			ps.setByte(3, level);
+			ps.setByte(4, masterLevel);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to insert skill for character " + characterId, e);
+		}
+	}
+
+	/**
+	 * Replaces a single quest status entry for an offline character.
+	 *
+	 * @param con            the connection (caller manages transaction)
+	 * @param characterId    the character ID
+	 * @param questId        the quest ID
+	 * @param status         the quest state
+	 * @param completionTime the completion time
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void replaceQuestStatus(Connection con, int characterId, short questId, byte status, long completionTime) {
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `queststatuses` WHERE `characterid` = ? AND `questid` = ?")) {
+			ps.setInt(1, characterId);
+			ps.setShort(2, questId);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to delete quest status for character " + characterId, e);
+		}
+
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `queststatuses` (`characterid`,`questid`,`state`,`completed`) VALUES (?,?,?,?)")) {
+			ps.setInt(1, characterId);
+			ps.setShort(2, questId);
+			ps.setByte(3, status);
+			ps.setLong(4, completionTime);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to insert quest status for character " + characterId, e);
+		}
+	}
+
+	/**
+	 * Maxes out all equipment stats for equipped items of a character.
+	 *
+	 * @param con          the connection (caller manages transaction)
+	 * @param charName     the character name
+	 * @param equippedType the byte value of the EQUIPPED inventory type
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void maxAllEquipStats(Connection con, String charName, byte equippedType) {
+		try (PreparedStatement ps = con.prepareStatement("UPDATE `inventoryequipment` `e` "
+				+ "LEFT JOIN `inventoryitems` `i` ON `i`.`inventoryitemid` = `e`.`inventoryitemid` "
+				+ "LEFT JOIN `characters` `c` ON `i`.`characterid` = `c`.`id` "
+				+ "SET "
+				+ "`e`.`str` = " + Short.MAX_VALUE + ", "
+				+ "`e`.`dex` = " + Short.MAX_VALUE + ", "
+				+ "`e`.`int` = " + Short.MAX_VALUE + ", "
+				+ "`e`.`luk` = " + Short.MAX_VALUE + ", "
+				+ "`e`.`hp` = 30000, "
+				+ "`e`.`mp` = 30000, "
+				+ "`e`.`watk` = " + Short.MAX_VALUE + ", "
+				+ "`e`.`matk` = " + Short.MAX_VALUE + ", "
+				+ "`e`.`wdef` = " + Short.MAX_VALUE + ", "
+				+ "`e`.`mdef` = " + Short.MAX_VALUE + ", "
+				+ "`e`.`acc` = " + Short.MAX_VALUE + ", "
+				+ "`e`.`avoid` = " + Short.MAX_VALUE + ", "
+				+ "`e`.`hands` = " + Short.MAX_VALUE + ", "
+				+ "`e`.`speed` = 40, "
+				+ "`e`.`jump` = 23 "
+				+ "WHERE `c`.`name` = ? AND `i`.`inventorytype` = " + equippedType)) {
+			ps.setString(1, charName);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to max equip stats for character " + charName, e);
+		}
+	}
+
+	/**
+	 * Maxes out all inventory slots for a character.
+	 *
+	 * @param con      the connection (caller manages transaction)
+	 * @param charName the character name
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void maxInventorySlots(Connection con, String charName) {
+		try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET "
+				+ "`equipslots` = 255, `useslots` = 255, `setupslots` = 255, `etcslots` = 255, `cashslots` = 255 "
+				+ "WHERE `name` = ?")) {
+			ps.setString(1, charName);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to max inventory slots for character " + charName, e);
+		}
+	}
+
+	/**
+	 * Maxes out buddy list slots for a character.
+	 *
+	 * @param con      the connection (caller manages transaction)
+	 * @param charName the character name
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void maxBuddySlots(Connection con, String charName) {
+		try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET `buddyslots` = 255 WHERE `name` = ?")) {
+			ps.setString(1, charName);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to max buddy slots for character " + charName, e);
+		}
+	}
+
+	/**
+	 * Resets the login status for a character's account (used for kick).
+	 *
+	 * @param con      the connection (caller manages transaction)
+	 * @param charName the character name
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void resetLoginStatus(Connection con, String charName) {
+		try (PreparedStatement ps = con.prepareStatement("UPDATE `accounts` `a` LEFT JOIN `characters` `c` "
+				+ "ON `c`.`accountid` = `a`.`id` SET `connected` = 0 WHERE `c`.`name` = ?")) {
+			ps.setString(1, charName);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to reset login status for character " + charName, e);
+		}
+	}
+
+	/**
+	 * Maxes storage slots for a character's account.
+	 *
+	 * @param con      the connection (caller manages transaction)
+	 * @param charName the character name
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void maxStorageSlots(Connection con, String charName) {
+		try (PreparedStatement ps = con.prepareStatement("UPDATE `accounts` SET `storageslots` = 255 "
+				+ "WHERE `id` = (SELECT `accountid` FROM `characters` WHERE `name` = ?)")) {
+			ps.setString(1, charName);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to max storage slots for character " + charName, e);
+		}
+	}
+
+	/**
+	 * Retrieves account ID for a character by name.
+	 *
+	 * @param charName the character name
+	 * @return the account ID, or -1 if not found
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static int getAccountIdFromName(String charName) {
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("SELECT `a`.`id` FROM `characters` `c` "
+						+ "LEFT JOIN `accounts` `a` ON `c`.`accountid` = `a`.`id` WHERE `c`.`name` = ?")) {
+			ps.setString(1, charName);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					return rs.getInt(1);
+				}
+				return -1;
+			}
+		} catch (SQLException e) {
+			throw new DataAccessException("Could not find account id of character " + charName, e);
+		}
+	}
+
 	// ---- Character lookup methods ----
 
 	/**
@@ -552,4 +1232,19 @@ public final class CharacterDAO {
 	 * Character lookup result record.
 	 */
 	public record CharacterLookup(byte connected, byte world, int characterId, String name, byte gm) {}
+
+	/**
+	 * Skill macro record.
+	 */
+	public record SkillMacroRecord(byte position, String name, boolean silent, int skill1, int skill2, int skill3) {}
+
+	/**
+	 * Party record.
+	 */
+	public record PartyRecord(byte world, int partyId, boolean leader) {}
+
+	/**
+	 * Guild member record.
+	 */
+	public record GuildMemberRecord(int guildId, byte rank, byte signature, byte allianceRank) {}
 }
