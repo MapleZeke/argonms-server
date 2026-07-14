@@ -54,22 +54,17 @@ public final class WorldlistHandler {
 
 	private static void loadAndWriteCharacters(LittleEndianWriter lew, LoginClient c) {
 		ArrayList<LoginCharacter> players = new ArrayList<>(c.getMaxCharacters());
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT `id` FROM `characters` WHERE `accountid` = ? AND `world` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("SELECT `id` FROM `characters` WHERE `accountid` = ? AND `world` = ?")) {
 			ps.setInt(1, c.getAccountId());
 			ps.setInt(2, c.getWorld());
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				players.add(LoginCharacter.loadPlayer(c, rs.getInt(1)));
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					players.add(LoginCharacter.loadPlayer(c, rs.getInt(1)));
+				}
 			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load characters of account " + c.getAccountId(), ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 		lew.writeByte((byte) players.size());
 		for (LoginCharacter p : players)
@@ -123,25 +118,20 @@ public final class WorldlistHandler {
 		LittleEndianByteArrayWriter lew;
 		Set<Byte> worlds = new TreeSet<>();
 		byte totalChars = 0;
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT `world` FROM `characters` WHERE `accountid` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("SELECT `world` FROM `characters` WHERE `accountid` = ?")) {
 			ps.setInt(1, lc.getAccountId());
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				byte world = rs.getByte(1);
-				if (LoginServer.getInstance().getWorld(world) != null) {
-					worlds.add(Byte.valueOf(world));
-					totalChars++;
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					byte world = rs.getByte(1);
+					if (LoginServer.getInstance().getWorld(world) != null) {
+						worlds.add(Byte.valueOf(world));
+						totalChars++;
+					}
 				}
 			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not set load all characters of account " + lc.getAccountId(), ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 		lew = new LittleEndianByteArrayWriter(11);
 		lew.writeShort(ClientSendOps.ALL_CHARLIST);
@@ -197,20 +187,15 @@ public final class WorldlistHandler {
 		if (name.length() < 4 || name.length() > 12) {
 			valid = false;
 		} else {
-			Connection con = null;
-			PreparedStatement ps = null;
-			ResultSet rs = null;
-			try {
-				con = DatabaseManager.getConnection(DatabaseType.STATE);
-				ps = con.prepareStatement("SELECT `id` FROM `characters` WHERE `name` = ?");
+			try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+					PreparedStatement ps = con.prepareStatement("SELECT `id` FROM `characters` WHERE `name` = ?")) {
 				ps.setString(1, name);
-				rs = ps.executeQuery();
-				valid = !rs.next();
+				try (ResultSet rs = ps.executeQuery()) {
+					valid = !rs.next();
+				}
 			} catch (SQLException ex) {
 				LOG.log(Level.WARNING, "Could not determine if name " + name + " is allowed.", ex);
 				valid = false;
-			} finally {
-				DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 			}
 		}
 		return valid;

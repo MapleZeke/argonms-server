@@ -20,6 +20,7 @@ package argonms.game.net.external;
 
 import argonms.common.net.external.ClientPacketProcessor;
 import argonms.common.net.external.ClientRecvOps;
+import argonms.common.net.external.PacketDispatchTable;
 import argonms.common.util.input.LittleEndianReader;
 import argonms.game.net.external.handler.*;
 import java.util.logging.Level;
@@ -28,252 +29,109 @@ import java.util.logging.Logger;
 public class ClientGamePacketProcessor extends ClientPacketProcessor<GameClient> {
 	private static final Logger LOG = Logger.getLogger(ClientPacketProcessor.class.getName());
 
+	private static final PacketDispatchTable<GameClient> TABLE = new PacketDispatchTable<GameClient>()
+		// Remnants of character-select flow received after transfer – silently ignored
+		.noOp(ClientRecvOps.SERVERLIST_REREQUEST)
+		.noOp(ClientRecvOps.EXIT_CHARLIST)
+		.noOp(ClientRecvOps.PICK_ALL_CHAR)
+		.noOp(ClientRecvOps.ENTER_EXIT_VIEW_ALL)
+		.noOp(ClientRecvOps.CHAR_SELECT)
+		.noOp(ClientRecvOps.RELOG)
+		// Core lifecycle
+		.register(ClientRecvOps.PLAYER_CONNECTED,      EnterHandler::handlePlayerConnection)
+		.register(ClientRecvOps.PONG,                  (r, gc) -> gc.getSession().receivedPong())
+		.register(ClientRecvOps.CLIENT_ERROR,          (r, gc) -> gc.clientError(r.readLengthPrefixedString()))
+		.noOp(ClientRecvOps.AES_IV_UPDATE_REQUEST)
+		// Navigation
+		.register(ClientRecvOps.CHANGE_MAP,            GoToHandler::handleMapChange)
+		.register(ClientRecvOps.CHANGE_CHANNEL,        GoToHandler::handleChangeChannel)
+		.register(ClientRecvOps.ENTER_CASH_SHOP,       GoToHandler::handleWarpCs)
+		.register(ClientRecvOps.CHANGE_MAP_SPECIAL,    GoToHandler::handleEnteredSpecialPortal)
+		.register(ClientRecvOps.USE_INNER_PORTAL,      GoToHandler::handleEnteredInnerPortal)
+		.register(ClientRecvOps.USE_DOOR,              GoToHandler::handleMysticDoor)
+		// Movement
+		.register(ClientRecvOps.MOVE_PLAYER,           MovementHandler::handleMovePlayer)
+		.register(ClientRecvOps.MOVE_PET,              MovementHandler::handleMovePet)
+		.register(ClientRecvOps.MOVE_SUMMON,           MovementHandler::handleMoveSummon)
+		.register(ClientRecvOps.MOVE_MOB,              MovementHandler::handleMoveMob)
+		.register(ClientRecvOps.MOVE_NPC,              MovementHandler::handleMoveNpc)
+		// Combat
+		.register(ClientRecvOps.MELEE_ATTACK,          DealDamageHandler::handleMeleeAttack)
+		.register(ClientRecvOps.RANGED_ATTACK,         DealDamageHandler::handleRangedAttack)
+		.register(ClientRecvOps.MAGIC_ATTACK,          DealDamageHandler::handleMagicAttack)
+		.register(ClientRecvOps.ENERGY_CHARGE_ATTACK,  DealDamageHandler::handleEnergyChargeAttack)
+		.register(ClientRecvOps.PREPARED_SKILL,        DealDamageHandler::handlePreparedSkill)
+		.register(ClientRecvOps.SUMMON_ATTACK,         DealDamageHandler::handleSummonAttack)
+		.register(ClientRecvOps.TAKE_DAMAGE,           TakeDamageHandler::handleTakeDamage)
+		.register(ClientRecvOps.DAMAGE_SUMMON,         TakeDamageHandler::handlePuppetTakeDamage)
+		.register(ClientRecvOps.MOB_DAMAGE_MOB,        TakeDamageHandler::handleMobDamageMob)
+		// Player misc
+		.register(ClientRecvOps.CHAIR,                 PlayerMiscHandler::handleChair)
+		.register(ClientRecvOps.USE_CHAIR_ITEM,        PlayerMiscHandler::handleItemChair)
+		.register(ClientRecvOps.FACIAL_EXPRESSION,     PlayerMiscHandler::handleEmote)
+		.register(ClientRecvOps.HEAL_OVER_TIME,        PlayerMiscHandler::handleReplenishHpMp)
+		.register(ClientRecvOps.CHANGE_BINDING,        PlayerMiscHandler::handleBindingChange)
+		.noOp(ClientRecvOps.CANCEL_DEBUFF)
+		.noOp(ClientRecvOps.STATUS_EFFECTS_TOGGLE)
+		.noOp(ClientRecvOps.UNKNOWN)               // suppressed – would spam logs
+		// Stats & skills
+		.register(ClientRecvOps.DISTRIBUTE_AP,         StatAllocationHandler::handleApAllocation)
+		.register(ClientRecvOps.DISTRIBUTE_SP,         StatAllocationHandler::handleSpAllocation)
+		.register(ClientRecvOps.USE_SKILL,             BuffHandler::handleUseSkill)
+		.register(ClientRecvOps.CANCEL_SKILL,          BuffHandler::handleCancelSkill)
+		.register(ClientRecvOps.SKILL_MACRO,           StatAllocationHandler::handleSkillMacroAssign)
+		.register(ClientRecvOps.USE_ITEM,              BuffHandler::handleUseItem)
+		.register(ClientRecvOps.CANCEL_ITEM,           BuffHandler::handleCancelItem)
+		// Inventory
+		.register(ClientRecvOps.ITEM_MOVE,             InventoryHandler::handleItemMove)
+		.register(ClientRecvOps.USE_RETURN_SCROLL,     InventoryHandler::handleReturnScroll)
+		.register(ClientRecvOps.USE_UPGRADE_SCROLL,    InventoryHandler::handleUpgradeScroll)
+		.register(ClientRecvOps.MESO_DROP,             InventoryHandler::handleMesoDrop)
+		.register(ClientRecvOps.ITEM_PICKUP,           InventoryHandler::handleMapItemPickUp)
+		.register(ClientRecvOps.PET_LOOT,              InventoryHandler::handlePetMapItemPickUp)
+		.register(ClientRecvOps.USE_CASH_ITEM,         CashConsumeHandler::handleCashItem)
+		// NPCs & quests
+		.register(ClientRecvOps.NPC_TALK,              NpcHandler::handleStartConversation)
+		.register(ClientRecvOps.NPC_TALK_MORE,         NpcHandler::handleContinueConversation)
+		.register(ClientRecvOps.QUEST_ACTION,          NpcHandler::handleQuestAction)
+		.register(ClientRecvOps.NPC_SHOP,              NpcMiniroomHandler::handleNpcShopAction)
+		.register(ClientRecvOps.NPC_STORAGE,           NpcMiniroomHandler::handleNpcStorageAction)
+		// Social
+		.register(ClientRecvOps.MAP_CHAT,              ChatHandler::handleMapChat)
+		.register(ClientRecvOps.PARTYCHAT,             ChatHandler::handlePrivateChat)
+		.register(ClientRecvOps.CLIENT_COMMAND,        ChatHandler::handleClientCommand)
+		.register(ClientRecvOps.SPOUSECHAT,            ChatHandler::handleSpouseChat)
+		.register(ClientRecvOps.GIVE_FAME,             PersonalInfoHandler::handleFameUp)
+		.register(ClientRecvOps.OPEN_PERSONAL_INFO,    PersonalInfoHandler::handleOpenInfo)
+		.register(ClientRecvOps.MESSENGER_ACT,         MessengerHandler::handleAction)
+		.register(ClientRecvOps.MINIROOM_ACT,          MiniroomHandler::handleAction)
+		.register(ClientRecvOps.PARTYLIST_MODIFY,      PartyListHandler::handleListModification)
+		.register(ClientRecvOps.DENY_PARTY_REQUEST,    PartyListHandler::handleDenyRequest)
+		.register(ClientRecvOps.GUILDLIST_MODIFY,      GuildListHandler::handleListModification)
+		.register(ClientRecvOps.DENY_GUILD_REQUEST,    GuildListHandler::handleDenyRequest)
+		.register(ClientRecvOps.BBS_OPERATION,         GuildListHandler::handleGuildBbs)
+		.register(ClientRecvOps.BUDDYLIST_MODIFY,      BuddyListHandler::handleListModification)
+		// Pets
+		.register(ClientRecvOps.SPAWN_PET,             PetHandler::handleUsePet)
+		.register(ClientRecvOps.PET_FOOD,              PetHandler::handlePetFood)
+		.register(ClientRecvOps.PET_CHAT,              PetHandler::handlePetChat)
+		.register(ClientRecvOps.PET_COMMAND,           PetHandler::handlePetCommand)
+		.register(ClientRecvOps.PET_AUTO_POT,          PetHandler::handlePetAutoPotion)
+		.register(ClientRecvOps.PET_ITEM_IGNORE,       PetHandler::handlePetItemIgnore)
+		// Mobs & reactors
+		.noOp(ClientRecvOps.AUTO_AGGRO)
+		.register(ClientRecvOps.DAMAGE_REACTOR,        ReactorHandler::handleReactorTrigger)
+		.register(ClientRecvOps.TOUCH_REACTOR,         ReactorHandler::handleReactorTouch)
+		// Misc
+		.register(ClientRecvOps.ENTERED_SHIP_MAP,      EnterHandler::handleShipDockedCheck)
+		.register(ClientRecvOps.PLAYER_UPDATE,         (r, gc) -> gc.getPlayer().saveCharacter())
+		.noOp(ClientRecvOps.MAPLE_TV);
+
 	@Override
 	public void process(LittleEndianReader reader, GameClient gc) {
-		switch (reader.readShort()) {
-			case ClientRecvOps.SERVERLIST_REREQUEST:
-			case ClientRecvOps.EXIT_CHARLIST:
-			case ClientRecvOps.PICK_ALL_CHAR:
-			case ClientRecvOps.ENTER_EXIT_VIEW_ALL:
-			case ClientRecvOps.CHAR_SELECT:
-			case ClientRecvOps.RELOG:
-				//tried to leave character select screen after control was transferred from login server
-				//can't do anything about it now
-				break;
-			case ClientRecvOps.PLAYER_CONNECTED:
-				EnterHandler.handlePlayerConnection(reader, gc);
-				break;
-			case ClientRecvOps.PONG:
-				gc.getSession().receivedPong();
-				break;
-			case ClientRecvOps.CLIENT_ERROR:
-				gc.clientError(reader.readLengthPrefixedString());
-				break;
-			case ClientRecvOps.AES_IV_UPDATE_REQUEST:
-				//no-op
-				break;
-			case ClientRecvOps.CHANGE_MAP:
-				GoToHandler.handleMapChange(reader, gc);
-				break;
-			case ClientRecvOps.CHANGE_CHANNEL:
-				GoToHandler.handleChangeChannel(reader, gc);
-				break;
-			case ClientRecvOps.ENTER_CASH_SHOP:
-				GoToHandler.handleWarpCs(reader, gc);
-				break;
-			case ClientRecvOps.MOVE_PLAYER:
-				MovementHandler.handleMovePlayer(reader, gc);
-				break;
-			case ClientRecvOps.CHAIR:
-				PlayerMiscHandler.handleChair(reader, gc);
-				break;
-			case ClientRecvOps.USE_CHAIR_ITEM:
-				PlayerMiscHandler.handleItemChair(reader, gc);
-				break;
-			case ClientRecvOps.MELEE_ATTACK:
-				DealDamageHandler.handleMeleeAttack(reader, gc);
-				break;
-			case ClientRecvOps.RANGED_ATTACK:
-				DealDamageHandler.handleRangedAttack(reader, gc);
-				break;
-			case ClientRecvOps.MAGIC_ATTACK:
-				DealDamageHandler.handleMagicAttack(reader, gc);
-				break;
-			case ClientRecvOps.ENERGY_CHARGE_ATTACK:
-				DealDamageHandler.handleEnergyChargeAttack(reader, gc);
-				break;
-			case ClientRecvOps.TAKE_DAMAGE:
-				TakeDamageHandler.handleTakeDamage(reader, gc);
-				break;
-			case ClientRecvOps.MAP_CHAT:
-				ChatHandler.handleMapChat(reader, gc);
-				break;
-			case ClientRecvOps.FACIAL_EXPRESSION:
-				PlayerMiscHandler.handleEmote(reader, gc);
-				break;
-			case ClientRecvOps.NPC_TALK:
-				NpcHandler.handleStartConversation(reader, gc);
-				break;
-			case ClientRecvOps.NPC_TALK_MORE:
-				NpcHandler.handleContinueConversation(reader, gc);
-				break;
-			case ClientRecvOps.NPC_SHOP:
-				NpcMiniroomHandler.handleNpcShopAction(reader, gc);
-				break;
-			case ClientRecvOps.NPC_STORAGE:
-				NpcMiniroomHandler.handleNpcStorageAction(reader, gc);
-				break;
-			case ClientRecvOps.ITEM_MOVE:
-				InventoryHandler.handleItemMove(reader, gc);
-				break;
-			case ClientRecvOps.USE_ITEM:
-				BuffHandler.handleUseItem(reader, gc);
-				break;
-			case ClientRecvOps.CANCEL_ITEM:
-				BuffHandler.handleCancelItem(reader, gc);
-				break;
-			case ClientRecvOps.PET_FOOD:
-				PetHandler.handlePetFood(reader, gc);
-				break;
-			case ClientRecvOps.USE_CASH_ITEM:
-				CashConsumeHandler.handleCashItem(reader, gc);
-				break;
-			case ClientRecvOps.USE_RETURN_SCROLL:
-				InventoryHandler.handleReturnScroll(reader, gc);
-				break;
-			case ClientRecvOps.USE_UPGRADE_SCROLL:
-				InventoryHandler.handleUpgradeScroll(reader, gc);
-				break;
-			case ClientRecvOps.DISTRIBUTE_AP:
-				StatAllocationHandler.handleApAllocation(reader, gc);
-				break;
-			case ClientRecvOps.HEAL_OVER_TIME:
-				PlayerMiscHandler.handleReplenishHpMp(reader, gc);
-				break;
-			case ClientRecvOps.DISTRIBUTE_SP:
-				StatAllocationHandler.handleSpAllocation(reader, gc);
-				break;
-			case ClientRecvOps.USE_SKILL:
-				BuffHandler.handleUseSkill(reader, gc);
-				break;
-			case ClientRecvOps.CANCEL_SKILL:
-				BuffHandler.handleCancelSkill(reader, gc);
-				break;
-			case ClientRecvOps.PREPARED_SKILL:
-				DealDamageHandler.handlePreparedSkill(reader, gc);
-				break;
-			case ClientRecvOps.MESO_DROP:
-				InventoryHandler.handleMesoDrop(reader, gc);
-				break;
-			case ClientRecvOps.GIVE_FAME:
-				PersonalInfoHandler.handleFameUp(reader, gc);
-				break;
-			case ClientRecvOps.OPEN_PERSONAL_INFO:
-				PersonalInfoHandler.handleOpenInfo(reader, gc);
-				break;
-			case ClientRecvOps.SPAWN_PET:
-				PetHandler.handleUsePet(reader, gc);
-				break;
-			case ClientRecvOps.CANCEL_DEBUFF:
-				//no-op
-				break;
-			case ClientRecvOps.CHANGE_MAP_SPECIAL:
-				GoToHandler.handleEnteredSpecialPortal(reader, gc);
-				break;
-			case ClientRecvOps.USE_INNER_PORTAL:
-				GoToHandler.handleEnteredInnerPortal(reader, gc);
-				break;
-			case ClientRecvOps.QUEST_ACTION:
-				NpcHandler.handleQuestAction(reader, gc);
-				break;
-			case ClientRecvOps.STATUS_EFFECTS_TOGGLE:
-				//no-op
-				break;
-			case ClientRecvOps.SKILL_MACRO:
-				StatAllocationHandler.handleSkillMacroAssign(reader, gc);
-				break;
-			case ClientRecvOps.PARTYCHAT:
-				ChatHandler.handlePrivateChat(reader, gc);
-				break;
-			case ClientRecvOps.CLIENT_COMMAND:
-				ChatHandler.handleClientCommand(reader, gc);
-				break;
-			case ClientRecvOps.SPOUSECHAT:
-				ChatHandler.handleSpouseChat(reader, gc);
-				break;
-			case ClientRecvOps.MESSENGER_ACT:
-				MessengerHandler.handleAction(reader, gc);
-				break;
-			case ClientRecvOps.MINIROOM_ACT:
-				MiniroomHandler.handleAction(reader, gc);
-				break;
-			case ClientRecvOps.PARTYLIST_MODIFY:
-				PartyListHandler.handleListModification(reader, gc);
-				break;
-			case ClientRecvOps.DENY_PARTY_REQUEST:
-				PartyListHandler.handleDenyRequest(reader, gc);
-				break;
-			case ClientRecvOps.GUILDLIST_MODIFY:
-				GuildListHandler.handleListModification(reader, gc);
-				break;
-			case ClientRecvOps.DENY_GUILD_REQUEST:
-				GuildListHandler.handleDenyRequest(reader, gc);
-				break;
-			case ClientRecvOps.BUDDYLIST_MODIFY:
-				BuddyListHandler.handleListModification(reader, gc);
-				break;
-			case ClientRecvOps.USE_DOOR:
-				GoToHandler.handleMysticDoor(reader, gc);
-				break;
-			case ClientRecvOps.CHANGE_BINDING:
-				PlayerMiscHandler.handleBindingChange(reader, gc);
-				break;
-			case ClientRecvOps.UNKNOWN:
-				//no-op, spams logs
-				break;
-			case ClientRecvOps.BBS_OPERATION:
-				GuildListHandler.handleGuildBbs(reader, gc);
-				break;
-			case ClientRecvOps.MOVE_PET:
-				MovementHandler.handleMovePet(reader, gc);
-				break;
-			case ClientRecvOps.PET_CHAT:
-				PetHandler.handlePetChat(reader, gc);
-				break;
-			case ClientRecvOps.PET_COMMAND:
-				PetHandler.handlePetCommand(reader, gc);
-				break;
-			case ClientRecvOps.PET_LOOT:
-				InventoryHandler.handlePetMapItemPickUp(reader, gc);
-				break;
-			case ClientRecvOps.PET_AUTO_POT:
-				PetHandler.handlePetAutoPotion(reader, gc);
-				break;
-			case ClientRecvOps.PET_ITEM_IGNORE:
-				PetHandler.handlePetItemIgnore(reader, gc);
-				break;
-			case ClientRecvOps.MOVE_SUMMON:
-				MovementHandler.handleMoveSummon(reader, gc);
-				break;
-			case ClientRecvOps.SUMMON_ATTACK:
-				DealDamageHandler.handleSummonAttack(reader, gc);
-				break;
-			case ClientRecvOps.DAMAGE_SUMMON:
-				TakeDamageHandler.handlePuppetTakeDamage(reader, gc);
-				break;
-			case ClientRecvOps.MOVE_MOB:
-				MovementHandler.handleMoveMob(reader, gc);
-				break;
-			case ClientRecvOps.AUTO_AGGRO:
-				//no-op, for now
-				break;
-			case ClientRecvOps.MOB_DAMAGE_MOB:
-				TakeDamageHandler.handleMobDamageMob(reader, gc);
-				break;
-			case ClientRecvOps.MOVE_NPC:
-				MovementHandler.handleMoveNpc(reader, gc);
-				break;
-			case ClientRecvOps.ITEM_PICKUP:
-				InventoryHandler.handleMapItemPickUp(reader, gc);
-				break;
-			case ClientRecvOps.DAMAGE_REACTOR:
-				ReactorHandler.handleReactorTrigger(reader, gc);
-				break;
-			case ClientRecvOps.TOUCH_REACTOR:
-				ReactorHandler.handleReactorTouch(reader, gc);
-				break;
-			case ClientRecvOps.ENTERED_SHIP_MAP:
-				EnterHandler.handleShipDockedCheck(reader, gc);
-				break;
-			case ClientRecvOps.PLAYER_UPDATE:
-				gc.getPlayer().saveCharacter();
-				break;
-			case ClientRecvOps.MAPLE_TV:
-				//no-op
-				break;
-			default:
-				LOG.log(Level.FINE, "Received unhandled client packet {0} bytes long:\n{1}", new Object[]{reader.available() + 2, reader});
-				break;
+		if (!TABLE.dispatch(reader, gc)) {
+			LOG.log(Level.FINE, "Received unhandled client packet {0} bytes long:\n{1}",
+					new Object[]{reader.available() + 2, reader});
 		}
 	}
 }

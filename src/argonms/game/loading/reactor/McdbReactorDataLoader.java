@@ -20,10 +20,12 @@ package argonms.game.loading.reactor;
 
 import argonms.common.util.DatabaseManager;
 import argonms.common.util.DatabaseManager.DatabaseType;
+import argonms.common.util.dao.ReactorDataDAO;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,55 +38,38 @@ public class McdbReactorDataLoader extends ReactorDataLoader {
 
 	@Override
 	protected void load(int reactorid) {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		ReactorStats stats = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.WZ);
-			ps = con.prepareStatement("SELECT * FROM `reactoreventdata` WHERE `reactorid` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.WZ);
+				PreparedStatement ps = con.prepareStatement("SELECT * FROM `reactoreventdata` WHERE `reactorid` = ?")) {
 			ps.setInt(1, reactorid);
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				stats = new ReactorStats(reactorid);
-				doWork(rs, reactorid, stats);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					stats = new ReactorStats(reactorid);
+					doWork(rs, reactorid, stats);
+				}
 			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not read MCDB data for reactor " + reactorid, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
 		}
-		con = null;
-		ps = null;
-		rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT `script` FROM `reactorscriptnames` WHERE `reactorid` = ?");
-			ps.setInt(1, reactorid);
-			rs = ps.executeQuery();
-			if (rs.next()) {
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			String script = ReactorDataDAO.loadScriptName(con, reactorid);
+			if (script != null) {
 				if (stats == null) {
 					stats = new ReactorStats(reactorid);
 				}
-				stats.setScript(rs.getString(1));
+				stats.setScript(script);
 			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not read reactor script name for reactor " + reactorid, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 		reactorStats.put(Integer.valueOf(reactorid), stats);
 	}
 
 	@Override
 	public boolean loadAll() {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.WZ);
-			ps = con.prepareStatement("SELECT * FROM `reactoreventdata` ORDER BY `reactorid`");
-			rs = ps.executeQuery();
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.WZ);
+				PreparedStatement ps = con.prepareStatement("SELECT * FROM `reactoreventdata` ORDER BY `reactorid`");
+				ResultSet rs = ps.executeQuery()) {
 			boolean more = false;
 			while (more || rs.next()) {
 				int reactorid = rs.getInt(2);
@@ -95,30 +80,21 @@ public class McdbReactorDataLoader extends ReactorDataLoader {
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load all reactor data from MCDB.", ex);
 			return false;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
 		}
-		con = null;
-		ps = null;
-		rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT `reactorid`,`script` FROM `reactorscriptnames` ORDER BY `reactorid`");
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				int reactorid = rs.getInt(1);
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			Map<Integer, String> scripts = ReactorDataDAO.loadAllScriptNames(con);
+			for (Map.Entry<Integer, String> entry : scripts.entrySet()) {
+				int reactorid = entry.getKey();
 				ReactorStats stats = reactorStats.get(Integer.valueOf(reactorid));
 				if (stats == null) {
 					stats = new ReactorStats(reactorid);
 					reactorStats.put(Integer.valueOf(reactorid), stats);
 				}
-				stats.setScript(rs.getString(2));
+				stats.setScript(entry.getValue());
 			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load all reactor scripts from MCDB.", ex);
 			return false;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 		return true;
 	}
@@ -128,37 +104,19 @@ public class McdbReactorDataLoader extends ReactorDataLoader {
 		if (reactorStats.containsKey(reactorid)) {
 			return true;
 		}
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.WZ);
-			ps = con.prepareStatement("SELECT * FROM `reactoreventdata` WHERE `reactorid` = ?");
-			ps.setInt(1, reactorid);
-			rs = ps.executeQuery();
-			if (rs.next()) {
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.WZ)) {
+			if (ReactorDataDAO.reactorEventDataExists(con, reactorid)) {
 				return true;
 			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not use MCDB to determine whether reactor " + reactorid + " is valid.", e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
 		}
-		con = null;
-		ps = null;
-		rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT * FROM `reactorscriptnames` WHERE `reactorid` = ?");
-			ps.setInt(1, reactorid);
-			rs = ps.executeQuery();
-			if (rs.next()) {
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			if (ReactorDataDAO.reactorScriptExists(con, reactorid)) {
 				return true;
 			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not use reactor scripts table to determine whether reactor " + reactorid + " is valid.", e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 		return false;
 	}

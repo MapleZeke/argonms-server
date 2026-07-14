@@ -28,6 +28,9 @@ import argonms.common.net.internal.CenterRemoteOps;
 import argonms.common.net.internal.RemoteCenterOps;
 import argonms.common.util.DatabaseManager;
 import argonms.common.util.DatabaseManager.DatabaseType;
+import argonms.common.util.dao.DataAccessException;
+import argonms.common.util.dao.GuildDAO;
+import argonms.common.util.dao.PartyDAO;
 import argonms.common.util.input.LittleEndianReader;
 import argonms.common.util.output.LittleEndianByteArrayWriter;
 import java.sql.Connection;
@@ -268,20 +271,14 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 				return;
 			}
 
-			Connection con = null;
-			PreparedStatement ps = null;
-			try {
-				con = DatabaseManager.getConnection(DatabaseType.STATE);
-				ps = con.prepareStatement("DELETE FROM `parties` WHERE `characterid` = ?");
+			try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+				List<Integer> memberIds = new java.util.ArrayList<>();
 				for (Party.Member mem : offlineMembers) {
-					ps.setInt(1, mem.getPlayerId());
-					ps.addBatch();
+					memberIds.add(mem.getPlayerId());
 				}
-				ps.executeBatch();
-			} catch (SQLException ex) {
+				PartyDAO.deletePartyMembers(con, memberIds);
+			} catch (SQLException | DataAccessException ex) {
 				LOG.log(Level.WARNING, "Could not expel offline members from disbanded party " + partyId, ex);
-			} finally {
-				DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, ps, con);
 			}
 		} finally {
 			party.unlockRead();
@@ -348,17 +345,10 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 			return;
 		}
 
-		Connection con = null;
-		PreparedStatement ps = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("DELETE FROM `parties` WHERE `characterid` = ?");
-			ps.setInt(1, leaverId);
-			ps.executeUpdate();
-		} catch (SQLException ex) {
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			PartyDAO.deletePartyMember(con, leaverId);
+		} catch (SQLException | DataAccessException ex) {
 			LOG.log(Level.WARNING, "Could not expel offline member " + leaverName + " from party " + partyId, ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, ps, con);
 		}
 	}
 
@@ -465,29 +455,16 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 			//same time or when there was only one member logged in and he
 			//logged off at the same time another member logs in
 			party = new Party();
-			Connection con = null;
-			PreparedStatement ps = null;
-			ResultSet rs = null;
-			try {
-				con = DatabaseManager.getConnection(DatabaseType.STATE);
-				ps = con.prepareStatement("SELECT `c`.`id`,`c`.`name`,`c`.`job`,`c`.`level`,`p`.`leader` "
-						+ "FROM `parties` `p` LEFT JOIN `characters` `c` ON `c`.`id` = `p`.`characterid` "
-						+ "WHERE `p`.`world` = ? AND `p`.`partyid` = ?");
-				ps.setInt(1, r.getWorld());
-				ps.setInt(2, partyId);
-				rs = ps.executeQuery();
-				//no write locking necessary because scope is still limited
-				while (rs.next()) {
-					int cid = rs.getInt(1);
-					party.addPlayer(new Party.Member(cid, rs.getString(2), rs.getShort(3), rs.getShort(4), Party.OFFLINE_CH));
-					if (rs.getBoolean(5)) {
-						party.setLeader(cid);
+			try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+				List<PartyDAO.PartyMemberRecord> members = PartyDAO.loadPartyMembers(con, r.getWorld(), partyId);
+				for (PartyDAO.PartyMemberRecord rec : members) {
+					party.addPlayer(new Party.Member(rec.characterId(), rec.name(), rec.job(), rec.level(), Party.OFFLINE_CH));
+					if (rec.leader()) {
+						party.setLeader(rec.characterId());
 					}
 				}
-			} catch (SQLException ex) {
+			} catch (SQLException | DataAccessException ex) {
 				LOG.log(Level.WARNING, "Could not load party " + partyId + " of world " + r.getWorld(), ex);
-			} finally {
-				DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, rs, ps, con);
 			}
 			CenterServer.getInstance().getGroupsDb(r.getWorld()).setParty(partyId, party);
 		}
@@ -587,42 +564,23 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 			//same time or when there was only one member logged in and he
 			//logged off at the same time another member logs in
 			guild = new Guild();
-			Connection con = null;
-			PreparedStatement ps = null;
-			ResultSet rs = null;
-			try {
-				con = DatabaseManager.getConnection(DatabaseType.STATE);
-				ps = con.prepareStatement("SELECT `name`,`titles`,`capacity`,`emblemBackground`,`emblemBackgroundColor`,`emblemDesign`,`emblemDesignColor`,"
-						+ "`notice`,`gp`,`alliance` FROM `guilds` WHERE `world` = ? AND `id` = ?");
-				ps.setByte(1, r.getWorld());
-				ps.setInt(2, guildId);
-				rs = ps.executeQuery();
-				if (rs.next()) {
-					guild.setName(rs.getString(1));
-					guild.setTitles(rs.getString(2));
-					guild.setCapacity(rs.getByte(3));
-					guild.setEmblem(rs.getShort(4), rs.getByte(5), rs.getShort(6), rs.getByte(7));
-					guild.setNotice(rs.getString(8));
-					guild.setGp(rs.getInt(9));
-					guild.setAlliance(rs.getInt(10));
+			try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+				GuildDAO.GuildInfo info = GuildDAO.loadGuildInfoByWorld(con, r.getWorld(), guildId);
+				if (info != null) {
+					guild.setName(info.name());
+					guild.setTitles(info.titles());
+					guild.setCapacity(info.capacity());
+					guild.setEmblem(info.emblemBackground(), info.emblemBackgroundColor(), info.emblemDesign(), info.emblemDesignColor());
+					guild.setNotice(info.notice());
+					guild.setGp(info.gp());
+					guild.setAlliance(info.alliance());
 				}
-				rs.close();
-				ps.close();
-
-				ps = con.prepareStatement("SELECT `c`.`id`,`c`.`name`,`c`.`job`,`c`.`level`,`g`.`rank`,`g`.`signature`,`g`.`alliancerank` "
-						+ "FROM `guildmembers` `g` LEFT JOIN `characters` `c` ON `c`.`id` = `g`.`characterid` "
-						+ "WHERE `g`.`guildid` = ?");
-				ps.setInt(1, guildId);
-				rs = ps.executeQuery();
-				//no write locking necessary because scope is still limited
-				while (rs.next()) {
-					int cid = rs.getInt(1);
-					guild.addPlayer(new Guild.Member(cid, rs.getString(2), rs.getShort(3), rs.getShort(4), Guild.OFFLINE_CH, rs.getByte(5), rs.getByte(6), rs.getByte(7)));
+				List<GuildDAO.GuildMemberInfo> members = GuildDAO.loadGuildMembers(con, guildId);
+				for (GuildDAO.GuildMemberInfo mem : members) {
+					guild.addPlayer(new Guild.Member(mem.characterId(), mem.name(), mem.job(), mem.level(), Guild.OFFLINE_CH, mem.rank(), mem.signature(), mem.allianceRank()));
 				}
-			} catch (SQLException ex) {
+			} catch (SQLException | DataAccessException ex) {
 				LOG.log(Level.WARNING, "Could not load guild " + guildId, ex);
-			} finally {
-				DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, rs, ps, con);
 			}
 			CenterServer.getInstance().getGroupsDb(r.getWorld()).setGuild(guildId, guild);
 		}
@@ -830,19 +788,12 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 			return;
 		}
 
-		Connection con = null;
-		PreparedStatement ps = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("DELETE FROM `guildmembers` WHERE `characterid` = ?");
-			ps.setInt(1, leaverId);
-			ps.executeUpdate();
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			GuildDAO.deleteGuildMember(con, leaverId);
 
 			//TODO: add note
-		} catch (SQLException ex) {
+		} catch (SQLException | DataAccessException ex) {
 			LOG.log(Level.WARNING, "Could not expel offline member " + leaverName + " from guild " + guildId, ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, ps, con);
 		}
 	}
 
@@ -862,18 +813,10 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		}
 		guild.lockRead();
 		try {
-			Connection con = null;
-			PreparedStatement ps = null;
-			try {
-				con = DatabaseManager.getConnection(DatabaseType.STATE);
-				ps = con.prepareStatement("UPDATE `guilds` SET `capacity` = ? WHERE `id` = ?");
-				ps.setByte(1, guild.getCapacity());
-				ps.setInt(2, guildId);
-				ps.executeUpdate();
-			} catch (SQLException ex) {
+			try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+				GuildDAO.updateCapacity(con, guildId, guild.getCapacity());
+			} catch (SQLException | DataAccessException ex) {
 				LOG.log(Level.WARNING, "Could not update capacity of guild " + guildId, ex);
-			} finally {
-				DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, ps, con);
 			}
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : guild.allChannels()) {
@@ -912,21 +855,10 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		}
 		guild.lockRead();
 		try {
-			Connection con = null;
-			PreparedStatement ps = null;
-			try {
-				con = DatabaseManager.getConnection(DatabaseType.STATE);
-				ps = con.prepareStatement("UPDATE `guilds` SET `emblemBackground` = ?, `emblemBackgroundColor` = ?, `emblemDesign` = ?, `emblemDesignColor` = ? WHERE `id` = ?");
-				ps.setShort(1, background);
-				ps.setByte(2, backgroundColor);
-				ps.setShort(3, design);
-				ps.setByte(4, designColor);
-				ps.setInt(5, guildId);
-				ps.executeUpdate();
-			} catch (SQLException ex) {
+			try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+				GuildDAO.updateEmblem(con, guildId, background, backgroundColor, design, designColor);
+			} catch (SQLException | DataAccessException ex) {
 				LOG.log(Level.WARNING, "Could not update emblem of guild " + guildId, ex);
-			} finally {
-				DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, ps, con);
 			}
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : guild.allChannels()) {
@@ -972,18 +904,10 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		}
 		guild.lockRead();
 		try {
-			Connection con = null;
-			PreparedStatement ps = null;
-			try {
-				con = DatabaseManager.getConnection(DatabaseType.STATE);
-				ps = con.prepareStatement("UPDATE `guilds` SET `titles` = ? WHERE `id` = ?");
-				ps.setString(1, joined.toString());
-				ps.setInt(2, guildId);
-				ps.executeUpdate();
-			} catch (SQLException ex) {
+			try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+				GuildDAO.updateTitles(con, guildId, joined.toString());
+			} catch (SQLException | DataAccessException ex) {
 				LOG.log(Level.WARNING, "Could not update titles of guild " + guildId, ex);
-			} finally {
-				DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, ps, con);
 			}
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : guild.allChannels()) {
@@ -1025,19 +949,10 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		guild.lockRead();
 		try {
 			if (member.getChannel() == Guild.OFFLINE_CH) {
-				Connection con = null;
-				PreparedStatement ps = null;
-				try {
-					con = DatabaseManager.getConnection(DatabaseType.STATE);
-					ps = con.prepareStatement("UPDATE `guildmembers` SET `rank` = ? WHERE `guildid` = ? AND `characterid` = ?");
-					ps.setByte(1, newRank);
-					ps.setInt(2, guildId);
-					ps.setInt(3, member.getPlayerId());
-					ps.executeUpdate();
-				} catch (SQLException ex) {
+				try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+					GuildDAO.updateMemberRank(con, guildId, member.getPlayerId(), newRank);
+				} catch (SQLException | DataAccessException ex) {
 					LOG.log(Level.WARNING, "Could not update rank of offline guild member " + member.getName(), ex);
-				} finally {
-					DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, ps, con);
 				}
 			}
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
@@ -1075,18 +990,10 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		}
 		guild.lockRead();
 		try {
-			Connection con = null;
-			PreparedStatement ps = null;
-			try {
-				con = DatabaseManager.getConnection(DatabaseType.STATE);
-				ps = con.prepareStatement("UPDATE `guilds` SET `notice` = ? WHERE `id` = ?");
-				ps.setString(1, notice);
-				ps.setInt(2, guildId);
-				ps.executeUpdate();
-			} catch (SQLException ex) {
+			try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+				GuildDAO.updateNotice(con, guildId, notice);
+			} catch (SQLException | DataAccessException ex) {
 				LOG.log(Level.WARNING, "Could not update notice of guild " + guildId, ex);
-			} finally {
-				DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, ps, con);
 			}
 
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
@@ -1146,17 +1053,12 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 				}
 			}
 		} else {
-			Connection con = null;
-			PreparedStatement ps = null;
-			try {
-				con = DatabaseManager.getConnection(DatabaseType.STATE);
-				ps = con.prepareStatement("DELETE FROM `guilds` WHERE `id` = ?");
+			try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+					PreparedStatement ps = con.prepareStatement("DELETE FROM `guilds` WHERE `id` = ?")) {
 				ps.setInt(1, guildId);
 				ps.executeUpdate();
 			} catch (SQLException ex) {
 				LOG.log(Level.WARNING, "Could not remove guild " + guildId + " after contract rejection", ex);
-			} finally {
-				DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, ps, con);
 			}
 
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
@@ -1197,18 +1099,13 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 				}
 			}
 
-			Connection con = null;
-			PreparedStatement ps = null;
-			try {
-				con = DatabaseManager.getConnection(DatabaseType.STATE);
-				ps = con.prepareStatement("DELETE FROM `guilds` WHERE `id` = ?");
+			try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+					PreparedStatement ps = con.prepareStatement("DELETE FROM `guilds` WHERE `id` = ?")) {
 				ps.setInt(1, guildId);
 				ps.executeUpdate();
 				//TODO: add note to offline?
 			} catch (SQLException ex) {
 				LOG.log(Level.WARNING, "Could not disband guild " + guildId, ex);
-			} finally {
-				DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, ps, con);
 			}
 		} finally {
 			guild.unlockRead();

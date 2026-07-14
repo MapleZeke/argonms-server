@@ -29,10 +29,10 @@ public final class MapleServerHandler<T extends RemoteClient> extends SimpleChan
 	private static final Logger LOG = Logger.getLogger(MapleServerHandler.class.getName());
 
 	private final ClientPacketProcessor<T> packetProcessor;
-	private final ClientListener.ClientFactory<T> clientFactory;
+	private final NettyClientListener.ClientFactory<T> clientFactory;
 	private final ExecutorService workerThreadPool;
 
-	public MapleServerHandler(ClientPacketProcessor<T> packetProcessor, ClientListener.ClientFactory<T> clientFactory, ExecutorService workerThreadPool) {
+	public MapleServerHandler(ClientPacketProcessor<T> packetProcessor, NettyClientListener.ClientFactory<T> clientFactory, ExecutorService workerThreadPool) {
 		super(false);
 		this.packetProcessor = packetProcessor;
 		this.clientFactory = clientFactory;

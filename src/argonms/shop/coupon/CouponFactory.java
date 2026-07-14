@@ -19,10 +19,11 @@
 package argonms.shop.coupon;
 
 import argonms.common.util.DatabaseManager;
+import argonms.common.util.dao.CouponDAO;
+import argonms.common.util.dao.DataAccessException;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
@@ -47,45 +48,28 @@ public final class CouponFactory {
 				return existing;
 			}
 
-			Connection con = null;
-			PreparedStatement ps = null;
-			ResultSet rs = null;
-			try {
-				con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
-				ps = con.prepareStatement("SELECT `maplepoints`,`mesos`,`remaininguses`,`expiredate` FROM `cashshopcoupons` WHERE `code` = ?");
-				ps.setString(1, code);
-				rs = ps.executeQuery();
-				if (rs.next()) {
-					c.setMaplePoints(rs.getInt(1));
-					c.setMesos(rs.getInt(2));
-					c.setRemainingUses(rs.getInt(3));
-					c.setExpireDate(rs.getLong(4));
-					rs.close();
-					ps.close();
+			try (Connection con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE)) {
+				CouponDAO.CouponRecord record = CouponDAO.loadCoupon(con, code);
+				if (record != null) {
+					c.setMaplePoints(record.maplePoints());
+					c.setMesos(record.mesos());
+					c.setRemainingUses(record.remainingUses());
+					c.setExpireDate(record.expireDate());
 
-					ps = con.prepareStatement("SELECT `accountid` FROM `cashshopcouponusers` `u` LEFT JOIN `cashshopcoupons` `c` ON `u`.`couponentryid` = `c`.`entryid` WHERE `c`.`code` = ?");
-					ps.setString(1, code);
-					rs = ps.executeQuery();
-					while (rs.next()) {
-						c.addUser(rs.getInt(1));
+					List<Integer> users = CouponDAO.loadCouponUsers(con, code);
+					for (Integer accountId : users) {
+						c.addUser(accountId);
 					}
-					rs.close();
-					ps.close();
-
-					ps = con.prepareStatement("SELECT `sn` FROM `cashshopcouponitems` `i` LEFT JOIN `cashshopcoupons` `c` ON `i`.`couponentryid` = `c`.`entryid` WHERE `c`.`code` = ?");
-					ps.setString(1, code);
-					rs = ps.executeQuery();
-					while (rs.next()) {
-						c.addItem(rs.getInt(1));
+					List<Integer> items = CouponDAO.loadCouponItems(con, code);
+					for (Integer sn : items) {
+						c.addItem(sn);
 					}
 
 					c.onInitialized();
 					return c;
 				}
-			} catch (SQLException ex) {
+			} catch (SQLException | DataAccessException ex) {
 				LOG.log(Level.WARNING, "Could not fetch coupon " + code, ex);
-			} finally {
-				DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, rs, ps, con);
 			}
 		}
 		loadedCoupons.remove(code);
@@ -93,64 +77,21 @@ public final class CouponFactory {
 	}
 
 	public void commitCoupon(Coupon c) {
-		Connection con = null;
-		PreparedStatement ps = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
+		try (Connection con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE)) {
 			synchronized (c) {
-				ps = con.prepareStatement("INSERT INTO `cashshopcoupons` (`code`,`maplepoints`,`mesos`,`remaininguses`,`expiredate`) VALUES (?,?,?,?,?) "
-						+ "ON DUPLICATE KEY UPDATE `maplepoints` = ?, `mesos` = ?, `remaininguses` = ?, `expiredate` = ?");
-				ps.setString(1, c.getCode());
-				ps.setInt(2, c.getMaplePointsReward());
-				ps.setInt(3, c.getMesosReward());
-				ps.setInt(4, c.getRemainingUses());
-				ps.setLong(5, c.getExpireDate());
-				ps.setInt(6, c.getMaplePointsReward());
-				ps.setInt(7, c.getMesosReward());
-				ps.setInt(8, c.getRemainingUses());
-				ps.setLong(9, c.getExpireDate());
-				ps.executeUpdate();
+				CouponDAO.upsertCoupon(con, c.getCode(), c.getMaplePointsReward(),
+						c.getMesosReward(), c.getRemainingUses(), c.getExpireDate());
 
 				if (c.shouldUpdateUsers()) {
-					ps.close();
-					ps = con.prepareStatement("DELETE `u`.* FROM `cashshopcouponusers` `u` LEFT JOIN `cashshopcoupons` `c` ON `u`.`couponentryid` = `c`.`entryid` WHERE `c`.`code` = ?");
-					ps.setString(1, c.getCode());
-					ps.executeUpdate();
-
-					if (!c.getUsers().isEmpty()) {
-						ps.close();
-						ps = con.prepareStatement("INSERT INTO `cashshopcouponusers` (`couponentryid`,`accountid`) SELECT `entryid`,? FROM `cashshopcoupons` WHERE `code` = ?");
-						ps.setString(2, c.getCode());
-						for (Integer accountId : c.getUsers()) {
-							ps.setInt(1, accountId.intValue());
-							ps.addBatch();
-						}
-						ps.executeBatch();
-					}
+					CouponDAO.replaceCouponUsers(con, c.getCode(), c.getUsers());
 				}
 
 				if (c.shouldUpdateItems()) {
-					ps.close();
-					ps = con.prepareStatement("DELETE `i`.* FROM `cashshopcouponitems` `i` LEFT JOIN `cashshopcoupons` `c` ON `i`.`couponentryid` = `c`.`entryid` WHERE `c`.`code` = ?");
-					ps.setString(1, c.getCode());
-					ps.executeUpdate();
-
-					if (!c.getItems().isEmpty()) {
-						ps.close();
-						ps = con.prepareStatement("INSERT INTO `cashshopcouponitems` (`couponentryid`,`sn`) SELECT `entryid`,? FROM `cashshopcoupons` WHERE `code` = ?");
-						ps.setString(2, c.getCode());
-						for (Integer sn : c.getItems()) {
-							ps.setInt(1, sn.intValue());
-							ps.addBatch();
-						}
-						ps.executeBatch();
-					}
+					CouponDAO.replaceCouponItems(con, c.getCode(), c.getItems());
 				}
 			}
-		} catch (SQLException ex) {
+		} catch (SQLException | DataAccessException ex) {
 			LOG.log(Level.WARNING, "Could not commit coupon " + c.getCode(), ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, ps, con);
 		}
 	}
 

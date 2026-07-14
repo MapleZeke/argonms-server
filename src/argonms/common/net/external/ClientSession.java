@@ -19,7 +19,6 @@
 package argonms.common.net.external;
 
 import argonms.common.GlobalConstants;
-import argonms.common.net.OrderedQueue;
 import argonms.common.net.Session;
 import argonms.common.util.Rng;
 import argonms.common.util.Scheduler;
@@ -27,24 +26,22 @@ import argonms.common.util.output.LittleEndianByteArrayWriter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.Channel;
-import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.CancelledKeyException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
-import java.util.Iterator;
 import java.util.Random;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Wraps a Netty {@link Channel} and manages the lifecycle of a single
+ * external client connection, including keep-alive (ping/pong), idle
+ * detection, and session-level crypto IVs.
+ */
 public class ClientSession<T extends RemoteClient> implements Session {
 	public static final byte CLIENT_DISTRIBUTION_JAPAN = 3;
 	public static final byte CLIENT_DISTRIBUTION_TEST = 5;
@@ -54,69 +51,34 @@ public class ClientSession<T extends RemoteClient> implements Session {
 
 	private static final Logger LOG = Logger.getLogger(ClientSession.class.getName());
 	private static final int INIT_HEADER_LENGTH = 2;
-	private static final int HEADER_LENGTH = 4;
-	//1kb as the initial buffer size for each client isn't too unreasonable...
-	private static final int DEFAULT_BUFFER_SIZE = 1024;
-	private static final byte[][] EMPTY_ARRAY = new byte[0][];
 	private static final int IDLE_TIME = 15000; //in milliseconds
 	private static final int TIMEOUT = 15000; //in milliseconds
 
-	private final SocketChannel commChn;
-	private final Channel nettyChn;
-	private final boolean nettyTransport;
+	private final Channel channel;
 	private final AtomicBoolean closeEventsTriggered;
-	private ByteBuffer readBuffer;
-	private final CloseListener<T> onClose;
 	private T client;
 	private final AtomicInteger queuedReads;
 	private volatile Runnable emptyReadQueueHandler;
 
-	private final SelectionKey selectionKey;
-	private final OrderedQueue sendQueue;
-
 	private final KeepAliveTask heartbeatTask;
-	private final Runnable idleTask = () ->
-		startPingTask();
+	private final Runnable idleTask = this::startPingTask;
 	private ScheduledFuture<?> idleTaskFuture;
 
-	private MessageType nextMessageType;
-
-	private final Lock sendIvLock;
 	private byte[] recvIv;
 	private byte[] sendIv;
 
-	/* package-private */ interface CloseListener<T extends RemoteClient> {
-		public void closed(ClientSession<T> session);
-	}
-
-	/* package-private */ ClientSession(SocketChannel channel, SelectionKey key, T client, CloseListener<T> onClose) {
-		this(channel, null, key, client, onClose);
-	}
-
 	/* package-private */ ClientSession(Channel channel, T client) {
-		this(null, channel, null, client, null);
-	}
+		this.channel = channel;
+		this.closeEventsTriggered = new AtomicBoolean(false);
+		this.heartbeatTask = new KeepAliveTask();
+		this.queuedReads = new AtomicInteger(0);
+		this.client = client;
 
-	private ClientSession(SocketChannel socketChannel, Channel nettyChannel, SelectionKey key, T client, CloseListener<T> onClose) {
-		closeEventsTriggered = new AtomicBoolean(false);
-		nettyTransport = nettyChannel != null;
-		sendQueue = new OrderedQueue();
-		heartbeatTask = new KeepAliveTask();
-		queuedReads = new AtomicInteger(0);
-
-		//we don't need to lock for receiving - see readMessage()
-		sendIvLock = new ReentrantLock();
 		Random generator = Rng.getGenerator();
 		recvIv = new byte[4];
 		sendIv = new byte[4];
 		generator.nextBytes(recvIv);
 		generator.nextBytes(sendIv);
-
-		this.commChn = socketChannel;
-		this.nettyChn = nettyChannel;
-		this.onClose = onClose;
-		this.selectionKey = key;
-		this.client = client;
 	}
 
 	public T getClient() {
@@ -129,53 +91,16 @@ public class ClientSession<T extends RemoteClient> implements Session {
 
 	@Override
 	public SocketAddress getAddress() {
-		return nettyTransport ? nettyChn.remoteAddress() : commChn.socket().getRemoteSocketAddress();
+		return channel.remoteAddress();
 	}
 
 	public String getAccountName() {
 		return getClient() != null ? getClient().getAccountName() : null;
 	}
 
-	private void send(int queueInsertNo, ByteBuffer buf) {
-		sendQueue.insert(queueInsertNo, buf);
-		try {
-			if (selectionKey.isValid() && !sendQueue.willBlock() && tryFlushSendQueue() == 0) {
-				selectionKey.interestOps(selectionKey.interestOps() | SelectionKey.OP_WRITE);
-				selectionKey.selector().wakeup();
-			}
-		} catch (CancelledKeyException e) {
-			//don't worry about it - session is already closed
-		}
-	}
-
 	@Override
 	public void send(byte[] message) {
-		if (nettyTransport) {
-			nettyChn.writeAndFlush(message);
-			return;
-		}
-		//we will have to synchronize here because send can be called from any
-		//thread. we have to ensure that this message is sent before any shorter
-		//messages that use a newer IV are sent, so use an OrderedQueue.
-		byte[] iv;
-		int queueInsertNo;
-		sendIvLock.lock();
-		try {
-			iv = sendIv;
-			sendIv = ClientEncryption.nextIv(iv);
-			queueInsertNo = sendQueue.getNextPush();
-		} finally {
-			sendIvLock.unlock();
-		}
-		byte[] input = new byte[message.length];
-		System.arraycopy(message, 0, input, 0, message.length);
-		byte[] header = ClientEncryption.makePacketHeader(input.length, iv);
-		byte[] output = new byte[header.length + input.length];
-		ClientEncryption.mapleEncrypt(input);
-		ClientEncryption.aesOfbCrypt(input, iv);
-		System.arraycopy(header, 0, output, 0, header.length);
-		System.arraycopy(input, 0, output, header.length, input.length);
-		send(queueInsertNo, ByteBuffer.wrap(output));
+		channel.writeAndFlush(message);
 	}
 
 	public void readEnqueued() {
@@ -212,19 +137,9 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	@Override
 	public boolean close(String reason) {
 		if (closeEventsTriggered.compareAndSet(false, true)) {
-			try {
-				if (nettyTransport) {
-					nettyChn.close();
-				} else {
-					commChn.close();
-				}
-			} catch (IOException ex) {
-				LOG.log(Level.WARNING, "Error while closing client " + getAccountName() + " (" + getAddress() + ")", ex);
-			}
+			channel.close();
 			stopPingTask();
-			//this check is thread safe - idleTaskFuture can never be null again after it has been assigned a non-null value
 			if (idleTaskFuture != null) {
-				//client closed before we could send init packet
 				idleTaskFuture.cancel(false);
 			}
 
@@ -232,79 +147,13 @@ public class ClientSession<T extends RemoteClient> implements Session {
 			if (client != null) {
 				client.disconnected();
 			}
-			if (onClose != null) {
-				onClose.closed(this);
-			}
 			return true;
 		}
 		return false;
 	}
 
-	/**
-	 * @return 0 if not all queued messages could be sent in a non-blocking
-	 * manner, 1 if all queued messages have been successfully sent, -1 if there
-	 * is another flush attempt in progress, or -2 if there's an error and the
-	 * channel is closed.
-	 */
-	/* package-private */ byte tryFlushSendQueue() {
-		if (nettyTransport) {
-			return 1;
-		}
-	if (!sendQueue.shouldWrite()) {
-		return -1;
-	}
-		try {
-			do {
-				int success = 0;
-				try {
-					Iterator<ByteBuffer> iter = sendQueue.pop().iterator();
-					while (iter.hasNext()) {
-						ByteBuffer buf = iter.next();
-						if (buf.remaining() == commChn.write(buf)) {
-							success++;
-						} else {
-							int i = sendQueue.currentPopBlock() + success;
-							sendQueue.insert(i++, buf);
-							while (iter.hasNext()) {
-								sendQueue.insert(i++, iter.next());
-							}
-							return 0;
-						}
-					}
-				} finally {
-					sendQueue.incrementPopCursor(success);
-				}
-			} while (!sendQueue.willBlock());
-			return 1;
-		} catch (IOException ex) {
-			//does an IOException in write always mean an invalid channel?
-			close(ex.getMessage());
-			return -2;
-		} finally {
-			sendQueue.setCanWrite();
-		}
-	}
-
-	/**
-	 * This may only be called from the ClientListener boss thread, in the
-	 * Selector loop.
-	 */
 	/* package-private */ void sendInitPacket() {
-		if (nettyTransport) {
-			activate();
-			return;
-		}
-		ByteBuffer buf = ByteBuffer.wrap(makeInitPacketBytes());
-		send(sendQueue.getNextPush(), buf);
 		activate();
-	}
-
-	/**
-	 * This may only be called from the ClientListener boss thread, in the
-	 * Selector loop.
-	 */
-	/* package-private */ ByteBuffer readBuffer() {
-		return readBuffer;
 	}
 
 	/* package-private */ ByteBuf makeInitPacket(ByteBufAllocator allocator) {
@@ -315,9 +164,6 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	}
 
 	/* package-private */ void activate() {
-		readBuffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE);
-		readBuffer.limit(HEADER_LENGTH);
-		nextMessageType = MessageType.HEADER;
 		rescheduleIdleTask();
 	}
 
@@ -340,78 +186,9 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	}
 
 	/* package-private */ byte[] advanceSendIv() {
-		sendIvLock.lock();
-		try {
-			byte[] iv = sendIv;
-			sendIv = ClientEncryption.nextIv(iv);
-			return iv;
-		} finally {
-			sendIvLock.unlock();
-		}
-	}
-
-	/**
-	 * This may only be called from the ClientListener boss thread, in the
-	 * Selector loop.
-	 * @param readBytes
-	 * @return null if nothing was processed, an array of length 0 if the header
-	 * was fully read, or an array of length 2 consisting of this session's
-	 * receive IV for the just received message at index 0 and the encrypted
-	 * message body at index 1 if the message body was fully read.
-	 */
-	/* package-private */ byte[][] readMessage(int readBytes) {
-		if (idleTaskFuture != null) {
-			idleTaskFuture.cancel(false);
-		}
-		if (readBytes == -1) {
-			//connection closed
-			close("EOF received");
-			return null;
-		}
-		if (readBuffer.remaining() != 0) { //buffer is still not full
-			//we limited buffer to the expected length of the next packet - continue reading
-			idleTaskFuture = Scheduler.getWheelTimer().runAfterDelay(idleTask, IDLE_TIME);
-			return null;
-		}
-		switch (nextMessageType) {
-			case HEADER: {
-				readBuffer.flip();
-				byte[] message = new byte[readBuffer.remaining()];
-				readBuffer.get(message);
-				if (!ClientEncryption.checkPacket(message, recvIv)) {
-					close("Failed packet test");
-					return null;
-				}
-				int length = ClientEncryption.getPacketLength(message);
-
-				readBuffer.clear();
-				if (length > readBuffer.remaining()) {
-					readBuffer = ByteBuffer.allocate(length);
-				}
-				readBuffer.limit(length);
-				nextMessageType = MessageType.BODY;
-				idleTaskFuture = Scheduler.getWheelTimer().runAfterDelay(idleTask, IDLE_TIME);
-				return EMPTY_ARRAY;
-			}
-			case BODY: {
-				readBuffer.flip();
-				byte[] message = new byte[readBuffer.remaining()];
-				readBuffer.get(message);
-				//since recvIv can only be touched here (excluding the one-time
-				//initialization and sending to client), and this method can
-				//only be called from the boss thread of ClientListener in the
-				//Selector loop, we don't need recvIv access to be thread-safe.
-				byte[] iv = recvIv;
-				recvIv = ClientEncryption.nextIv(iv);
-				readBuffer.clear();
-				readBuffer.limit(HEADER_LENGTH);
-				nextMessageType = MessageType.HEADER;
-				idleTaskFuture = Scheduler.getWheelTimer().runAfterDelay(idleTask, IDLE_TIME);
-				return new byte[][]{iv, message};
-			}
-			default:
-				return null;
-		}
+		byte[] iv = sendIv;
+		sendIv = ClientEncryption.nextIv(iv);
+		return iv;
 	}
 
 	private byte[] makeInitPacketBytes() {

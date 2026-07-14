@@ -23,13 +23,12 @@ import argonms.common.util.DatabaseManager;
 import argonms.common.util.DatabaseManager.DatabaseType;
 import argonms.common.util.HexTool;
 import argonms.common.util.collections.LockableMap;
+import argonms.common.util.dao.BanDAO;
+import argonms.common.util.dao.CheatDAO;
+import argonms.common.util.dao.DataAccessException;
 import java.net.InetSocketAddress;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -169,25 +168,12 @@ public abstract class CheatTracker {
 	private void load() {
 		totalPoints = 0;
 
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			//only get infractions that haven't expired and aren't pardoned yet
-			ps = con.prepareStatement("SELECT `severity` FROM `infractions` "
-					+ "WHERE `accountid` = ? AND `pardoned` = 0 AND `expiredate` > (UNIX_TIMESTAMP() * 1000)");
-			ps.setInt(1, getAccountId());
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				totalPoints += rs.getShort(1);
-			}
+			totalPoints = CheatDAO.loadActiveInfractionPoints(getAccountId());
 			infractionsLoaded = true;
-		} catch (SQLException ex) {
+		} catch (DataAccessException ex) {
 			LOG.log(Level.WARNING, "Could not load cheatlog for account "
 					+ getAccountId(), ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 	}
 
@@ -209,45 +195,11 @@ public abstract class CheatTracker {
 			return;
 		}
 
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			ps = con.prepareStatement("INSERT INTO `bans` (`accountid`,`ip`) VALUES (?,?)", Statement.RETURN_GENERATED_KEYS);
-			ps.setInt(1, getAccountId());
-			ps.setLong(2, ipBytesToLong(getIpAddress()));
-			ps.executeUpdate();
-			rs = ps.getGeneratedKeys();
-			int entryId = rs.next() ? rs.getInt(1) : -1;
-			rs.close();
-			ps.close();
+		int entryId = BanDAO.insertBan(con, getAccountId(), ipBytesToLong(getIpAddress()));
 
-			//storing macs in binary saves us 2 bytes per address compared
-			//to if we used a more readable 8-byte/64-bit signed integer
-			ps = con.prepareStatement("SELECT `recentmacs` FROM `accounts` WHERE `id` = ?");
-			ps.setInt(1, getAccountId());
-			rs = ps.executeQuery();
-			byte[] macListCombined = rs.next() ? rs.getBytes(1) : null;
+		byte[] macListCombined = BanDAO.loadRecentMacs(con, getAccountId());
 
-			if (macListCombined != null) {
-				rs.close();
-				ps.close();
-
-				int macCount = macListCombined.length / 6;
-				byte[] macAddress = new byte[6];
-				ps = con.prepareStatement("INSERT INTO `macbans` (`banid`,`mac`) VALUES (?,?)");
-				ps.setInt(1, entryId);
-				for (int i = 0; i < macCount; i++) {
-					System.arraycopy(macListCombined, i * 6, macAddress, 0, 6);
-					if (!excludeMacBan(macAddress)) {
-						ps.setBytes(2, macAddress);
-						ps.addBatch();
-					}
-				}
-				ps.executeBatch();
-			}
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, null);
-		}
+		BanDAO.insertMacBans(con, entryId, macListCombined, this::excludeMacBan);
 	}
 
 	private void addInfraction(Infraction reason, Assigner type, String reporter, String message, long overrideExpire, short overridePoints, boolean dcOnBan) {
@@ -270,37 +222,21 @@ public abstract class CheatTracker {
 			loadLock.unlock();
 		}
 		totalPoints += points;
-		Connection con = null;
-		PreparedStatement ps = null;
+		long expireDate = overrideExpire == -1L ? (now + reason.duration()) : overrideExpire;
 		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("INSERT INTO `infractions` (`accountid`,`characterid`,`receivedate`,`expiredate`,`assignertype`,`assignername`,`assignercomment`,`reason`,`severity`) VALUES (?,?,?,?,?,?,?,?,?)");
-			ps.setInt(1, getAccountId());
-			int cid = getCharacterId();
-			if (cid != -1) {
-				ps.setInt(2, cid);
-			} else {
-				ps.setNull(2, Types.INTEGER);
-			}
-			ps.setLong(3, now);
-			ps.setLong(4, overrideExpire == -1L ? (now + reason.duration()) : overrideExpire);
-			ps.setString(5, type.sqlName());
-			ps.setString(6, reporter);
-			ps.setString(7, message);
-			ps.setByte(8, reason.byteValue());
-			ps.setShort(9, points);
-			ps.executeUpdate();
+			CheatDAO.insertInfraction(getAccountId(), getCharacterId(), now, expireDate,
+					type.sqlName(), reporter, message, reason.byteValue(), points);
 			if (totalPoints >= TOLERANCE) {
-				ban(con);
+				try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+					ban(con);
+				}
 				if (dcOnBan) {
 					disconnectClient();
 				}
 			}
-		} catch (SQLException ex) {
+		} catch (DataAccessException | SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load cheatlog for account "
 					+ getAccountId(), ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, con);
 		}
 	}
 
@@ -428,27 +364,11 @@ public abstract class CheatTracker {
 	}
 
 	public static CheatTracker get(String characterName) {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			//only get infractions that haven't expired and aren't pardoned yet
-			ps = con.prepareStatement("SELECT `a`.`id`,`c`.`id`,`a`.`recentip` FROM `characters` `c` LEFT JOIN `accounts` `a` ON `c`.`accountid` = `a`.`id` WHERE `c`.`name` = ?");
-			ps.setString(1, characterName);
-			rs = ps.executeQuery();
-			if (!rs.next()) {
-				return null;
-			}
-
-			return new OfflineCheatTracker(rs.getInt(1), rs.getInt(2), rs.getLong(3));
-		} catch (SQLException ex) {
-			LOG.log(Level.WARNING, "Could not load cheatlog for offline character "
-					+ characterName, ex);
+		CheatDAO.OfflineCharacterInfo info = CheatDAO.lookupOfflineCharacter(characterName);
+		if (info == null) {
 			return null;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
+		return new OfflineCheatTracker(info.accountId(), info.characterId(), info.recentIp());
 	}
 
 	public static void setBlacklistedMacBans(Scanner scan) {

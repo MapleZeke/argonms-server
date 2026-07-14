@@ -20,15 +20,26 @@ package argonms.common.net.external;
 
 import argonms.common.character.Player;
 import argonms.common.net.SessionDataModel;
-import argonms.common.util.DatabaseManager;
-import argonms.common.util.DatabaseManager.DatabaseType;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import argonms.common.util.dao.AccountDAO;
+import argonms.common.util.dao.DataAccessException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class RemoteClient implements SessionDataModel {
+/**
+ * Base class for all external (game-client-facing) session contexts.
+ *
+ * <p>Implements {@link MapleClientContext} so that cross-cutting concerns
+ * (telemetry, logging, disconnect pipeline) can operate on a common interface
+ * without depending on module-specific subclasses.
+ *
+ * <h2>Disconnect pipeline (item 5 – idempotent state transitions)</h2>
+ * {@link #disconnected()} is declared {@code final} and uses an
+ * {@code AtomicBoolean} to guarantee that the module-specific cleanup hook
+ * {@link #onDisconnected()} is called <em>at most once</em> per session
+ * lifetime, even when multiple threads race to close the channel.
+ */
+public abstract class RemoteClient implements SessionDataModel, MapleClientContext {
 	private static final Logger LOG = Logger.getLogger(RemoteClient.class.getName());
 	public static final byte STATUS_NOTLOGGEDIN = 0;
 	public static final byte STATUS_MIGRATION = 1;
@@ -42,6 +53,7 @@ public abstract class RemoteClient implements SessionDataModel {
 	private byte world;
 	private byte channel;
 	private boolean serverTransition;
+	private final AtomicBoolean disconnectedOnce = new AtomicBoolean(false);
 
 	public int getAccountId() {
 		return id;
@@ -99,18 +111,10 @@ public abstract class RemoteClient implements SessionDataModel {
 	}
 
 	public void updateState(byte currentState) {
-		Connection con = null;
-		PreparedStatement ps = null;
 		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("UPDATE `accounts` SET `connected` = ? WHERE `id` = ?");
-			ps.setByte(1, currentState);
-			ps.setInt(2, id);
-			ps.executeUpdate();
-		} catch (SQLException ex) {
+			AccountDAO.updateConnectedStatus(id, currentState);
+		} catch (DataAccessException ex) {
 			LOG.log(Level.WARNING, "Could not change connected status of account " + id, ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, con);
 		}
 	}
 
@@ -119,9 +123,29 @@ public abstract class RemoteClient implements SessionDataModel {
 	public abstract byte getServerId();
 
 	/**
-	 * DO NOT USE THIS METHOD TO FORCE THE CLIENT TO CLOSE ITSELF. USE
-	 * getSession().close() INSTEAD.
+	 * Called at most once when the underlying channel closes.
+	 *
+	 * <p>This method is {@code final}; an {@code AtomicBoolean} ensures the
+	 * module-specific {@link #onDisconnected()} hook fires exactly once even
+	 * when multiple threads race to close the channel.
+	 *
+	 * <p><strong>Do not call this method directly to force a close.</strong>
+	 * Use {@link ClientSession#close(String)} instead.
 	 */
 	@Override
-	public abstract void disconnected();
+	public final void disconnected() {
+		if (disconnectedOnce.compareAndSet(false, true)) {
+			onDisconnected();
+		}
+	}
+
+	/**
+	 * Module-specific disconnect hook invoked exactly once per session.
+	 *
+	 * <p>Subclasses must implement this instead of overriding
+	 * {@link #disconnected()}.  Typical responsibilities: cancel ongoing NPC
+	 * conversations, flush character saves, remove the player from the active
+	 * map/channel, and null out session references to allow GC.
+	 */
+	protected abstract void onDisconnected();
 }

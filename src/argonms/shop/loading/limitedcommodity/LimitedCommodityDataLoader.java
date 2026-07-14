@@ -41,39 +41,29 @@ public abstract class LimitedCommodityDataLoader {
 	}
 
 	protected int getUsed(int itemId) {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT `used` FROM `cashshoplimitedcommodities` WHERE `itemid` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("SELECT `used` FROM `cashshoplimitedcommodities` WHERE `itemid` = ?")) {
 			ps.setInt(1, itemId);
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				return rs.getInt(1);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					return rs.getInt(1);
+				}
 			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not determine remainder of limited commodity from database", e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, rs, ps, con);
 		}
 		return 0;
 	}
 
 	public void commitUsed(int itemId, int used) {
-		Connection con = null;
-		PreparedStatement ps = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
-			ps = con.prepareStatement("INSERT INTO `cashshoplimitedcommodities` (`itemid`,`used`) VALUES (?,?) ON DUPLICATE KEY UPDATE `used` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("INSERT INTO `cashshoplimitedcommodities` (`itemid`,`used`) VALUES (?,?) ON DUPLICATE KEY UPDATE `used` = ?")) {
 			ps.setInt(1, itemId);
 			ps.setInt(2, used);
 			ps.setInt(3, used);
 			ps.executeUpdate();
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not update remainder of limited commodity in database", e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, ps, con);
 		}
 	}
 

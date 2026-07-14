@@ -20,6 +20,7 @@ package argonms.login.net.external;
 
 import argonms.common.net.external.ClientPacketProcessor;
 import argonms.common.net.external.ClientRecvOps;
+import argonms.common.net.external.PacketDispatchTable;
 import argonms.common.util.input.LittleEndianReader;
 import argonms.login.net.external.handler.*;
 import java.util.logging.Level;
@@ -28,80 +29,35 @@ import java.util.logging.Logger;
 public class ClientLoginPacketProcessor extends ClientPacketProcessor<LoginClient> {
 	private static final Logger LOG = Logger.getLogger(ClientPacketProcessor.class.getName());
 
+	private static final PacketDispatchTable<LoginClient> TABLE = new PacketDispatchTable<LoginClient>()
+		.register(ClientRecvOps.LOGIN_PASSWORD,      AuthHandler::handleLogin)
+		.register(ClientRecvOps.SERVERLIST_REREQUEST, WorldlistHandler::handleWorldListRequest)
+		.register(ClientRecvOps.CHARLIST_REQ,         WorldlistHandler::handleCharlist)
+		.register(ClientRecvOps.REQ_SERVERLOAD,       WorldlistHandler::sendServerStatus)
+		.register(ClientRecvOps.SET_GENDER,           AuthHandler::handleGender)
+		.register(ClientRecvOps.PIN_OPERATION,        AuthHandler::handlePin)
+		.register(ClientRecvOps.REGISTER_PIN,         AuthHandler::handlePinRegister)
+		.register(ClientRecvOps.SERVERLIST_REQUEST,   WorldlistHandler::handleWorldListRequest)
+		.noOp(ClientRecvOps.EXIT_CHARLIST)            // cancel-loading no-op
+		.register(ClientRecvOps.VIEW_ALL_CHARS,       WorldlistHandler::handleViewAllChars)
+		.register(ClientRecvOps.PICK_ALL_CHAR,        WorldlistHandler::handlePickFromAllChars)
+		.noOp(ClientRecvOps.ENTER_EXIT_VIEW_ALL)      // cancel-loading no-op
+		.register(ClientRecvOps.CHAR_SELECT,          WorldlistHandler::handlePickFromWorldCharlist)
+		.register(ClientRecvOps.CHECK_CHAR_NAME,      WorldlistHandler::handleNameCheck)
+		.register(ClientRecvOps.CREATE_CHAR,          WorldlistHandler::handleCreateCharacter)
+		.register(ClientRecvOps.DELETE_CHAR,          WorldlistHandler::handleDeleteChar)
+		.register(ClientRecvOps.PONG,                 (r, lc) -> lc.getSession().receivedPong())
+		.register(ClientRecvOps.CLIENT_ERROR,         (r, lc) -> lc.clientError(r.readLengthPrefixedString()))
+		.noOp(ClientRecvOps.AES_IV_UPDATE_REQUEST)
+		.register(ClientRecvOps.RELOG,                WorldlistHandler::backToLogin)
+		.noOp(ClientRecvOps.MESSENGER_ACT)            // clean-up already handled server-side
+		.noOp(ClientRecvOps.PLAYER_UPDATE);
+
 	@Override
 	public void process(LittleEndianReader reader, LoginClient lc) {
-		switch (reader.readShort()) {
-			case ClientRecvOps.LOGIN_PASSWORD:
-				AuthHandler.handleLogin(reader, lc);
-				break;
-			case ClientRecvOps.SERVERLIST_REREQUEST:
-				WorldlistHandler.handleWorldListRequest(reader, lc);
-				break;
-			case ClientRecvOps.CHARLIST_REQ:
-				WorldlistHandler.handleCharlist(reader, lc);
-				break;
-			case ClientRecvOps.REQ_SERVERLOAD:
-				WorldlistHandler.sendServerStatus(reader, lc);
-				break;
-			case ClientRecvOps.SET_GENDER:
-				AuthHandler.handleGender(reader, lc);
-				break;
-			case ClientRecvOps.PIN_OPERATION:
-				AuthHandler.handlePin(reader, lc);
-				break;
-			case ClientRecvOps.REGISTER_PIN:
-				AuthHandler.handlePinRegister(reader, lc);
-				break;
-			case ClientRecvOps.SERVERLIST_REQUEST:
-				WorldlistHandler.handleWorldListRequest(reader, lc);
-				break;
-			case ClientRecvOps.EXIT_CHARLIST:
-				//I guess if we're loading a character right now, we cancel it?
-				break;
-			case ClientRecvOps.VIEW_ALL_CHARS:
-				WorldlistHandler.handleViewAllChars(reader, lc);
-				break;
-			case ClientRecvOps.PICK_ALL_CHAR:
-				WorldlistHandler.handlePickFromAllChars(reader, lc);
-				break;
-			case ClientRecvOps.ENTER_EXIT_VIEW_ALL:
-				//I guess if we're loading a character right now, we cancel it?
-				break;
-			case ClientRecvOps.CHAR_SELECT:
-				WorldlistHandler.handlePickFromWorldCharlist(reader, lc);
-				break;
-			case ClientRecvOps.CHECK_CHAR_NAME:
-				WorldlistHandler.handleNameCheck(reader, lc);
-				break;
-			case ClientRecvOps.CREATE_CHAR:
-				WorldlistHandler.handleCreateCharacter(reader, lc);
-				break;
-			case ClientRecvOps.DELETE_CHAR:
-				WorldlistHandler.handleDeleteChar(reader, lc);
-				break;
-			case ClientRecvOps.PONG:
-				lc.getSession().receivedPong();
-				break;
-			case ClientRecvOps.CLIENT_ERROR:
-				lc.clientError(reader.readLengthPrefixedString());
-				break;
-			case ClientRecvOps.AES_IV_UPDATE_REQUEST:
-				//no-op
-				break;
-			case ClientRecvOps.RELOG:
-				WorldlistHandler.backToLogin(reader, lc);
-				break;
-			case ClientRecvOps.MESSENGER_ACT:
-				//no-op: player logged off before closing messenger. we already
-				//handled the clean up on game server side, but there is no way
-				//the server can make the client close the messenger window.
-				break;
-			case ClientRecvOps.PLAYER_UPDATE:
-				//no-op
-				break;
-			default:
-				LOG.log(Level.FINE, "Received unhandled client packet {0} bytes long:\n{1}", new Object[]{reader.available() + 2, reader});
-				break;
+		if (!TABLE.dispatch(reader, lc)) {
+			LOG.log(Level.FINE, "Received unhandled client packet {0} bytes long:\n{1}",
+					new Object[]{reader.available() + 2, reader});
 		}
 	}
 }

@@ -31,6 +31,7 @@ import argonms.common.character.inventory.TamingMob;
 import argonms.common.net.external.RemoteClient;
 import argonms.common.util.DatabaseManager;
 import argonms.common.util.DatabaseManager.DatabaseType;
+import argonms.common.util.dao.CharacterDAO;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -321,32 +322,24 @@ public abstract class Player {
 	}
 
 	public static void commitInventory(int characterId, int accountId, Pet[] pets, Connection con, Map<InventoryType, ? extends IInventory> inventories) throws SQLException {
-		PreparedStatement ps = null;
-		PreparedStatement eps = null;
-		PreparedStatement rps = null;
-		PreparedStatement pps = null;
-		PreparedStatement mps = null;
-		PreparedStatement cps = null;
-		ResultSet rs = null;
-		try {
-			ps = con.prepareStatement("INSERT INTO `inventoryitems` "
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `inventoryitems` "
 				+ "(`characterid`,`accountid`,`inventorytype`,`position`,`itemid`,`expiredate`,`owner`,`quantity`) "
 				+ "VALUES (?,?,?,?,?,?,?,?)",
 				Statement.RETURN_GENERATED_KEYS);
-			eps = con.prepareStatement("INSERT INTO `inventoryequipment` "
-					+ "(`inventoryitemid`,`upgradeslots`,`level`,`str`,`dex`,`int`,`luk`,`hp`,`mp`,`watk`,`matk`,`wdef`,`mdef`,`acc`,`avoid`,`hands`,`speed`,`jump`) "
-					+ "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-			rps = con.prepareStatement("INSERT INTO `inventoryrings` "
-					+ "(`inventoryitemid`,`partnerchrid`,`partnerringid`) "
-					+ "VALUES (?,?,?)");
-			pps = con.prepareStatement("INSERT INTO `inventorypets` "
-					+ "(`inventoryitemid`,`position`,`name`,`level`,`closeness`,`fullness`) "
-					+ "VALUES (?,?,?,?,?,?)");
-			mps = con.prepareStatement("INSERT INTO `inventorymounts` "
-					+ "(`inventoryitemid`,`level`,`exp`,`tiredness`) "
-					+ "VALUES (?,?,?,?)");
-			cps = con.prepareStatement("UPDATE `cashshoppurchases` "
-					+ "SET `inventoryitemid` = ? WHERE `uniqueid` = ?");
+				PreparedStatement eps = con.prepareStatement("INSERT INTO `inventoryequipment` "
+						+ "(`inventoryitemid`,`upgradeslots`,`level`,`str`,`dex`,`int`,`luk`,`hp`,`mp`,`watk`,`matk`,`wdef`,`mdef`,`acc`,`avoid`,`hands`,`speed`,`jump`) "
+						+ "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+				PreparedStatement rps = con.prepareStatement("INSERT INTO `inventoryrings` "
+						+ "(`inventoryitemid`,`partnerchrid`,`partnerringid`) "
+						+ "VALUES (?,?,?)");
+				PreparedStatement pps = con.prepareStatement("INSERT INTO `inventorypets` "
+						+ "(`inventoryitemid`,`position`,`name`,`level`,`closeness`,`fullness`) "
+						+ "VALUES (?,?,?,?,?,?)");
+				PreparedStatement mps = con.prepareStatement("INSERT INTO `inventorymounts` "
+						+ "(`inventoryitemid`,`level`,`exp`,`tiredness`) "
+						+ "VALUES (?,?,?,?)");
+				PreparedStatement cps = con.prepareStatement("UPDATE `cashshoppurchases` "
+						+ "SET `inventoryitemid` = ? WHERE `uniqueid` = ?")) {
 			ps.setInt(1, characterId);
 			ps.setInt(2, accountId);
 			for (Entry<InventoryType, ? extends IInventory> ent : inventories.entrySet()) {
@@ -381,9 +374,9 @@ public abstract class Player {
 								Ring ring = (Ring) item;
 
 								ps.executeUpdate(); //need the generated keys, so no batch
-								rs = ps.getGeneratedKeys();
-								inventoryKey = rs.next() ? rs.getInt(1) : -1;
-								rs.close();
+								try (ResultSet rs = ps.getGeneratedKeys()) {
+									inventoryKey = rs.next() ? rs.getInt(1) : -1;
+								}
 
 								setEquipUpdateVariables(ring, inventoryKey, eps);
 								eps.addBatch();
@@ -396,9 +389,9 @@ public abstract class Player {
 							}
 							case EQUIP: {
 								ps.executeUpdate(); //need the generated keys, so no batch
-								rs = ps.getGeneratedKeys();
-								inventoryKey = rs.next() ? rs.getInt(1) : -1;
-								rs.close();
+								try (ResultSet rs = ps.getGeneratedKeys()) {
+									inventoryKey = rs.next() ? rs.getInt(1) : -1;
+								}
 
 								setEquipUpdateVariables((Equip) item, inventoryKey, eps);
 								eps.addBatch();
@@ -408,9 +401,9 @@ public abstract class Player {
 								Pet pet = (Pet) item;
 
 								ps.executeUpdate(); //need the generated keys, so no batch
-								rs = ps.getGeneratedKeys();
-								inventoryKey = rs.next() ? rs.getInt(1) : -1;
-								rs.close();
+								try (ResultSet rs = ps.getGeneratedKeys()) {
+									inventoryKey = rs.next() ? rs.getInt(1) : -1;
+								}
 
 								pps.setInt(1, inventoryKey);
 								pps.setByte(2, indexOf(pets, pet));
@@ -425,9 +418,9 @@ public abstract class Player {
 								TamingMob mount = (TamingMob) item;
 
 								ps.executeUpdate(); //need the generated keys, so no batch
-								rs = ps.getGeneratedKeys();
-								inventoryKey = rs.next() ? rs.getInt(1) : -1;
-								rs.close();
+								try (ResultSet rs = ps.getGeneratedKeys()) {
+									inventoryKey = rs.next() ? rs.getInt(1) : -1;
+								}
 
 								setEquipUpdateVariables(mount, inventoryKey, eps);
 								eps.addBatch();
@@ -444,9 +437,9 @@ public abstract class Player {
 									ps.addBatch();
 								} else {
 									ps.executeUpdate(); //need the generated keys, so no batch
-									rs = ps.getGeneratedKeys();
-									inventoryKey = rs.next() ? rs.getInt(1) : -1;
-									rs.close();
+									try (ResultSet rs = ps.getGeneratedKeys()) {
+										inventoryKey = rs.next() ? rs.getInt(1) : -1;
+									}
 								}
 								break;
 						}
@@ -465,13 +458,6 @@ public abstract class Player {
 			pps.executeBatch();
 			mps.executeBatch();
 			cps.executeBatch();
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, cps, null);
-			DatabaseManager.cleanup(DatabaseType.STATE, null, mps, null);
-			DatabaseManager.cleanup(DatabaseType.STATE, null, pps, null);
-			DatabaseManager.cleanup(DatabaseType.STATE, null, rps, null);
-			DatabaseManager.cleanup(DatabaseType.STATE, null, eps, null);
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, null);
 		}
 	}
 
@@ -480,108 +466,102 @@ public abstract class Player {
 	}
 
 	public static void loadInventory(Pet[] pets, Connection con, ResultSet rs, Map<InventoryType, ? extends IInventory> inventories) throws SQLException {
-		PreparedStatement ips = null;
-		ResultSet irs = null;
-		try {
-			while (rs.next()) {
-				InventorySlot item;
-				InventoryType inventoryType = InventoryType.valueOf(rs.getByte(4));
-				short position = rs.getShort(5);
-				int itemid = rs.getInt(6);
-				int inventoryKey = rs.getInt(1);
-				if (InventoryTools.isEquip(itemid)) {
-					Equip e;
-					if (InventoryTools.isPartnerRing(itemid)) {
-						e = new Ring(itemid);
-						ips = con.prepareStatement("SELECT * FROM `inventoryrings` WHERE `inventoryitemid` = ?");
+		while (rs.next()) {
+			InventorySlot item;
+			InventoryType inventoryType = InventoryType.valueOf(rs.getByte(4));
+			short position = rs.getShort(5);
+			int itemid = rs.getInt(6);
+			int inventoryKey = rs.getInt(1);
+			if (InventoryTools.isEquip(itemid)) {
+				Equip e;
+				if (InventoryTools.isPartnerRing(itemid)) {
+					e = new Ring(itemid);
+					try (PreparedStatement ips = con.prepareStatement("SELECT * FROM `inventoryrings` WHERE `inventoryitemid` = ?")) {
 						ips.setInt(1, inventoryKey);
-						irs = ips.executeQuery();
-						if (irs.next()) {
-							((Ring) e).setPartnerCharId(irs.getInt(3));
-							((Ring) e).setPartnerRingId(irs.getLong(4));
-						}
-						irs.close();
-						ips.close();
-					} else if (InventoryTools.isMount(itemid)) {
-						e = new TamingMob(itemid);
-						ips = con.prepareStatement("SELECT * FROM `inventorymounts` WHERE `inventoryitemid` = ?");
-						ips.setInt(1, inventoryKey);
-						irs = ips.executeQuery();
-						if (irs.next()) {
-							((TamingMob) e).setLevel(irs.getByte(3));
-							((TamingMob) e).setExp(irs.getShort(4));
-							((TamingMob) e).setTiredness(irs.getByte(5));
-						}
-						irs.close();
-						ips.close();
-					} else {
-						e = new Equip(itemid);
-					}
-					ips = con.prepareStatement("SELECT * FROM `inventoryequipment` WHERE `inventoryitemid` = ?");
-					ips.setInt(1, inventoryKey);
-					irs = ips.executeQuery();
-					if (irs.next()) {
-						e.setUpgradeSlots(irs.getByte(3));
-						e.setLevel(irs.getByte(4));
-						e.setStr(irs.getShort(5));
-						e.setDex(irs.getShort(6));
-						e.setInt(irs.getShort(7));
-						e.setLuk(irs.getShort(8));
-						e.setHp(irs.getShort(9));
-						e.setMp(irs.getShort(10));
-						e.setWatk(irs.getShort(11));
-						e.setMatk(irs.getShort(12));
-						e.setWdef(irs.getShort(13));
-						e.setMdef(irs.getShort(14));
-						e.setAcc(irs.getShort(15));
-						e.setAvoid(irs.getShort(16));
-						e.setHands(irs.getShort(17));
-						e.setSpeed(irs.getShort(18));
-						e.setJump(irs.getShort(19));
-					}
-					irs.close();
-					ips.close();
-					item = e;
-				} else {
-					if (InventoryTools.isPet(itemid)) {
-						Pet pet = new Pet(itemid);
-						ips = con.prepareStatement("SELECT * FROM `inventorypets` WHERE `inventoryitemid` = ?");
-						ips.setInt(1, inventoryKey);
-						irs = ips.executeQuery();
-						if (irs.next()) {
-							pet.setName(irs.getString(4));
-							pet.setLevel(irs.getByte(5));
-							pet.setCloseness(irs.getShort(6));
-							pet.setFullness(irs.getByte(7));
-							byte pos = irs.getByte(3);
-							if (pos >= 0 && pos < 3) {
-								pets[pos] = pet;
+						try (ResultSet irs = ips.executeQuery()) {
+							if (irs.next()) {
+								((Ring) e).setPartnerCharId(irs.getInt(3));
+								((Ring) e).setPartnerRingId(irs.getLong(4));
 							}
 						}
-						irs.close();
-						ips.close();
-						item = pet;
-					} else {
-						item = new Item(itemid);
-						item.setQuantity(rs.getShort(9));
 					}
+				} else if (InventoryTools.isMount(itemid)) {
+					e = new TamingMob(itemid);
+					try (PreparedStatement ips = con.prepareStatement("SELECT * FROM `inventorymounts` WHERE `inventoryitemid` = ?")) {
+						ips.setInt(1, inventoryKey);
+						try (ResultSet irs = ips.executeQuery()) {
+							if (irs.next()) {
+								((TamingMob) e).setLevel(irs.getByte(3));
+								((TamingMob) e).setExp(irs.getShort(4));
+								((TamingMob) e).setTiredness(irs.getByte(5));
+							}
+						}
+					}
+				} else {
+					e = new Equip(itemid);
 				}
-				if (InventoryTools.isCashItem(itemid)) {
-					ips = con.prepareStatement("SELECT `uniqueid` FROM `cashshoppurchases` WHERE `inventoryitemid` = ?");
+				try (PreparedStatement ips = con.prepareStatement("SELECT * FROM `inventoryequipment` WHERE `inventoryitemid` = ?")) {
 					ips.setInt(1, inventoryKey);
-					irs = ips.executeQuery();
-					if (irs.next()) {
-						item.setUniqueId(irs.getLong(1));
+					try (ResultSet irs = ips.executeQuery()) {
+						if (irs.next()) {
+							e.setUpgradeSlots(irs.getByte(3));
+							e.setLevel(irs.getByte(4));
+							e.setStr(irs.getShort(5));
+							e.setDex(irs.getShort(6));
+							e.setInt(irs.getShort(7));
+							e.setLuk(irs.getShort(8));
+							e.setHp(irs.getShort(9));
+							e.setMp(irs.getShort(10));
+							e.setWatk(irs.getShort(11));
+							e.setMatk(irs.getShort(12));
+							e.setWdef(irs.getShort(13));
+							e.setMdef(irs.getShort(14));
+							e.setAcc(irs.getShort(15));
+							e.setAvoid(irs.getShort(16));
+							e.setHands(irs.getShort(17));
+							e.setSpeed(irs.getShort(18));
+							e.setJump(irs.getShort(19));
+						}
 					}
-					irs.close();
-					ips.close();
 				}
-				item.setExpiration(rs.getLong(7));
-				item.setOwner(rs.getString(8));
-				inventories.get(inventoryType).put(position, item);
+				item = e;
+			} else {
+				if (InventoryTools.isPet(itemid)) {
+					Pet pet = new Pet(itemid);
+					try (PreparedStatement ips = con.prepareStatement("SELECT * FROM `inventorypets` WHERE `inventoryitemid` = ?")) {
+						ips.setInt(1, inventoryKey);
+						try (ResultSet irs = ips.executeQuery()) {
+							if (irs.next()) {
+								pet.setName(irs.getString(4));
+								pet.setLevel(irs.getByte(5));
+								pet.setCloseness(irs.getShort(6));
+								pet.setFullness(irs.getByte(7));
+								byte pos = irs.getByte(3);
+								if (pos >= 0 && pos < 3) {
+									pets[pos] = pet;
+								}
+							}
+						}
+					}
+					item = pet;
+				} else {
+					item = new Item(itemid);
+					item.setQuantity(rs.getShort(9));
+				}
 			}
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, irs, ips, null);
+			if (InventoryTools.isCashItem(itemid)) {
+				try (PreparedStatement ips = con.prepareStatement("SELECT `uniqueid` FROM `cashshoppurchases` WHERE `inventoryitemid` = ?")) {
+					ips.setInt(1, inventoryKey);
+					try (ResultSet irs = ips.executeQuery()) {
+						if (irs.next()) {
+							item.setUniqueId(irs.getLong(1));
+						}
+					}
+				}
+			}
+			item.setExpiration(rs.getLong(7));
+			item.setOwner(rs.getString(8));
+			inventories.get(inventoryType).put(position, item);
 		}
 	}
 
@@ -590,64 +570,14 @@ public abstract class Player {
 	}
 
 	public static String getNameFromId(int characterid) {
-		String name = null;
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT `name` FROM `characters` WHERE `id` = ?");
-			ps.setInt(1, characterid);
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				name = rs.getString(1);
-			}
-		} catch (SQLException ex) {
-			LOG.log(Level.WARNING, "Could not find name of character " + characterid, ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
-		}
-		return name;
+		return CharacterDAO.getNameFromId(characterid);
 	}
 
 	public static int getIdFromName(String name) {
-		int id = -1;
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT `id` FROM `characters` WHERE `name` = ?");
-			ps.setString(1, name);
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				id = rs.getInt(1);
-			}
-		} catch (SQLException ex) {
-			LOG.log(Level.WARNING, "Could not find id of character " + name, ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
-		}
-		return id;
+		return CharacterDAO.getIdFromName(name);
 	}
 
 	public static boolean characterExists(String name, byte world) {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT EXISTS(SELECT 1 FROM `characters` WHERE `name` = ? AND `world` = ? LIMIT 1)");
-			ps.setString(1, name);
-			ps.setByte(2, world);
-			rs = ps.executeQuery();
-			rs.next();
-			return rs.getBoolean(1);
-		} catch (SQLException ex) {
-			LOG.log(Level.WARNING, "Could not determine if character " + name + " exists", ex);
-			return false;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
-		}
+		return CharacterDAO.characterExists(name, world);
 	}
 }

@@ -26,6 +26,7 @@ import argonms.common.loading.item.ItemDataLoader;
 import argonms.common.loading.string.StringDataLoader;
 import argonms.common.util.DatabaseManager;
 import argonms.common.util.Rng;
+import argonms.common.util.dao.CashShopStagingDAO;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -188,19 +189,14 @@ public final class InventoryTools {
 	}
 
 	private static long generateCashPurchase() throws Exception {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		try {
-			con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
-			ps = con.prepareStatement("INSERT INTO `cashshoppurchases` VALUES ()", Statement.RETURN_GENERATED_KEYS);
-			ps.executeUpdate();
-			rs = ps.getGeneratedKeys();
-			return rs.next() ? rs.getLong(1) : -1;
-		} catch (SQLException e) {
+			long id = CashShopStagingDAO.generateUniqueId();
+			if (id == -1) {
+				throw new Exception("Failed to generate unique ID - no key returned");
+			}
+			return id;
+		} catch (Exception e) {
 			throw new Exception("Database access error while acquiring next unique id.", e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, rs, ps, con);
 		}
 	}
 

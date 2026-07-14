@@ -25,13 +25,18 @@ import argonms.common.net.external.RemoteClient;
 import argonms.common.util.DatabaseManager;
 import argonms.common.util.DatabaseManager.DatabaseType;
 import argonms.common.util.TimeTool;
+import argonms.common.util.dao.AccountDAO;
+import argonms.common.util.dao.AccountDAO.AuthRecord;
+import argonms.common.util.dao.BanDAO;
+import argonms.common.util.dao.BanDAO.BanStatus;
+import argonms.common.util.dao.DataAccessException;
+import argonms.common.util.dao.GuildDAO;
 import argonms.login.character.LoginCharacter;
 import java.net.InetSocketAddress;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -95,111 +100,16 @@ public class LoginClient extends RemoteClient {
 		return longValue;
 	}
 
-	private CheatTracker.Infraction loadBanStatusInternal(Connection con, ResultSet rs) throws SQLException {
-		EnumMap<CheatTracker.Infraction, Integer> infractionPoints = new EnumMap<>(CheatTracker.Infraction.class);
-		int highestPoints = 0;
-		CheatTracker.Infraction mainBanReason = null;
-
-		PreparedStatement ips = null;
-		PreparedStatement rbps = null;
-		ResultSet irs;
-
-		try {
-			//load only non-expired infractions - even though the ban
-			//may have been given with infractions that have already
-			//expired, the longest lasting infraction will still remain
-			//the same, and we could just choose the most outstanding
-			//points from the active infractions to send to the client
-			ips = con.prepareStatement("SELECT `expiredate`,`reason`,`severity` FROM `infractions` WHERE `accountid` = ? AND `pardoned` = 0 AND `expiredate` > (UNIX_TIMESTAMP() * 1000) ORDER BY `expiredate` DESC");
-			rbps = con.prepareStatement("DELETE FROM `bans` WHERE `banid` = ?");
-			//there could be multiple bans (account bans, some mac, and others IP)
-			//if that's the case, load all of them and calculate the longest lasting
-			//infraction and the most outstanding infraction reason from a union
-			//of the infractions of all bans.
-			while (rs.next()) {
-				boolean release = true;
-				int totalPoints = 0;
-				ips.setInt(1, rs.getInt(2));
-				irs = null;
-				try {
-					irs = ips.executeQuery();
-					while (irs.next()) {
-						long infractionExpire = irs.getLong(1);
-						CheatTracker.Infraction infractionReason = CheatTracker.Infraction.valueOf(irs.getByte(2));
-						short severity = irs.getShort(3);
-
-						//ban expire time is based on the shortest amount of
-						//time before total points goes below tolerance.
-						//assume ResultSet is iterated in order of `expiredate`
-						//descending
-						if (release && (totalPoints += severity) >= CheatTracker.TOLERANCE) {
-							banExpire = infractionExpire;
-							release = false;
-						}
-
-						//meanwhile, the ban reason sent the client doesn't have
-						//to be paired up to the longest lasting ban. instead,
-						//send the reason that is most responsible for the ban
-						//(i.e. the reason that has the highest sum of points)
-						Integer runningPoints = infractionPoints.get(infractionReason);
-						int updatedPoints = (runningPoints != null ? runningPoints.intValue() : 0) + severity;
-						infractionPoints.put(infractionReason, Integer.valueOf(updatedPoints));
-						if (updatedPoints > highestPoints) {
-							highestPoints = updatedPoints;
-							mainBanReason = infractionReason;
-						}
-					}
-				} finally {
-					DatabaseManager.cleanup(DatabaseType.STATE, irs, null, null);
-				}
-				if (release) {
-					rbps.setInt(1, rs.getInt(1));
-					rbps.addBatch();
-				}
-			}
-			rbps.executeBatch();
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, rbps, null);
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ips, null);
-		}
-		return mainBanReason;
-	}
-
 	private void loadBanStatusFromIdAndIp(Connection con) throws SQLException {
-		banExpire = 0;
-
-		CheatTracker.Infraction banStatus;
-
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			ps = con.prepareStatement("SELECT `banid`,`accountid` FROM `bans` WHERE `accountid` = ? OR `ip` = ?");
-			ps.setInt(1, getAccountId());
-			ps.setLong(2, getIpAddress());
-			rs = ps.executeQuery();
-			banStatus = loadBanStatusInternal(con, rs);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, null);
-		}
-		banReason = banStatus == null ? 0 : banStatus.byteValue();
+		BanStatus status = BanDAO.loadBanStatusFromIdAndIp(con, getAccountId(), getIpAddress());
+		banExpire = status.banExpire();
+		banReason = status.banReason();
 	}
 
 	private void loadBanStatusFromBanId(Connection con, int banId) throws SQLException {
-		banExpire = 0;
-
-		CheatTracker.Infraction banStatus;
-
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			ps = con.prepareStatement("SELECT `banid`,`accountid` FROM `bans` WHERE `banid` = ?");
-			ps.setInt(1, banId);
-			rs = ps.executeQuery();
-			banStatus = loadBanStatusInternal(con, rs);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, null);
-		}
-		banReason = banStatus == null ? 0 : banStatus.byteValue();
+		BanStatus status = BanDAO.loadBanStatusFromBanId(con, banId);
+		banExpire = status.banExpire();
+		banReason = status.banReason();
 	}
 
 	//TODO: Maybe we shouldn't reload all of the account data if we already
@@ -214,97 +124,93 @@ public class LoginClient extends RemoteClient {
 	 */
 	public byte loginResult(String pwd) {
 		byte result;
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT `id`,`password`,`salt`,`pin`,`gender`,`birthday`,`characters`,`connected`,`gm` FROM `accounts` WHERE `name` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("SELECT `id`,`password`,`salt`,`pin`,`gender`,`birthday`,`characters`,`connected`,`gm` FROM `accounts` WHERE `name` = ?")) {
 			ps.setString(1, getAccountName());
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				setAccountId(rs.getInt(1));
-				byte[] passhash = rs.getBytes(2);
-				byte[] salt = rs.getBytes(3);
-				pin = rs.getString(4);
-				gender = rs.getByte(5);
-				birthday = rs.getInt(6);
-				chars = rs.getByte(7);
-				byte onlineStatus = rs.getByte(8);
-				gm = rs.getByte(9);
-				loadBanStatusFromIdAndIp(con);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					setAccountId(rs.getInt(1));
+					byte[] passhash = rs.getBytes(2);
+					byte[] salt = rs.getBytes(3);
+					pin = rs.getString(4);
+					gender = rs.getByte(5);
+					birthday = rs.getInt(6);
+					chars = rs.getByte(7);
+					byte onlineStatus = rs.getByte(8);
+					gm = rs.getByte(9);
+					loadBanStatusFromIdAndIp(con);
 
-				boolean correct;
-				boolean hashUpdate;
-				boolean hasSalt = salt != null;
-				switch (passhash.length) {
-					case 20: //sha-1 (160 bits = 20 bytes)
-						correct = hasSalt && HashFunctions.checkSaltedSha1Hash(passhash, pwd, salt) || !hasSalt && HashFunctions.checkSha1Hash(passhash, pwd);
-						//only update to SHA512 w/ salt if we are sure the given password matches the SHA1 hash
-						hashUpdate = correct;
-						break;
-					case 64: //sha-512 (512 bits = 64 bytes)
-						correct = hasSalt && HashFunctions.checkSaltedSha512Hash(passhash, pwd, salt) || !hasSalt && HashFunctions.checkSha512Hash(passhash, pwd);
-						//only update to SHA512 w/ salt if we are sure the given password matches and we don't already have a salt
-						hashUpdate = correct && !hasSalt;
-						break;
-					case 5:
-					case 6:
-					case 7:
-					case 8:
-					case 9:
-					case 10:
-					case 11:
-					case 12: //plaintext - client only sends password (5 <= chars <= 12)
-						correct = new String(passhash, HashFunctions.ASCII).equals(pwd);
-						//only update to SHA512 w/ salt if we are sure the given password matches the plaintext
-						hashUpdate = correct;
-						break;
-					default:
-						correct = false;
-						//don't update to SHA512 w/ salt if we can't verify the given password
-						hashUpdate = false;
-						break;
-				}
-				if (correct) {
-					if (onlineStatus != STATUS_NOTLOGGEDIN) {
-						//TODO: there is a high chance that the player is not really
-						//in game if they have an onlineStatus of STATUS_MIGRATION.
-						//Make a way to check if they really are/will be connected
-						//to a server
-						result = 7;
-					} else if (banExpire > System.currentTimeMillis()) {
-						result = 2;
-					} else {
-						rs.close();
-						ps.close();
-						if (hashUpdate) {
-							salt = HashFunctions.makeSalt();
-							passhash = HashFunctions.makeSaltedSha512Hash(pwd, salt);
-							ps = con.prepareStatement("UPDATE `accounts` SET `connected` = ?, `password` = ?, `salt` = ? WHERE `id` = ?");
-							ps.setByte(1, STATUS_INLOGIN);
-							ps.setBytes(2, passhash);
-							ps.setBytes(3, salt);
-							ps.setInt(4, getAccountId());
+					boolean correct;
+					boolean hashUpdate;
+					boolean hasSalt = salt != null;
+					switch (passhash.length) {
+						case 20: //sha-1 (160 bits = 20 bytes)
+							correct = hasSalt && HashFunctions.checkSaltedSha1Hash(passhash, pwd, salt) || !hasSalt && HashFunctions.checkSha1Hash(passhash, pwd);
+							//only update to SHA512 w/ salt if we are sure the given password matches the SHA1 hash
+							hashUpdate = correct;
+							break;
+						case 64: //sha-512 (512 bits = 64 bytes)
+							correct = hasSalt && HashFunctions.checkSaltedSha512Hash(passhash, pwd, salt) || !hasSalt && HashFunctions.checkSha512Hash(passhash, pwd);
+							//only update to SHA512 w/ salt if we are sure the given password matches and we don't already have a salt
+							hashUpdate = correct && !hasSalt;
+							break;
+						case 5:
+						case 6:
+						case 7:
+						case 8:
+						case 9:
+						case 10:
+						case 11:
+						case 12: //plaintext - client only sends password (5 <= chars <= 12)
+							correct = new String(passhash, HashFunctions.ASCII).equals(pwd);
+							//only update to SHA512 w/ salt if we are sure the given password matches the plaintext
+							hashUpdate = correct;
+							break;
+						default:
+							correct = false;
+							//don't update to SHA512 w/ salt if we can't verify the given password
+							hashUpdate = false;
+							break;
+					}
+					if (correct) {
+						if (onlineStatus != STATUS_NOTLOGGEDIN) {
+							//TODO: there is a high chance that the player is not really
+							//in game if they have an onlineStatus of STATUS_MIGRATION.
+							//Make a way to check if they really are/will be connected
+							//to a server
+							result = 7;
+						} else if (banExpire > System.currentTimeMillis()) {
+							result = 2;
 						} else {
-							ps = con.prepareStatement("UPDATE `accounts` SET `connected` = ? WHERE `id` = ?");
-							ps.setByte(1, STATUS_INLOGIN);
-							ps.setInt(2, getAccountId());
+							if (hashUpdate) {
+								salt = HashFunctions.makeSalt();
+								passhash = HashFunctions.makeSaltedSha512Hash(pwd, salt);
+								try (PreparedStatement ups = con.prepareStatement("UPDATE `accounts` SET `connected` = ?, `password` = ?, `salt` = ? WHERE `id` = ?")) {
+									ups.setByte(1, STATUS_INLOGIN);
+									ups.setBytes(2, passhash);
+									ups.setBytes(3, salt);
+									ups.setInt(4, getAccountId());
+									ups.executeUpdate();
+								}
+							} else {
+								try (PreparedStatement ups = con.prepareStatement("UPDATE `accounts` SET `connected` = ? WHERE `id` = ?")) {
+									ups.setByte(1, STATUS_INLOGIN);
+									ups.setInt(2, getAccountId());
+									ups.executeUpdate();
+								}
+							}
+							result = 0;
 						}
-						ps.executeUpdate();
-						result = 0;
+					} else {
+						result = 4;
 					}
 				} else {
-					result = 4;
+					result = 5;
 				}
-			} else {
-				result = 5;
 			}
 		} catch (SQLException ex) {
 			LOG.log(Level.SEVERE, "Could not fetch login information of account " + getAccountName(), ex);
 			result = 8;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 		return result;
 	}
@@ -335,35 +241,19 @@ public class LoginClient extends RemoteClient {
 
 	public void setGender(byte gender) {
 		this.gender = gender;
-		Connection con = null;
-		PreparedStatement ps = null;
 		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("UPDATE `accounts` SET `gender` = ? WHERE `id` = ?");
-			ps.setByte(1, gender);
-			ps.setInt(2, getAccountId());
-			ps.executeUpdate();
-		} catch (SQLException ex) {
+			AccountDAO.updateGender(getAccountId(), gender);
+		} catch (DataAccessException ex) {
 			LOG.log(Level.WARNING, "Could not set gender of account " + getAccountId(), ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, con);
 		}
 	}
 
 	public void setPin(String pin) {
 		this.pin = pin;
-		Connection con = null;
-		PreparedStatement ps = null;
 		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("UPDATE `accounts` SET `pin` = ? WHERE `id` = ?");
-			ps.setString(1, pin);
-			ps.setInt(2, getAccountId());
-			ps.executeUpdate();
-		} catch (SQLException ex) {
+			AccountDAO.updatePin(getAccountId(), pin);
+		} catch (DataAccessException ex) {
 			LOG.log(Level.WARNING, "Could not set pin of account " + getAccountId(), ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, con);
 		}
 	}
 
@@ -372,22 +262,17 @@ public class LoginClient extends RemoteClient {
 			return DELETE_ERROR_WRONG_BIRTHDAY;
 		}
 
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT EXISTS(SELECT 1 FROM `guildmembers` WHERE `characterid` = ? AND `rank` = 1 LIMIT 1)");
-			ps.setInt(1, characterid);
-			rs = ps.executeQuery();
-			rs.next();
-			if (rs.getBoolean(1)) {
+			if (GuildDAO.isGuildMaster(characterid)) {
 				return DELETE_ERROR_GUILD_MASTER;
 			}
-			rs.close();
-			ps.close();
+		} catch (DataAccessException ex) {
+			LOG.log(Level.WARNING, "Could not check guild master status for character " + characterid, ex);
+			return DELETE_ERROR_SYSTEM;
+		}
 
-			ps = con.prepareStatement("DELETE FROM `characters` WHERE `id` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("DELETE FROM `characters` WHERE `id` = ?")) {
 			ps.setInt(1, characterid);
 			int rowsUpdated = ps.executeUpdate();
 			if (rowsUpdated != 0) {
@@ -398,8 +283,6 @@ public class LoginClient extends RemoteClient {
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not delete character " + characterid + " of account " + getAccountId(), ex);
 			return DELETE_ERROR_SYSTEM;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, con);
 		}
 	}
 
@@ -433,41 +316,36 @@ public class LoginClient extends RemoteClient {
 			checkBanQuery.replace(length - 2, length, ")");
 		}
 
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-
-			ps = con.prepareStatement("UPDATE `accounts` SET `recentmacs` = ?, `recentip` = ? WHERE `id` = ?");
-			ps.setBytes(1, macListCombined);
-			ps.setLong(2, getIpAddress());
-			ps.setInt(3, getAccountId());
-			ps.executeUpdate();
-			ps.close();
-
-			ps = con.prepareStatement(checkBanQuery.toString());
-			for (int i = 0; i < macListArray.length; i++) {
-				ps.setBytes(i + 1, macListArray[i]);
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			try (PreparedStatement ps = con.prepareStatement("UPDATE `accounts` SET `recentmacs` = ?, `recentip` = ? WHERE `id` = ?")) {
+				ps.setBytes(1, macListCombined);
+				ps.setLong(2, getIpAddress());
+				ps.setInt(3, getAccountId());
+				ps.executeUpdate();
 			}
-			rs = ps.executeQuery();
-			//don't load duplicate ban ids
-			Set<Integer> banIds = new HashSet<>();
-			while (rs.next()) {
-				banIds.add(Integer.valueOf(rs.getInt(1)));
-			}
-			for (Integer banId : banIds) {
-				loadBanStatusFromBanId(con, banId.intValue());
-				if (banExpire > System.currentTimeMillis()) {
-					return true;
+
+			try (PreparedStatement ps = con.prepareStatement(checkBanQuery.toString())) {
+				for (int i = 0; i < macListArray.length; i++) {
+					ps.setBytes(i + 1, macListArray[i]);
 				}
+				//don't load duplicate ban ids
+				Set<Integer> banIds = new HashSet<>();
+				try (ResultSet rs = ps.executeQuery()) {
+					while (rs.next()) {
+						banIds.add(Integer.valueOf(rs.getInt(1)));
+					}
+				}
+				for (Integer banId : banIds) {
+					loadBanStatusFromBanId(con, banId.intValue());
+					if (banExpire > System.currentTimeMillis()) {
+						return true;
+					}
+				}
+				return false;
 			}
-			return false;
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not update and check MAC addresses of account " + getAccountId(), e);
 			return false;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 	}
 
@@ -487,7 +365,7 @@ public class LoginClient extends RemoteClient {
 	}
 
 	@Override
-	public void disconnected() {
+	public void onDisconnected() {
 		if (getSession().getQueuedReads() == 0) {
 			dissociate();
 		} else {

@@ -20,6 +20,7 @@ package argonms.shop.net.external;
 
 import argonms.common.net.external.ClientPacketProcessor;
 import argonms.common.net.external.ClientRecvOps;
+import argonms.common.net.external.PacketDispatchTable;
 import argonms.common.util.input.LittleEndianReader;
 import argonms.shop.net.external.handler.*;
 import java.util.logging.Level;
@@ -28,42 +29,23 @@ import java.util.logging.Logger;
 public class ClientShopPacketProcessor extends ClientPacketProcessor<ShopClient> {
 	private static final Logger LOG = Logger.getLogger(ClientPacketProcessor.class.getName());
 
+	private static final PacketDispatchTable<ShopClient> TABLE = new PacketDispatchTable<ShopClient>()
+		.register(ClientRecvOps.PLAYER_CONNECTED, EnterShopHandler::handlePlayerConnection)
+		.register(ClientRecvOps.PONG,             (r, sc) -> sc.getSession().receivedPong())
+		.register(ClientRecvOps.CLIENT_ERROR,     (r, sc) -> sc.clientError(r.readLengthPrefixedString()))
+		.noOp(ClientRecvOps.AES_IV_UPDATE_REQUEST)
+		.register(ClientRecvOps.CHANGE_MAP,       CashShopHandler::handleReturnToChannel)
+		.noOp(ClientRecvOps.MOVE_PET)
+		.register(ClientRecvOps.CHECK_CASH,       CashShopHandler::handleCheckCash)
+		.register(ClientRecvOps.BUY_CS_ITEM,      CashShopHandler::handleAction)
+		.register(ClientRecvOps.COUPON_CODE,      CashShopHandler::handleRedeemCoupon)
+		.register(ClientRecvOps.PLAYER_UPDATE,    (r, sc) -> sc.getPlayer().saveCharacter());
+
 	@Override
 	public void process(LittleEndianReader reader, ShopClient sc) {
-		switch (reader.readShort()) {
-			case ClientRecvOps.PLAYER_CONNECTED:
-				EnterShopHandler.handlePlayerConnection(reader, sc);
-				break;
-			case ClientRecvOps.PONG:
-				sc.getSession().receivedPong();
-				break;
-			case ClientRecvOps.CLIENT_ERROR:
-				sc.clientError(reader.readLengthPrefixedString());
-				break;
-			case ClientRecvOps.AES_IV_UPDATE_REQUEST:
-				//no-op
-				break;
-			case ClientRecvOps.CHANGE_MAP:
-				CashShopHandler.handleReturnToChannel(reader, sc);
-				break;
-			case ClientRecvOps.MOVE_PET:
-				//no-op
-				break;
-			case ClientRecvOps.CHECK_CASH:
-				CashShopHandler.handleCheckCash(reader, sc);
-				break;
-			case ClientRecvOps.BUY_CS_ITEM:
-				CashShopHandler.handleAction(reader, sc);
-				break;
-			case ClientRecvOps.COUPON_CODE:
-				CashShopHandler.handleRedeemCoupon(reader, sc);
-				break;
-			case ClientRecvOps.PLAYER_UPDATE:
-				sc.getPlayer().saveCharacter();
-				break;
-			default:
-				LOG.log(Level.FINE, "Received unhandled client packet {0} bytes long:\n{1}", new Object[]{reader.available() + 2, reader});
-				break;
+		if (!TABLE.dispatch(reader, sc)) {
+			LOG.log(Level.FINE, "Received unhandled client packet {0} bytes long:\n{1}",
+					new Object[]{reader.available() + 2, reader});
 		}
 	}
 }
