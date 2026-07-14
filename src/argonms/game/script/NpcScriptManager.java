@@ -38,6 +38,7 @@ import argonms.game.script.binding.ScriptPlayerNpc;
 import argonms.game.script.binding.ScriptQuest;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -100,7 +101,7 @@ public class NpcScriptManager {
 		Context cx = Context.enter();
 		ScriptNpc convoMan = null;
 		try {
-			FileReader reader = new FileReader(npcPath + scriptName + ".js");
+			FileReader reader = new FileReader(npcPath + scriptName + ".js", StandardCharsets.UTF_8);
 			Scriptable globalScope = cx.initStandardObjects();
 			cx.setOptimizationLevel(-1); // must use interpreter mode
 			cx.setLanguageVersion(Context.VERSION_1_7);
@@ -133,7 +134,7 @@ public class NpcScriptManager {
 		Context cx = Context.enter();
 		ScriptQuest convoMan = null;
 		try {
-			FileReader reader = new FileReader(questPath + scriptName + ".js");
+			FileReader reader = new FileReader(questPath + scriptName + ".js", StandardCharsets.UTF_8);
 			Scriptable globalScope = cx.initStandardObjects();
 			cx.setOptimizationLevel(-1); // must use interpreter mode
 			cx.setLanguageVersion(Context.VERSION_1_7);

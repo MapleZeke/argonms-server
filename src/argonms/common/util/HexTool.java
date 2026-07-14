@@ -18,6 +18,8 @@
 
 package argonms.common.util;
 
+import java.util.Locale;
+
 /**
  * Provides a class for manipulating hexadecimal numbers.
  * 
@@ -55,7 +57,7 @@ public final class HexTool {
 	 * @return The hexadecimal representation of <code>intValue</code>.
 	 */
 	public static String toString(int intValue) {
-		return Integer.toHexString(intValue).toUpperCase();
+		return Integer.toHexString(intValue).toUpperCase(Locale.ROOT);
 	}
 
 	/**

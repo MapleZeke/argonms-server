@@ -23,6 +23,7 @@ import argonms.game.character.GameCharacter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -68,7 +69,7 @@ public abstract class QuestDataLoader {
 	public List<String> getSimilarNamedQuests(String reference) {
 		List<String> retSkills = new ArrayList<>();
 		for (Entry<Short, String> name : questNames.entrySet())
-			if (name.getValue().toLowerCase().contains(reference.toLowerCase()))
+			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT)))
 				retSkills.add(name.getKey() + " - " + name.getValue());
 		return retSkills;
 	}

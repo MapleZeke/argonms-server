@@ -21,6 +21,7 @@ package argonms.game.command;
 import argonms.common.UserPrivileges;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -106,7 +107,7 @@ public class TownCommandHandler extends AbstractCommandDefinition<CommandCaller>
 		if (name.equalsIgnoreCase("list")) {
 			resp.printOut("Valid locations: " + getList());
 		} else {
-			Integer mapId = lookup.get(name.toLowerCase());
+			Integer mapId = lookup.get(name.toLowerCase(Locale.ROOT));
 			if (mapId != null)
 				target.mutate(Collections.singletonList(new CommandTarget.CharacterManipulation(CommandTarget.CharacterManipulationKey.CHANGE_MAP, new CommandTarget.MapValue(mapId))));
 			else

@@ -22,6 +22,7 @@ import argonms.common.util.input.LittleEndianByteArrayReader;
 import argonms.common.util.input.LittleEndianReader;
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,7 +50,7 @@ public class KvjReactorDataLoader extends ReactorDataLoader {
 
 	@Override
 	protected void load(int reactorid) {
-		String id = "%07d".formatted(reactorid);
+		String id = String.format(Locale.ROOT, "%07d", reactorid);
 
 		ReactorStats stats = null;
 		try {
@@ -88,7 +89,7 @@ public class KvjReactorDataLoader extends ReactorDataLoader {
 	public boolean canLoad(int reactorid) {
 		if (reactorStats.containsKey(reactorid))
 			return true;
-		String id = "%07d".formatted(reactorid);
+		String id = String.format(Locale.ROOT, "%07d", reactorid);
 		File f = new File(new StringBuilder(dataPath).append("Reactor.wz").append(File.separator).append(id).append(".img.kvj").toString());
 		return f.exists();
 	}

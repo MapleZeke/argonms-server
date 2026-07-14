@@ -29,6 +29,7 @@ import argonms.game.field.GameMap;
 import argonms.game.net.external.GamePackets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ScheduledFuture;
 
 /**
@@ -52,7 +53,7 @@ public abstract class FreeMarketShop extends Miniroom {
 	}
 
 	public void banVisitor(String name) {
-		bannedPlayers.add(name.toLowerCase());
+		bannedPlayers.add(name.toLowerCase(Locale.ROOT));
 		GameCharacter v;
 		for (byte i = 1; i < getMaxPlayers(); i++) {
 			if ((v = getPlayerByPosition(i)) != null && v.getName().equalsIgnoreCase(name)) {
@@ -64,7 +65,7 @@ public abstract class FreeMarketShop extends Miniroom {
 
 	@Override
 	public boolean isPlayerBanned(GameCharacter p) {
-		return bannedPlayers.contains(p.getName().toLowerCase());
+		return bannedPlayers.contains(p.getName().toLowerCase(Locale.ROOT));
 	}
 
 	protected abstract byte[] getSlotUpdateMessage();

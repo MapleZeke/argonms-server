@@ -22,6 +22,7 @@ import argonms.common.util.input.LittleEndianByteArrayReader;
 import argonms.common.util.input.LittleEndianReader;
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,7 +58,7 @@ public class KvjMapDataLoader extends MapDataLoader {
 
 	@Override
 	protected void load(int mapid) {
-		String id = "%09d".formatted(mapid);
+		String id = String.format(Locale.ROOT, "%09d", mapid);
 
 		MapStats stats = null;
 		try {
@@ -99,7 +100,7 @@ public class KvjMapDataLoader extends MapDataLoader {
 	public boolean canLoad(int mapid) {
 		if (mapStats.containsKey(Integer.valueOf(mapid)))
 			return true;
-		String id = "%09d".formatted(mapid);
+		String id = String.format(Locale.ROOT, "%09d", mapid);
 		File f = new File(new StringBuilder(dataPath).append("Map.wz").append(File.separator).append("Map").append(File.separator).append("Map").append(id.substring(0, 1)).append(id).append(".img.kvj").toString());
 		return f.exists();
 	}

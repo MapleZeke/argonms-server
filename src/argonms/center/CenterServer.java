@@ -33,6 +33,7 @@ import argonms.common.util.DatabaseManager.DatabaseType;
 import argonms.common.util.Scheduler;
 import argonms.common.util.output.LittleEndianByteArrayWriter;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -83,7 +84,7 @@ public class CenterServer {
 		int telnetPort;
 		boolean useNio;
 		try {
-			FileReader fr = new FileReader(System.getProperty("argonms.center.config.file", "center.properties"));
+			FileReader fr = new FileReader(System.getProperty("argonms.center.config.file", "center.properties"), StandardCharsets.UTF_8);
 			prop.read(fr);
 			fr.close();
 			port = prop.getInt("argonms.center.port");
@@ -107,7 +108,7 @@ public class CenterServer {
 		}
 		prop = new PropertiesConfiguration();
 		try {
-			FileReader fr = new FileReader(System.getProperty("argonms.db.config.file", "db.properties"));
+			FileReader fr = new FileReader(System.getProperty("argonms.db.config.file", "db.properties"), StandardCharsets.UTF_8);
 			prop.read(fr);
 			fr.close();
 			DatabaseManager.setProps(prop, false, useNio);
@@ -141,7 +142,7 @@ public class CenterServer {
 
 		Scanner scan = null;
 		try {
-			scan = new Scanner(new FileReader(System.getProperty("argonms.ct.macbanblacklist.file", "macbanblacklist.txt")));
+			scan = new Scanner(new FileReader(System.getProperty("argonms.ct.macbanblacklist.file", "macbanblacklist.txt"), StandardCharsets.UTF_8));
 			CheatTracker.setBlacklistedMacBans(scan);
 		} catch (IOException ex) {
 			LOG.log(Level.SEVERE, "Could not load macban blacklist!", ex);

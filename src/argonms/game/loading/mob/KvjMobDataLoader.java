@@ -23,6 +23,7 @@ import argonms.common.util.input.LittleEndianByteArrayReader;
 import argonms.common.util.input.LittleEndianReader;
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -69,7 +70,7 @@ public class KvjMobDataLoader extends MobDataLoader {
 
 	@Override
 	protected void load(int mobid) {
-		String id = "%07d".formatted(mobid);
+		String id = String.format(Locale.ROOT, "%07d", mobid);
 
 		MobStats stats = null;
 		try {
@@ -108,7 +109,7 @@ public class KvjMobDataLoader extends MobDataLoader {
 	public boolean canLoad(int mobid) {
 		if (mobStats.containsKey(mobid))
 			return true;
-		String id = "%07d".formatted(mobid);
+		String id = String.format(Locale.ROOT, "%07d", mobid);
 		File f = new File(new StringBuilder(dataPath).append("Mob.wz").append(File.separator).append(id).append(".img.kvj").toString());
 		return f.exists();
 	}

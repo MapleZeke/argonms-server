@@ -20,6 +20,7 @@ package argonms.shop.loading.limitedcommodity;
 
 import argonms.shop.ShopServer;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Level;
@@ -48,7 +49,7 @@ public class JsonLimitedCommodityDataLoader extends LimitedCommodityDataLoader {
 		Context cx = Context.enter();
 		FileReader fr = null;
 		try {
-			fr = new FileReader(ShopServer.getInstance().getLimitedCommodityPath());
+			fr = new FileReader(ShopServer.getInstance().getLimitedCommodityPath(), StandardCharsets.UTF_8);
 			final Scriptable globalScope = cx.initStandardObjects();
 			Object json = NativeJSON.parse(cx, globalScope, Kit.readReader(fr), new Callable() {
 				@Override

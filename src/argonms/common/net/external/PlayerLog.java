@@ -20,6 +20,7 @@ package argonms.common.net.external;
 
 import argonms.common.character.Player;
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,12 +38,12 @@ public class PlayerLog<T extends Player> {
 	}
 
 	public void addPlayer(T p) {
-		nameToPlayerMapping.put(p.getName().toLowerCase(), p);
+		nameToPlayerMapping.put(p.getName().toLowerCase(Locale.ROOT), p);
 		idToPlayerMapping.put(Integer.valueOf(p.getDataId()), p);
 	}
 
 	public void deletePlayer(T p) {
-		nameToPlayerMapping.remove(p.getName().toLowerCase());
+		nameToPlayerMapping.remove(p.getName().toLowerCase(Locale.ROOT));
 		idToPlayerMapping.remove(Integer.valueOf(p.getDataId()));
 	}
 
@@ -51,7 +52,7 @@ public class PlayerLog<T extends Player> {
 	}
 
 	public T getPlayer(String name) {
-		return nameToPlayerMapping.get(name.toLowerCase());
+		return nameToPlayerMapping.get(name.toLowerCase(Locale.ROOT));
 	}
 
 	public short getConnectedCount() {

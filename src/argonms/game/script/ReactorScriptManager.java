@@ -28,6 +28,7 @@ import argonms.game.script.binding.ScriptPlayer;
 import argonms.game.script.binding.ScriptReactor;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -52,7 +53,7 @@ public class ReactorScriptManager {
 	public boolean runScript(String scriptName, Reactor reactor, GameClient client) {
 		Context cx = Context.enter();
 		try {
-			FileReader reader = new FileReader(reactorScriptPath + scriptName + ".js");
+			FileReader reader = new FileReader(reactorScriptPath + scriptName + ".js", StandardCharsets.UTF_8);
 			Scriptable globalScope = cx.initStandardObjects();
 			cx.setOptimizationLevel(1);
 			cx.setLanguageVersion(Context.VERSION_1_7);

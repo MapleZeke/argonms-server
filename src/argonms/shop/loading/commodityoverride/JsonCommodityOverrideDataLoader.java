@@ -20,6 +20,7 @@ package argonms.shop.loading.commodityoverride;
 
 import argonms.shop.ShopServer;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Map;
@@ -48,7 +49,7 @@ public class JsonCommodityOverrideDataLoader extends CommodityOverrideDataLoader
 		Context cx = Context.enter();
 		FileReader fr = null;
 		try {
-			fr = new FileReader(ShopServer.getInstance().getCommodityOverridePath());
+			fr = new FileReader(ShopServer.getInstance().getCommodityOverridePath(), StandardCharsets.UTF_8);
 			final Scriptable globalScope = cx.initStandardObjects();
 			Object json = NativeJSON.parse(cx, globalScope, Kit.readReader(fr), new Callable() {
 				@Override

@@ -40,6 +40,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
@@ -574,7 +575,7 @@ public class CommandProcessor {
 
 				long startMillis = GameServer.getChannel(caller.getChannel()).getTimeStarted();
 				long upTimeMillis = System.currentTimeMillis() - startMillis;
-				DateFormat fmt = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.LONG);
+				DateFormat fmt = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.LONG, Locale.ROOT);
 				resp.printOut("This game server was started on " + fmt.format(startMillis) + ".");
 
 				long upDays = upTimeMillis / (1000 * 60 * 60 * 24);
@@ -606,7 +607,7 @@ public class CommandProcessor {
 
 	public void process(GameCharacter p, String line) {
 		String[] args = argSplit.split(line);
-		AbstractCommandDefinition<CommandCaller> def1 = universalCommands.get(args[0].toLowerCase());
+		AbstractCommandDefinition<CommandCaller> def1 = universalCommands.get(args[0].toLowerCase(Locale.ROOT));
 		CommandOutput resp = new CommandOutput.InChat(p.getClient());
 		if (def1 != null && p.getPrivilegeLevel() >= def1.minPrivilegeLevel()) {
 			CommandArguments argsContainer = new CommandArguments(args);
@@ -617,7 +618,7 @@ public class CommandProcessor {
 				resp.printOut(def1.getHelpMessage());
 			}
 		} else {
-			AbstractCommandDefinition<GameCharacterCommandCaller> def2 = inGameOnlyCommands.get(args[0].toLowerCase());
+			AbstractCommandDefinition<GameCharacterCommandCaller> def2 = inGameOnlyCommands.get(args[0].toLowerCase(Locale.ROOT));
 			if (def2 != null && p.getPrivilegeLevel() >= def2.minPrivilegeLevel()) {
 				CommandArguments argsContainer = new CommandArguments(args);
 				if (!argsContainer.hasOpt("--help")) {
@@ -659,12 +660,12 @@ public class CommandProcessor {
 				}
 			} else {
 				String param = args.next();
-				AbstractCommandDefinition def = universalCommands.get(param.toLowerCase());
+				AbstractCommandDefinition def = universalCommands.get(param.toLowerCase(Locale.ROOT));
 				if (def == null || caller.getPrivilegeLevel() < def.minPrivilegeLevel())
 					if (caller.isInGame())
-						def = inGameOnlyCommands.get(param.toLowerCase());
+						def = inGameOnlyCommands.get(param.toLowerCase(Locale.ROOT));
 					else
-						def = byTelnetOnlyCommands.get(param.toLowerCase());
+						def = byTelnetOnlyCommands.get(param.toLowerCase(Locale.ROOT));
 				if (def == null || caller.getPrivilegeLevel() < def.minPrivilegeLevel()) {
 					resp.printErr(param + " is not a valid command.");
 					resp.printErr(getUsage());

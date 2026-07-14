@@ -24,7 +24,9 @@ import argonms.game.character.MapMemoryVariable;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  *
@@ -120,7 +122,7 @@ public class DisciplinaryCommandHandlers implements CommandCollection<CommandCal
 					expireCal.set(Calendar.SECOND, 0);
 					expireCal.set(Calendar.MILLISECOND, 0);
 
-					if (expireCal.before(Calendar.getInstance())) {
+					if (expireCal.before(Calendar.getInstance(TimeZone.getDefault(), Locale.ROOT))) {
 						resp.printErr("Expire date must not be in the past.");
 						resp.printErr(getUsage());
 						return;

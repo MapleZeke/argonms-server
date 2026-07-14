@@ -22,6 +22,7 @@ import argonms.common.loading.DataFileType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -79,7 +80,7 @@ public abstract class StringDataLoader {
 	public List<String> getSimilarNamedItems(String reference) {
 		List<String> retItems = new ArrayList<>();
 		for (Entry<Integer, String> name : itemNames.entrySet())
-			if (name.getValue().toLowerCase().contains(reference.toLowerCase()))
+			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT)))
 				retItems.add(name.getKey() + " - " + name.getValue());
 		return retItems;
 	}
@@ -87,7 +88,7 @@ public abstract class StringDataLoader {
 	public List<String> getSimilarNamedSkills(String reference) {
 		List<String> retSkills = new ArrayList<>();
 		for (Entry<Integer, String> name : skillNames.entrySet())
-			if (name.getValue().toLowerCase().contains(reference.toLowerCase()))
+			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT)))
 				retSkills.add(name.getKey() + " - " + name.getValue());
 		return retSkills;
 	}
@@ -100,7 +101,7 @@ public abstract class StringDataLoader {
 				streetAndMap += ": " + name.getValue();
 			else
 				streetAndMap = name.getValue();
-			if (streetAndMap.toLowerCase().contains(reference.toLowerCase()))
+			if (streetAndMap.toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT)))
 				retMaps.add(name.getKey() + " - " + streetAndMap);
 		}
 		return retMaps;
@@ -109,7 +110,7 @@ public abstract class StringDataLoader {
 	public List<String> getSimilarNamedMobs(String reference) {
 		List<String> retMobs = new ArrayList<>();
 		for (Entry<Integer, String> name : mobNames.entrySet())
-			if (name.getValue().toLowerCase().contains(reference.toLowerCase()))
+			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT)))
 				retMobs.add(name.getKey() + " - " + name.getValue());
 		return retMobs;
 	}
@@ -117,7 +118,7 @@ public abstract class StringDataLoader {
 	public List<String> getSimilarNamedNpcs(String reference) {
 		List<String> retNpcs = new ArrayList<>();
 		for (Entry<Integer, String> name : npcNames.entrySet())
-			if (name.getValue().toLowerCase().contains(reference.toLowerCase()))
+			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT)))
 				retNpcs.add(name.getKey() + " - " + name.getValue());
 		return retNpcs;
 	}

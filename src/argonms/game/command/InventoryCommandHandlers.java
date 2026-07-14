@@ -23,6 +23,7 @@ import argonms.common.character.inventory.Inventory;
 import argonms.common.loading.item.ItemDataLoader;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -67,7 +68,7 @@ public class InventoryCommandHandlers implements CommandCollection<CommandCaller
 			}
 			Inventory.InventoryType type;
 			try {
-				type = Inventory.InventoryType.valueOf(args.next().toUpperCase());
+				type = Inventory.InventoryType.valueOf(args.next().toUpperCase(Locale.ROOT));
 			} catch (IllegalArgumentException e) {
 				resp.printErr("Please specify the inventory type you wish to clear slots of.");
 				resp.printErr(getUsage());

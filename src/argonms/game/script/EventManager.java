@@ -23,6 +23,7 @@ import argonms.common.util.collections.Pair;
 import argonms.game.script.binding.ScriptEvent;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -66,7 +67,7 @@ public class EventManager {
 		EventManipulator delegator;
 		Context cx = Context.enter();
 		try {
-			FileReader reader = new FileReader(eventPath + scriptName + ".js");
+			FileReader reader = new FileReader(eventPath + scriptName + ".js", StandardCharsets.UTF_8);
 			Scriptable globalScope = cx.initStandardObjects();
 			cx.setOptimizationLevel(1);
 			cx.setLanguageVersion(Context.VERSION_1_7);

@@ -20,6 +20,7 @@ package argonms.common.character;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -76,7 +77,7 @@ public class QuestEntry {
 	public String getData() {
 		StringBuilder sb = new StringBuilder(mobCount.size() * 3);
 		for (AtomicInteger c : mobCount.values())
-			sb.append("%03d".formatted(c.get()));
+			sb.append(String.format(Locale.ROOT, "%03d", c.get()));
 		return sb.toString();
 	}
 

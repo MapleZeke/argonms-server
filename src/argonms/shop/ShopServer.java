@@ -45,6 +45,7 @@ import argonms.shop.net.external.ShopClient;
 import argonms.shop.net.internal.ShopCenterInterface;
 import argonms.shop.net.internal.ShopCrossServerSynchronization;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -123,7 +124,7 @@ public class ShopServer implements LocalServer {
 		int centerPort;
 		String authKey;
 		try {
-			FileReader fr = new FileReader(System.getProperty("argonms.shop.config.file", "shop.properties"));
+			FileReader fr = new FileReader(System.getProperty("argonms.shop.config.file", "shop.properties"), StandardCharsets.UTF_8);
 			prop.read(fr);
 			fr.close();
 			address = prop.getString("argonms.shop.host");
@@ -167,7 +168,7 @@ public class ShopServer implements LocalServer {
 		boolean mcdb = wzType == DataFileType.MCDB;
 		prop = new PropertiesConfiguration();
 		try {
-			FileReader fr = new FileReader(System.getProperty("argonms.db.config.file", "db.properties"));
+			FileReader fr = new FileReader(System.getProperty("argonms.db.config.file", "db.properties"), StandardCharsets.UTF_8);
 			prop.read(fr);
 			fr.close();
 			DatabaseManager.setProps(prop, mcdb, useNio);
@@ -214,10 +215,10 @@ public class ShopServer implements LocalServer {
 
 		Scanner scan = null;
 		try {
-			scan = new Scanner(new FileReader(System.getProperty("argonms.ct.macbanblacklist.file", "macbanblacklist.txt")));
+			scan = new Scanner(new FileReader(System.getProperty("argonms.ct.macbanblacklist.file", "macbanblacklist.txt"), StandardCharsets.UTF_8));
 			CheatTracker.setBlacklistedMacBans(scan);
 			scan.close();
-			scan = new Scanner(new FileReader(System.getProperty("argonms.shop.blockedserials.file", "cashshopblockedserialnumbers.txt")));
+			scan = new Scanner(new FileReader(System.getProperty("argonms.shop.blockedserials.file", "cashshopblockedserialnumbers.txt"), StandardCharsets.UTF_8));
 			setBlockedSerials(scan);
 		} catch (IOException ex) {
 			LOG.log(Level.SEVERE, "Could not load macban and SN blacklist!", ex);

@@ -26,6 +26,7 @@ import argonms.game.script.binding.ScriptPlayer;
 import argonms.game.script.binding.ScriptPortal;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -57,7 +58,7 @@ public class PortalScriptManager {
 
 		Context cx = Context.enter();
 		try {
-			FileReader reader = new FileReader(portalPath + scriptName + ".js");
+			FileReader reader = new FileReader(portalPath + scriptName + ".js", StandardCharsets.UTF_8);
 			Scriptable globalScope = cx.initStandardObjects();
 			cx.setOptimizationLevel(1);
 			cx.setLanguageVersion(Context.VERSION_1_7);

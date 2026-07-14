@@ -24,6 +24,7 @@ import argonms.common.util.input.LittleEndianReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -55,7 +56,7 @@ public class KvjSkillDataLoader extends SkillDataLoader {
 
 	@Override
 	protected void loadPlayerSkill(int skillid) {
-		String id = "%07d".formatted(skillid);
+		String id = String.format(Locale.ROOT, "%07d", skillid);
 
 		try {
 			Integer key = Integer.valueOf(Integer.parseInt(id.substring(0, 3)));
@@ -119,7 +120,7 @@ public class KvjSkillDataLoader extends SkillDataLoader {
 			return false;
 		//TODO: actually load the file to see if the skill exists so we can use
 		//this method as an "does exist" instead of just "is loadable"?
-		String id = "%07d".formatted(skillid);
+		String id = String.format(Locale.ROOT, "%07d", skillid);
 		File f = new File(new StringBuilder(dataPath).append("Skill.wz").append(File.separator).append(id.substring(0, 3)).append(".img.kvj").toString());
 		return f.exists();
 	}

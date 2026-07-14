@@ -36,6 +36,7 @@ import argonms.login.net.external.LoginClient;
 import argonms.login.net.internal.LoginCenterInterface;
 import java.awt.Point;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -115,7 +116,7 @@ public class LoginServer implements LocalServer {
 		int centerPort;
 		String authKey;
 		try {
-			FileReader fr = new FileReader(System.getProperty("argonms.login.config.file", "login.properties"));
+			FileReader fr = new FileReader(System.getProperty("argonms.login.config.file", "login.properties"), StandardCharsets.UTF_8);
 			prop.read(fr);
 			fr.close();
 			address = prop.getString("argonms.login.host");
@@ -171,7 +172,7 @@ public class LoginServer implements LocalServer {
 		boolean mcdb = wzType == DataFileType.MCDB;
 		prop = new PropertiesConfiguration();
 		try {
-			FileReader fr = new FileReader(System.getProperty("argonms.db.config.file", "db.properties"));
+			FileReader fr = new FileReader(System.getProperty("argonms.db.config.file", "db.properties"), StandardCharsets.UTF_8);
 			prop.read(fr);
 			fr.close();
 			DatabaseManager.setProps(prop, mcdb, useNio);
@@ -218,7 +219,7 @@ public class LoginServer implements LocalServer {
 
 		Scanner scan = null;
 		try {
-			scan = new Scanner(new FileReader(System.getProperty("argonms.ct.macbanblacklist.file", "macbanblacklist.txt")));
+			scan = new Scanner(new FileReader(System.getProperty("argonms.ct.macbanblacklist.file", "macbanblacklist.txt"), StandardCharsets.UTF_8));
 			CheatTracker.setBlacklistedMacBans(scan);
 		} catch (IOException ex) {
 			LOG.log(Level.SEVERE, "Could not load macban blacklist!", ex);

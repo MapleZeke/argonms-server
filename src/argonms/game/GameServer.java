@@ -47,6 +47,7 @@ import argonms.game.script.NpcScriptManager;
 import argonms.game.script.PortalScriptManager;
 import argonms.game.script.ReactorScriptManager;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -114,7 +115,7 @@ public class GameServer implements LocalServer {
 		String authKey;
 		String[] chList;
 		try {
-			FileReader fr = new FileReader(System.getProperty("argonms.game.config.file", "game" + serverId + ".properties"));
+			FileReader fr = new FileReader(System.getProperty("argonms.game.config.file", "game" + serverId + ".properties"), StandardCharsets.UTF_8);
 			prop.read(fr);
 			fr.close();
 			address = prop.getString("argonms.game." + serverId + ".host");
@@ -172,7 +173,7 @@ public class GameServer implements LocalServer {
 		boolean mcdb = wzType == DataFileType.MCDB;
 		prop = new PropertiesConfiguration();
 		try {
-			FileReader fr = new FileReader(System.getProperty("argonms.db.config.file", "db.properties"));
+			FileReader fr = new FileReader(System.getProperty("argonms.db.config.file", "db.properties"), StandardCharsets.UTF_8);
 			prop.read(fr);
 			fr.close();
 			DatabaseManager.setProps(prop, mcdb, useNio);
@@ -219,7 +220,7 @@ public class GameServer implements LocalServer {
 
 		Scanner scan = null;
 		try {
-			scan = new Scanner(new FileReader(System.getProperty("argonms.ct.macbanblacklist.file", "macbanblacklist.txt")));
+			scan = new Scanner(new FileReader(System.getProperty("argonms.ct.macbanblacklist.file", "macbanblacklist.txt"), StandardCharsets.UTF_8));
 			CheatTracker.setBlacklistedMacBans(scan);
 		} catch (IOException ex) {
 			LOG.log(Level.SEVERE, "Could not load macban blacklist!", ex);

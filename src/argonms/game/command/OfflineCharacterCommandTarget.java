@@ -36,6 +36,7 @@ import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -347,7 +348,7 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 						Inventory.InventoryType type = InventoryTools.getCategory(value.itemId);
 						Pet[] pets = new Pet[3];
 
-						ps = con.prepareStatement("SELECT `accountid`,`id`,`" + type.toString().toLowerCase() + "slots` FROM `characters` WHERE `name` = ?");
+						ps = con.prepareStatement("SELECT `accountid`,`id`,`" + type.toString().toLowerCase(Locale.ROOT) + "slots` FROM `characters` WHERE `name` = ?");
 						ps.setString(1, target);
 						rs = ps.executeQuery();
 						rs.next(); //assert this is true
@@ -462,7 +463,7 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 						InventorySlotRangeValue value = (InventorySlotRangeValue) update.getValue();
 						Pet[] pets = new Pet[3];
 
-						ps = con.prepareStatement("SELECT `accountid`,`id`,`" + value.type.toString().toLowerCase() + "slots` FROM `characters` WHERE `name` = ?");
+						ps = con.prepareStatement("SELECT `accountid`,`id`,`" + value.type.toString().toLowerCase(Locale.ROOT) + "slots` FROM `characters` WHERE `name` = ?");
 						ps.setString(1, target);
 						rs = ps.executeQuery();
 						rs.next(); //assert this is true
