@@ -18,10 +18,6 @@
 
 package argonms.common.loading;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class KvjEffects {
 	public static final byte END_EFFECT = 0;
 	public static final byte MP_CONSUME = 1;

@@ -22,10 +22,6 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
-/**
- *
- * @author GoldenKevin
- */
 public class TimeTool {
 	/**
 	 * Number of 100 nanosecond units from 1/1/1601 to 1/1/1970
@@ -75,5 +71,8 @@ public class TimeTool {
 
 	public static Calendar currentDateTime() {
 		return Calendar.getInstance(TimeZone.getDefault(), Locale.ROOT);
+	}
+
+	private TimeTool() {
 	}
 }

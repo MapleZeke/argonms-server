@@ -31,10 +31,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class IntraworldGroupList<M extends IntraworldGroupList.Member,
 		R extends IntraworldGroupList.RemoteMember,
 		L extends IntraworldGroupList.LocalMember> {

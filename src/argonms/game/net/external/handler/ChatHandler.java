@@ -30,10 +30,6 @@ import argonms.game.command.CommandProcessor;
 import argonms.game.net.external.GameClient;
 import argonms.game.net.external.GamePackets;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class ChatHandler {
 	private static final byte COMMAND_FIND = 5;
 	private static final byte COMMAND_WHISPER = 6;

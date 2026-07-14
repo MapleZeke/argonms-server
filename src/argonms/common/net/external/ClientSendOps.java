@@ -18,10 +18,6 @@
 
 package argonms.common.net.external;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class ClientSendOps {
 	public static final short LOGIN_RESULT = 0x00;
 	public static final short SERVERLOAD_MSG = 0x03;

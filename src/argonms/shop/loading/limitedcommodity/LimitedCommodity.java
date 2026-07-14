@@ -21,10 +21,6 @@ package argonms.shop.loading.limitedcommodity;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- * @author GoldenKevin
- */
 public class LimitedCommodity {
 	private final List<Number> serialNumbers;
 	private int initial;

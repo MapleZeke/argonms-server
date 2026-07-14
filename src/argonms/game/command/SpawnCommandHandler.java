@@ -25,10 +25,6 @@ import argonms.game.loading.mob.MobDataLoader;
 import argonms.game.loading.mob.MobStats;
 import java.awt.Point;
 
-/**
- *
- * @author GoldenKevin
- */
 public class SpawnCommandHandler extends AbstractCommandDefinition<GameCharacterCommandCaller> {
 	@Override
 	public String getHelpMessage() {

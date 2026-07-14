@@ -25,7 +25,6 @@ import argonms.common.util.input.LittleEndianReader;
  * methods in this package. These methods must be protected so that JavaScript
  * code cannot call them, and this class allows those methods to be called by
  * Java code.
- * @author GoldenKevin
  */
 public class ScriptObjectManipulator {
 	public static void npcResponseReceived(ScriptNpc npc, LittleEndianReader packet) {
@@ -38,5 +37,8 @@ public class ScriptObjectManipulator {
 
 	public static void guildEmblemReceived(ScriptNpc npc, short background, byte backgroundColor, short design, byte designColor) {
 		npc.guildEmblemReceived(background, backgroundColor, design, designColor);
+	}
+
+	private ScriptObjectManipulator() {
 	}
 }

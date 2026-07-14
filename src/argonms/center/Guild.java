@@ -18,10 +18,6 @@
 
 package argonms.center;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Guild extends IntraworldGroup<Guild.Member> {
 	public static final byte OFFLINE_CH = 0;
 
@@ -76,7 +72,7 @@ public class Guild extends IntraworldGroup<Guild.Member> {
 	public Guild(String name, Party p) {
 		super();
 		this.name = name;
-		titles = new String[] { "Master", "Jr.Master", "Member", "", "" };
+		titles = new String[]{"Master", "Jr.Master", "Member", "", ""};
 		capacity = 10;
 		notice = "";
 
@@ -90,7 +86,7 @@ public class Guild extends IntraworldGroup<Guild.Member> {
 
 	public byte getLowestRank() {
 		byte i;
-		for (i = 5; i >= 4 && titles[i - 1].isEmpty(); --i) {
+		for (i = 5; i >= 4 && titles[i - 1].isEmpty(); i--) {
 		}
 		return i;
 	}

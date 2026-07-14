@@ -18,10 +18,6 @@
 
 package argonms.game.command;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CommandDefinition<T extends CommandCaller> extends AbstractCommandDefinition<T> {
 	private final CommandAction<T> r;
 	private final String help;

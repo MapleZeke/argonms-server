@@ -23,10 +23,6 @@ import argonms.common.loading.string.StringDataLoader;
 import argonms.game.loading.quest.QuestDataLoader;
 import java.util.List;
 
-/**
- *
- * @author GoldenKevin
- */
 public class SearchCommandHandler extends AbstractCommandDefinition<CommandCaller> {
 	@Override
 	public String getHelpMessage() {

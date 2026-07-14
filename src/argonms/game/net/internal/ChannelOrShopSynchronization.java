@@ -29,10 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class ChannelOrShopSynchronization extends CrossProcessSynchronization {
 	protected final CrossServerSynchronization handler;
 	protected final byte targetCh;

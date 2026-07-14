@@ -26,10 +26,6 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class KvjQuestDataLoader extends QuestDataLoader {
 	private static final byte QUEST_ACTION = 1;
 	private static final byte QUEST_CHECK = 2;

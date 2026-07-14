@@ -24,10 +24,6 @@ import argonms.game.net.external.GameClient;
 import argonms.game.net.external.GamePackets;
 import org.mozilla.javascript.Scriptable;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ScriptPlayerNpc extends ScriptNpc {
 	private final PlayerNpc npc;
 

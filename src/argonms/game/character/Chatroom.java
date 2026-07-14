@@ -26,10 +26,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Chatroom {
 	public static final byte ACT_OPEN = 0;
 	public static final byte ACT_JOIN = 1;

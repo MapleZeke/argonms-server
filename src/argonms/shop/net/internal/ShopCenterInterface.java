@@ -25,10 +25,6 @@ import argonms.common.net.internal.RemoteCenterOps;
 import argonms.common.util.output.LittleEndianByteArrayWriter;
 import argonms.shop.ShopServer;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ShopCenterInterface extends RemoteCenterInterface {
 	private final ShopServer local;
 

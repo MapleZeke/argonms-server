@@ -18,10 +18,6 @@
 
 package argonms.game.loading.map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ReactorData {
 	private int id;
 	private short x;

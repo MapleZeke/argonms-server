@@ -27,10 +27,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public class BuddyList implements ReadableBuddyList {
 	private short capacity;
 	private final Map<Integer, BuddyListEntry> buddies;

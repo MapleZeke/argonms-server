@@ -20,10 +20,6 @@ package argonms.game.field.movement;
 
 import java.awt.Point;
 
-/**
- *
- * @author GoldenKevin
- */
 public interface PositionChangedMovementFragment extends LifeMovementFragment {
 	public Point getPosition();
 }

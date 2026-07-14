@@ -28,10 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class MaxStatCommandHandlers implements CommandCollection<CommandCaller> {
 	private static void maxEquips(List<CommandTarget.CharacterManipulation> changes) {
 		changes.add(new CommandTarget.CharacterManipulation(CommandTarget.CharacterManipulationKey.MAX_ALL_EQUIP_STATS, null));

@@ -26,7 +26,6 @@ import java.io.InputStream;
 
 /**
  *
- * @author GoldenKevin
  * @version 1.1
  */
 public class LittleEndianByteArrayReader extends LittleEndianReader {
@@ -47,7 +46,7 @@ public class LittleEndianByteArrayReader extends LittleEndianReader {
 				throw new IOException("File is too large to be stored in a byte array");
 			}
 			try {
-				bytes = new byte[(int)length];
+				bytes = new byte[(int) length];
 			} catch (OutOfMemoryError e) { //Requested array size exceeds VM limit
 				throw new IOException("File is too large to be stored in a byte array");
 			}

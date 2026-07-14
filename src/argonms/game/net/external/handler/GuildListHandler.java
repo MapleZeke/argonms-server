@@ -43,10 +43,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class GuildListHandler {
 	private static final Logger LOG = Logger.getLogger(GuildListHandler.class.getName());
 
@@ -749,5 +745,8 @@ public class GuildListHandler {
 		}
 
 		return lew.getBytes();
+	}
+
+	private GuildListHandler() {
 	}
 }

@@ -33,10 +33,6 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
 
-/**
- *
- * @author GoldenKevin
- */
 public class EventManager {
 	private static final Logger LOG = Logger.getLogger(EventManager.class.getName());
 

@@ -20,10 +20,6 @@ package argonms.common.character;
 
 import java.awt.Point;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class BuffState {
 	public final long endTime;
 

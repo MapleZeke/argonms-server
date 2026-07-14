@@ -53,10 +53,6 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class MovementHandler {
 	public static final byte NORMAL_MOVE = 0;
 	public static final byte JUMP = 1;
@@ -232,12 +228,8 @@ public final class MovementHandler {
 						if (skillToUse.getEffectDelay() == 0) {
 							MonsterStatusEffectTools.applyEffectsAndShowVisuals(monster, player, skillToUseEffect);
 						} else {
-							Scheduler.getInstance().runAfterDelay(new Runnable() {
-								@Override
-								public void run() {
-									MonsterStatusEffectTools.applyEffectsAndShowVisuals(monster, player, skillToUseEffect);
-								}
-							}, skillToUse.getEffectDelay());
+							Scheduler.getInstance().runAfterDelay(() ->
+								MonsterStatusEffectTools.applyEffectsAndShowVisuals(monster, player, skillToUseEffect), skillToUse.getEffectDelay());
 						}
 					} else {
 						skillToUse = null;

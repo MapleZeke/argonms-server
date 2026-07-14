@@ -32,10 +32,6 @@ import argonms.game.net.external.GamePackets;
 import java.util.List;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class PetTools {
 	private static final byte MAX_PET_LEVEL = 30;
 
@@ -186,5 +182,8 @@ public class PetTools {
 
 	public static void updatePet(GameCharacter p, Pet pet) {
 		p.getClient().getSession().send(CommonPackets.writeInventoryUpdatePet(getInventorySlot(p, pet.getUniqueId()), pet));
+	}
+
+	private PetTools() {
 	}
 }

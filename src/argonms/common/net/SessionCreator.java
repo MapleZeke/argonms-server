@@ -18,10 +18,6 @@
 
 package argonms.common.net;
 
-/**
- *
- * @author GoldenKevin
- */
 public interface SessionCreator {
 
 }

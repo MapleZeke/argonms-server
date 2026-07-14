@@ -23,10 +23,6 @@ import argonms.common.util.input.LittleEndianReader;
 import java.io.File;
 import java.io.IOException;
 
-/**
- *
- * @author GoldenKevin
- */
 public class KvjCashShopDataLoader extends CashShopDataLoader {
 	private final String dataPath;
 

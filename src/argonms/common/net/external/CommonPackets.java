@@ -43,10 +43,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class CommonPackets {
 	private static final int[] ROCK_MAPS = { //there has to be exactly 5!
 		GlobalConstants.NULL_MAP, GlobalConstants.NULL_MAP,
@@ -225,7 +221,7 @@ public final class CommonPackets {
 						lew.writeLong(0); //one of these values has to be for it
 					}
 				} else {
-					lew.writeBytes(new byte[] { 0x40, (byte) 0xE0, (byte) 0xFD, 0x3B, 0x37, 0x4F, 0x01 });
+					lew.writeBytes(new byte[]{0x40, (byte) 0xE0, (byte) 0xFD, 0x3B, 0x37, 0x4F, 0x01});
 					lew.writeInt(-1);
 				}
 				break;
@@ -500,7 +496,7 @@ public final class CommonPackets {
 		}
 		lew.writeByte((byte) 0); //end of equip inventory
 
-		for (InventoryType invType : new InventoryType[] { InventoryType.USE, InventoryType.SETUP, InventoryType.ETC, InventoryType.CASH }) {
+		for (InventoryType invType : new InventoryType[]{InventoryType.USE, InventoryType.SETUP, InventoryType.ETC, InventoryType.CASH}) {
 			iv = p.getInventory(invType).getAll();
 			synchronized(iv) {
 				for (Entry<Short, InventorySlot> entry : iv.entrySet())

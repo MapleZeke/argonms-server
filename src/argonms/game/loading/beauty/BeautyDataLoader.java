@@ -24,10 +24,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class BeautyDataLoader {
 	private static BeautyDataLoader instance;
 

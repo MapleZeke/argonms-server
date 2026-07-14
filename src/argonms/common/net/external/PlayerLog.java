@@ -24,10 +24,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- *
- * @author GoldenKevin
- */
 public class PlayerLog<T extends Player> {
 	private final Map<String, T> nameToPlayerMapping;
 	private final Map<Integer, T> idToPlayerMapping;

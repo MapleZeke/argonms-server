@@ -41,10 +41,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class OfflineCharacterCommandTarget implements CommandTarget {
 	private static final Logger LOG = Logger.getLogger(OfflineCharacterCommandTarget.class.getName());
 

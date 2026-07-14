@@ -25,10 +25,6 @@ import argonms.common.util.output.LittleEndianByteArrayWriter;
 import argonms.login.LoginServer;
 import argonms.login.net.external.LoginClient;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class AuthHandler {
 	private static final byte PIN_ACCEPTED = 0x00;
 	private static final byte PIN_REGISTER = 0x01;
@@ -56,7 +52,7 @@ public final class AuthHandler {
 			writer.writeByte((byte) 0x4E); //TODO: what does thie byte do? o.o
 			writer.writeLengthPrefixedString(login);
 			//TODO: we really ought to decode this random stream of bytes here
-			writer.writeBytes(new byte[] { 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, (byte) 0xDC, 0x3D, 0x0B, 0x28, 0x64, (byte) 0xC5, 1, 8, 0, 0, 0 });
+			writer.writeBytes(new byte[]{3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, (byte) 0xDC, 0x3D, 0x0B, 0x28, 0x64, (byte) 0xC5, 1, 8, 0, 0, 0});
 		} else if (result == 2) {
 			writer.writeByte(lc.getBanReason());
 			writer.writeLong(lc.getBanExpiration());

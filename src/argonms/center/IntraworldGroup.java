@@ -28,10 +28,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class IntraworldGroup<T extends IntraworldGroup.Member> {
 	public static class Member {
 		private final int playerId;

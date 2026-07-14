@@ -55,7 +55,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * execute within the specified tickDuration after the scheduled time, unless
  * there was a computationally heavy task being executed before it that
  * temporarily delayed the start of the task's tick on the wheel.
- * @author GoldenKevin
  */
 public class ScheduledHashedWheelExecutor implements ScheduledExecutorService {
 	private final int millisPerTick;

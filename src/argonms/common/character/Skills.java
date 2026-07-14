@@ -20,7 +20,6 @@ package argonms.common.character;
 
 /**
  * A class of constants for player skills.
- * @author GoldenKevin
  */
 public final class Skills {
 	public static final int FOLLOW_THE_LEAD = 8;

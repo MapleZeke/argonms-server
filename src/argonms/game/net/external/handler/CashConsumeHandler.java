@@ -34,10 +34,6 @@ import argonms.game.net.external.GameClient;
 import argonms.game.net.external.GamePackets;
 import java.util.List;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CashConsumeHandler {
 	private static void handleHiredMerchant(LittleEndianReader packet, GameCharacter p, int itemId) {
 		//TODO: handle hired merchant
@@ -242,5 +238,8 @@ public class CashConsumeHandler {
 		lew.writeBool(hasLabelRing);
 
 		return lew.getBytes();
+	}
+
+	private CashConsumeHandler() {
 	}
 }

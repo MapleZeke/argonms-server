@@ -35,10 +35,6 @@ import java.util.logging.Logger;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class PortalScriptManager {
 	private static final Logger LOG = Logger.getLogger(PortalScriptManager.class.getName());
 

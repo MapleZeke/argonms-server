@@ -23,10 +23,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ShopWorld {
 	private final Map<Byte, byte[]> hosts;
 	private final Map<Byte, Integer> channelPorts;

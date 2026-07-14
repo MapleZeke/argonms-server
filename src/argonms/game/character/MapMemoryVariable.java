@@ -18,10 +18,6 @@
 
 package argonms.game.character;
 
-/**
- *
- * @author GoldenKevin
- */
 public enum MapMemoryVariable {
 	FREE_MARKET, WORLD_TOUR, FLORINA, ARIANT, MONSTER_CARNIVAL, JAIL
 }

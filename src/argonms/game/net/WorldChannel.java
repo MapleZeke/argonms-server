@@ -19,7 +19,6 @@
 package argonms.game.net;
 
 import argonms.common.net.external.ClientListener;
-import argonms.common.net.external.ClientListener.ClientFactory;
 import argonms.common.net.external.CommonPackets;
 import argonms.common.net.external.PlayerLog;
 import argonms.common.net.internal.ChannelSynchronizationOps;
@@ -45,10 +44,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class WorldChannel {
 	private static final Logger LOG = Logger.getLogger(WorldChannel.class.getName());
 	private static final int CHANNEL_CHANGE_TIMEOUT = 2000;
@@ -73,30 +68,22 @@ public class WorldChannel {
 		this.port = port;
 		mapFactory = new MapFactory();
 		storage = new PlayerLog<>();
-		handler = new ClientListener<>(new ClientGamePacketProcessor(), new ClientFactory<GameClient>() {
-			@Override
-			public GameClient newInstance() {
-				return new GameClient(world, channel);
-			}
-		});
+		handler = new ClientListener<>(new ClientGamePacketProcessor(), () -> new GameClient(world, channel));
 	}
 
 	public void listen(boolean useNio) {
 		if (handler.bind(port)) {
-			LOG.log(Level.INFO, "World {0} Channel {1} is online.", new Object[] { world, channel });
+			LOG.log(Level.INFO, "World {0} Channel {1} is online.", new Object[]{world, channel});
 		} else {
 			shutdown();
 			return;
 		}
 		startTime = System.currentTimeMillis();
-		Scheduler.getInstance().runRepeatedly(new Runnable() {
-			@Override
-			public void run() {
-				for (GameMap map : mapFactory.getMaps())
-					map.respawnMobs();
-				for (GameMap map : mapFactory.getInstanceMaps())
-					map.respawnMobs();
-			}
+		Scheduler.getInstance().runRepeatedly(() -> {
+			for (GameMap map : mapFactory.getMaps())
+				map.respawnMobs();
+			for (GameMap map : mapFactory.getInstanceMaps())
+				map.respawnMobs();
 		}, 0, 15000);
 	}
 
@@ -155,12 +142,8 @@ public class WorldChannel {
 
 	public void requestChannelChange(final GameCharacter p, byte destCh) {
 		p.channelChangeCancelSkills();
-		queuedChannelChanges.put(Integer.valueOf(p.getId()), new Pair<Byte, ScheduledFuture<?>>(Byte.valueOf(destCh), Scheduler.getInstance().runAfterDelay(new Runnable() {
-			@Override
-			public void run() {
-				channelChangeError(p, (byte) 1);
-			}
-		}, CHANNEL_CHANGE_TIMEOUT)));
+		queuedChannelChanges.put(Integer.valueOf(p.getId()), new Pair<Byte, ScheduledFuture<?>>(Byte.valueOf(destCh), Scheduler.getInstance().runAfterDelay(() ->
+			channelChangeError(p, (byte) 1), CHANNEL_CHANGE_TIMEOUT)));
 		worldComm.sendChannelChangeRequest(destCh, p);
 	}
 
@@ -172,12 +155,8 @@ public class WorldChannel {
 		}
 
 		p.channelChangeCancelSkills();
-		queuedChannelChanges.put(Integer.valueOf(p.getId()), new Pair<Byte, ScheduledFuture<?>>(Byte.valueOf(ChannelSynchronizationOps.CHANNEL_CASH_SHOP), Scheduler.getInstance().runAfterDelay(new Runnable() {
-			@Override
-			public void run() {
-				channelChangeError(p, cashShop ? (byte) 2 : (byte) 3);
-			}
-		}, CHANNEL_CHANGE_TIMEOUT)));
+		queuedChannelChanges.put(Integer.valueOf(p.getId()), new Pair<Byte, ScheduledFuture<?>>(Byte.valueOf(ChannelSynchronizationOps.CHANNEL_CASH_SHOP), Scheduler.getInstance().runAfterDelay(() ->
+			channelChangeError(p, cashShop ? (byte) 2 : (byte) 3), CHANNEL_CHANGE_TIMEOUT)));
 		worldComm.sendEnterShopRequest(p, cashShop);
 	}
 

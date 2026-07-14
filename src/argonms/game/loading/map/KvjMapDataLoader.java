@@ -26,10 +26,6 @@ import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class KvjMapDataLoader extends MapDataLoader {
 	private static final Logger LOG = Logger.getLogger(KvjMapDataLoader.class.getName());
 

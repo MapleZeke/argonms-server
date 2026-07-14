@@ -26,17 +26,12 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.mozilla.javascript.Callable;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Kit;
 import org.mozilla.javascript.NativeJSON;
 import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.Scriptable;
 
-/**
- *
- * @author GoldenKevin
- */
 public class JsonCommodityOverrideDataLoader extends CommodityOverrideDataLoader {
 	private static final Logger LOG = Logger.getLogger(JsonCommodityOverrideDataLoader.class.getName());
 
@@ -51,12 +46,7 @@ public class JsonCommodityOverrideDataLoader extends CommodityOverrideDataLoader
 		try {
 			fr = new FileReader(ShopServer.getInstance().getCommodityOverridePath(), StandardCharsets.UTF_8);
 			final Scriptable globalScope = cx.initStandardObjects();
-			Object json = NativeJSON.parse(cx, globalScope, Kit.readReader(fr), new Callable() {
-				@Override
-				public Object call(Context cntxt, Scriptable s, Scriptable s1, Object[] os) {
-					return os[1];
-				}
-			});
+			Object json = NativeJSON.parse(cx, globalScope, Kit.readReader(fr), (cntxt, s, s1, os) -> os[1]);
 			for (Map.Entry<Object, Object> commodity : ((NativeObject) json).entrySet()) {
 				Integer sn = (Integer) commodity.getKey();
 				Map<CommodityMod, Object> properties = new EnumMap<>(CommodityMod.class);

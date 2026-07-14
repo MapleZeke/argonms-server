@@ -28,7 +28,6 @@ import java.nio.charset.StandardCharsets;
  * Characters (and character strings) are encoded in ASCII.
  * Each method returns the instance of LittleEndianWriter it was called on to
  * allow method chaining (in turn, implementing a fluent interface).
- * @author GoldenKevin
  * @version 1.1
  */
 public abstract class LittleEndianWriter {

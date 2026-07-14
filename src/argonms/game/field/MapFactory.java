@@ -26,10 +26,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-/**
- *
- * @author GoldenKevin
- */
 public class MapFactory {
 	private final ConcurrentMap<Integer, GameMap> maps;
 	private final Set<GameMap> instanceMaps;

@@ -18,10 +18,6 @@
 
 package argonms.common.character;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CenterServerSynchronizationOps {
 	public static final byte PARTY_CREATE = 0;
 	public static final byte PARTY_DISBAND = 1;
@@ -58,4 +54,7 @@ public class CenterServerSynchronizationOps {
 	public static final byte CHATROOM_CREATED = 32;
 	public static final byte CHATROOM_ROOM_CHANGED = 33;
 	public static final byte CHATROOM_SLOT_CHANGED = 34;
+
+	private CenterServerSynchronizationOps() {
+	}
 }

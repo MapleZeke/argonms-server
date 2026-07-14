@@ -44,10 +44,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CenterRemoteSession implements Session {
 	private static final Logger LOG = Logger.getLogger(CenterRemoteSession.class.getName());
 	private static final int HEADER_LENGTH = 4;
@@ -66,12 +62,8 @@ public class CenterRemoteSession implements Session {
 	private final UnorderedQueue sendQueue;
 
 	private final KeepAliveTask heartbeatTask;
-	private final Runnable idleTask = new Runnable() {
-		@Override
-		public void run() {
-			startPingTask();
-		}
-	};
+	private final Runnable idleTask = () ->
+		startPingTask();
 	private ScheduledFuture<?> idleTaskFuture;
 
 	private MessageType nextMessageType;
@@ -159,7 +151,7 @@ public class CenterRemoteSession implements Session {
 			//idleTaskFuture has to be non-null as long as the this pointer was not leaked in the constructor
 			idleTaskFuture.cancel(false);
 
-			LOG.log(Level.FINE, "{0} server ({1}) disconnected: {2}", new Object[] { getServerName(), getAddress(), reason });
+			LOG.log(Level.FINE, "{0} server ({1}) disconnected: {2}", new Object[]{getServerName(), getAddress(), reason});
 			if (cri != null) {
 				cri.disconnected();
 			}

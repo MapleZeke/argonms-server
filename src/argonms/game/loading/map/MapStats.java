@@ -22,10 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-/**
- *
- * @author GoldenKevin
- */
 public class MapStats {
 	private final int mapid;
 	private final Map<Byte, PortalData> portals;

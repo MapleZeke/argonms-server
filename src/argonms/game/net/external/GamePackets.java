@@ -78,10 +78,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class GamePackets {
 	private static final Map<ClientUpdateKey, Number> EMPTY_STATUPDATE = Collections.emptyMap();
 
@@ -752,8 +748,8 @@ public final class GamePackets {
 		//perhaps it would be more concise if we didn't use a switch-case, and just use some conditionals if there are patterns.
 		switch (key) {
 			case SPEED:
-				if (v.getSourceType() == StatusEffectsData.EffectSource.PLAYER_SKILL &&
-					(v.getSource() == Skills.SIN_HASTE || v.getSource() == Skills.DIT_HASTE || v.getSource() == Skills.GM_HASTE || v.getSource() == Skills.SUPER_GM_HASTE)) {
+				if (v.getSourceType() == StatusEffectsData.EffectSource.PLAYER_SKILL
+					&& (v.getSource() == Skills.SIN_HASTE || v.getSource() == Skills.DIT_HASTE || v.getSource() == Skills.GM_HASTE || v.getSource() == Skills.SUPER_GM_HASTE)) {
 					break;
 				}
 				//fallthrough for non-haste sources
@@ -1922,7 +1918,7 @@ public final class GamePackets {
 	 * @return 
 	 */
 	public static byte[] writeServerMigrateFailed(byte msg) {
-		LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter ();
+		LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter();
 		lew.writeShort(ClientSendOps.BLOCK_MIGRATE);
 		lew.writeByte(msg);
 		return lew.getBytes();

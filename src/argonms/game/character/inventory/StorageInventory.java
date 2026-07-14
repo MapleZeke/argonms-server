@@ -33,10 +33,6 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- *
- * @author GoldenKevin
- */
 public class StorageInventory implements IInventory {
 	private short capacity;
 	private InventorySlot[] startItems;
@@ -217,7 +213,7 @@ public class StorageInventory implements IInventory {
 		try {
 			alreadyTouched.clear();
 			List<InventorySlot> allItems = new ArrayList<>(occupied);
-			for (Iterator<List<InventorySlot>> iter = realItems.values().iterator(); iter.hasNext();) {
+			for (Iterator<List<InventorySlot>> iter = realItems.values().iterator(); iter.hasNext(); ) {
 				List<InventorySlot> inventorySpecificItems = iter.next();
 				if (!inventorySpecificItems.isEmpty()) {
 					allItems.addAll(inventorySpecificItems);

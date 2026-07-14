@@ -47,10 +47,6 @@ import org.mozilla.javascript.ContinuationPending;
 import org.mozilla.javascript.Script;
 import org.mozilla.javascript.Scriptable;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class NpcScriptManager {
 	private static final Logger LOG = Logger.getLogger(NpcScriptManager.class.getName());
 

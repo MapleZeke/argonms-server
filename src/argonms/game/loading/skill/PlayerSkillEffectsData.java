@@ -29,10 +29,6 @@ import java.awt.Rectangle;
 import java.util.EnumSet;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public class PlayerSkillEffectsData extends BuffsData implements MonsterStatusEffectsData {
 	private final byte level;
 	private short mpCon;

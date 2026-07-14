@@ -100,10 +100,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 	private static final Logger LOG = Logger.getLogger(GameCharacter.class.getName());
 
@@ -179,7 +175,7 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 
 	private EventManipulator event;
 
-	private GameCharacter () {
+	private GameCharacter() {
 		nextTransientItemUniqueId = new AtomicLong(0); //first value is -1 because of decrementAndGet
 		petFullnessSchedules = new ScheduledFuture<?>[3];
 		petIgnoreItems = new ConcurrentHashMap<>();
@@ -1895,12 +1891,9 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 	}
 
 	public void addCooldown(final int skill, short time) {
-		cooldowns.put(Integer.valueOf(skill), new Cooldown(time * 1000, new Runnable() {
-			@Override
-			public void run() {
-				removeCooldown(skill);
-				getClient().getSession().send(GamePackets.writeCooldown(skill, (short) 0));
-			}
+		cooldowns.put(Integer.valueOf(skill), new Cooldown(time * 1000, () -> {
+			removeCooldown(skill);
+			getClient().getSession().send(GamePackets.writeCooldown(skill, (short) 0));
 		}));
 	}
 
@@ -2821,25 +2814,22 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 	public MobDeathListener getMobDeathListener(final int mobId) {
 		final WeakReference<GameCharacter> futureSelf = new WeakReference<>(this);
 		final int mobMap = getMapId();
-		return new MobDeathListener() {
-			@Override
-			public void monsterKilled(GameCharacter highestDamager, GameCharacter last) {
-				GameCharacter ourself = futureSelf.get();
-				if (ourself == null || ourself.isClosed()
-					|| highestDamager != ourself
-					//I think we had to be the highest damager and
-					//we had to kill it to be recognized for the kill
-					|| last != highestDamager
-					|| ourself.getMapId() != mobMap) {
-					return;
-				}
+		return (highestDamager, last) -> {
+			GameCharacter ourself = futureSelf.get();
+			if (ourself == null || ourself.isClosed()
+				|| highestDamager != ourself
+				//I think we had to be the highest damager and
+				//we had to kill it to be recognized for the kill
+				|| last != highestDamager
+				|| ourself.getMapId() != mobMap) {
+				return;
+			}
 
-				if (party == null) {
-					ourself.mobKilled(mobId);
-				} else {
-					for (GameCharacter mem : party.getLocalMembersInMap(mobMap))
-						mem.mobKilled(mobId);
-				}
+			if (party == null) {
+				ourself.mobKilled(mobId);
+			} else {
+				for (GameCharacter mem : party.getLocalMembersInMap(mobMap))
+					mem.mobKilled(mobId);
 			}
 		};
 	}

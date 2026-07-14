@@ -39,7 +39,6 @@ import org.bouncycastle.crypto.params.KeyParameter;
  * This class merges the MapleAESOFB and MapleCustomEncryption classes from
  * OdinMS derived sources, with some extensive modifications.
  *
- * @author Frz, GoldenKevin
  * @version 3.0
  */
 public final class ClientEncryption {
@@ -136,7 +135,7 @@ public final class ClientEncryption {
 		int v = (((iv[3] & 0xFF) << 8) | (iv[2] & 0xFF)) ^ ~GlobalConstants.MAPLE_VERSION; //version
 		int l = v ^ length; //length
 		//write v and l as two 16-bit little-endian integers
-		return new byte[] {
+		return new byte[]{
 			(byte) (v & 0xFF), (byte) ((v >>> 8) & 0xFF),
 			(byte) (l & 0xFF), (byte) ((l >>> 8) & 0xFF)
 		};
@@ -150,8 +149,8 @@ public final class ClientEncryption {
 	 */
 	public static int getPacketLength(byte[] packetHeader) {
 		//read two 16-bit little-endian integers and XOR them.
-		return ((packetHeader[0] & 0xFF) | ((packetHeader[1] & 0xFF) << 8)) ^
-				((packetHeader[2] & 0xFF) | ((packetHeader[3] & 0xFF) << 8));
+		return ((packetHeader[0] & 0xFF) | ((packetHeader[1] & 0xFF) << 8))
+				^ ((packetHeader[2] & 0xFF) | ((packetHeader[3] & 0xFF) << 8));
 	}
 
 	/**
@@ -164,13 +163,13 @@ public final class ClientEncryption {
 	public static boolean checkPacket(byte[] packetHeader, byte[] iv) {
 		//note, this is only valid for client to server packet headers. for
 		//server to client, the MAPLE_VERSION must be bitwise negated (~)
-		return (((packetHeader[0] ^ iv[2]) & 0xFF) == (GlobalConstants.MAPLE_VERSION & 0xFF)) &&
-				(((packetHeader[1] ^ iv[3]) & 0xFF) == ((GlobalConstants.MAPLE_VERSION >>> 8) & 0xFF));
+		return (((packetHeader[0] ^ iv[2]) & 0xFF) == (GlobalConstants.MAPLE_VERSION & 0xFF))
+				&& (((packetHeader[1] ^ iv[3]) & 0xFF) == ((GlobalConstants.MAPLE_VERSION >>> 8) & 0xFF));
 	}
 
 	//The following routines are for MapleStory's custom encryption
 	public static byte[] nextIv(byte[] oldIv) {
-		byte[] newIv = { (byte) 0xF2, (byte) 0x53, (byte) 0x50, (byte) 0xC6 };
+		byte[] newIv = {(byte) 0xF2, (byte) 0x53, (byte) 0x50, (byte) 0xC6};
 		for (int x = 0; x < oldIv.length; x++) {
 			byte temp1 = newIv[1];
 			byte temp2 = oldIv[x];

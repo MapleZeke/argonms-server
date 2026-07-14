@@ -47,10 +47,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CashShopHandler {
 	private static final Logger LOG = Logger.getLogger(CashShopHandler.class.getName());
 
@@ -163,7 +159,7 @@ public class CashShopHandler {
 			return;
 		}
 
-		if (!CashShopStaging.giveGift(p.getClient().getAccountId(), p.getName(), recipientAcct, new int[] { serialNumber }, message, null)) {
+		if (!CashShopStaging.giveGift(p.getClient().getAccountId(), p.getName(), recipientAcct, new int[]{serialNumber}, message, null)) {
 			p.getClient().getSession().send(CashShopPackets.writeGiftError(CashShopPackets.ERROR_INVENTORY_FULL));
 			return;
 		}
@@ -431,7 +427,7 @@ public class CashShopHandler {
 			return;
 		}
 
-		boolean success = CashShopStaging.giveGift(p.getClient().getAccountId(), p.getName(), recipientAcct, new int[] { serialNumber }, message, new CashShopStaging.ItemManipulator() {
+		boolean success = CashShopStaging.giveGift(p.getClient().getAccountId(), p.getName(), recipientAcct, new int[]{serialNumber}, message, new CashShopStaging.ItemManipulator() {
 			@Override
 			public boolean manipulate(InventorySlot partnersRing, int serialNumber, Commodity c) {
 				Pair<InventorySlot, CashShopStaging.CashPurchaseProperties> ourRing = CashShopStaging.createItem(c, serialNumber, p.getClient().getAccountId(), null);
@@ -579,7 +575,7 @@ public class CashShopHandler {
 
 				LimitedCommodity lc = LimitedCommodityDataLoader.getInstance().getLimitedCommodity(c.itemDataId);
 				if (lc != null && lc.getSerialNumbers().contains(Integer.valueOf(serialNumber))) {
-					synchronized (lc) {
+					synchronized(lc) {
 						if (lc.getRemainingStock() == 0) {
 							return false;
 						}
@@ -698,7 +694,7 @@ public class CashShopHandler {
 			return;
 		}
 
-		boolean success = CashShopStaging.giveGift(p.getClient().getAccountId(), p.getName(), recipientAcct, new int[] { serialNumber }, message, new CashShopStaging.ItemManipulator() {
+		boolean success = CashShopStaging.giveGift(p.getClient().getAccountId(), p.getName(), recipientAcct, new int[]{serialNumber}, message, new CashShopStaging.ItemManipulator() {
 			@Override
 			public boolean manipulate(InventorySlot partnersRing, int serialNumber, Commodity c) {
 				Pair<InventorySlot, CashShopStaging.CashPurchaseProperties> ourRing = CashShopStaging.createItem(c, serialNumber, p.getClient().getAccountId(), null);
@@ -810,5 +806,8 @@ public class CashShopHandler {
 			sc.getPlayer().gainMesos(c.getMesosReward());
 			sc.getSession().send(CashShopPackets.writeCouponRewards(items, c.getMaplePointsReward(), c.getMesosReward()));
 		}
+	}
+
+	private CashShopHandler() {
 	}
 }

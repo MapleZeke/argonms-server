@@ -45,10 +45,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class CommandProcessor {
 	private static final Pattern argSplit;
 	private static final CommandProcessor singleton;
@@ -92,7 +88,7 @@ public final class CommandProcessor {
 				}
 
 				List<CommandTarget.CharacterManipulation> changes = new ArrayList<CommandTarget.CharacterManipulation>();
-				changes.add(new CommandTarget.CharacterManipulation(CommandTarget.CharacterManipulationKey.CANCEL_DEBUFFS, new PlayerStatusEffect[] {
+				changes.add(new CommandTarget.CharacterManipulation(CommandTarget.CharacterManipulationKey.CANCEL_DEBUFFS, new PlayerStatusEffect[]{
 						PlayerStatusEffect.CURSE, PlayerStatusEffect.DARKNESS,
 						PlayerStatusEffect.POISON, PlayerStatusEffect.SEAL,
 						PlayerStatusEffect.WEAKNESS
@@ -575,9 +571,7 @@ public final class CommandProcessor {
 
 			@Override
 			public void doAction(CommandCaller caller, CommandArguments args, CommandOutput resp) {
-				if (args.hasOpt("-gc")) {
-					System.gc();
-				}
+				args.hasOpt("-gc");
 
 				long startMillis = GameServer.getChannel(caller.getChannel()).getTimeStarted();
 				long upTimeMillis = System.currentTimeMillis() - startMillis;

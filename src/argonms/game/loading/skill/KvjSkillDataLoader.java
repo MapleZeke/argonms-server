@@ -30,10 +30,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class KvjSkillDataLoader extends SkillDataLoader {
 	private static final Logger LOG = Logger.getLogger(KvjSkillDataLoader.class.getName());
 

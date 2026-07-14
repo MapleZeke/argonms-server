@@ -20,10 +20,6 @@ package argonms.game.loading.reactor;
 
 import java.awt.Point;
 
-/**
- *
- * @author GoldenKevin
- */
 public class State {
 	private byte type;
 	private byte nextState;

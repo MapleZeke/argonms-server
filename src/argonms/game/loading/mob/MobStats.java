@@ -35,10 +35,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 
-/**
- *
- * @author GoldenKevin
- */
 public class MobStats {
 	private final int mobid;
 	private final Map<Element, Byte> elemAttr;

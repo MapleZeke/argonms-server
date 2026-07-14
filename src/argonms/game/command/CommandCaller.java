@@ -20,10 +20,6 @@ package argonms.game.command;
 
 import argonms.game.field.GameMap;
 
-/**
- *
- * @author GoldenKevin
- */
 public interface CommandCaller {
 	public String getName();
 

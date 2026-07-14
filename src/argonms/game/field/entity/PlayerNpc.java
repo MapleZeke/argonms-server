@@ -23,10 +23,6 @@ import argonms.game.character.GameCharacter;
 import java.awt.Point;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class PlayerNpc extends Npc {
 	private String name;
 	private byte gender;

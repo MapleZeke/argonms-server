@@ -37,10 +37,6 @@ import java.lang.ref.WeakReference;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.NativeArray;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ScriptPlayer {
 	private final WeakReference<GameCharacter> player;
 

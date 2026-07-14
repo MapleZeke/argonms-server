@@ -22,10 +22,6 @@ import argonms.common.loading.StatusEffectsData.BuffsData;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ItemEffectsData extends BuffsData {
 	private static final byte POISON = 1 << 0;
 	private static final byte SEAL = 1 << 1;

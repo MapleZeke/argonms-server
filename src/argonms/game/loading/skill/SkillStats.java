@@ -22,10 +22,6 @@ import argonms.game.field.Element;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-/**
- *
- * @author GoldenKevin
- */
 public class SkillStats {
 	private final SortedMap<Byte, PlayerSkillEffectsData> levels;
 	private Element elemAttr;

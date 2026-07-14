@@ -18,10 +18,6 @@
 
 package argonms.game.field.movement;
 
-/**
- *
- * @author GoldenKevin
- */
 public interface StanceChangedMovementFragment extends LifeMovementFragment {
 	public byte getStance();
 }

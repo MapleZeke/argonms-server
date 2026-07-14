@@ -23,10 +23,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ShopPlayerContinuation extends AbstractPlayerContinuation {
 	private final Map<Integer, BuffState.PlayerSummonState> activeSummons;
 

@@ -18,10 +18,6 @@
 
 package argonms.common.character;
 
-/**
- *
- * @author GoldenKevin
- */
 public class BuddyListEntry {
 	public static final byte OFFLINE_CHANNEL = 0;
 	public static final byte CASH_SHOP_CHANNEL = 21;

@@ -32,10 +32,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class McdbItemDataLoader extends ItemDataLoader {
 	private static final Logger LOG = Logger.getLogger(McdbItemDataLoader.class.getName());
 
@@ -182,7 +178,7 @@ public class McdbItemDataLoader extends ItemDataLoader {
 						if (!petCommands.containsKey(oId)) {
 							petCommands.put(oId, new HashMap<Byte, int[]>());
 						}
-						petCommands.get(oId).put(Byte.valueOf(prs.getByte(1)), new int[] { prs.getInt(3), prs.getInt(2) });
+						petCommands.get(oId).put(Byte.valueOf(prs.getByte(1)), new int[]{prs.getInt(3), prs.getInt(2)});
 					}
 				} catch (SQLException e) {
 					throw new SQLException("Failed to load pet specific data of item " + itemid, e);

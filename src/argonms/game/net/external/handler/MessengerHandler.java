@@ -26,10 +26,6 @@ import argonms.game.character.Chatroom;
 import argonms.game.character.GameCharacter;
 import argonms.game.net.external.GameClient;
 
-/**
- *
- * @author GoldenKevin
- */
 public class MessengerHandler {
 	public static void handleAction(LittleEndianReader packet, GameClient gc) {
 		GameCharacter p = gc.getPlayer();
@@ -89,5 +85,8 @@ public class MessengerHandler {
 				GameServer.getChannel(gc.getChannel()).getCrossServerInterface().sendChatroomText(text, room, p.getId());
 				break;
 		}
+	}
+
+	private MessengerHandler() {
 	}
 }

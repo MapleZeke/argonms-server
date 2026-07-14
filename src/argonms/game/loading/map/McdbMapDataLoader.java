@@ -28,10 +28,6 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class McdbMapDataLoader extends MapDataLoader {
 	private static final Logger LOG = Logger.getLogger(McdbMapDataLoader.class.getName());
 

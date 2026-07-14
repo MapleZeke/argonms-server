@@ -31,7 +31,6 @@ import java.util.logging.Logger;
 /**
  * Processes packet sent from the center server and received at the shop
  * server.
- * @author GoldenKevin
  */
 public class CenterShopPacketProcessor extends CenterRemotePacketProcessor {
 	private static final Logger LOG = Logger.getLogger(CenterShopPacketProcessor.class.getName());
@@ -70,7 +69,7 @@ public class CenterShopPacketProcessor extends CenterRemotePacketProcessor {
 				processCenterServerSynchronization(packet);
 				break;
 			default:
-				LOG.log(Level.FINE, "Received unhandled interserver packet {0} bytes long:\n{1}", new Object[] { packet.available() + 2, packet });
+				LOG.log(Level.FINE, "Received unhandled interserver packet {0} bytes long:\n{1}", new Object[]{packet.available() + 2, packet});
 				break;
 		}
 	}

@@ -20,10 +20,6 @@ package argonms.game.field;
 
 import java.awt.Point;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class AbstractEntity implements MapEntity {
 	private int entityid;
 	private Point pos;

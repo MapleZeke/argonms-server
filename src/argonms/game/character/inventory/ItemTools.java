@@ -36,10 +36,6 @@ import argonms.game.net.external.GamePackets;
 import java.util.EnumMap;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class ItemTools {
 	public static short getPersonalSlotMax(GameCharacter p, int itemid) {
 		short max = ItemDataLoader.getInstance().getSlotMax(Integer.valueOf(itemid));
@@ -142,12 +138,8 @@ public final class ItemTools {
 		}
 		if (duration > 0) { //buff item
 			StatusEffectTools.applyEffectsAndShowVisuals(p, StatusEffectTools.ACTIVE_BUFF, e, (byte) -1, duration);
-			p.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(new Runnable() {
-				@Override
-				public void run() {
-					cancelBuffItem(p, itemId);
-				}
-			}, duration), (byte) 0, System.currentTimeMillis() + duration);
+			p.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(() ->
+				cancelBuffItem(p, itemId), duration), (byte) 0, System.currentTimeMillis() + duration);
 		}
 	}
 
@@ -163,12 +155,8 @@ public final class ItemTools {
 	public static void localUseBuffItem(final GameCharacter p, final int itemId, long endTime) {
 		ItemEffectsData e = ItemDataLoader.getInstance().getEffect(itemId);
 		StatusEffectTools.applyEffects(p, e);
-		p.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(new Runnable() {
-			@Override
-			public void run() {
-				cancelBuffItem(p, itemId);
-			}
-		}, endTime - System.currentTimeMillis()), (byte) 0, endTime);
+		p.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(() ->
+			cancelBuffItem(p, itemId), endTime - System.currentTimeMillis()), (byte) 0, endTime);
 	}
 
 	public static void cancelBuffItem(GameCharacter p, int itemId) {

@@ -40,10 +40,6 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class LoginCharacter extends Player {
 	private static final Logger LOG = Logger.getLogger(LoginCharacter.class.getName());
 
@@ -132,19 +128,19 @@ public final class LoginCharacter extends Player {
 			rs = ps.executeQuery();
 			if (!rs.next()) {
 				LOG.log(Level.WARNING, "Client requested to load a nonexistent character w/ id {0} (account {1}).",
-						new Object[] { id, c.getAccountId() });
+						new Object[]{id, c.getAccountId()});
 				return null;
 			}
 			int accountid = rs.getInt(1);
 			if (accountid != c.getAccountId()) { //we are aware of our accountid
 				LOG.log(Level.WARNING, "Client account {0} is trying to load character {1} which belongs to account {2}",
-						new Object[] { c.getAccountId(), id, accountid });
+						new Object[]{c.getAccountId(), id, accountid});
 				return null;
 			}
 			byte world = rs.getByte(2);
 			if (world != c.getWorld()) { //we are aware of our world
 				LOG.log(Level.WARNING, "Client account {0} is trying to load character {1} on world {2} but exists on world {3}",
-						new Object[] { accountid, id, c.getWorld(), world });
+						new Object[]{accountid, id, c.getWorld(), world});
 				return null;
 			}
 			LoginCharacter p = new LoginCharacter();

@@ -37,10 +37,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class LoginClient extends RemoteClient {
 	private static final Logger LOG = Logger.getLogger(LoginClient.class.getName());
 
@@ -495,12 +491,8 @@ public class LoginClient extends RemoteClient {
 		if (getSession().getQueuedReads() == 0) {
 			dissociate();
 		} else {
-			getSession().setEmptyReadQueueHandler(new Runnable() {
-				@Override
-				public void run() {
-					dissociate();
-				}
-			});
+			getSession().setEmptyReadQueueHandler(() ->
+				dissociate());
 		}
 		if (!isMigrating() && getAccountId() != 0) {
 			updateState(STATUS_NOTLOGGEDIN);

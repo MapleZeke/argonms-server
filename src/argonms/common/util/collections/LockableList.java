@@ -27,10 +27,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- *
- * @author GoldenKevin
- */
 public class LockableList<T> implements List<T> {
 	private final List<T> list;
 	private final Lock readLock;

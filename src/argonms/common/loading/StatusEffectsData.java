@@ -25,10 +25,6 @@ import java.awt.Rectangle;
 import java.util.EnumSet;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public interface StatusEffectsData {
 	public enum EffectSource { ITEM, PLAYER_SKILL, MOB_SKILL }
 

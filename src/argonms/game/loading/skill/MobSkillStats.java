@@ -21,10 +21,6 @@ package argonms.game.loading.skill;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class MobSkillStats {
 	private final Map<Byte, MobSkillEffectsData> levels;
 	private int animationTime;

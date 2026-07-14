@@ -33,10 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-/**
- *
- * @author GoldenKevin
- */
 public class QuestChecks {
 	public enum QuestRequirementType {
 		MOB, ITEM, MESOS, PET, PET_TAMENESS, QUEST

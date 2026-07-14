@@ -34,7 +34,6 @@ import java.util.logging.Logger;
  * Java's better processing performance over MySQL script execution.
  *
  * Inspired by Vana's RankingCalculator.
- * @author GoldenKevin
  */
 public class RankingWorker implements Runnable {
 	private static final Logger LOG = Logger.getLogger(RankingWorker.class.getName());

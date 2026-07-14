@@ -30,10 +30,6 @@ import java.util.logging.Logger;
 //reactor has any item drops, it looks kinda unnatural to drop the items
 //immediately after it is destroyed (analagous to mobs dropping items with no
 //delay when using MCDB).
-/**
- *
- * @author GoldenKevin
- */
 public class KvjReactorDataLoader extends ReactorDataLoader {
 	private static final Logger LOG = Logger.getLogger(KvjReactorDataLoader.class.getName());
 

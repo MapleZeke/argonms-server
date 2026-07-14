@@ -37,10 +37,6 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class BuddyListHandler {
 	private static final Logger LOG = Logger.getLogger(BuddyListHandler.class.getName());
 

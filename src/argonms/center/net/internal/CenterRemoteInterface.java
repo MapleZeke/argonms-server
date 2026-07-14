@@ -21,10 +21,6 @@ package argonms.center.net.internal;
 import argonms.common.ServerType;
 import argonms.common.net.SessionDataModel;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class CenterRemoteInterface implements SessionDataModel {
 	private final CenterRemoteSession session;
 	protected boolean online;

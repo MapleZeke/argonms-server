@@ -32,10 +32,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class TelnetClient implements SessionDataModel {
 	private static final Logger LOG = Logger.getLogger(TelnetClient.class.getName());
 
@@ -76,7 +72,7 @@ public class TelnetClient implements SessionDataModel {
 		//just to make sure - may have established this earlier during the
 		//handshake, but we sure as hell don't want the client to local echo
 		//when the password comes up
-		session.send(new byte[] { IAC, WILL, ECHO });
+		session.send(new byte[]{IAC, WILL, ECHO});
 
 		session.send("Please use the same credentials as your in-game account.\r\n");
 		session.send("Login: ");
@@ -91,7 +87,7 @@ public class TelnetClient implements SessionDataModel {
 				switch (array[index + 1]) {
 					case LINEMODE:
 						flags.remove(TelnetOptions.ECHO);
-						session.send(new byte[] { IAC, DO, LINEMODE });
+						session.send(new byte[]{IAC, DO, LINEMODE});
 						break;
 					case TERMINAL_TYPE:
 						break;
@@ -102,7 +98,7 @@ public class TelnetClient implements SessionDataModel {
 					case NEW_ENVIRON:
 						break;
 					case SUPPRESS_GO_AHEAD:
-						session.send(new byte[] { IAC, DO, SUPPRESS_GO_AHEAD });
+						session.send(new byte[]{IAC, DO, SUPPRESS_GO_AHEAD});
 						break;
 				}
 				break;

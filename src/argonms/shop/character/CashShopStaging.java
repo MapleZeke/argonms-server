@@ -47,10 +47,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CashShopStaging implements IInventory {
 	private static final Logger LOG = Logger.getLogger(ShopCharacter.class.getName());
 
@@ -203,7 +199,7 @@ public class CashShopStaging implements IInventory {
 				InventorySlot item = slots.get(oUid);
 				CashPurchaseProperties props = purchaseProperties.get(oUid);
 				if (item == null || props == null) {
-					LOG.log(Level.FINE, "Dropping gift with unique ID {0} for {1}. Missing item data or not owned by recipient.", new Object[] { oUid, Integer.valueOf(accountId) });
+					LOG.log(Level.FINE, "Dropping gift with unique ID {0} for {1}. Missing item data or not owned by recipient.", new Object[]{oUid, Integer.valueOf(accountId)});
 					continue;
 				}
 

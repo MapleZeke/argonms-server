@@ -32,10 +32,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ScheduledFuture;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class FreeMarketShop extends Miniroom {
 	protected static class ShopItem {
 		public short bundles;
@@ -142,12 +138,8 @@ public abstract class FreeMarketShop extends Miniroom {
 			ownerName = owner.getName();
 			ownerId = owner.getId();
 			final GameMap map = owner.getMap();
-			expireSchedule = Scheduler.getInstance().runAfterDelay(new Runnable() {
-				@Override
-				public void run() {
-					closeRoom(map);
-				}
-			}, 1000 * 60 * 60 * 24);
+			expireSchedule = Scheduler.getInstance().runAfterDelay(() ->
+				closeRoom(map), 1000 * 60 * 60 * 24);
 		}
 
 		@Override

@@ -24,10 +24,6 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class TownCommandHandler extends AbstractCommandDefinition<CommandCaller> {
 	private final Map<String, Integer> lookup;
 

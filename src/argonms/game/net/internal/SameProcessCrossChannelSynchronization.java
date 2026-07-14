@@ -27,10 +27,6 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
-/**
- *
- * @author GoldenKevin
- */
 public class SameProcessCrossChannelSynchronization implements CrossChannelSynchronization {
 	private final CrossServerSynchronization handler;
 	private SameProcessCrossChannelSynchronization pipe;

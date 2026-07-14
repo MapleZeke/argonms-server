@@ -28,10 +28,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- *
- * @author GoldenKevin
- */
 public class GuildList extends IntraworldGroupList<
 		GuildList.Member,
 		GuildList.RemoteMember,
@@ -146,7 +142,7 @@ public class GuildList extends IntraworldGroupList<
 	public GuildList(int guildId, String name, PartyList p) {
 		this(guildId);
 		this.name = name;
-		titles = new String[] { "Master", "Jr.Master", "Member", "", "" };
+		titles = new String[]{"Master", "Jr.Master", "Member", "", ""};
 		capacity = 10;
 		notice = "";
 
@@ -195,7 +191,7 @@ public class GuildList extends IntraworldGroupList<
 
 	public byte getLowestRank() {
 		byte i;
-		for (i = 5; i >= 4 && titles[i - 1].isEmpty(); --i) {
+		for (i = 5; i >= 4 && titles[i - 1].isEmpty(); i--) {
 		}
 		return i;
 	}

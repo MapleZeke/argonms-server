@@ -55,8 +55,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * and so all <code>HashMap</code> operations are sent directly to the
  * <code>HashMap</code> instance (no methods are overridden or implemented).
  *
- * @see argonms.tools.collections.LockableMap
- * @author GoldenKevin
  */
 @SuppressWarnings("serial")
 public class LockableHashMap<K, V> extends HashMap<K, V> {

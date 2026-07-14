@@ -39,10 +39,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class SkillTools {
 	//TODO: IMPLEMENT HP/MP stuff for alchemist, heal, chakra
 	private static Map<ClientUpdateKey, Number> skillCastCosts(GameCharacter p, PlayerSkillEffectsData e) {
@@ -186,12 +182,8 @@ public final class SkillTools {
 		p.getClient().getSession().send(GamePackets.writeUpdatePlayerStats(skillCastCosts(p, e), true));
 		StatusEffectTools.applyEffectsAndShowVisuals(p, StatusEffectTools.ACTIVE_BUFF, e, stance);
 		if (e.getDuration() > 0) {
-			p.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(new Runnable() {
-				@Override
-				public void run() {
-					cancelBuffSkill(p, skillId, skillLevel);
-				}
-			}, e.getDuration()), skillLevel, System.currentTimeMillis() + e.getDuration());
+			p.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(() ->
+				cancelBuffSkill(p, skillId, skillLevel), e.getDuration()), skillLevel, System.currentTimeMillis() + e.getDuration());
 		}
 	}
 
@@ -208,12 +200,8 @@ public final class SkillTools {
 	public static void localUseBuffSkill(final GameCharacter p, final int skillId, final byte skillLevel, long endTime) {
 		PlayerSkillEffectsData e = SkillDataLoader.getInstance().getSkill(skillId).getLevel(skillLevel);
 		StatusEffectTools.applyEffects(p, e);
-		p.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(new Runnable() {
-			@Override
-			public void run() {
-				cancelBuffSkill(p, skillId, skillLevel);
-			}
-		}, endTime - System.currentTimeMillis()), skillLevel, endTime);
+		p.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(() ->
+			cancelBuffSkill(p, skillId, skillLevel), endTime - System.currentTimeMillis()), skillLevel, endTime);
 	}
 
 	/**
@@ -237,12 +225,8 @@ public final class SkillTools {
 	public static void applyAoeBuff(final GameCharacter p, final PlayerSkillEffectsData e) {
 		StatusEffectTools.applyEffectsAndShowVisuals(p, StatusEffectTools.PASSIVE_BUFF, e, (byte) -1);
 		if (e.getDuration() > 0) {
-			p.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(new Runnable() {
-				@Override
-				public void run() {
-					cancelBuffSkill(p, e.getDataId(), e.getLevel());
-				}
-			}, e.getDuration()), e.getLevel(), System.currentTimeMillis() + e.getDuration());
+			p.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(() ->
+				cancelBuffSkill(p, e.getDataId(), e.getLevel()), e.getDuration()), e.getLevel(), System.currentTimeMillis() + e.getDuration());
 		}
 	}
 
@@ -267,7 +251,7 @@ public final class SkillTools {
 		}
 		//"Dispel can cure: Weakness, Poison, Seal, Curse and Darkness
 		//Dispel can NOT cure: Confusion, Zombify, Seduction, Ice Seduction, Implanted bombs, Freezing, Darkness Damage and Stun"
-		for (PlayerStatusEffect debuff : new PlayerStatusEffect[] { PlayerStatusEffect.POISON, PlayerStatusEffect.SEAL, PlayerStatusEffect.DARKNESS, PlayerStatusEffect.WEAKNESS, PlayerStatusEffect.CURSE }) {
+		for (PlayerStatusEffect debuff : new PlayerStatusEffect[]{PlayerStatusEffect.POISON, PlayerStatusEffect.SEAL, PlayerStatusEffect.DARKNESS, PlayerStatusEffect.WEAKNESS, PlayerStatusEffect.CURSE}) {
 			PlayerStatusEffectValues v = p.getEffectValue(debuff);
 			if (v != null) {
 				StatusEffectTools.dispelEffectsAndShowVisuals(p, v.getEffectsData());

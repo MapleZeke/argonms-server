@@ -29,10 +29,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class DefaultCashShopDataLoader extends CashShopDataLoader {
 	private static final Logger LOG = Logger.getLogger(DefaultCashShopDataLoader.class.getName());
 

@@ -21,10 +21,6 @@ package argonms.game.loading.map;
 import argonms.common.GlobalConstants;
 import java.awt.Point;
 
-/**
- *
- * @author GoldenKevin
- */
 public class PortalData {
 	private String pn;
 	private byte pt;

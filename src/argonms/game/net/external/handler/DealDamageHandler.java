@@ -64,10 +64,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
 
 //TODO: log any suspicious damages (must calculate max damage first)
-/**
- *
- * @author GoldenKevin
- */
 public final class DealDamageHandler {
 	private enum AttackType { MELEE, RANGED, MAGIC, SUMMON, CHARGE }
 
@@ -228,12 +224,9 @@ public final class DealDamageHandler {
 		if (e != null) {
 			if (attack.skill == Skills.POISON_MIST) {
 				final Mist mist = new Mist(p, e);
-				ScheduledFuture<?> poisonSchedule = Scheduler.getInstance().runRepeatedly(new Runnable() {
-					@Override
-					public void run() {
-						for (MapEntity mo : p.getMap().getMapEntitiesInRect(mist.getBox(), EnumSet.of(EntityType.MONSTER)))
-							MonsterStatusEffectTools.applyEffectsAndShowVisuals((Mob) mo, p, e);
-					}
+				ScheduledFuture<?> poisonSchedule = Scheduler.getInstance().runRepeatedly(() -> {
+					for (MapEntity mo : p.getMap().getMapEntitiesInRect(mist.getBox(), EnumSet.of(EntityType.MONSTER)))
+						MonsterStatusEffectTools.applyEffectsAndShowVisuals((Mob) mo, p, e);
 				}, 2000, 2500);
 				p.getMap().spawnMist(mist, e.getDuration(), poisonSchedule);
 			}
@@ -367,12 +360,8 @@ public final class DealDamageHandler {
 				final Point tdpos = new Point(mobPos.x + Rng.getGenerator().nextInt(100) - 50, mobPos.y);
 				final ItemDrop d = new ItemDrop(dropAmt);
 
-				Scheduler.getInstance().runAfterDelay(new Runnable() {
-					@Override
-					public void run() {
-						tdmap.drop(d, mobId, mobPos, tdpos, ItemDrop.PICKUP_ALLOW_OWNER, pEntId);
-					}
-				}, delay);
+				Scheduler.getInstance().runAfterDelay(() ->
+					tdmap.drop(d, mobId, mobPos, tdpos, ItemDrop.PICKUP_ALLOW_OWNER, pEntId), delay);
 
 				delay += 100;
 			}
@@ -508,12 +497,9 @@ public final class DealDamageHandler {
 					for (int meso : attack.mesoExplosion) {
 						final ItemDrop drop = (ItemDrop) map.getEntityById(EntityType.DROP, meso);
 						if (drop != null) {
-							Scheduler.getInstance().runAfterDelay(new Runnable() {
-								@Override
-								public void run() {
-									if (drop.isAlive()) {
-										map.mesoExplosion(drop, player);
-									}
+							Scheduler.getInstance().runAfterDelay(() -> {
+								if (drop.isAlive()) {
+									map.mesoExplosion(drop, player);
 								}
 							}, delay);
 							delay += 100;

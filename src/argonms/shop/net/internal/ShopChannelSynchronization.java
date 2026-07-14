@@ -32,10 +32,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ShopChannelSynchronization extends CrossProcessSynchronization {
 	private final byte targetWorld;
 	private final byte targetCh;

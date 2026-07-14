@@ -30,10 +30,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CrossChannelCommandTarget implements CommandTarget {
 	private final byte localChannel;
 	private final byte targetChannel;

@@ -26,10 +26,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class CrossProcessSynchronization {
 	protected static final class WeakValueMap<K, V> {
 		private final Map<K, WeakValue<K, V>> backingMap;
@@ -110,8 +106,7 @@ public abstract class CrossProcessSynchronization {
 
 	protected CrossProcessSynchronization() {
 		//prevents memory leaks in case responses time out and never reach us
-		this.blockingCalls = new WeakValueMap<>
-				(new ConcurrentHashMap<Integer, WeakValueMap.WeakValue<Integer, BlockingQueue<Pair<Byte, Object>>>>());
+		this.blockingCalls = new WeakValueMap<>(new ConcurrentHashMap<Integer, WeakValueMap.WeakValue<Integer, BlockingQueue<Pair<Byte, Object>>>>());
 		this.nextResponseId = new AtomicInteger(0);
 	}
 }

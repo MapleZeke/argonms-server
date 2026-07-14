@@ -30,10 +30,6 @@ import argonms.game.net.external.GamePackets;
 import java.util.EnumMap;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class StatAllocationHandler {
 	public static void handleApAllocation(LittleEndianReader packet, GameClient gc) {
 		GameCharacter p = gc.getPlayer();

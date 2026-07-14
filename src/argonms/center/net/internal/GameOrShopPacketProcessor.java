@@ -32,10 +32,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class GameOrShopPacketProcessor extends RemoteCenterPacketProcessor {
 	protected void writeCenterGameSynchronizationPacketHeader(LittleEndianWriter lew, byte destCh, byte opcode) {
 		lew.writeByte(CenterRemoteOps.CENTER_SERVER_SYNCHRONIZATION);

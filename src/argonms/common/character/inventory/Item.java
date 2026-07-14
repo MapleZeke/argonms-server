@@ -18,10 +18,6 @@
 
 package argonms.common.character.inventory;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Item extends InventorySlot implements Cloneable {
 	private short qty;
 

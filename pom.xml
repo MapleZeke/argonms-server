@@ -14,6 +14,15 @@
                 <version>5.44.0</version>
                 <configuration>
                     <exportDatatables>true</exportDatatables>
+                    <activeRecipes>
+                        <!-- Static-analysis improvements beyond CommonStaticAnalysis -->
+                        <recipe>org.openrewrite.staticanalysis.CodeCleanup</recipe>
+                        <recipe>org.openrewrite.staticanalysis.RemoveCallsToSystemGc</recipe>
+                        <recipe>org.openrewrite.staticanalysis.RemoveJavaDocAuthorTag</recipe>
+                        <recipe>org.openrewrite.staticanalysis.UseLambdaForFunctionalInterface</recipe>
+                        <!-- OWASP Top-10 A02 – cryptographic failures (SecureRandom, etc.) -->
+                        <recipe>org.openrewrite.java.security.OwaspA02</recipe>
+                    </activeRecipes>
                 </configuration>
                 <dependencies>
                     <dependency>

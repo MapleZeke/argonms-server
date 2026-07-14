@@ -18,10 +18,6 @@
 
 package argonms.common.character.inventory;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Ring extends Equip implements Cloneable {
 	private int partnerCharId;
 	private long partnerRingUid;

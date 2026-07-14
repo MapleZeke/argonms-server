@@ -26,10 +26,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- *
- * @author GoldenKevin
- */
 public class LockableSet<T> implements Set<T> {
 	private final Set<T> set;
 	private final Lock readLock;

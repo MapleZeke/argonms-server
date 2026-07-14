@@ -23,7 +23,6 @@ import java.util.Random;
 
 /**
  * Provides a central area to acquire a ThreadLocal random number generator.
- * @author GoldenKevin
  */
 public final class Rng {
 	//here is what Sun documented in Math.random():

@@ -18,10 +18,6 @@
 
 package argonms.game.loading.mob;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Skill {
 	private short skill;
 	private byte level;

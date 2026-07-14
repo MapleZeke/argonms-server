@@ -29,10 +29,6 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * 
- * @author GoldenKevin
- */
 public class McdbSkillDataLoader extends SkillDataLoader {
 	private static final Logger LOG = Logger.getLogger(McdbSkillDataLoader.class.getName());
 

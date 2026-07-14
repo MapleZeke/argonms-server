@@ -42,10 +42,6 @@ import argonms.game.script.EventManipulator;
 import java.util.Map.Entry;
 import java.util.Random;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class EnterHandler {
 	public static void handlePlayerConnection(LittleEndianReader packet, GameClient gc) {
 		int cid = packet.readInt();

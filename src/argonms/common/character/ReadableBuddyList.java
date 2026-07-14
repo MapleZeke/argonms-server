@@ -20,10 +20,6 @@ package argonms.common.character;
 
 import java.util.Collection;
 
-/**
- *
- * @author GoldenKevin
- */
 public interface ReadableBuddyList {
 	public Collection<BuddyListEntry> getBuddies();
 

@@ -29,10 +29,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class DefaultNpcShopDataLoader extends NpcShopDataLoader {
 	private static final Logger LOG = Logger.getLogger(DefaultNpcShopDataLoader.class.getName());
 

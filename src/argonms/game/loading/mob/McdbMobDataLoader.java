@@ -27,10 +27,6 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * 
- * @author GoldenKevin
- */
 public class McdbMobDataLoader extends MobDataLoader {
 	private static final Logger LOG = Logger.getLogger(McdbMobDataLoader.class.getName());
 

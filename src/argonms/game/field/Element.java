@@ -18,10 +18,6 @@
 
 package argonms.game.field;
 
-/**
- *
- * @author GoldenKevin
- */
 public enum Element {
 	NEUTRAL, FIRE, ICE, LIGHTING, POISON, HOLY, PHYSICAL;
 

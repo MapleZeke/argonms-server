@@ -21,10 +21,6 @@ package argonms.game.character;
 import argonms.common.loading.StatusEffectsData;
 import argonms.common.loading.StatusEffectsData.EffectSource;
 
-/**
- *
- * @author GoldenKevin
- */
 public class PlayerStatusEffectValues {
 	private final StatusEffectsData e;
 	private final short mod;

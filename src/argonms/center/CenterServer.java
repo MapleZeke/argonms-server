@@ -52,10 +52,6 @@ import java.util.logging.Logger;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class CenterServer {
 	private static final Logger LOG = Logger.getLogger(CenterServer.class.getName());
 

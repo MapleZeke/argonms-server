@@ -23,10 +23,6 @@ import java.awt.Point;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class PartyList extends IntraworldGroupList<
 		IntraworldGroupList.Member,
 		IntraworldGroupList.RemoteMember,

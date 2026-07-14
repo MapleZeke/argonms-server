@@ -23,10 +23,6 @@ import java.awt.Point;
 import java.util.EnumSet;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public class TeleportMovement implements PositionChangedMovementFragment, StanceChangedMovementFragment {
 	private final byte type;
 	private final Point position;

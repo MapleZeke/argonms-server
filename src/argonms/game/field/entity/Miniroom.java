@@ -29,10 +29,6 @@ import argonms.game.net.external.GamePackets;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class Miniroom extends AbstractEntity {
 	public static final byte ACT_CREATE = 0x00;
 	public static final byte ACT_INVITE = 0x02;

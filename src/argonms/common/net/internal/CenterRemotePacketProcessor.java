@@ -24,10 +24,6 @@ import argonms.common.util.output.LittleEndianByteArrayWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class CenterRemotePacketProcessor {
 	private static final Logger LOG = Logger.getLogger(CenterRemotePacketProcessor.class.getName());
 

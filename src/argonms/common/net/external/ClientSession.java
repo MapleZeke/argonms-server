@@ -42,10 +42,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ClientSession<T extends RemoteClient> implements Session {
 	public static final byte CLIENT_DISTRIBUTION_JAPAN = 3;
 	public static final byte CLIENT_DISTRIBUTION_TEST = 5;
@@ -74,12 +70,8 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	private final OrderedQueue sendQueue;
 
 	private final KeepAliveTask heartbeatTask;
-	private final Runnable idleTask = new Runnable() {
-		@Override
-		public void run() {
-			startPingTask();
-		}
-	};
+	private final Runnable idleTask = () ->
+		startPingTask();
 	private ScheduledFuture<?> idleTaskFuture;
 
 	private MessageType nextMessageType;
@@ -213,7 +205,7 @@ public class ClientSession<T extends RemoteClient> implements Session {
 				idleTaskFuture.cancel(false);
 			}
 
-			LOG.log(Level.FINE, "Client {0} ({1}) disconnected: {2}", new Object[] { getAccountName(), getAddress(), reason });
+			LOG.log(Level.FINE, "Client {0} ({1}) disconnected: {2}", new Object[]{getAccountName(), getAddress(), reason});
 			client.disconnected();
 			onClose.closed(this);
 			return true;
@@ -352,7 +344,7 @@ public class ClientSession<T extends RemoteClient> implements Session {
 				readBuffer.limit(HEADER_LENGTH);
 				nextMessageType = MessageType.HEADER;
 				idleTaskFuture = Scheduler.getWheelTimer().runAfterDelay(idleTask, IDLE_TIME);
-				return new byte[][] { iv, message };
+				return new byte[][]{iv, message};
 			}
 			default:
 				return null;

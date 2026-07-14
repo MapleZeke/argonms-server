@@ -40,10 +40,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class GoToHandler {
 	public static void handleChangeChannel(LittleEndianReader packet, GameClient gc) {
 		byte destCh = (byte) (packet.readByte() + 1);

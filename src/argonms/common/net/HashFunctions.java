@@ -26,10 +26,6 @@ import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.crypto.digests.SHA512Digest;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class HashFunctions {
 	public static final Charset ASCII = StandardCharsets.US_ASCII;
 

@@ -18,10 +18,6 @@
 
 package argonms.common.net.internal;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ChannelSynchronizationOps {
 	public static final byte INBOUND_PLAYER = 1;
 	public static final byte INBOUND_PLAYER_ACCEPTED = 2;
@@ -58,4 +54,7 @@ public class ChannelSynchronizationOps {
 
 	public static final byte CHANNEL_OFFLINE = -1;
 	public static final byte CHANNEL_CASH_SHOP = 0;
+
+	private ChannelSynchronizationOps() {
+	}
 }

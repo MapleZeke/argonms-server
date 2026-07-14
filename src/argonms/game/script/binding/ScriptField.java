@@ -30,10 +30,6 @@ import java.awt.Point;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ScriptField {
 	private final Scriptable globalScope;
 	private final GameMap map;

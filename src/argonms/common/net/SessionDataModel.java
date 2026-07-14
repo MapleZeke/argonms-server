@@ -19,10 +19,6 @@
 
 package argonms.common.net;
 
-/**
- *
- * @author GoldenKevin
- */
 public interface SessionDataModel {
 	public Session getSession();
 	public void disconnected();

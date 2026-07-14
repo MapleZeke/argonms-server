@@ -24,10 +24,6 @@ import argonms.game.field.MapEntity.EntityType;
 import argonms.game.field.entity.Reactor;
 import argonms.game.net.external.GameClient;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class ReactorHandler {
 	public static void handleReactorTrigger(LittleEndianReader packet, GameClient gc) {
 		int entId = packet.readInt();

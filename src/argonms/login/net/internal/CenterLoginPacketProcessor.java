@@ -31,7 +31,6 @@ import java.util.logging.Logger;
 /**
  * Processes packet sent from the center server and received at the login
  * server.
- * @author GoldenKevin
  */
 public class CenterLoginPacketProcessor extends CenterRemotePacketProcessor {
 	private static final Logger LOG = Logger.getLogger(CenterLoginPacketProcessor.class.getName());
@@ -67,7 +66,7 @@ public class CenterLoginPacketProcessor extends CenterRemotePacketProcessor {
 				processChannelPortChange(packet);
 				break;
 			default:
-				LOG.log(Level.FINE, "Received unhandled interserver packet {0} bytes long:\n{1}", new Object[] { packet.available() + 2, packet });
+				LOG.log(Level.FINE, "Received unhandled interserver packet {0} bytes long:\n{1}", new Object[]{packet.available() + 2, packet});
 				break;
 		}
 	}

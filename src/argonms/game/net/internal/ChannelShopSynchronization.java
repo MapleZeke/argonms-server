@@ -28,10 +28,6 @@ import argonms.common.util.output.LittleEndianWriter;
 import argonms.game.character.PlayerContinuation;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ChannelShopSynchronization extends ChannelOrShopSynchronization {
 	private final byte localWorld;
 	private final byte localCh;

@@ -18,10 +18,6 @@
 
 package argonms.game.character;
 
-/**
- *
- * @author GoldenKevin
- */
 public class SkillMacro {
 	private final String name;
 	private final boolean silent;

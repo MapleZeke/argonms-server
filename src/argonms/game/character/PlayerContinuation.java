@@ -37,10 +37,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-/**
- *
- * @author GoldenKevin
- */
 public class PlayerContinuation extends AbstractPlayerContinuation {
 	private final Map<Integer, PlayerSkillSummon> activeSummons;
 
@@ -82,16 +78,13 @@ public class PlayerContinuation extends AbstractPlayerContinuation {
 			} else if (skillId == Skills.ENERGY_CHARGE) {
 				final PlayerSkillEffectsData e = SkillDataLoader.getInstance().getSkill(Skills.ENERGY_CHARGE).getLevel(skillState.level);
 				p.addToActiveEffects(PlayerStatusEffect.ENERGY_CHARGE, new PlayerStatusEffectValues(e, (short) 10000));
-				p.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(new Runnable() {
-					@Override
-					public void run() {
-						p.resetEnergyCharge();
-						p.removeCancelEffectTask(e);
-						p.removeFromActiveEffects(PlayerStatusEffect.ENERGY_CHARGE);
-						Map<PlayerStatusEffect, Short> updatedStats = Collections.singletonMap(PlayerStatusEffect.ENERGY_CHARGE, Short.valueOf((short) 0));
-						p.getClient().getSession().send(GamePackets.writeUsePirateSkill(updatedStats, 0, 0, (short) 0));
-						p.getMap().sendToAll(GamePackets.writeBuffMapPirateEffect(p, updatedStats, 0, 0), p);
-					}
+				p.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(() -> {
+					p.resetEnergyCharge();
+					p.removeCancelEffectTask(e);
+					p.removeFromActiveEffects(PlayerStatusEffect.ENERGY_CHARGE);
+					Map<PlayerStatusEffect, Short> updatedStats = Collections.singletonMap(PlayerStatusEffect.ENERGY_CHARGE, Short.valueOf((short) 0));
+					p.getClient().getSession().send(GamePackets.writeUsePirateSkill(updatedStats, 0, 0, (short) 0));
+					p.getMap().sendToAll(GamePackets.writeBuffMapPirateEffect(p, updatedStats, 0, 0), p);
 				}, skillState.endTime - System.currentTimeMillis()), skillState.level, skillState.endTime);
 			} else {
 				SkillTools.localUseBuffSkill(p, skillId, skillState.level, skillState.endTime);

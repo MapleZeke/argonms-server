@@ -48,10 +48,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class ShopCharacter extends LoggedInPlayer {
 	private static final Logger LOG = Logger.getLogger(ShopCharacter.class.getName());
 
@@ -212,12 +208,8 @@ public final class ShopCharacter extends LoggedInPlayer {
 	}
 
 	private void addCooldown(final int skill, short time) {
-		cooldowns.put(Integer.valueOf(skill), new Cooldown(time * 1000, new Runnable() {
-			@Override
-			public void run() {
-				removeCooldown(skill);
-			}
-		}));
+		cooldowns.put(Integer.valueOf(skill), new Cooldown(time * 1000, () ->
+			removeCooldown(skill)));
 	}
 
 	public void setReturnContext(ShopPlayerContinuation context) {
@@ -440,7 +432,7 @@ public final class ShopCharacter extends LoggedInPlayer {
 			rs = ps.executeQuery();
 			if (!rs.next()) {
 				LOG.log(Level.WARNING, "Client requested to load a nonexistent character w/ id {0} (account {1}).",
-						new Object[] { id, c.getAccountId() });
+						new Object[]{id, c.getAccountId()});
 				return null;
 			}
 			int accountid = rs.getInt(1);

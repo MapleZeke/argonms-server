@@ -29,10 +29,6 @@ import java.util.logging.Logger;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ScriptEvent {
 	private static final Logger LOG = Logger.getLogger(ScriptEvent.class.getName());
 
@@ -81,15 +77,12 @@ public class ScriptEvent {
 	}
 
 	public void startTimer(final String key, int millisDelay) {
-		timers.put(key, Scheduler.getInstance().runAfterDelay(new Runnable() {
-			@Override
-			public void run() {
-				timers.remove(key);
-				try {
-					hooks.timerExpired(key);
-				} catch (Throwable ex) {
-					LOG.log(Level.SEVERE, "Uncaught exception while processing event timer.", ex);
-				}
+		timers.put(key, Scheduler.getInstance().runAfterDelay(() -> {
+			timers.remove(key);
+			try {
+				hooks.timerExpired(key);
+			} catch (Throwable ex) {
+				LOG.log(Level.SEVERE, "Uncaught exception while processing event timer.", ex);
 			}
 		}, millisDelay));
 	}

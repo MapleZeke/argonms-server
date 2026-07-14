@@ -23,7 +23,6 @@ package argonms.common.util;
  *
  * Taken from an OdinMS-derived source with a few modifications.
  *
- * @author Frz
  * @since Revision 206
  * @version 1.1
  */

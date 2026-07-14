@@ -56,10 +56,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CrossServerSynchronization {
 	private static final Logger LOG = Logger.getLogger(CrossServerSynchronization.class.getName());
 

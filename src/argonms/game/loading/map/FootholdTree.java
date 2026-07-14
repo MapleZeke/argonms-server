@@ -23,10 +23,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-/**
- * 
- * @author Matze
- */
 public class FootholdTree {
 	private static int maxDepth = 8;
 
@@ -99,9 +95,9 @@ public class FootholdTree {
 				minDropX = f.getX2();
 			}
 		}
-		if (/*footholds.size() == 0 || */depth == maxDepth || 
-			(f.getX1() >= p1.x && f.getX2() <= p2.x &&
-			f.getY1() >= p1.y && f.getY2() <= p2.y)) {
+		if (/*footholds.size() == 0 || */depth == maxDepth 
+			|| (f.getX1() >= p1.x && f.getX2() <= p2.x
+			&& f.getY1() >= p1.y && f.getY2() <= p2.y)) {
 			footholds.add(f);
 		} else {
 			if (nw == null) {
@@ -146,8 +142,8 @@ public class FootholdTree {
 		Foothold ret;
 		for (Foothold f : footholds) {
 			//if (f.isWall()) System.out.println(f.getX1() + " " + f.getX2());
-			if (f.isWall() && f.getX1() >= p1.x && f.getX1() <= p2.x &&
-				f.getY1() >= p1.y && f.getY2() <= p1.y) {
+			if (f.isWall() && f.getX1() >= p1.x && f.getX1() <= p2.x
+				&& f.getY1() >= p1.y && f.getY2() <= p1.y) {
 				return f;
 			}
 		}

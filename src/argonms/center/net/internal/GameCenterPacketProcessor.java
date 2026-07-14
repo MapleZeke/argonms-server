@@ -46,7 +46,6 @@ import java.util.logging.Logger;
 /**
  * Processes packet sent from the game server and received at the center
  * server.
- * @author GoldenKevin
  */
 public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 	private static final Logger LOG = Logger.getLogger(GameCenterPacketProcessor.class.getName());
@@ -87,7 +86,7 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		}
 	}
 
-	private void serverOnline(LittleEndianReader packet)  {
+	private void serverOnline(LittleEndianReader packet) {
 		r.setHost(packet.readLengthPrefixedString());
 		byte world = packet.readByte();
 		byte size = packet.readByte();

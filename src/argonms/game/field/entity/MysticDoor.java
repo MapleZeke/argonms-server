@@ -33,10 +33,6 @@ import argonms.game.net.external.GamePackets;
 import java.awt.Point;
 import java.lang.ref.WeakReference;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class MysticDoor extends AbstractEntity {
 	public static final byte OUT_OF_TOWN_PORTAL_ID = (byte) 0x80;
 
@@ -184,12 +180,9 @@ public final class MysticDoor extends AbstractEntity {
 			owner.getClient().getSession().send(GamePackets.writeSpawnPortal(destination));
 		}
 
-		Scheduler.getInstance().runAfterDelay(new Runnable() {
-			@Override
-			public void run() {
-				source.mod = DESTROY_ANIMATION_FADE;
-				destination.mod = DESTROY_ANIMATION_FADE;
-			}
+		Scheduler.getInstance().runAfterDelay(() -> {
+			source.mod = DESTROY_ANIMATION_FADE;
+			destination.mod = DESTROY_ANIMATION_FADE;
 		}, 2000);
 
 		return source;

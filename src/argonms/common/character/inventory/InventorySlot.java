@@ -18,10 +18,6 @@
 
 package argonms.common.character.inventory;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class InventorySlot implements Comparable<InventorySlot>, Cloneable {
 	//TODO: store database entry id so we can save some keys, because right now,
 	//we can do a maximum of 1403584 logouts in worst case.

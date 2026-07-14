@@ -18,10 +18,6 @@
 
 package argonms.game.loading.mob;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Attack {
 	private boolean deadlyAttack;
 	private short mpBurn;

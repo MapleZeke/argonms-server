@@ -24,10 +24,6 @@ import argonms.shop.loading.cashshop.Commodity;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class CommodityOverrideDataLoader {
 	private static CommodityOverrideDataLoader instance;
 

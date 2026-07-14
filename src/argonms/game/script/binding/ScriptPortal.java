@@ -24,10 +24,6 @@ import argonms.game.character.MapMemoryVariable;
 import argonms.game.net.external.GameClient;
 import org.mozilla.javascript.Scriptable;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ScriptPortal extends PlayerScriptInteraction {
 	private final byte portalId;
 	private boolean warped;

@@ -36,10 +36,6 @@ import argonms.game.character.inventory.PetTools;
 import argonms.game.net.external.GameClient;
 import argonms.game.net.external.GamePackets;
 
-/**
- *
- * @author GoldenKevin
- */
 public class PetHandler {
 	public static void handlePetFood(LittleEndianReader packet, GameClient gc) {
 		/*int tickCount = */packet.readInt();
@@ -257,5 +253,8 @@ public class PetHandler {
 		lew.writeLengthPrefixedString(message);
 		lew.writeBool(hasQuoteRing); //chat item
 		return lew.getBytes();
+	}
+
+	private PetHandler() {
 	}
 }

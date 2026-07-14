@@ -40,10 +40,6 @@ import argonms.game.net.external.GameClient;
 import argonms.game.net.external.GamePackets;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class InventoryHandler {
 	public static void handleItemMove(LittleEndianReader packet, GameClient gc) {
 		/*int time = */packet.readInt();

@@ -40,10 +40,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ClientListener<T extends RemoteClient> implements SessionCreator {
 	public interface ClientFactory<T extends RemoteClient> {
 		public T newInstance();

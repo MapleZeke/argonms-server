@@ -22,7 +22,6 @@ import argonms.common.util.HexTool;
 
 /**
  *
- * @author GoldenKevin
  * @version 1.1
  */
 public class LittleEndianByteArrayWriter extends LittleEndianWriter {

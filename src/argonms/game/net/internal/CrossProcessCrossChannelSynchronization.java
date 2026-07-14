@@ -35,10 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CrossProcessCrossChannelSynchronization extends ChannelOrShopSynchronization implements CrossChannelSynchronization {
 	private final byte localCh;
 	private final byte serverId;

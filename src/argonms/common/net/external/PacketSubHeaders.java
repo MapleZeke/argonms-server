@@ -32,7 +32,6 @@ package argonms.common.net.external;
  *
  * Created as part of an effort to curb magic numbers and to give more meaning
  * to certain constants that are in written in packets sent to clients
- * @author GoldenKevin
  */
 public final class PacketSubHeaders {
 	public static final byte STATUS_INFO_INVENTORY = 0;

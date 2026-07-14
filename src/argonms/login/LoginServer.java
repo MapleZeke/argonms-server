@@ -25,7 +25,6 @@ import argonms.common.loading.DataFileType;
 import argonms.common.loading.item.ItemDataLoader;
 import argonms.common.net.external.CheatTracker;
 import argonms.common.net.external.ClientListener;
-import argonms.common.net.external.ClientListener.ClientFactory;
 import argonms.common.net.internal.RemoteCenterSession;
 import argonms.common.util.DatabaseManager;
 import argonms.common.util.DatabaseManager.DatabaseType;
@@ -57,10 +56,6 @@ import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
 //TODO: NOT THREAD SAFE
-/**
- *
- * @author GoldenKevin
- */
 public final class LoginServer implements LocalServer {
 	private static final Logger LOG = Logger.getLogger(LoginServer.class.getName());
 
@@ -166,12 +161,7 @@ public final class LoginServer implements LocalServer {
 		}
 		wzPath = System.getProperty("argonms.data.dir");
 
-		handler = new ClientListener<>(new ClientLoginPacketProcessor(), new ClientFactory<LoginClient>() {
-			@Override
-			public LoginClient newInstance() {
-				return new LoginClient();
-			}
-		});
+		handler = new ClientListener<>(new ClientLoginPacketProcessor(), () -> new LoginClient());
 
 		boolean mcdb = wzType == DataFileType.MCDB;
 		prop = new PropertiesConfiguration();
@@ -204,7 +194,7 @@ public final class LoginServer implements LocalServer {
 						int realSubversion = rs.getInt(2);
 						int realGameVersion = rs.getInt(3);
 						if (realVersion != GlobalConstants.MCDB_VERSION || realSubversion != GlobalConstants.MCDB_SUBVERSION) {
-							LOG.log(Level.SEVERE, "MCDB version imcompatible. Expected: {0}.{1} Have: {2}.{3}", new Object[] { GlobalConstants.MCDB_VERSION, GlobalConstants.MCDB_SUBVERSION, realVersion, realSubversion });
+							LOG.log(Level.SEVERE, "MCDB version imcompatible. Expected: {0}.{1} Have: {2}.{3}", new Object[]{GlobalConstants.MCDB_VERSION, GlobalConstants.MCDB_SUBVERSION, realVersion, realSubversion});
 							System.exit(3);
 							return;
 						}
@@ -265,18 +255,15 @@ public final class LoginServer implements LocalServer {
 	public void registerCenter() {
 		LOG.log(Level.INFO, "Center server registered.");
 		centerConnected = true;
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				initializeData(preloadAll, wzType, wzPath);
-				if (handler.bind(port)) {
-					LOG.log(Level.INFO, "Login Server is online.");
-					lci.serverReady();
-				} else {
-					System.exit(5);
-				}
-				Scheduler.getInstance().runRepeatedly(new RankingWorker(), rankingPeriod, rankingPeriod);
+		new Thread((Runnable) () -> {
+			initializeData(preloadAll, wzType, wzPath);
+			if (handler.bind(port)) {
+				LOG.log(Level.INFO, "Login Server is online.");
+				lci.serverReady();
+			} else {
+				System.exit(5);
 			}
+			Scheduler.getInstance().runRepeatedly(new RankingWorker(), rankingPeriod, rankingPeriod);
 		}, "data-preloader-thread").start();
 	}
 
@@ -299,7 +286,7 @@ public final class LoginServer implements LocalServer {
 				onlineWorlds.put(oWorld, w);
 			}
 			w.addGameServer(ip, ports, serverId);
-			LOG.log(Level.INFO, "{0} server registered as {1}.", new Object[] { ServerType.getName(serverId), host });
+			LOG.log(Level.INFO, "{0} server registered as {1}.", new Object[]{ServerType.getName(serverId), host});
 		} catch (UnknownHostException e) {
 			LOG.log(Level.INFO, "Could not accept " + ServerType.getName(serverId)
 					+ " server because its address could not be resolved!", e);

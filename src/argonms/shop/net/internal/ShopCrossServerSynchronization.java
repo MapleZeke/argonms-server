@@ -30,10 +30,6 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ShopCrossServerSynchronization {
 	private final Map<Byte, Map<Byte, ShopChannelSynchronization>> allChannels;
 	private final Map<Byte, ShopCenterServerSynchronization> intraworldGroups;

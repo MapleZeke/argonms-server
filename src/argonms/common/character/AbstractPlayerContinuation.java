@@ -21,10 +21,6 @@ package argonms.common.character;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class AbstractPlayerContinuation {
 	private final Map<Integer, BuffState.ItemState> activeItems;
 	private final Map<Integer, BuffState.SkillState> activeSkills;

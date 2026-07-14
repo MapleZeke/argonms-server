@@ -27,10 +27,6 @@ import argonms.game.character.PartyList;
 import argonms.game.net.external.GameClient;
 import argonms.game.net.external.GamePackets;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class PartyListHandler {
 	public static final byte CREATE = 0x01;
 	public static final byte LEAVE = 0x02;

@@ -18,10 +18,6 @@
 
 package argonms.common.net.external;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class ClientRecvOps {
 	public static final short LOGIN_PASSWORD = 0x01;
 	public static final short GUEST_LOGIN = 0x02;

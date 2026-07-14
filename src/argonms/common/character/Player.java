@@ -43,10 +43,6 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class Player {
 	private static final Logger LOG = Logger.getLogger(Player.class.getName());
 

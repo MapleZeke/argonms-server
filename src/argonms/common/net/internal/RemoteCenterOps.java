@@ -21,7 +21,6 @@ package argonms.common.net.internal;
 /**
  * Opcodes for packets sent from a remote server and received on the center
  * server.
- * @author GoldenKevin
  */
 public final class RemoteCenterOps {
 	public static final byte AUTH = 0x00;

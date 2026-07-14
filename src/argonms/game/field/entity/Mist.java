@@ -26,10 +26,6 @@ import argonms.game.loading.skill.PlayerSkillEffectsData;
 import argonms.game.net.external.GamePackets;
 import java.awt.Rectangle;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Mist extends AbstractEntity {
 	public static final int MOB_MIST = 0;
 	public static final int POISON_MIST = 1;

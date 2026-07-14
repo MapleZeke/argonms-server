@@ -45,10 +45,6 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class WorldlistHandler {
 	private static final Logger LOG = Logger.getLogger(WorldlistHandler.class.getName());
 
@@ -250,21 +246,21 @@ public final class WorldlistHandler {
 			valid = false;
 		}
 		if (gender == 0) {
-			if ((eyes < 20000 || eyes > 20002) || (hair != 30000 && hair != 30020 && hair != 30030) ||
-				(top != 1040002 && top != 1040006 && top != 1040010) || (bottom != 1060006 && bottom != 1060002)) {
+			if ((eyes < 20000 || eyes > 20002) || (hair != 30000 && hair != 30020 && hair != 30030)
+				|| (top != 1040002 && top != 1040006 && top != 1040010) || (bottom != 1060006 && bottom != 1060002)) {
 				valid = false;
 			} else if (gender == 1) {
-				if ((eyes < 21000 || eyes > 21002) || (hair != 31000 && hair != 31040 && hair != 31050) ||
-					(top != 1041002 && top != 1041006 && top != 1041010 && top != 1041011) || (bottom != 1061002 && bottom != 1061008)) {
+				if ((eyes < 21000 || eyes > 21002) || (hair != 31000 && hair != 31040 && hair != 31050)
+					|| (top != 1041002 && top != 1041006 && top != 1041010 && top != 1041011) || (bottom != 1061002 && bottom != 1061008)) {
 					valid = false;
 				} else {
 					valid = false;
 				}
 			}
 		}
-		if ((skin < 0 || skin > 3) || (weapon != 1302000 && weapon != 1322005 && weapon != 1312004) ||
-			(shoes != 1072001 && shoes != 1072005 && shoes != 1072037 && shoes != 1072038) ||
-			(hairColor != 0 && hairColor != 2 && hairColor != 3 && hairColor != 7)) {
+		if ((skin < 0 || skin > 3) || (weapon != 1302000 && weapon != 1322005 && weapon != 1312004)
+			|| (shoes != 1072001 && shoes != 1072005 && shoes != 1072037 && shoes != 1072038)
+			|| (hairColor != 0 && hairColor != 2 && hairColor != 3 && hairColor != 7)) {
 			valid = false;
 		}
 

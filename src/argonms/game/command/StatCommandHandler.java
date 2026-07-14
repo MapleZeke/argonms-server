@@ -23,10 +23,6 @@ import argonms.common.UserPrivileges;
 import java.util.Collections;
 import java.util.List;
 
-/**
- *
- * @author GoldenKevin
- */
 public class StatCommandHandler extends AbstractCommandDefinition<CommandCaller> {
 	@Override
 	public String getHelpMessage() {

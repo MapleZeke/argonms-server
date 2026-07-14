@@ -47,10 +47,6 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class LocalChannelCommandTarget implements CommandTarget {
 	private final GameCharacter target;
 
@@ -294,7 +290,7 @@ public class LocalChannelCommandTarget implements CommandTarget {
 					break;
 				}
 				case MAX_INVENTORY_SLOTS: {
-					for (Inventory.InventoryType type : new Inventory.InventoryType[] { Inventory.InventoryType.EQUIP, Inventory.InventoryType.USE, Inventory.InventoryType.SETUP, Inventory.InventoryType.ETC, Inventory.InventoryType.CASH }) {
+					for (Inventory.InventoryType type : new Inventory.InventoryType[]{Inventory.InventoryType.EQUIP, Inventory.InventoryType.USE, Inventory.InventoryType.SETUP, Inventory.InventoryType.ETC, Inventory.InventoryType.CASH}) {
 						Inventory inv = target.getInventory(type);
 						inv.increaseCapacity((short) 0xFF);
 						target.getClient().getSession().send(CommonPackets.writeInventoryUpdateCapacity(type, (short) 0xFF));

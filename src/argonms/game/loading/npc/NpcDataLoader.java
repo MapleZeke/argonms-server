@@ -24,10 +24,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class NpcDataLoader {
 	private static NpcDataLoader instance;
 

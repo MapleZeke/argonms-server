@@ -21,10 +21,6 @@ package argonms.game.field.movement;
 import argonms.common.util.output.LittleEndianWriter;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public interface LifeMovementFragment {
 	public enum UpdatedEntityInfo { POSITION, FOOTHOLD, STANCE }
 

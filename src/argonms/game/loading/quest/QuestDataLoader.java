@@ -29,10 +29,6 @@ import java.util.Map.Entry;
 
 //TODO: quests take a full 6MB of memory on unconditional preloading. be more
 //efficient with memory usage in several of these structures?
-/**
- *
- * @author GoldenKevin
- */
 public abstract class QuestDataLoader {
 	private static QuestDataLoader instance;
 

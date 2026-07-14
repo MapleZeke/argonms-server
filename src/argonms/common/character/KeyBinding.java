@@ -18,10 +18,6 @@
 
 package argonms.common.character;
 
-/**
- *
- * @author GoldenKevin
- */
 public class KeyBinding {
 	private final byte type;
 	private final int action;

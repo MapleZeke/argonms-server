@@ -25,10 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class QuestEntry {
 	public static final byte STATE_NOT_STARTED = 0;
 	public static final byte STATE_STARTED = 1;

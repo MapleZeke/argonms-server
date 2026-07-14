@@ -18,10 +18,6 @@
 
 package argonms.common;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class ServerType {
 	public static final byte UNDEFINED = -4;
 	public static final byte CENTER = -3;

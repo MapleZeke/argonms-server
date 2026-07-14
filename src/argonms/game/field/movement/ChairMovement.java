@@ -24,10 +24,6 @@ import java.awt.Point;
 import java.util.EnumSet;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ChairMovement implements PositionChangedMovementFragment, FootholdChangedMovementFragment, StanceChangedMovementFragment {
 	private final Point position;
 	private final short foothold;
@@ -70,4 +66,3 @@ public class ChairMovement implements PositionChangedMovementFragment, FootholdC
 		return stance;
 	}
 }
-

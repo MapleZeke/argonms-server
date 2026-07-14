@@ -42,10 +42,6 @@ import argonms.game.field.entity.Trade;
 import argonms.game.net.external.GameClient;
 import argonms.game.net.external.GamePackets;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class MiniroomHandler {
 	public static void handleAction(LittleEndianReader packet, GameClient gc) {
 		GameCharacter p = gc.getPlayer();

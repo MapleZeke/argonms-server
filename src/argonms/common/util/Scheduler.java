@@ -27,10 +27,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class Scheduler {
 	private static final Logger LOG = Logger.getLogger(Scheduler.class.getName());
 
@@ -44,27 +40,21 @@ public final class Scheduler {
 	}
 
 	public ScheduledFuture<?> runAfterDelay(final Runnable r, long delay) {
-		return timer.schedule(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					r.run();
-				} catch (Throwable ex) {
-					LOG.log(Level.WARNING, "Uncaught exception while running scheduled task", ex);
-				}
+		return timer.schedule((Runnable) () -> {
+			try {
+				r.run();
+			} catch (Throwable ex) {
+				LOG.log(Level.WARNING, "Uncaught exception while running scheduled task", ex);
 			}
 		}, delay, TimeUnit.MILLISECONDS);
 	}
 
 	public ScheduledFuture<?> runRepeatedly(final Runnable r, long delay, long period) {
-		return timer.scheduleAtFixedRate(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					r.run();
-				} catch (Throwable ex) {
-					LOG.log(Level.WARNING, "Uncaught exception while running periodic task", ex);
-				}
+		return timer.scheduleAtFixedRate(() -> {
+			try {
+				r.run();
+			} catch (Throwable ex) {
+				LOG.log(Level.WARNING, "Uncaught exception while running periodic task", ex);
 			}
 		}, delay, period, TimeUnit.MILLISECONDS);
 	}

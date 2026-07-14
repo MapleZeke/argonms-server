@@ -24,10 +24,6 @@ import argonms.game.field.entity.ItemDrop;
 import argonms.game.field.entity.Mob;
 import java.util.Collections;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ScriptMob {
 	private final Mob m;
 

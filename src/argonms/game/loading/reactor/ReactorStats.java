@@ -21,10 +21,6 @@ package argonms.game.loading.reactor;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ReactorStats {
 	private final int reactorId;
 	private final Map<Byte, State> states;

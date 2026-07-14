@@ -27,10 +27,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public class GameCenterInterface extends RemoteCenterInterface {
 	private final GameServer local;
 	private final byte serverId;

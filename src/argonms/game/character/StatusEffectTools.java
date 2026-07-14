@@ -33,10 +33,6 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class StatusEffectTools {
 	public static final byte LEVEL_UP = 0;
 	public static final byte ACTIVE_BUFF = 1;

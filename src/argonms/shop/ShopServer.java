@@ -27,7 +27,6 @@ import argonms.common.loading.item.ItemDataLoader;
 import argonms.common.loading.string.StringDataLoader;
 import argonms.common.net.external.CheatTracker;
 import argonms.common.net.external.ClientListener;
-import argonms.common.net.external.ClientListener.ClientFactory;
 import argonms.common.net.external.CommonPackets;
 import argonms.common.net.external.PlayerLog;
 import argonms.common.net.internal.RemoteCenterSession;
@@ -66,10 +65,6 @@ import java.util.logging.Logger;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class ShopServer implements LocalServer {
 	private static final Logger LOG = Logger.getLogger(ShopServer.class.getName());
 	private static final int CHANNEL_CHANGE_TIMEOUT = 2000;
@@ -160,12 +155,7 @@ public final class ShopServer implements LocalServer {
 		}
 		wzPath = System.getProperty("argonms.data.dir");
 
-		handler = new ClientListener<>(new ClientShopPacketProcessor(), new ClientFactory<ShopClient>() {
-			@Override
-			public ShopClient newInstance() {
-				return new ShopClient();
-			}
-		});
+		handler = new ClientListener<>(new ClientShopPacketProcessor(), () -> new ShopClient());
 
 		boolean mcdb = wzType == DataFileType.MCDB;
 		prop = new PropertiesConfiguration();
@@ -198,7 +188,7 @@ public final class ShopServer implements LocalServer {
 						int realSubversion = rs.getInt(2);
 						int realGameVersion = rs.getInt(3);
 						if (realVersion != GlobalConstants.MCDB_VERSION || realSubversion != GlobalConstants.MCDB_SUBVERSION) {
-							LOG.log(Level.SEVERE, "MCDB version imcompatible. Expected: {0}.{1} Have: {2}.{3}", new Object[] { GlobalConstants.MCDB_VERSION, GlobalConstants.MCDB_SUBVERSION, realVersion, realSubversion });
+							LOG.log(Level.SEVERE, "MCDB version imcompatible. Expected: {0}.{1} Have: {2}.{3}", new Object[]{GlobalConstants.MCDB_VERSION, GlobalConstants.MCDB_SUBVERSION, realVersion, realSubversion});
 							System.exit(3);
 							return;
 						}
@@ -278,16 +268,13 @@ public final class ShopServer implements LocalServer {
 	public void registerCenter() {
 		LOG.log(Level.INFO, "Center server registered.");
 		centerConnected = true;
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				initializeData(preloadAll, wzType, wzPath);
-				if (handler.bind(port)) {
-					LOG.log(Level.INFO, "Shop Server is online.");
-					sci.serverReady();
-				} else {
-					System.exit(5);
-				}
+		new Thread((Runnable) () -> {
+			initializeData(preloadAll, wzType, wzPath);
+			if (handler.bind(port)) {
+				LOG.log(Level.INFO, "Shop Server is online.");
+				sci.serverReady();
+			} else {
+				System.exit(5);
 			}
 		}, "data-preloader-thread").start();
 	}
@@ -310,7 +297,7 @@ public final class ShopServer implements LocalServer {
 			}
 			w.addGameServer(ip, ports, serverId);
 			worldComm.addChannels(world, serverId, ip, ports);
-			LOG.log(Level.INFO, "{0} server registered as {1}.", new Object[] { ServerType.getName(serverId), host });
+			LOG.log(Level.INFO, "{0} server registered as {1}.", new Object[]{ServerType.getName(serverId), host});
 		} catch (UnknownHostException e) {
 			LOG.log(Level.INFO, "Could not accept " + ServerType.getName(serverId)
 					+ " server because its address could not be resolved!", e);
@@ -366,12 +353,8 @@ public final class ShopServer implements LocalServer {
 	}
 
 	public void requestChannelChange(final ShopCharacter p, byte destCh) {
-		queuedChannelChanges.put(Integer.valueOf(p.getId()), new Pair<Byte, ScheduledFuture<?>>(Byte.valueOf(destCh), Scheduler.getInstance().runAfterDelay(new Runnable() {
-			@Override
-			public void run() {
-				queuedChannelChanges.remove(Integer.valueOf(p.getId()));
-			}
-		}, CHANNEL_CHANGE_TIMEOUT)));
+		queuedChannelChanges.put(Integer.valueOf(p.getId()), new Pair<Byte, ScheduledFuture<?>>(Byte.valueOf(destCh), Scheduler.getInstance().runAfterDelay(() ->
+			queuedChannelChanges.remove(Integer.valueOf(p.getId())), CHANNEL_CHANGE_TIMEOUT)));
 		worldComm.sendChannelChangeRequest(destCh, p);
 	}
 

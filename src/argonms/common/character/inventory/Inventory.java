@@ -30,10 +30,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Inventory implements IInventory {
 	public enum InventoryType {
 		EQUIPPED (-1),

@@ -20,10 +20,6 @@ package argonms.common.net.external;
 
 import argonms.common.util.input.LittleEndianReader;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class ClientPacketProcessor<T extends RemoteClient> {
 	public abstract void process(LittleEndianReader reader, T client);
 }

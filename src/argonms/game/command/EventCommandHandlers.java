@@ -30,10 +30,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class EventCommandHandlers implements CommandCollection<CommandCaller> {
 	private static class EventUtilCommandHandler extends AbstractCommandDefinition<CommandCaller> {
 		@Override

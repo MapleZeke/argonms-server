@@ -27,10 +27,6 @@ import argonms.game.net.external.GamePackets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class RoomInviteQueue {
 	private static final RoomInviteQueue INSTANCE = new RoomInviteQueue();
 

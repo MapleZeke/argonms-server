@@ -27,10 +27,6 @@ import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class KvjMobDataLoader extends MobDataLoader {
 	private static final Logger LOG = Logger.getLogger(KvjMobDataLoader.class.getName());
 
@@ -188,7 +184,7 @@ public class KvjMobDataLoader extends MobDataLoader {
 					break;
 				case DROPS: {
 					byte amt = reader.readByte();
-					for (int i = amt - 1; i >= 0; --i) {
+					for (int i = amt - 1; i >= 0; i--) {
 						int itemid = reader.readInt();
 						int chance = reader.readInt();
 						if (InventoryTools.isArrowForBow(itemid) || InventoryTools.isArrowForCrossBow(itemid)) {
@@ -204,7 +200,7 @@ public class KvjMobDataLoader extends MobDataLoader {
 					break;
 				case QUEST_ITEM_DROPS: {
 					byte amt = reader.readByte();
-					for (int i = amt - 1; i >= 0; --i) {
+					for (int i = amt - 1; i >= 0; i--) {
 						int itemid = reader.readInt();
 						int chance = reader.readInt();
 						short questId = reader.readShort();

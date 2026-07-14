@@ -31,10 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-/**
- *
- * @author GoldenKevin
- */
 public class MobSkillEffectsData implements MonsterStatusEffectsData {
 	private final short skillid;
 	private final byte level;

@@ -20,10 +20,6 @@ package argonms.game.loading.npc;
 
 import argonms.game.net.external.GameClient.NpcMiniroom;
 
-/**
- *
- * @author GoldenKevin
- */
 public class NpcStorageKeeper implements NpcMiniroom {
 	private final int putCost;
 	private final int getCost;

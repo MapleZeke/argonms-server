@@ -32,10 +32,6 @@ import argonms.game.field.MapEntity.EntityType;
 import argonms.game.net.external.GameClient;
 import java.util.List;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class PersonalInfoHandler {
 	private static final byte FAME_OPERATION_RESPONSE_SUCCESS = 0;
 	private static final byte FAME_OPERATION_RESPONSE_NOT_IN_MAP = 1;

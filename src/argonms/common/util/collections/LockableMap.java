@@ -58,8 +58,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * <code>Map</code> operations so that any type of map, not only
  * <code>HashMap</code>, can be used, unlike <code>LockableHashMap</code>.
  *
- * @see argonms.tools.collections.LockableHashMap
- * @author GoldenKevin
  */
 public class LockableMap<K, V> implements Map<K, V> {
 	private final Map<K, V> map;

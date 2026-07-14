@@ -31,10 +31,6 @@ import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class KvjItemDataLoader extends ItemDataLoader {
 	private static final Logger LOG = Logger.getLogger(KvjItemDataLoader.class.getName());
 
@@ -287,27 +283,27 @@ public class KvjItemDataLoader extends ItemDataLoader {
 	private int[] processSummon(LittleEndianReader reader) {
 		int mobId = reader.readInt();
 		int prob = reader.readInt();
-		return new int[] { mobId, prob };
+		return new int[]{mobId, prob};
 	}
 
 	private byte[] processOperatingHours(LittleEndianReader reader) {
 		byte day = reader.readByte();
 		byte startHour = reader.readByte();
 		byte endHour = reader.readByte();
-		return new byte[] { day, startHour, endHour };
+		return new byte[]{day, startHour, endHour};
 	}
 
 	private void processPetCmd(LittleEndianReader reader, Integer oId) {
 		byte commandId = reader.readByte();
 		int prob = reader.readInt();
 		int expInc = reader.readInt();
-		petCommands.get(oId).put(Byte.valueOf(commandId), new int[] { prob, expInc });
+		petCommands.get(oId).put(Byte.valueOf(commandId), new int[]{prob, expInc});
 	}
 
 	private int[] processPetEvolve(LittleEndianReader reader) {
 		int itemId = reader.readInt();
 		int prob = reader.readInt();
-		return new int[] { itemId, prob };
+		return new int[]{itemId, prob};
 	}
 
 	private ItemEffectsData processEffect(int itemid, LittleEndianReader reader) {

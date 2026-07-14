@@ -32,10 +32,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class McdbNpcShopDataLoader extends NpcShopDataLoader {
 	private static final Logger LOG = Logger.getLogger(McdbNpcShopDataLoader.class.getName());
 

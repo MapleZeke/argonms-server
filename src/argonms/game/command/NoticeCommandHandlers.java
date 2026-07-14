@@ -25,10 +25,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class NoticeCommandHandlers implements CommandCollection<CommandCaller> {
 	private static class NoticeCommandHandler extends AbstractCommandDefinition<CommandCaller> {
 		@Override

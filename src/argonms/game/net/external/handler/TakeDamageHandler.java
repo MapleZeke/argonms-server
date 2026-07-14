@@ -40,10 +40,6 @@ import argonms.game.net.external.GameClient;
 import argonms.game.net.external.GamePackets;
 import java.awt.Point;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class TakeDamageHandler {
 	private static final byte BUMP_DAMAGE = -1;
 	private static final byte MAP_DAMAGE = -2;

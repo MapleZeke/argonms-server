@@ -23,10 +23,6 @@ import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class LittleEndianStreamWriter extends LittleEndianWriter {
 	private static final Logger LOG = Logger.getLogger(LittleEndianStreamWriter.class.getName());
 

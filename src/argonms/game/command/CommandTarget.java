@@ -23,10 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public interface CommandTarget {
 	public static class MapValue {
 		public static final int FREE_MARKET_MAP_ID = 910000000;

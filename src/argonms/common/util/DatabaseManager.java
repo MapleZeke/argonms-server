@@ -52,7 +52,6 @@ import org.apache.commons.configuration2.PropertiesConfiguration;
  * Support for connections to MCDB or other kinds of databases that store WZ
  * data have also been integrated into this class.
  *
- * @author GoldenKevin
  * @version 2.0
  */
 public final class DatabaseManager {
@@ -77,7 +76,7 @@ public final class DatabaseManager {
 			return pool.getConnection();
 		} finally {
 			LOG.log(Level.FINEST, "Database pool: {0}, Taken connections: {1}, All connections: {2}, Impl: {3}, Caller: {4}",
-					new Object[] { type, pool.connectionsInUse(), pool.totalConnections(), getNonFullyQualifiedClassName(pool.getClass().getName()), Thread.currentThread().getStackTrace()[2] });
+					new Object[]{type, pool.connectionsInUse(), pool.totalConnections(), getNonFullyQualifiedClassName(pool.getClass().getName()), Thread.currentThread().getStackTrace()[2]});
 		}
 	}
 
@@ -123,7 +122,7 @@ public final class DatabaseManager {
 			LockableList<Connection> allConnections = pool.getValue().allConnections();
 			allConnections.lockWrite();
 			try {
-				for (Iterator<Connection> iter = allConnections.iterator(); iter.hasNext();) {
+				for (Iterator<Connection> iter = allConnections.iterator(); iter.hasNext(); ) {
 					Connection con = iter.next();
 					try {
 						con.close();

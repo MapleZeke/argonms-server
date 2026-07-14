@@ -40,7 +40,6 @@ import argonms.game.field.MapEntity.EntityType;
 import argonms.game.field.entity.ItemDrop;
 import argonms.game.field.entity.Mist;
 import argonms.game.field.entity.Mob;
-import argonms.game.field.entity.Mob.MobDeathListener;
 import argonms.game.field.entity.MysticDoor;
 import argonms.game.field.entity.Npc;
 import argonms.game.field.entity.PlayerNpc;
@@ -77,10 +76,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class GameMap {
 	private static final Logger LOG = Logger.getLogger(GameMap.class.getName());
 
@@ -158,7 +153,7 @@ public class GameMap {
 					mysticDoorPortalIds[i] = mysticDoorPortalId;
 				} else {
 					// use the last portal for the remainder
-					mysticDoorPortalIds[i] = mysticDoorPortalIds[i-1];
+					mysticDoorPortalIds[i] = mysticDoorPortalIds[i - 1];
 				}
 			}
 		}
@@ -354,23 +349,16 @@ public class GameMap {
 		if (timeLimitTasks != null) {
 			//TODO: I heard that ScheduledFutures still hold onto strong references
 			//when canceled, so should we just use a WeakReference to player?
-			ScheduledFuture<?> future = Scheduler.getInstance().runAfterDelay(new Runnable() {
-				@Override
-				public void run() {
-					p.changeMap(stats.getForcedReturn());
-					p.getClient().getSession().send(GamePackets.writeTimer(0));
-				}
+			ScheduledFuture<?> future = Scheduler.getInstance().runAfterDelay(() -> {
+				p.changeMap(stats.getForcedReturn());
+				p.getClient().getSession().send(GamePackets.writeTimer(0));
 			}, stats.getTimeLimit() * 1000);
 			p.getClient().getSession().send(GamePackets.writeTimer(stats.getTimeLimit()));
 			timeLimitTasks.put(p, future);
 		}
 		if (decHpTasks != null) {
-			ScheduledFuture<?> future = Scheduler.getInstance().runRepeatedly(new Runnable() {
-				@Override
-				public void run() {
-					p.doDecHp(stats.getProtectItem(), stats.getDecHp());
-				}
-			}, 10000, 10000);
+			ScheduledFuture<?> future = Scheduler.getInstance().runRepeatedly(() ->
+				p.doDecHp(stats.getProtectItem(), stats.getDecHp()), 10000, 10000);
 			decHpTasks.put(p, future);
 		}
 		//it would be too wasteful to save the "fieldType" properties from the
@@ -394,12 +382,9 @@ public class GameMap {
 			updateMonsterController(monster);
 			monsters.incrementAndGet();
 			if (removeAfter != -1) {
-				monster.setSelfRemoveFuture(Scheduler.getInstance().runAfterDelay(new Runnable() {
-					@Override
-					public void run() {
-						monster.setSelfRemoveFuture(null);
-						killMonster(monster, null);
-					}
+				monster.setSelfRemoveFuture(Scheduler.getInstance().runAfterDelay((Runnable) () -> {
+					monster.setSelfRemoveFuture(null);
+					killMonster(monster, null);
 				}, removeAfter * 1000)); //is it in seconds?
 			}
 		} else {
@@ -495,13 +480,10 @@ public class GameMap {
 
 	public void spawnMist(final Mist mist, final int duration, final ScheduledFuture<?> periodicTask) {
 		spawnEntity(mist);
-		Scheduler.getInstance().runAfterDelay(new Runnable() {
-			@Override
-			public void run() {
-				destroyEntity(mist);
-				if (periodicTask != null) {
-					periodicTask.cancel(false);
-				}
+		Scheduler.getInstance().runAfterDelay(() -> {
+			destroyEntity(mist);
+			if (periodicTask != null) {
+				periodicTask.cancel(false);
 			}
 		}, duration);
 	}
@@ -567,12 +549,8 @@ public class GameMap {
 	public void destroyReactor(final Reactor r) {
 		destroyEntity(r);
 		if (r.getDelay() > 0) {
-			Scheduler.getInstance().runAfterDelay(new Runnable() {
-				@Override
-				public void run() {
-					respawnReactor(r);
-				}
-			}, r.getDelay() * 1000);
+			Scheduler.getInstance().runAfterDelay(() ->
+				respawnReactor(r), r.getDelay() * 1000);
 		}
 	}
 
@@ -927,20 +905,17 @@ public class GameMap {
 			mob.setFoothold(foothold);
 			mob.setPosition(new Point(pos));
 			spawnedMonsters.incrementAndGet();
-			mob.addListener(new MobDeathListener() {
-				@Override
-				public void monsterKilled(GameCharacter highestAttacker, GameCharacter finalAttacker) {
-					//this has to be atomic, so I had to do away with assigning
-					//nextPossibleSpawn more than once.
-					if (mobTime > 0) {
-						nextPossibleSpawn = System.currentTimeMillis() + mobTime * 1000;
-					} else {
-						Integer deathTime = mobStats.getDelays().get("die1");
-						nextPossibleSpawn = System.currentTimeMillis()
-								+ (deathTime != null ? deathTime.intValue() : 0);
-					}
-					spawnedMonsters.decrementAndGet();
+			mob.addListener((highestAttacker, finalAttacker) -> {
+				//this has to be atomic, so I had to do away with assigning
+				//nextPossibleSpawn more than once.
+				if (mobTime > 0) {
+					nextPossibleSpawn = System.currentTimeMillis() + mobTime * 1000;
+				} else {
+					Integer deathTime = mobStats.getDelays().get("die1");
+					nextPossibleSpawn = System.currentTimeMillis()
+						+ (deathTime != null ? deathTime.intValue() : 0);
 				}
+				spawnedMonsters.decrementAndGet();
 			});
 			if (mobTime == 0) {
 				nextPossibleSpawn = System.currentTimeMillis() + 5000;

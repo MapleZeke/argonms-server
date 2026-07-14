@@ -35,10 +35,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Trade extends Miniroom {
 	private final InventorySlot[][] items;
 	private final int[] mesos;

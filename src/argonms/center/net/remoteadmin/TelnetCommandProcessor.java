@@ -18,10 +18,6 @@
 
 package argonms.center.net.remoteadmin;
 
-/**
- *
- * @author GoldenKevin
- */
 public class TelnetCommandProcessor {
 	public void process(String message, TelnetClient client) {
 		if ("exit".equals(message) || "quit".equals(message)) {

@@ -39,10 +39,6 @@ import argonms.game.net.external.GameClient;
 import java.util.EnumSet;
 import java.util.List;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class NpcMiniroomHandler {
 	private static final byte ACT_BUY = 0;
 	private static final byte ACT_SELL = 1;

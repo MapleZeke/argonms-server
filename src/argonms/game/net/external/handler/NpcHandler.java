@@ -31,10 +31,6 @@ import argonms.game.script.NpcScriptManager;
 import argonms.game.script.binding.ScriptNpc;
 import argonms.game.script.binding.ScriptObjectManipulator;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class NpcHandler {
 	public static void handleStartConversation(LittleEndianReader packet, GameClient gc) {
 		int entId = packet.readInt();

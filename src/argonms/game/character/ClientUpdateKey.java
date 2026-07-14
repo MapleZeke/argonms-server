@@ -21,10 +21,6 @@ package argonms.game.character;
 import java.util.EnumSet;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public enum ClientUpdateKey {
 	SKIN		(0x000001),
 	FACE		(0x000002),

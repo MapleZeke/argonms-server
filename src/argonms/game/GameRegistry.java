@@ -18,10 +18,6 @@
 
 package argonms.game;
 
-/**
- *
- * @author GoldenKevin
- */
 public class GameRegistry {
 	public static final byte RATE_EXP = 1;
 	public static final byte RATE_DROP = 2;

@@ -69,10 +69,6 @@ import java.util.logging.Logger;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class GameServer implements LocalServer {
 	private static final Logger LOG = Logger.getLogger(GameServer.class.getName());
 
@@ -201,7 +197,7 @@ public final class GameServer implements LocalServer {
 						int realSubversion = rs.getInt(2);
 						int realGameVersion = rs.getInt(3);
 						if (realVersion != GlobalConstants.MCDB_VERSION || realSubversion != GlobalConstants.MCDB_SUBVERSION) {
-							LOG.log(Level.SEVERE, "MCDB version imcompatible. Expected: {0}.{1} Have: {2}.{3}", new Object[] { GlobalConstants.MCDB_VERSION, GlobalConstants.MCDB_SUBVERSION, realVersion, realSubversion });
+							LOG.log(Level.SEVERE, "MCDB version imcompatible. Expected: {0}.{1} Have: {2}.{3}", new Object[]{GlobalConstants.MCDB_VERSION, GlobalConstants.MCDB_SUBVERSION, realVersion, realSubversion});
 							System.exit(3);
 							return;
 						}
@@ -303,22 +299,19 @@ public final class GameServer implements LocalServer {
 	public void registerCenter() {
 		LOG.log(Level.INFO, "Center server registered.");
 		centerConnected = true;
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				initializeData(preloadAll, wzType, wzPath);
-				boolean doingWork = false;
-				for (WorldChannel ch : channels.values()) {
-					ch.listen(useNio);
-					if (ch.getPort() != -1) {
-						doingWork = true;
-					}
+		new Thread((Runnable) () -> {
+			initializeData(preloadAll, wzType, wzPath);
+			boolean doingWork = false;
+			for (WorldChannel ch : channels.values()) {
+				ch.listen(useNio);
+				if (ch.getPort() != -1) {
+					doingWork = true;
 				}
-				if (doingWork) {
-					gci.serverReady();
-				} else {
-					System.exit(5);
-				}
+			}
+			if (doingWork) {
+				gci.serverReady();
+			} else {
+				System.exit(5);
 			}
 		}, "data-preloader-thread").start();
 	}
@@ -337,7 +330,7 @@ public final class GameServer implements LocalServer {
 			remoteGameChannelMapping.put(Byte.valueOf(serverId), ports.keySet());
 			for (WorldChannel ch : channels.values())
 				ch.getCrossServerInterface().addRemoteChannels(serverId, ip, ports);
-			LOG.log(Level.INFO, "{0} server registered as {1}.", new Object[] { ServerType.getName(serverId), host });
+			LOG.log(Level.INFO, "{0} server registered as {1}.", new Object[]{ServerType.getName(serverId), host});
 		} catch (UnknownHostException e) {
 			LOG.log(Level.INFO, "Could not accept shop server because its"
 					+ " address could not be resolved!", e);
@@ -356,7 +349,7 @@ public final class GameServer implements LocalServer {
 			byte[] ip = InetAddress.getByName(host).getAddress();
 			for (WorldChannel ch : channels.values())
 				ch.getCrossServerInterface().addShopServer(ip, port);
-			LOG.log(Level.INFO, "Shop server registered as {0}:{1}.", new Object[] { host, port });
+			LOG.log(Level.INFO, "Shop server registered as {0}:{1}.", new Object[]{host, port});
 		} catch (UnknownHostException e) {
 			LOG.log(Level.INFO, "Could not accept shop server because its"
 					+ " address could not be resolved!", e);
@@ -448,12 +441,8 @@ public final class GameServer implements LocalServer {
 		if (time == 0) {
 			terminate(halt);
 		} else {
-			Scheduler.getInstance().runAfterDelay(new Runnable() {
-				@Override
-				public void run() {
-					terminate(halt);
-				}
-			}, time);
+			Scheduler.getInstance().runAfterDelay(() ->
+				terminate(halt), time);
 		}
 	}
 

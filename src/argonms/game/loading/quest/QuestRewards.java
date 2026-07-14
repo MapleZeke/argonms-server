@@ -42,10 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-/**
- *
- * @author GoldenKevin
- */
 public class QuestRewards {
 	private final List<QuestItemStats> items;
 	private final Map<Short, Byte> questChanges;

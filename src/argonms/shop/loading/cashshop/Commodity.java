@@ -18,10 +18,6 @@
 
 package argonms.shop.loading.cashshop;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Commodity {
 	public int itemDataId;
 	public short quantity;

@@ -18,10 +18,6 @@
 
 package argonms.common.character;
 
-/**
- *
- * @author GoldenKevin
- */
 public class SkillEntry {
 	private byte level;
 	private byte master;

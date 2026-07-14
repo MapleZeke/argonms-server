@@ -36,10 +36,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class TelnetListener implements SessionCreator {
 	private static final Logger LOG = Logger.getLogger(TelnetListener.class.getName());
 	private final ExecutorService bossThreadPool;
@@ -92,12 +88,8 @@ public class TelnetListener implements SessionCreator {
 		});
 
 		this.packetProc = new TelnetCommandProcessor();
-		this.packetDelegate = new TelnetSession.CommandReceivedDelegate() {
-			@Override
-			public void lineReceived(String message, TelnetClient client) {
-				packetProc.process(message, client);
-			}
-		};
+		this.packetDelegate = (message, client) ->
+			packetProc.process(message, client);
 	}
 
 	public boolean bind(int port) {

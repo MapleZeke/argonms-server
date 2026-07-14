@@ -30,10 +30,6 @@ import argonms.shop.character.ShopCharacter;
 import java.util.Collection;
 import java.util.List;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CashShopPackets {
 	private static final byte INVENTORY = 0x2F;
 	private static final byte GIFTS = 0x31;
@@ -345,5 +341,8 @@ public class CashShopPackets {
 		lew.writeShort(pos);
 		lew.writeInt(itemId);
 		return lew.getBytes();
+	}
+
+	private CashShopPackets() {
 	}
 }

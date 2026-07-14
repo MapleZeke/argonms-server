@@ -30,7 +30,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * All methods of this class are thread safe.
- * @author GoldenKevin
  */
 public class OrderedQueue {
 	private final SortedMap<Integer, ByteBuffer> queued;

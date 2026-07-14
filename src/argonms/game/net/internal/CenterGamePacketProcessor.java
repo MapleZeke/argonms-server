@@ -30,7 +30,6 @@ import java.util.logging.Logger;
 
 /**
  * Processes packet sent from the center server and received at the game server.
- * @author GoldenKevin
  */
 public class CenterGamePacketProcessor extends CenterRemotePacketProcessor {
 	private static final Logger LOG = Logger.getLogger(CenterGamePacketProcessor.class.getName());
@@ -78,7 +77,7 @@ public class CenterGamePacketProcessor extends CenterRemotePacketProcessor {
 				processCenterServerSynchronization(packet);
 				break;
 			default:
-				LOG.log(Level.FINE, "Received unhandled interserver packet {0} bytes long:\n{1}", new Object[] { packet.available() + 2, packet });
+				LOG.log(Level.FINE, "Received unhandled interserver packet {0} bytes long:\n{1}", new Object[]{packet.available() + 2, packet});
 				break;
 		}
 	}

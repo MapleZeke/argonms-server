@@ -25,10 +25,6 @@ import argonms.common.util.output.LittleEndianWriter;
 import argonms.game.character.GameCharacter;
 import java.util.Random;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class Minigame extends Miniroom {
 	public enum MinigameResult {
 		WIN(0),
@@ -251,7 +247,7 @@ public abstract class Minigame extends Miniroom {
 			}
 
 			lastLastMove = lastMove;
-			lastMove = new int[] { x, y };
+			lastMove = new int[]{x, y};
 			board[x][y] = playerNum;
 			if (horizontal == 5 || vertical == 5 || mainDiagonal == 5 || antiDiagonal == 5) {
 				return MoveResult.MOVE_AND_WIN;

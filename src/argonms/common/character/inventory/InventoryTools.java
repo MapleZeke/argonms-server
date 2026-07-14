@@ -40,10 +40,6 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class InventoryTools {
 	public enum WeaponClass {
 		ONE_HANDED_MELEE(1),
@@ -391,7 +387,7 @@ public final class InventoryTools {
 							}
 							unequip(equipped, equips, (short) -6, slot);
 						}
-						otherChange = new short[] { -6, slot };
+						otherChange = new short[]{-6, slot};
 					}
 				}
 				break;
@@ -412,7 +408,7 @@ public final class InventoryTools {
 						}
 						unequip(equipped, equips, (short) -5, slot);
 					}
-					otherChange = new short[] { -5, slot };
+					otherChange = new short[]{-5, slot};
 				}
 				break;
 			}
@@ -432,7 +428,7 @@ public final class InventoryTools {
 						}
 						unequip(equipped, equips, (short) -11, slot);
 					}
-					otherChange = new short[] { -11, slot };
+					otherChange = new short[]{-11, slot};
 				}
 				break;
 			}
@@ -453,7 +449,7 @@ public final class InventoryTools {
 							}
 							unequip(equipped, equips, (short) -10, slot);
 						}
-						otherChange = new short[] { -10, slot };
+						otherChange = new short[]{-10, slot};
 					}
 				}
 				break;

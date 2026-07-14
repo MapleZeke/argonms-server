@@ -25,10 +25,6 @@ import argonms.game.character.GameCharacter;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CommandArguments implements Iterator<String> {
 	private final String[] values;
 	private int index;
@@ -72,7 +68,7 @@ public class CommandArguments implements Iterator<String> {
 								previousQuote--;
 							}
 						}
-						value += word ;
+						value += word;
 						if (quoteCount % 2 == 0) { //even amount of quotes means all of them are matched
 							return value;
 						}

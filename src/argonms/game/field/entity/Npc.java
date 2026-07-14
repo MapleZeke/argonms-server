@@ -21,10 +21,6 @@ package argonms.game.field.entity;
 import argonms.game.field.AbstractEntity;
 import argonms.game.net.external.GamePackets;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Npc extends AbstractEntity {
 	private final int npcid;
 	private short rx0;

@@ -48,10 +48,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CenterServerSynchronization extends CrossProcessSynchronization {
 	private final CrossServerSynchronization handler;
 	private final WorldChannel self;
@@ -1056,7 +1052,7 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 			return;
 		}
 
-		consumer.add(new Pair<Byte, Object>(Byte.valueOf((byte) -1), new Object[] {
+		consumer.add(new Pair<Byte, Object>(Byte.valueOf((byte) -1), new Object[]{
 			name,
 			Short.valueOf(emblemBackground), Byte.valueOf(emblemBackgroundColor), Short.valueOf(emblemDesign), Byte.valueOf(emblemDesignColor),
 			titles, Byte.valueOf(capacity), notice, Integer.valueOf(gp), Integer.valueOf(allianceId)

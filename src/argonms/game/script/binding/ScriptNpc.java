@@ -46,10 +46,6 @@ import org.mozilla.javascript.Function;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.Scriptable;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ScriptNpc extends PlayerScriptInteraction {
 	/* package-private */ static final class ScriptInterruptedException extends RuntimeException {
 		private static final long serialVersionUID = -1302552528821402944L;
@@ -367,7 +363,7 @@ public class ScriptNpc extends PlayerScriptInteraction {
 			if (f != Scriptable.NOT_FOUND) {
 				Context cx = Context.enter();
 				try {
-					cx.callFunctionWithContinuations((Function) f, globalScope, new Object[] { });
+					cx.callFunctionWithContinuations((Function) f, globalScope, new Object[]{});
 					endConversation();
 				} catch (ContinuationPending pending) {
 					setContinuation(pending.getContinuation());
@@ -493,7 +489,7 @@ public class ScriptNpc extends PlayerScriptInteraction {
 				break;
 			default:
 				LOG.log(Level.INFO, "Did not process NPC type {0}:\n{1}",
-						new Object[] { type, packet });
+						new Object[]{type, packet});
 				break;
 		}
 	}
@@ -506,7 +502,7 @@ public class ScriptNpc extends PlayerScriptInteraction {
 		Scriptable array;
 		Context cx = Context.enter();
 		try {
-			array = cx.newArray(globalScope, new Object[] { Short.valueOf(background), Byte.valueOf(backgroundColor), Short.valueOf(design), Byte.valueOf(designColor) });
+			array = cx.newArray(globalScope, new Object[]{Short.valueOf(background), Byte.valueOf(backgroundColor), Short.valueOf(design), Byte.valueOf(designColor)});
 		} finally {
 			Context.exit();
 		}
@@ -518,7 +514,7 @@ public class ScriptNpc extends PlayerScriptInteraction {
 	}
 
 	public Object getAllSkinColors() {
-		return Context.javaToJS(new NativeArray(new Byte[] { 0, 1, 2, 3, 4 }), globalScope);
+		return Context.javaToJS(new NativeArray(new Byte[]{0, 1, 2, 3, 4}), globalScope);
 	}
 
 	public Object getAllEyeStyles() {

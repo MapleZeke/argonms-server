@@ -28,10 +28,6 @@ import argonms.game.script.ReactorScriptManager;
 import java.awt.Point;
 import java.awt.Rectangle;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Reactor extends AbstractEntity {
 	public static final byte
 		TYPE_ITEM_TRIGGERED = 100

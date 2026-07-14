@@ -21,7 +21,6 @@ package argonms.common.character;
 /**
  * A helper class with static methods that accept job id parameters and check
  * various conditions.
- * @author GoldenKevin
  */
 public final class PlayerJob {
 	public static final int CLASS_BEGINNER = 0;

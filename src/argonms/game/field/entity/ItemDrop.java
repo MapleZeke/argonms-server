@@ -23,10 +23,6 @@ import argonms.game.field.AbstractEntity;
 import argonms.game.net.external.GamePackets;
 import java.awt.Point;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ItemDrop extends AbstractEntity {
 	public static final byte ITEM = 0;
 	public static final byte MESOS = 1;

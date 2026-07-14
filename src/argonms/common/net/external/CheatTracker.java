@@ -57,7 +57,6 @@ import java.util.regex.Pattern;
  * playing behind the same gateway (router) as a banned account, while the MAC
  * ban will deny any user playing on the same computer as a banned account.
  * This class is thread safe.
- * @author GoldenKevin
  */
 public abstract class CheatTracker {
 	private static final Logger LOG = Logger.getLogger(CheatTracker.class.getName());

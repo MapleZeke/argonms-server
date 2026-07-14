@@ -32,10 +32,6 @@ import java.util.Map;
 import java.util.Set;
 
 //FIXME: Thread safety for concurrent read/writes (if we're not preloading)
-/**
- *
- * @author GoldenKevin
- */
 public abstract class ItemDataLoader {
 	private static ItemDataLoader instance;
 
@@ -144,8 +140,8 @@ public abstract class ItemDataLoader {
 		}
 		Short ret = slotMax.get(oId);
 		return ret != null ? ret.shortValue() : (short)
-				(InventoryTools.isEquip(itemId) ||
-				InventoryTools.isPet(itemId) ? 1 : 100);
+				(InventoryTools.isEquip(itemId)
+				|| InventoryTools.isPet(itemId) ? 1 : 100);
 	}
 
 	public boolean isTradeBlocked(int itemId) {

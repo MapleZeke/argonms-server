@@ -66,10 +66,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Mob extends AbstractEntity {
 	public static final byte DESTROY_ANIMATION_NONE = 0;
 	public static final byte DESTROY_ANIMATION_NORMAL = 1;
@@ -699,8 +695,8 @@ public class Mob extends AbstractEntity {
 			if (attacker == null || attacker.isClosed() || attacker.getMapId() != map.getDataId() || !attacker.isAlive()) {
 				return;
 			}
-			int hsRate = player.get().isEffectActive(PlayerStatusEffect.HOLY_SYMBOL) ?
-					player.get().getEffectValue(PlayerStatusEffect.HOLY_SYMBOL).getModifier() : 0;
+			int hsRate = player.get().isEffectActive(PlayerStatusEffect.HOLY_SYMBOL)
+					? player.get().getEffectValue(PlayerStatusEffect.HOLY_SYMBOL).getModifier() : 0;
 			share *= GameServer.getVariables().getExpRate();
 			//share = share * getTauntEffect() / 100;
 			share += share * hsRate / 100;
@@ -788,8 +784,8 @@ public class Mob extends AbstractEntity {
 							totalLevel += attackerLevel;
 							splitExpMembers.add(member);
 							//TODO: if more than one priest, only use highest? or use latest cast?
-							hsRate = Math.max(member.isEffectActive(PlayerStatusEffect.HOLY_SYMBOL) ?
-									member.getEffectValue(PlayerStatusEffect.HOLY_SYMBOL).getModifier() : 0, hsRate);
+							hsRate = Math.max(member.isEffectActive(PlayerStatusEffect.HOLY_SYMBOL)
+									? member.getEffectValue(PlayerStatusEffect.HOLY_SYMBOL).getModifier() : 0, hsRate);
 						}
 						membersCount++; //I'm pretty sure party bonus is based on every member, not just for those who are getting EXP
 					}

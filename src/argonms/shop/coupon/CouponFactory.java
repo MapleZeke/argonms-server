@@ -28,10 +28,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class CouponFactory {
 	private static final Logger LOG = Logger.getLogger(CouponFactory.class.getName());
 

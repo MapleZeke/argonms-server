@@ -26,10 +26,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class InventoryCommandHandlers implements CommandCollection<CommandCaller> {
 	private static class ClearInventoryCommandHandler extends AbstractCommandDefinition<CommandCaller> {
 		@Override

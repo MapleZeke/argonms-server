@@ -18,10 +18,6 @@
 
 package argonms.common.character.inventory;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Equip extends InventorySlot implements Cloneable {
 	public enum WeaponType {
 		NOT_A_WEAPON(0),

@@ -21,10 +21,6 @@ package argonms.game.command;
 import argonms.common.UserPrivileges;
 import argonms.game.GameServer;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ShutdownCommandHandler extends AbstractCommandDefinition<CommandCaller> {
 	@Override
 	public String getHelpMessage() {

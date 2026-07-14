@@ -22,10 +22,6 @@ import argonms.common.loading.DataFileType;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class CashShopDataLoader {
 	private static CashShopDataLoader instance;
 

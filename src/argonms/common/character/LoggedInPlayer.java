@@ -30,10 +30,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class LoggedInPlayer extends Player {
 	protected abstract static class ItemExpireTask implements Runnable {
 		private final NavigableMap<Long, Set<Long>> itemExpires;

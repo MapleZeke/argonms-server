@@ -25,12 +25,11 @@ import java.util.Locale;
  * 
  * Taken from an OdinMS-derived source. Optimized and modified by GoldenKevin.
  *
- * @author Frz, GoldenKevin
  * @since Revision 206
  * @version 1.2
  */
 public final class HexTool {
-	private static final char[] HEX = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+	private static final char[] HEX = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
 	private static char leftHexDigit(byte byteValue) {
 		return HEX[(byteValue & 0xF0) >>> 4];
@@ -47,7 +46,7 @@ public final class HexTool {
 	 * @return The hexadecimal representation of <code>byteValue</code>
 	 */
 	public static String toString(byte byteValue) {
-		return String.valueOf(new char[] { leftHexDigit(byteValue), rightHexDigit(byteValue) });
+		return String.valueOf(new char[]{leftHexDigit(byteValue), rightHexDigit(byteValue)});
 	}
 
 	/**

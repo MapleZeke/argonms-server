@@ -20,10 +20,6 @@ package argonms.game.command;
 
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public interface CommandCollection<T extends CommandCaller> {
 	public Map<String, AbstractCommandDefinition<T>> getDefinitions();
 }

@@ -18,10 +18,6 @@
 
 package argonms.common;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class UserPrivileges {
 	public static final byte USER = 0;
 	public static final byte JUNIOR_GM = 25;

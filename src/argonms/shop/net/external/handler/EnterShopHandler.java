@@ -39,10 +39,6 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class EnterShopHandler {
 	public static void handlePlayerConnection(LittleEndianReader packet, ShopClient sc) {
 		int cid = packet.readInt();

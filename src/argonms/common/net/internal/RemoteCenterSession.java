@@ -38,10 +38,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class RemoteCenterSession<T extends RemoteCenterInterface> implements Session, SessionCreator {
 	private static final Logger LOG = Logger.getLogger(RemoteCenterSession.class.getName());
 	private static final int HEADER_LENGTH = 4;
@@ -57,12 +53,8 @@ public final class RemoteCenterSession<T extends RemoteCenterInterface> implemen
 	private final T server;
 
 	private final KeepAliveTask heartbeatTask;
-	private final Runnable idleTask = new Runnable() {
-		@Override
-		public void run() {
-			startPingTask();
-		}
-	};
+	private final Runnable idleTask = () ->
+		startPingTask();
 	private ScheduledFuture<?> idleTaskFuture;
 
 	private MessageType nextMessageType;
@@ -117,6 +109,7 @@ public final class RemoteCenterSession<T extends RemoteCenterInterface> implemen
 			//spin loop if we don't write the entire buffer (although in
 			//blocking mode, that should never happen...)
 			while (buf.remaining() != commChn.write(buf)) {
+				continue;
 			}
 		} catch (IOException ex) {
 			//does an IOException in write always mean an invalid channel?
@@ -152,7 +145,7 @@ public final class RemoteCenterSession<T extends RemoteCenterInterface> implemen
 				idleTaskFuture.cancel(false);
 			}
 
-			LOG.log(Level.FINE, "Disconnected from center server ({0}): {1}", new Object[] { getAddress(), reason });
+			LOG.log(Level.FINE, "Disconnected from center server ({0}): {1}", new Object[]{getAddress(), reason});
 			server.disconnected();
 			return true;
 		}

@@ -42,10 +42,6 @@ import java.util.Random;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class MonsterStatusEffectTools {
 	private static byte[] getCastEffect(Mob m, MonsterStatusEffectsData e, Map<MonsterStatusEffect, Short> updatedStats) {
 		if (e.getSourceType() == StatusEffectsData.EffectSource.MOB_SKILL) {
@@ -233,12 +229,8 @@ public final class MonsterStatusEffectTools {
 		if (m.isVisible() && effect != null) {
 			m.getMap().sendToAll(effect);
 		}
-		m.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(new Runnable() {
-			@Override
-			public void run() {
-				dispelEffectsAndShowVisuals(m, e);
-			}
-		}, duration));
+		m.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(() ->
+			dispelEffectsAndShowVisuals(m, e), duration));
 		return true;
 	}
 
@@ -283,15 +275,12 @@ public final class MonsterStatusEffectTools {
 	}
 
 	private static void schedulePoisonDamage(final Mob m, final GameCharacter p, final MonsterStatusEffectsData e, final short damage) {
-		m.setPoisonTask(Scheduler.getInstance().runRepeatedly(new Runnable() {
-			@Override
-			public void run() {
-				if (m.getHp() > damage) {
-					//TODO: not thread-safe
-					m.hurt(p, damage);
-				} else {
-					dispelEffectsAndShowVisuals(m, e);
-				}
+		m.setPoisonTask(Scheduler.getInstance().runRepeatedly(() -> {
+			if (m.getHp() > damage) {
+				//TODO: not thread-safe
+				m.hurt(p, damage);
+			} else {
+				dispelEffectsAndShowVisuals(m, e);
 			}
 		}, 0, 1000));
 	}
@@ -334,38 +323,35 @@ public final class MonsterStatusEffectTools {
 						assert (v.getSource() == Skills.VENOMOUS_STAR || v.getSource() == Skills.VENOMOUS_STAB);
 						mod += v.getModifier();
 						final AtomicReference<Runnable> decrementVenomTask = new AtomicReference<>();
-						decrementVenomTask.set(new Runnable() {
-							@Override
-							public void run() {
-								MonsterStatusEffectValues value = m.getEffectValue(MonsterStatusEffect.POISON);
-								if (value == null) {
-									return;
-								}
-
-								ScheduledFuture<?> f = m.removePoisonTask();
-								if (f != null) {
-									f.cancel(false);
-								}
-								m.decrementVenom();
-								short newMod = value.getModifier();
-								newMod -= damage;
-								if (newMod <= 0) {
-									return;
-								}
-
-								schedulePoisonDamage(m, p, value.getEffectsData(), newMod);
-								m.addToActiveEffects(MonsterStatusEffect.POISON, new MonsterStatusEffectValues(value.getEffectsData(), newMod));
-								byte[] effect = getDispelEffect(m, e);
-								if (m.isVisible() && effect != null) {
-									m.getMap().sendToAll(effect);
-								}
-								effect = getCastEffect(m, e, Collections.singletonMap(MonsterStatusEffect.POISON, Short.valueOf(newMod)));
-								if (m.isVisible() && effect != null) {
-									m.getMap().sendToAll(effect);
-								}
-
-								m.setVenomDecrementTask(Scheduler.getInstance().runAfterDelay(decrementVenomTask.get(), m.nextVenomExpire()));
+						decrementVenomTask.set((Runnable) () -> {
+							MonsterStatusEffectValues value = m.getEffectValue(MonsterStatusEffect.POISON);
+							if (value == null) {
+								return;
 							}
+
+							ScheduledFuture<?> f = m.removePoisonTask();
+							if (f != null) {
+								f.cancel(false);
+							}
+							m.decrementVenom();
+							short newMod = value.getModifier();
+							newMod -= damage;
+							if (newMod <= 0) {
+								return;
+							}
+
+							schedulePoisonDamage(m, p, value.getEffectsData(), newMod);
+							m.addToActiveEffects(MonsterStatusEffect.POISON, new MonsterStatusEffectValues(value.getEffectsData(), newMod));
+							byte[] effect = getDispelEffect(m, e);
+							if (m.isVisible() && effect != null) {
+								m.getMap().sendToAll(effect);
+							}
+							effect = getCastEffect(m, e, Collections.singletonMap(MonsterStatusEffect.POISON, Short.valueOf(newMod)));
+							if (m.isVisible() && effect != null) {
+								m.getMap().sendToAll(effect);
+							}
+
+							m.setVenomDecrementTask(Scheduler.getInstance().runAfterDelay(decrementVenomTask.get(), m.nextVenomExpire()));
 						});
 						m.setVenomDecrementTask(Scheduler.getInstance().runAfterDelay(decrementVenomTask.get(), m.nextVenomExpire()));
 					}
@@ -464,7 +450,7 @@ public final class MonsterStatusEffectTools {
 	public static void applyDispel(Mob m, PlayerSkillEffectsData e) {
 		//"Dispel can override: W.Attack+, M.Att+, W.Defence+, M.Defence+, Accuracy+, Avoidability+, Speed+ and Super Avoidability
 		//Dispel can NOT override: Damage Reflection, Cancel W.Attack and Cancel M.Attack"
-		for (MonsterStatusEffect buff : new MonsterStatusEffect[] { MonsterStatusEffect.WATK, MonsterStatusEffect.WDEF, MonsterStatusEffect.MATK, MonsterStatusEffect.MDEF, MonsterStatusEffect.ACC, MonsterStatusEffect.AVOID, MonsterStatusEffect.SPEED }) {
+		for (MonsterStatusEffect buff : new MonsterStatusEffect[]{MonsterStatusEffect.WATK, MonsterStatusEffect.WDEF, MonsterStatusEffect.MATK, MonsterStatusEffect.MDEF, MonsterStatusEffect.ACC, MonsterStatusEffect.AVOID, MonsterStatusEffect.SPEED}) {
 			MonsterStatusEffectValues v = m.getEffectValue(buff);
 			if (v != null) {
 				MonsterStatusEffectTools.dispelEffectsAndShowVisuals(m, v.getEffectsData());

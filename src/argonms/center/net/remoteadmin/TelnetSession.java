@@ -40,10 +40,6 @@ import java.util.regex.Pattern;
 
 //TODO: find some kind of application-level keepalive, or just kick users after
 //a idle timeout.
-/**
- *
- * @author GoldenKevin
- */
 public class TelnetSession implements Session {
 	private static final Logger LOG = Logger.getLogger(TelnetSession.class.getName());
 	private static final int BUFFER_SIZE = 1024;
@@ -142,7 +138,7 @@ public class TelnetSession implements Session {
 				LOG.log(Level.FINE, "Error while closing telnet client " + getClient().getAccountName() + " (" + getAddress() + ")", e);
 			}
 
-			LOG.log(Level.FINE, "Telnet client {0} ({1}) disconnected: {2}", new Object[] { getClient().getAccountName(), getAddress(), reason });
+			LOG.log(Level.FINE, "Telnet client {0} ({1}) disconnected: {2}", new Object[]{getClient().getAccountName(), getAddress(), reason});
 			client.disconnected();
 			return true;
 		}

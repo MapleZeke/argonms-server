@@ -28,10 +28,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
-/**
- *
- * @author GoldenKevin
- */
 public class DisciplinaryCommandHandlers implements CommandCollection<CommandCaller> {
 	@Override
 	public Map<String, AbstractCommandDefinition<CommandCaller>> getDefinitions() {

@@ -27,7 +27,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * All methods of this class are thread safe.
- * @author GoldenKevin
  */
 public class UnorderedQueue {
 	private final Queue<ByteBuffer> queued;

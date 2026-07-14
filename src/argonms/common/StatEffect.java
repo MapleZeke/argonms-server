@@ -18,10 +18,6 @@
 
 package argonms.common;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class StatEffect {
 	public static final byte STR = 0;
 	public static final byte DEX = 1;

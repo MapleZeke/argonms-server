@@ -32,10 +32,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class IntraworldGroups {
 	private static final Logger LOG = Logger.getLogger(IntraworldGroups.class.getName());
 

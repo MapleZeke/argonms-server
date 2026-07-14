@@ -23,10 +23,6 @@ import argonms.common.util.input.LittleEndianReader;
 import java.io.File;
 import java.io.IOException;
 
-/**
- *
- * @author GoldenKevin
- */
 public class KvjStringDataLoader extends StringDataLoader {
 	private final String dataPath;
 
@@ -53,7 +49,7 @@ public class KvjStringDataLoader extends StringDataLoader {
 					itemMsgs.put(key, str);
 				}
 			}
-			for (String s : new String[] { "Eqp", "Consume", "Ins", "Etc", "Pet" }) {
+			for (String s : new String[]{"Eqp", "Consume", "Ins", "Etc", "Pet"}) {
 				reader = new LittleEndianByteArrayReader(new File(dir + s + ".img.kvj"));
 				for (int id = reader.readInt(); id != -1; id = reader.readInt()) {
 					key = Integer.valueOf(id);

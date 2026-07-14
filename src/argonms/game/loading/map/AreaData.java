@@ -18,10 +18,6 @@
 
 package argonms.game.loading.map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class AreaData {
 	private short x1;
 	private short y1;

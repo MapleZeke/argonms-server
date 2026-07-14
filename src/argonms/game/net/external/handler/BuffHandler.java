@@ -47,10 +47,6 @@ import argonms.game.net.external.GameClient;
 import argonms.game.net.external.GamePackets;
 import java.awt.Point;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class BuffHandler {
 	private static boolean isAffected(byte bitset, byte index) {
 		return (bitset & (1 << (5 - index))) != 0;
