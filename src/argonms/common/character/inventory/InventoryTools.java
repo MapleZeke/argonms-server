@@ -383,7 +383,7 @@ public final class InventoryTools {
 								if (!canFitEntirely(equips, bottom.getDataId(), bottom.getQuantity(), true)) {
 									return null;
 								}
-								slot = equips.getFreeSlots(1).getFirst();
+								slot = equips.getFreeSlots(1).get(0);
 							}
 							unequip(equipped, equips, (short) -6, slot);
 						}
@@ -404,7 +404,7 @@ public final class InventoryTools {
 							if (!canFitEntirely(equips, top.getDataId(), top.getQuantity(), true)) {
 								return null;
 							}
-							slot = equips.getFreeSlots(1).getFirst();
+							slot = equips.getFreeSlots(1).get(0);
 						}
 						unequip(equipped, equips, (short) -5, slot);
 					}
@@ -424,7 +424,7 @@ public final class InventoryTools {
 							if (!canFitEntirely(equips, weapon.getDataId(), weapon.getQuantity(), true)) {
 								return null;
 							}
-							slot = equips.getFreeSlots(1).getFirst();
+							slot = equips.getFreeSlots(1).get(0);
 						}
 						unequip(equipped, equips, (short) -11, slot);
 					}
@@ -445,7 +445,7 @@ public final class InventoryTools {
 								if (!canFitEntirely(equips, shield.getDataId(), shield.getQuantity(), true)) {
 									return null;
 								}
-								slot = equips.getFreeSlots(1).getFirst();
+								slot = equips.getFreeSlots(1).get(0);
 							}
 							unequip(equipped, equips, (short) -10, slot);
 						}
@@ -535,7 +535,7 @@ public final class InventoryTools {
 			if (freeSlots.isEmpty()) {
 				return false;
 			}
-			unequip(equipped, equips, src, freeSlots.getFirst());
+			unequip(equipped, equips, src, freeSlots.get(0));
 		}
 		return true;
 	}
