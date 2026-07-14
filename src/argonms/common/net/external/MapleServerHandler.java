@@ -47,6 +47,7 @@ public final class MapleServerHandler<T extends RemoteClient> extends SimpleChan
 		client.setSession(session);
 		session.activate();
 		NettyClientListener.setSession(ctx.channel(), session);
+		NettyClientListener.initializeCrypto(ctx.channel(), session.getRecvIv(), session.getSendIv());
 		ctx.writeAndFlush(session.makeInitPacket(ctx.alloc())).addListener(future -> {
 			if (future.isSuccess()) {
 				ctx.channel().config().setAutoRead(true);

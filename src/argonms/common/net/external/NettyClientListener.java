@@ -32,6 +32,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.AttributeKey;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -42,6 +44,8 @@ import java.util.logging.Logger;
 
 public final class NettyClientListener<T extends RemoteClient> implements SessionCreator {
 	static final AttributeKey<ClientSession<?>> SESSION_KEY = AttributeKey.valueOf("argonms.external.session");
+	static final AttributeKey<byte[]> RECV_IV_KEY = AttributeKey.valueOf("argonms.external.recvIv");
+	static final AttributeKey<byte[]> SEND_IV_KEY = AttributeKey.valueOf("argonms.external.sendIv");
 
 	private static final Logger LOG = Logger.getLogger(NettyClientListener.class.getName());
 	private static final String VIRTUAL_THREADS_PROPERTY = "argonms.virtualThreads";
@@ -142,6 +146,36 @@ public final class NettyClientListener<T extends RemoteClient> implements Sessio
 
 	static void setSession(Channel channel, ClientSession<?> session) {
 		channel.attr(SESSION_KEY).set(session);
+	}
+
+	static void initializeCrypto(Channel channel, byte[] recvIv, byte[] sendIv) {
+		Objects.requireNonNull(recvIv, "recvIv");
+		Objects.requireNonNull(sendIv, "sendIv");
+		if (channel.attr(RECV_IV_KEY).get() != null || channel.attr(SEND_IV_KEY).get() != null) {
+			throw new IllegalStateException("Channel crypto already initialized");
+		}
+		channel.attr(RECV_IV_KEY).set(Arrays.copyOf(recvIv, recvIv.length));
+		channel.attr(SEND_IV_KEY).set(Arrays.copyOf(sendIv, sendIv.length));
+	}
+
+	static byte[] getRecvIv(Channel channel) {
+		return channel.attr(RECV_IV_KEY).get();
+	}
+
+	static byte[] advanceRecvIv(Channel channel) {
+		byte[] iv = channel.attr(RECV_IV_KEY).get();
+		if (iv != null) {
+			channel.attr(RECV_IV_KEY).set(ClientEncryption.nextIv(iv));
+		}
+		return iv;
+	}
+
+	static byte[] advanceSendIv(Channel channel) {
+		byte[] iv = channel.attr(SEND_IV_KEY).get();
+		if (iv != null) {
+			channel.attr(SEND_IV_KEY).set(ClientEncryption.nextIv(iv));
+		}
+		return iv;
 	}
 
 	private static int workerThreadCount() {

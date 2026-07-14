@@ -18,12 +18,20 @@
 
 package argonms.common.net.external;
 
+import argonms.common.GlobalConstants;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import java.util.Arrays;
 
 public final class MaplePacketEncoder extends MessageToByteEncoder<byte[]> {
+	private static final int HEADER_LENGTH = 4;
+
+	@Override
+	protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, byte[] msg, boolean preferDirect) {
+		return ctx.alloc().ioBuffer(HEADER_LENGTH + msg.length, HEADER_LENGTH + msg.length);
+	}
+
 	@Override
 	protected void encode(ChannelHandlerContext ctx, byte[] msg, ByteBuf out) {
 		ClientSession<?> session = NettyClientListener.getSession(ctx.channel());
@@ -31,12 +39,21 @@ public final class MaplePacketEncoder extends MessageToByteEncoder<byte[]> {
 			return;
 		}
 
-		byte[] iv = session.advanceSendIv();
+		byte[] iv = NettyClientListener.advanceSendIv(ctx.channel());
+		if (iv == null) {
+			session.close("Missing send IV");
+			return;
+		}
 		byte[] body = Arrays.copyOf(msg, msg.length);
-		byte[] header = ClientEncryption.makePacketHeader(body.length, iv);
 		ClientEncryption.mapleEncrypt(body);
 		ClientEncryption.aesOfbCrypt(body, iv);
-		out.writeBytes(header);
+		writeHeader(out, body.length, iv);
 		out.writeBytes(body);
+	}
+
+	private static void writeHeader(ByteBuf out, int payloadLength, byte[] iv) {
+		int versionMask = (((iv[3] & 0xFF) << 8) | (iv[2] & 0xFF)) ^ (~GlobalConstants.MAPLE_VERSION);
+		out.writeShortLE(versionMask & 0xFFFF);
+		out.writeShortLE((versionMask ^ (payloadLength & 0xFFFF)) & 0xFFFF);
 	}
 }

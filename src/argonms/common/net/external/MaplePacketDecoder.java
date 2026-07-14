@@ -18,6 +18,7 @@
 
 package argonms.common.net.external;
 
+import argonms.common.GlobalConstants;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -33,25 +34,40 @@ public final class MaplePacketDecoder extends ByteToMessageDecoder {
 			return;
 		}
 
-		in.markReaderIndex();
-		byte[] header = new byte[HEADER_LENGTH];
-		in.readBytes(header);
-		if (!ClientEncryption.checkPacket(header, session.getRecvIv())) {
+		byte[] iv = NettyClientListener.getRecvIv(ctx.channel());
+		if (iv == null) {
+			session.close("Missing receive IV");
+			return;
+		}
+		int readerIndex = in.readerIndex();
+		if (!isValidHeader(in, readerIndex, iv)) {
 			session.close("Failed packet test");
 			return;
 		}
 
-		int packetLength = ClientEncryption.getPacketLength(header);
-		if (in.readableBytes() < packetLength) {
-			in.resetReaderIndex();
+		int packetLength = readPacketLength(in, readerIndex);
+		int availableBodyBytes = in.readableBytes() - HEADER_LENGTH;
+		if (availableBodyBytes < packetLength) {
 			return;
 		}
 
+		in.skipBytes(HEADER_LENGTH);
 		byte[] packet = new byte[packetLength];
 		in.readBytes(packet);
-		byte[] iv = session.advanceRecvIv();
+		NettyClientListener.advanceRecvIv(ctx.channel());
 		ClientEncryption.aesOfbCrypt(packet, iv);
 		ClientEncryption.mapleDecrypt(packet);
 		out.add(packet);
+	}
+
+	private static boolean isValidHeader(ByteBuf in, int readerIndex, byte[] iv) {
+		return (((in.getByte(readerIndex) ^ iv[2]) & 0xFF) == (GlobalConstants.MAPLE_VERSION & 0xFF))
+				&& (((in.getByte(readerIndex + 1) ^ iv[3]) & 0xFF) == ((GlobalConstants.MAPLE_VERSION >>> 8) & 0xFF));
+	}
+
+	private static int readPacketLength(ByteBuf in, int readerIndex) {
+		int versionMask = in.getUnsignedShortLE(readerIndex);
+		int maskedLength = in.getUnsignedShortLE(readerIndex + Short.BYTES);
+		return (versionMask ^ maskedLength) & 0xFFFF;
 	}
 }

@@ -329,6 +329,10 @@ public class ClientSession<T extends RemoteClient> implements Session {
 		return recvIv;
 	}
 
+	/* package-private */ byte[] getSendIv() {
+		return sendIv;
+	}
+
 	/* package-private */ byte[] advanceRecvIv() {
 		byte[] iv = recvIv;
 		recvIv = ClientEncryption.nextIv(iv);
