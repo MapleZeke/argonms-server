@@ -106,7 +106,7 @@ public final class NettyClientListener<T extends RemoteClient> implements Sessio
 						protected void initChannel(SocketChannel ch) {
 							ch.pipeline().addLast(new MaplePacketDecoder());
 							ch.pipeline().addLast(new MaplePacketEncoder());
-							ch.pipeline().addLast(new MapleServerHandler<>(packetProcessor, clientFactory, workerThreadPool));
+							ch.pipeline().addLast(new MapleSessionHandler<>(packetProcessor, clientFactory, workerThreadPool));
 						}
 					});
 			listener = bootstrap.bind(port).syncUninterruptibly().channel();
