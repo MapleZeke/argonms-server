@@ -20,9 +20,8 @@ package argonms.game.loading.npc;
 
 import argonms.common.util.DatabaseManager;
 import argonms.common.util.DatabaseManager.DatabaseType;
+import argonms.common.util.dao.NpcDataDAO;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -63,13 +62,10 @@ public class DefaultNpcDataLoader extends NpcDataLoader {
 	@Override
 	protected void load(int npcId) {
 		storageCosts.put(Integer.valueOf(npcId), hardCodedTable.get(Integer.valueOf(npcId)));
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-				PreparedStatement ps = con.prepareStatement("SELECT `script` FROM `npcscriptnames` WHERE `npcid` = ?")) {
-			ps.setInt(1, npcId);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					scriptNames.put(Integer.valueOf(npcId), rs.getString(1));
-				}
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			String script = NpcDataDAO.loadScriptName(con, npcId);
+			if (script != null) {
+				scriptNames.put(Integer.valueOf(npcId), script);
 			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not read script name for NPC " + npcId, e);
@@ -81,14 +77,11 @@ public class DefaultNpcDataLoader extends NpcDataLoader {
 	public boolean loadAll() {
 		storageCosts.putAll(hardCodedTable);
 		loaded.addAll(hardCodedTable.keySet());
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-				PreparedStatement ps = con.prepareStatement("SELECT `npcid`,`script` FROM `npcscriptnames`")) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					Integer npcId = Integer.valueOf(rs.getInt(1));
-					scriptNames.put(npcId, rs.getString(2));
-					loaded.add(npcId);
-				}
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			Map<Integer, String> allScripts = NpcDataDAO.loadAllScriptNames(con);
+			for (Map.Entry<Integer, String> entry : allScripts.entrySet()) {
+				scriptNames.put(entry.getKey(), entry.getValue());
+				loaded.add(entry.getKey());
 			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not load all NPC script names", e);

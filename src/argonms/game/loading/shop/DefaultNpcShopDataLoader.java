@@ -20,12 +20,12 @@ package argonms.game.loading.shop;
 
 import argonms.common.util.DatabaseManager;
 import argonms.common.util.DatabaseManager.DatabaseType;
+import argonms.common.util.dao.NpcShopDataDAO;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,19 +35,13 @@ public class DefaultNpcShopDataLoader extends NpcShopDataLoader {
 	@Override
 	protected void load(int npcid) {
 		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
-			List<NpcShop.ShopSlot> items = new ArrayList<>();
-			try (PreparedStatement ps = con.prepareStatement("SELECT `itemid`,`price` FROM `shopitems` WHERE `npcid` = ? ORDER BY `position` ASC")) {
-				ps.setInt(1, npcid);
-				try (ResultSet rs = ps.executeQuery()) {
-					while (rs.next()) {
-						items.add(new NpcShop.ShopSlot(rs.getInt(1), (short) 1, rs.getInt(2)));
-					}
+			List<NpcShopDataDAO.ShopSlotRecord> records = NpcShopDataDAO.loadDefaultShopItems(con, npcid);
+			if (!records.isEmpty()) {
+				List<NpcShop.ShopSlot> items = new ArrayList<>();
+				for (NpcShopDataDAO.ShopSlotRecord r : records) {
+					items.add(new NpcShop.ShopSlot(r.itemId(), r.quantity(), r.price()));
 				}
-			}
-
-			if (!items.isEmpty()) {
-				NpcShop shop = new NpcShop.DefaultNpcShopStock(items);
-				loadedShops.put(Integer.valueOf(npcid), shop);
+				loadedShops.put(Integer.valueOf(npcid), new NpcShop.DefaultNpcShopStock(items));
 			} else {
 				loadedShops.put(Integer.valueOf(npcid), null);
 			}
@@ -58,19 +52,14 @@ public class DefaultNpcShopDataLoader extends NpcShopDataLoader {
 
 	@Override
 	public boolean loadAll() {
-		List<NpcShop.ShopSlot> items;
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-				PreparedStatement ps = con.prepareStatement("SELECT `npcid`,`itemid`,`price` FROM `shopitems` ORDER BY `npcid`,`position` ASC");
-				ResultSet rs = ps.executeQuery()) {
-			boolean more = false;
-			while (more || rs.next()) {
-				int npcId = rs.getInt(1);
-				items = new ArrayList<>();
-				do {
-					items.add(new NpcShop.ShopSlot(rs.getInt(2), (short) 1, rs.getInt(3)));
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			Map<Integer, List<NpcShopDataDAO.ShopSlotRecord>> allItems = NpcShopDataDAO.loadAllDefaultShopItems(con);
+			for (Map.Entry<Integer, List<NpcShopDataDAO.ShopSlotRecord>> entry : allItems.entrySet()) {
+				List<NpcShop.ShopSlot> items = new ArrayList<>();
+				for (NpcShopDataDAO.ShopSlotRecord r : entry.getValue()) {
+					items.add(new NpcShop.ShopSlot(r.itemId(), r.quantity(), r.price()));
 				}
-				while ((more = rs.next()) && rs.getInt(1) == npcId);
-				loadedShops.put(Integer.valueOf(npcId), new NpcShop.DefaultNpcShopStock(items));
+				loadedShops.put(entry.getKey(), new NpcShop.DefaultNpcShopStock(items));
 			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load all shop data.", ex);

@@ -20,9 +20,8 @@ package argonms.game.loading.beauty;
 
 import argonms.common.loading.string.McdbStringDataLoader;
 import argonms.common.util.DatabaseManager;
+import argonms.common.util.dao.BeautyDataDAO;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,18 +32,8 @@ public class McdbBeautyDataLoader extends BeautyDataLoader {
 	@Override
 	public boolean loadAll() {
 		try (Connection con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.WZ)) {
-			try (PreparedStatement ps = con.prepareStatement("SELECT `faceid` FROM `facedata`");
-					ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					eyeStyles.add(Short.valueOf(rs.getShort(1)));
-				}
-			}
-			try (PreparedStatement ps = con.prepareStatement("SELECT `hairid` FROM `hairdata`");
-					ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					hairStyles.add(Short.valueOf(rs.getShort(1)));
-				}
-			}
+			eyeStyles.addAll(BeautyDataDAO.loadAllFaces(con));
+			hairStyles.addAll(BeautyDataDAO.loadAllHairs(con));
 			return true;
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Error loading beauty data from the MCDB.", e);

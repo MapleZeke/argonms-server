@@ -20,6 +20,8 @@ package argonms.common.util.dao;
 
 import argonms.common.character.KeyBinding;
 import argonms.common.character.SkillEntry;
+import argonms.common.util.DatabaseManager;
+import argonms.common.util.DatabaseManager.DatabaseType;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -446,4 +448,108 @@ public final class CharacterDAO {
 	 * Minigame score record.
 	 */
 	public record MinigameScoreRecord(byte gameType, int wins, int ties, int losses) {}
+
+	// ---- Character lookup methods ----
+
+	/**
+	 * Retrieves a character's name by ID.
+	 *
+	 * @param characterId the character ID
+	 * @return the character name, or null if not found
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static String getNameFromId(int characterId) {
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement(
+						"SELECT `name` FROM `characters` WHERE `id` = ?")) {
+			ps.setInt(1, characterId);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					return rs.getString(1);
+				}
+				return null;
+			}
+		} catch (SQLException e) {
+			throw new DataAccessException("Could not find name of character " + characterId, e);
+		}
+	}
+
+	/**
+	 * Retrieves a character's ID by name.
+	 *
+	 * @param name the character name
+	 * @return the character ID, or -1 if not found
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static int getIdFromName(String name) {
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement(
+						"SELECT `id` FROM `characters` WHERE `name` = ?")) {
+			ps.setString(1, name);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					return rs.getInt(1);
+				}
+				return -1;
+			}
+		} catch (SQLException e) {
+			throw new DataAccessException("Could not find id of character " + name, e);
+		}
+	}
+
+	/**
+	 * Checks whether a character exists by name and world.
+	 *
+	 * @param name  the character name
+	 * @param world the world ID
+	 * @return true if the character exists
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static boolean characterExists(String name, byte world) {
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement(
+						"SELECT EXISTS(SELECT 1 FROM `characters` WHERE `name` = ? AND `world` = ? LIMIT 1)")) {
+			ps.setString(1, name);
+			ps.setByte(2, world);
+			try (ResultSet rs = ps.executeQuery()) {
+				rs.next();
+				return rs.getBoolean(1);
+			}
+		} catch (SQLException e) {
+			throw new DataAccessException("Could not determine if character " + name + " exists", e);
+		}
+	}
+
+	/**
+	 * Looks up a character's connection status, world, ID, name, and GM level by name.
+	 * Used during buddy invite processing.
+	 *
+	 * @param con  the connection (caller manages)
+	 * @param name the character name
+	 * @return the lookup result, or null if not found
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static CharacterLookup lookupByName(Connection con, String name) {
+		try (PreparedStatement ps = con.prepareStatement(
+				"SELECT `a`.`connected`,`c`.`world`,`c`.`id`,`c`.`name`,`a`.`gm` "
+				+ "FROM `characters` `c` LEFT JOIN `accounts` `a` ON `c`.`accountid` = `a`.`id` "
+				+ "WHERE `c`.`name` = ?")) {
+			ps.setString(1, name);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (!rs.next()) {
+					return null;
+				}
+				return new CharacterLookup(
+					rs.getByte(1), rs.getByte(2), rs.getInt(3), rs.getString(4), rs.getByte(5)
+				);
+			}
+		} catch (SQLException e) {
+			throw new DataAccessException("Could not look up character " + name, e);
+		}
+	}
+
+	/**
+	 * Character lookup result record.
+	 */
+	public record CharacterLookup(byte connected, byte world, int characterId, String name, byte gm) {}
 }

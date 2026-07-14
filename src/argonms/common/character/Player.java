@@ -31,6 +31,7 @@ import argonms.common.character.inventory.TamingMob;
 import argonms.common.net.external.RemoteClient;
 import argonms.common.util.DatabaseManager;
 import argonms.common.util.DatabaseManager.DatabaseType;
+import argonms.common.util.dao.CharacterDAO;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -569,49 +570,14 @@ public abstract class Player {
 	}
 
 	public static String getNameFromId(int characterid) {
-		String name = null;
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-				PreparedStatement ps = con.prepareStatement("SELECT `name` FROM `characters` WHERE `id` = ?")) {
-			ps.setInt(1, characterid);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					name = rs.getString(1);
-				}
-			}
-		} catch (SQLException ex) {
-			LOG.log(Level.WARNING, "Could not find name of character " + characterid, ex);
-		}
-		return name;
+		return CharacterDAO.getNameFromId(characterid);
 	}
 
 	public static int getIdFromName(String name) {
-		int id = -1;
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-				PreparedStatement ps = con.prepareStatement("SELECT `id` FROM `characters` WHERE `name` = ?")) {
-			ps.setString(1, name);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					id = rs.getInt(1);
-				}
-			}
-		} catch (SQLException ex) {
-			LOG.log(Level.WARNING, "Could not find id of character " + name, ex);
-		}
-		return id;
+		return CharacterDAO.getIdFromName(name);
 	}
 
 	public static boolean characterExists(String name, byte world) {
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-				PreparedStatement ps = con.prepareStatement("SELECT EXISTS(SELECT 1 FROM `characters` WHERE `name` = ? AND `world` = ? LIMIT 1)")) {
-			ps.setString(1, name);
-			ps.setByte(2, world);
-			try (ResultSet rs = ps.executeQuery()) {
-				rs.next();
-				return rs.getBoolean(1);
-			}
-		} catch (SQLException ex) {
-			LOG.log(Level.WARNING, "Could not determine if character " + name + " exists", ex);
-			return false;
-		}
+		return CharacterDAO.characterExists(name, world);
 	}
 }

@@ -25,6 +25,7 @@ import argonms.common.util.DatabaseManager;
 import argonms.common.util.DatabaseManager.DatabaseType;
 import argonms.common.util.collections.Pair;
 import argonms.common.util.dao.BuddyDAO;
+import argonms.common.util.dao.CharacterDAO;
 import argonms.common.util.dao.DataAccessException;
 import argonms.common.util.input.LittleEndianReader;
 import argonms.game.GameServer;
@@ -33,8 +34,6 @@ import argonms.game.character.GameCharacter;
 import argonms.game.net.external.GameClient;
 import argonms.game.net.external.GamePackets;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -78,60 +77,52 @@ public final class BuddyListHandler {
 			client.getSession().send(GamePackets.writeSimpleBuddyListMessage(YOUR_LIST_FULL));
 			return;
 		}
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-				PreparedStatement ps = con.prepareStatement("SELECT `a`.`connected`,`c`.`world`,`c`.`id`,`c`.`name`,`a`.`gm` "
-						+ "FROM `characters` `c` LEFT JOIN `accounts` `a` ON `c`.`accountid` = `a`.`id` "
-						+ "WHERE `c`.`name` = ?")) {
-			ps.setString(1, invitee);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (!rs.next() || rs.getByte(2) != client.getWorld()) {
-					client.getSession().send(GamePackets.writeSimpleBuddyListMessage(NONEXISTENT));
-					return;
-				}
-				if (rs.getByte(5) > p.getPrivilegeLevel()) {
-					client.getSession().send(GamePackets.writeSimpleBuddyListMessage(NO_GM_INVITES));
-					return;
-				}
-				int inviteeId = rs.getInt(3);
-				if (bList.getBuddy(inviteeId) != null || bList.isInInvites(inviteeId)) {
-					client.getSession().send(GamePackets.writeSimpleBuddyListMessage(ALREADY_ON_LIST));
-					return;
-				}
-				switch (rs.getByte(1)) {
-					case RemoteClient.STATUS_INGAME: {
-						Pair<Byte, Byte> channelAndResult = GameServer.getChannel(client.getChannel()).getCrossServerInterface().sendBuddyInvite(p, inviteeId);
-						byte result = channelAndResult.right.byteValue();
-						if (result == Byte.MAX_VALUE) {
-							bList.addBuddy(new BuddyListEntry(inviteeId, rs.getString(4), BuddyListEntry.STATUS_HALF_OPEN));
-							client.getSession().send(GamePackets.writeBuddyList(ADD, bList));
-							break;
-						} else if (result == Byte.MIN_VALUE) {
-							bList.addBuddy(new BuddyListEntry(inviteeId, rs.getString(4), BuddyListEntry.STATUS_MUTUAL, channelAndResult.left.byteValue()));
-							client.getSession().send(GamePackets.writeBuddyList(ADD, bList));
-							break;
-						} else if (result != -1) {
-							client.getSession().send(GamePackets.writeSimpleBuddyListMessage(result));
-							break;
-						}
-						//apparently they are offline...
-						//intentional fallthrough to inviteOfflinePlayer
-					}
-					default: {
-						byte result = inviteOfflinePlayer(con, inviteeId, p.getId(), p.getName());
-						if (result == Byte.MAX_VALUE) {
-							bList.addBuddy(new BuddyListEntry(inviteeId, rs.getString(4), BuddyListEntry.STATUS_HALF_OPEN));
-							client.getSession().send(GamePackets.writeBuddyList(ADD, bList));
-						} else if (result == Byte.MIN_VALUE) {
-							bList.addBuddy(new BuddyListEntry(inviteeId, rs.getString(4), BuddyListEntry.STATUS_MUTUAL));
-							client.getSession().send(GamePackets.writeBuddyList(ADD, bList));
-						} else if (result != -1) {
-							client.getSession().send(GamePackets.writeSimpleBuddyListMessage(result));
-						}
-						//uhh, if result == -1, then I guess the player we're trying
-						//to add just deleted himself while we were handling this
-						//player's request...
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			CharacterDAO.CharacterLookup lookup = CharacterDAO.lookupByName(con, invitee);
+			if (lookup == null || lookup.world() != client.getWorld()) {
+				client.getSession().send(GamePackets.writeSimpleBuddyListMessage(NONEXISTENT));
+				return;
+			}
+			if (lookup.gm() > p.getPrivilegeLevel()) {
+				client.getSession().send(GamePackets.writeSimpleBuddyListMessage(NO_GM_INVITES));
+				return;
+			}
+			int inviteeId = lookup.characterId();
+			if (bList.getBuddy(inviteeId) != null || bList.isInInvites(inviteeId)) {
+				client.getSession().send(GamePackets.writeSimpleBuddyListMessage(ALREADY_ON_LIST));
+				return;
+			}
+			switch (lookup.connected()) {
+				case RemoteClient.STATUS_INGAME: {
+					Pair<Byte, Byte> channelAndResult = GameServer.getChannel(client.getChannel()).getCrossServerInterface().sendBuddyInvite(p, inviteeId);
+					byte result = channelAndResult.right.byteValue();
+					if (result == Byte.MAX_VALUE) {
+						bList.addBuddy(new BuddyListEntry(inviteeId, lookup.name(), BuddyListEntry.STATUS_HALF_OPEN));
+						client.getSession().send(GamePackets.writeBuddyList(ADD, bList));
+						break;
+					} else if (result == Byte.MIN_VALUE) {
+						bList.addBuddy(new BuddyListEntry(inviteeId, lookup.name(), BuddyListEntry.STATUS_MUTUAL, channelAndResult.left.byteValue()));
+						client.getSession().send(GamePackets.writeBuddyList(ADD, bList));
+						break;
+					} else if (result != -1) {
+						client.getSession().send(GamePackets.writeSimpleBuddyListMessage(result));
 						break;
 					}
+					//apparently they are offline...
+					//intentional fallthrough to inviteOfflinePlayer
+				}
+				default: {
+					byte result = inviteOfflinePlayer(con, inviteeId, p.getId(), p.getName());
+					if (result == Byte.MAX_VALUE) {
+						bList.addBuddy(new BuddyListEntry(inviteeId, lookup.name(), BuddyListEntry.STATUS_HALF_OPEN));
+						client.getSession().send(GamePackets.writeBuddyList(ADD, bList));
+					} else if (result == Byte.MIN_VALUE) {
+						bList.addBuddy(new BuddyListEntry(inviteeId, lookup.name(), BuddyListEntry.STATUS_MUTUAL));
+						client.getSession().send(GamePackets.writeBuddyList(ADD, bList));
+					} else if (result != -1) {
+						client.getSession().send(GamePackets.writeSimpleBuddyListMessage(result));
+					}
+					break;
 				}
 			}
 		} catch (SQLException e) {
