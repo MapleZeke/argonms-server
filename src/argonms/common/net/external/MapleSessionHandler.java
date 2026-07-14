@@ -165,7 +165,10 @@ public final class MapleSessionHandler<T extends RemoteClient> extends ChannelIn
 		if (session != null) {
 			LOG.log(Level.FINE, "[{0}] Channel inactive for {1} ({2}), closing session",
 					new Object[]{cid, session.getAccountName(), session.getAddress()});
-			session.close("EOF received");
+			// Offload session.close() to the virtual-thread executor so that
+			// the client.disconnected() callback (which may trigger DB saves)
+			// never blocks the Netty EventLoop thread.
+			packetExecutor.submit(() -> session.close("EOF received"));
 		} else {
 			LOG.log(Level.FINE, "[{0}] Channel inactive (no session)", cid);
 		}
@@ -185,7 +188,10 @@ public final class MapleSessionHandler<T extends RemoteClient> extends ChannelIn
 			var level = socketDrop ? Level.FINE : Level.WARNING;
 			LOG.log(level, "[" + cid + "] Connection failure for " + session.getAccountName()
 					+ " (" + session.getAddress() + ")", cause);
-			session.close(cause.getMessage());
+			// Offload to virtual-thread executor to avoid blocking the EventLoop
+			// with DB saves triggered by client.disconnected().
+			var reason = cause.getMessage();
+			packetExecutor.submit(() -> session.close(reason));
 		} else {
 			LOG.log(Level.WARNING, "[" + cid + "] Exception before session initialization", cause);
 		}

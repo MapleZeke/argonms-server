@@ -113,6 +113,7 @@ public final class NettyClientListener<T extends RemoteClient> implements Sessio
 						protected void initChannel(SocketChannel ch) {
 							ch.pipeline().addLast(new MaplePacketDecoder());
 							ch.pipeline().addLast(new MaplePacketEncoder());
+							ch.pipeline().addLast(new PacketRateLimiter());
 							ch.pipeline().addLast(new MapleSessionHandler<>(packetProcessor, clientFactory, workerThreadPool));
 						}
 					});
@@ -128,15 +129,21 @@ public final class NettyClientListener<T extends RemoteClient> implements Sessio
 
 	public void close(String reason, Throwable reasonExc) {
 		if (closeEventsTriggered.compareAndSet(false, true)) {
+			// Phase 1: Stop accepting new connections
 			if (listener != null) {
 				listener.close().syncUninterruptibly();
 			}
+			// Phase 2: Shut down boss group (acceptor threads)
 			if (bossGroup != null) {
 				bossGroup.shutdownGracefully().syncUninterruptibly();
 			}
+			// Phase 3: Gracefully drain in-flight packets on worker group.
+			// shutdownGracefully() waits for pending tasks before terminating.
 			if (workerGroup != null) {
 				workerGroup.shutdownGracefully().syncUninterruptibly();
 			}
+			// Phase 4: Shut down the packet-processing executor.
+			// This allows any in-flight disconnect saves to complete.
 			workerThreadPool.shutdown();
 			if (reasonExc == null) {
 				LOG.log(Level.FINE, "External facing selector closed: {0}", reason);

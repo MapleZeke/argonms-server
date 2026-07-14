@@ -181,6 +181,13 @@ public final class DatabaseManager {
 		config.setMaxLifetime(Long.getLong("argonms.db.maxLifetime", 600_000L));
 		config.setConnectionTimeout(Long.getLong("argonms.db.connectionTimeout", 30_000L));
 		config.setAutoCommit(true);
+
+		// MySQL prepared-statement caching for improved query performance.
+		config.addDataSourceProperty("cachePrepStmts", "true");
+		config.addDataSourceProperty("prepStmtCacheSize", "250");
+		config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+		config.addDataSourceProperty("useServerPrepStmts", "true");
+
 		return new HikariDataSource(config);
 	}
 

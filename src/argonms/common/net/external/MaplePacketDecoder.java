@@ -27,6 +27,12 @@ import java.util.List;
 public final class MaplePacketDecoder extends ByteToMessageDecoder {
 	private static final int HEADER_LENGTH = 4;
 
+	/**
+	 * Maximum allowed packet body size (64 KB). Packets exceeding this size
+	 * are rejected to prevent memory exhaustion attacks.
+	 */
+	private static final int MAX_PACKET_SIZE = 65_536;
+
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
 		ClientSession<?> session = NettyClientListener.getSession(ctx.channel());
@@ -46,6 +52,11 @@ public final class MaplePacketDecoder extends ByteToMessageDecoder {
 		}
 
 		int packetLength = readPacketLength(in, readerIndex);
+		if (packetLength > MAX_PACKET_SIZE) {
+			session.close("Packet size " + packetLength + " exceeds maximum " + MAX_PACKET_SIZE);
+			return;
+		}
+
 		int availableBodyBytes = in.readableBytes() - HEADER_LENGTH;
 		if (availableBodyBytes < packetLength) {
 			return;
