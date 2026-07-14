@@ -7,6 +7,23 @@
 
     <build>
         <sourceDirectory>src/argonms</sourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>org.openrewrite.maven</groupId>
+                <artifactId>rewrite-maven-plugin</artifactId>
+                <version>5.34.1</version>
+                <configuration>
+                    <exportDatatables>true</exportDatatables>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.openrewrite.recipe</groupId>
+                        <artifactId>rewrite-migrate-java</artifactId>
+                        <version>2.21.0</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
     </build>
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
