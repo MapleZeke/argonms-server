@@ -20,14 +20,10 @@ package argonms.shop.net.external;
 
 import argonms.common.ServerType;
 import argonms.common.net.external.RemoteClient;
-import argonms.common.util.DatabaseManager;
-import argonms.common.util.DatabaseManager.DatabaseType;
+import argonms.common.util.dao.AccountDAO;
+import argonms.common.util.dao.DataAccessException;
 import argonms.shop.ShopServer;
 import argonms.shop.character.ShopCharacter;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,18 +35,12 @@ public class ShopClient extends RemoteClient {
 	private ShopCharacter player;
 
 	public byte getOnlineState() {
-		byte ret;
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-				PreparedStatement ps = con.prepareStatement("SELECT `connected` FROM `accounts` WHERE `id` = ?")) {
-			ps.setInt(1, getAccountId());
-			try (ResultSet rs = ps.executeQuery()) {
-				ret = rs.next() ? rs.getByte(1) : -1;
-			}
-		} catch (SQLException ex) {
+		try {
+			return AccountDAO.getConnectedStatus(getAccountId());
+		} catch (DataAccessException ex) {
 			LOG.log(Level.WARNING, "Could not get connected status of account " + getAccountId(), ex);
-			ret = -1;
+			return -1;
 		}
-		return ret;
 	}
 
 	public void setPlayer(ShopCharacter p) {

@@ -20,11 +20,8 @@ package argonms.common.net.external;
 
 import argonms.common.character.Player;
 import argonms.common.net.SessionDataModel;
-import argonms.common.util.DatabaseManager;
-import argonms.common.util.DatabaseManager.DatabaseType;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import argonms.common.util.dao.AccountDAO;
+import argonms.common.util.dao.DataAccessException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -114,12 +111,9 @@ public abstract class RemoteClient implements SessionDataModel, MapleClientConte
 	}
 
 	public void updateState(byte currentState) {
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-			 PreparedStatement ps = con.prepareStatement("UPDATE `accounts` SET `connected` = ? WHERE `id` = ?")) {
-			ps.setByte(1, currentState);
-			ps.setInt(2, id);
-			ps.executeUpdate();
-		} catch (SQLException ex) {
+		try {
+			AccountDAO.updateConnectedStatus(id, currentState);
+		} catch (DataAccessException ex) {
 			LOG.log(Level.WARNING, "Could not change connected status of account " + id, ex);
 		}
 	}

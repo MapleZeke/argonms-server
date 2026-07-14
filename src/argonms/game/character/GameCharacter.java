@@ -50,6 +50,9 @@ import argonms.common.util.Rng;
 import argonms.common.util.Scheduler;
 import argonms.common.util.collections.LockableList;
 import argonms.common.util.collections.Pair;
+import argonms.common.util.dao.AccountDAO;
+import argonms.common.util.dao.CharacterDAO;
+import argonms.common.util.dao.CharacterDAO.CharacterStats;
 import argonms.game.GameServer;
 import argonms.game.character.inventory.PetTools;
 import argonms.game.character.inventory.StorageInventory;
@@ -251,83 +254,34 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 	}
 
 	private void updateDbAccount(Connection con) throws SQLException {
-		try (PreparedStatement ps = con.prepareStatement("UPDATE `accounts` SET `storageslots` = ?, `storagemesos` = ? WHERE `id` = ?")) {
-			ps.setShort(1, storage.getMaxSlots());
-			ps.setInt(2, storage.getMesos());
-			ps.setInt(3, client.getAccountId());
-			ps.executeUpdate();
-		} catch (SQLException e) {
-			throw new SQLException("Failed to save account-info of character " + name, e);
-		}
+		AccountDAO.updateStorage(con, client.getAccountId(), storage.getMaxSlots(), storage.getMesos());
 	}
 
 	private void updateDbStats(Connection con) throws SQLException {
-		try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET "
-				+ "`accountid` = ?, `world` = ?, `name` = ?, `gender` = ?, `skin` = ?, `eyes` = ?, `hair` = ?, "
-				+ "`level` = ?, `job` = ?, `str` = ?, `dex` = ?, `int` = ?, `luk` = ?, "
-				+ "`hp` = ?, `maxhp` = ?, `mp` = ?, `maxmp` = ?, `ap` = ?, `sp` = ?, `exp` = ?, `fame` = ?, "
-				+ "`spouse` = ?, `map` = ?, `spawnpoint` = ?, `mesos` = ?, "
-				+ "`equipslots` = ?, `useslots` = ?, `setupslots` = ?, `etcslots` = ?, `cashslots` = ?, "
-				+ "`buddyslots` = ?, `gm` = ? WHERE `id` = ?")) {
-			ps.setInt(1, client.getAccountId());
-			ps.setByte(2, client.getWorld());
-			ps.setString(3, name);
-			ps.setByte(4, gender);
-			ps.setInt(5, skin);
-			ps.setInt(6, eyes);
-			ps.setInt(7, hair);
-			ps.setShort(8, level);
-			ps.setShort(9, job);
-			ps.setShort(10, baseStr);
-			ps.setShort(11, baseDex);
-			ps.setShort(12, baseInt);
-			ps.setShort(13, baseLuk);
-			ps.setShort(14, remHp);
-			ps.setShort(15, baseMaxHp);
-			ps.setShort(16, remMp);
-			ps.setShort(17, baseMaxMp);
-			ps.setShort(18, remAp);
-			ps.setShort(19, remSp);
-			ps.setInt(20, exp);
-			ps.setShort(21, fame);
-			ps.setInt(22, partner);
-			ps.setInt(23, getMapId());
-			ps.setByte(24, map != null ? map.nearestSpawnPoint(getPosition()) : savedSpawnPoint);
-			ps.setInt(25, mesos);
-			ps.setShort(26, getInventory(InventoryType.EQUIP).getMaxSlots());
-			ps.setShort(27, getInventory(InventoryType.USE).getMaxSlots());
-			ps.setShort(28, getInventory(InventoryType.SETUP).getMaxSlots());
-			ps.setShort(29, getInventory(InventoryType.ETC).getMaxSlots());
-			ps.setShort(30, getInventory(InventoryType.CASH).getMaxSlots());
-			ps.setShort(31, buddies.getCapacity());
-			ps.setByte(32, getPrivilegeLevel());
-			ps.setInt(33, getDataId());
-			int updateRows = ps.executeUpdate();
-			if (updateRows < 1) {
-				LOG.log(Level.WARNING, "Updating a deleted character with name {0} of account {1}.",
-					new Object[]{name, client.getAccountId()});
-			}
-		} catch (SQLException e) {
-			throw new SQLException("Failed to save stats of character " + name, e);
-		}
+		CharacterDAO.updateStats(con, new CharacterStats(
+			getDataId(), client.getAccountId(), client.getWorld(), name, gender,
+			skin, eyes, hair,
+			level, job, baseStr, baseDex, baseInt, baseLuk,
+			remHp, baseMaxHp, remMp, baseMaxMp, remAp, remSp,
+			exp, fame, partner, getMapId(),
+			map != null ? map.nearestSpawnPoint(getPosition()) : savedSpawnPoint,
+			mesos,
+			getInventory(InventoryType.EQUIP).getMaxSlots(),
+			getInventory(InventoryType.USE).getMaxSlots(),
+			getInventory(InventoryType.SETUP).getMaxSlots(),
+			getInventory(InventoryType.ETC).getMaxSlots(),
+			getInventory(InventoryType.CASH).getMaxSlots(),
+			buddies.getCapacity(), getPrivilegeLevel()
+		));
 	}
 
 	private void updateDbMapMemory(Connection con) throws SQLException {
-		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `mapmemory` WHERE `characterid` = ?")) {
-			ps.setInt(1, getDataId());
-			ps.executeUpdate();
+		Map<String, int[]> mapMemory = new HashMap<>();
+		for (Entry<MapMemoryVariable, Pair<Integer, Byte>> entry : rememberedMaps.entrySet()) {
+			mapMemory.put(entry.getKey().toString(),
+				new int[]{entry.getValue().left.intValue(), entry.getValue().right.byteValue()});
 		}
-
-		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `mapmemory` (`characterid`,`key`,`value`,`spawnpoint`) VALUES (?,?,?,?)")) {
-			ps.setInt(1, getDataId());
-			for (Entry<MapMemoryVariable, Pair<Integer, Byte>> entry : rememberedMaps.entrySet()) {
-				ps.setString(2, entry.getKey().toString());
-				ps.setInt(3, entry.getValue().left.intValue());
-				ps.setByte(4, entry.getValue().right.byteValue());
-				ps.addBatch();
-			}
-			ps.executeBatch();
-		}
+		CharacterDAO.replaceMapMemory(con, getDataId(), mapMemory);
 	}
 
 	private void updateDbInventory(Connection con) throws SQLException {
@@ -372,62 +326,19 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 	}
 
 	private void updateDbSkills(Connection con) throws SQLException {
-		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `skills` WHERE `characterid` = ?")) {
-			ps.setInt(1, getDataId());
-			ps.executeUpdate();
-		}
-
-		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `skills` (`characterid`,`skillid`,`level`,`mastery`) VALUES (?,?,?,?)")) {
-			ps.setInt(1, getDataId());
-			for (Entry<Integer, SkillEntry> skill : skillEntries.entrySet()) {
-				SkillEntry skillLevel = skill.getValue();
-				ps.setInt(2, skill.getKey().intValue());
-				ps.setByte(3, skillLevel.getLevel());
-				ps.setByte(4, skillLevel.getMasterLevel());
-				ps.addBatch();
-			}
-			ps.executeBatch();
-		} catch (SQLException e) {
-			throw new SQLException("Failed to save skill levels of character " + name, e);
-		}
+		CharacterDAO.replaceSkills(con, getDataId(), skillEntries);
 	}
 
 	private void updateDbCooldowns(Connection con) throws SQLException {
-		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `cooldowns` WHERE `characterid` = ?")) {
-			ps.setInt(1, getDataId());
-			ps.executeUpdate();
+		Map<Integer, Short> cooldownMap = new HashMap<>();
+		for (Entry<Integer, Cooldown> cooling : cooldowns.entrySet()) {
+			cooldownMap.put(cooling.getKey(), cooling.getValue().getSecondsRemaining());
 		}
-
-		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `cooldowns` (`characterid`,`skillid`,`remaining`) VALUES (?,?,?)")) {
-			ps.setInt(1, getDataId());
-			for (Entry<Integer, Cooldown> cooling : cooldowns.entrySet()) {
-				ps.setInt(2, cooling.getKey().intValue());
-				ps.setShort(3, cooling.getValue().getSecondsRemaining());
-				ps.addBatch();
-			}
-			ps.executeBatch();
-		} catch (SQLException e) {
-			throw new SQLException("Failed to save cooldowns of character " + name, e);
-		}
+		CharacterDAO.replaceCooldowns(con, getDataId(), cooldownMap);
 	}
 
 	private void updateDbBindings(Connection con) throws SQLException {
-		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `keymaps` WHERE `characterid` = ?")) {
-			ps.setInt(1, getDataId());
-			ps.executeUpdate();
-		}
-
-		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `keymaps` (`characterid`,`key`,`type`,`action`) VALUES (?,?,?,?)")) {
-			ps.setInt(1, getDataId());
-			for (Entry<Byte, KeyBinding> entry : bindings.entrySet()) {
-				KeyBinding binding = entry.getValue();
-				ps.setByte(2, entry.getKey().byteValue());
-				ps.setByte(3, binding.getType());
-				ps.setInt(4, binding.getAction());
-				ps.addBatch();
-			}
-			ps.executeBatch();
-		}
+		CharacterDAO.replaceKeyBindings(con, getDataId(), bindings);
 
 		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `skillmacros` WHERE `characterid` = ?")) {
 			ps.setInt(1, getDataId());
@@ -459,28 +370,14 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 	}
 
 	private void updateDbBuddies(Connection con) throws SQLException {
-		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `buddyentries` WHERE `owner` = ?")) {
-			ps.setInt(1, getDataId());
-			ps.executeUpdate();
+		List<CharacterDAO.BuddyRecord> buddyRecords = new ArrayList<>();
+		for (BuddyListEntry buddy : buddies.getBuddies()) {
+			buddyRecords.add(new CharacterDAO.BuddyRecord(buddy.getId(), buddy.getName(), buddy.getStatus()));
 		}
-
-		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `buddyentries` "
-				+ "(`owner`,`buddy`,`buddyname`,`status`) VALUES (?,?,?,?)")) {
-			ps.setInt(1, getDataId());
-			for (BuddyListEntry buddy : buddies.getBuddies()) {
-				ps.setInt(2, buddy.getId());
-				ps.setString(3, buddy.getName());
-				ps.setByte(4, buddy.getStatus());
-				ps.addBatch();
-			}
-			ps.setByte(4, BuddyListEntry.STATUS_INVITED);
-			for (Entry<Integer, String> invite : buddies.getInvites()) {
-				ps.setInt(2, invite.getKey().intValue());
-				ps.setString(3, invite.getValue());
-				ps.addBatch();
-			}
-			ps.executeBatch();
+		for (Entry<Integer, String> invite : buddies.getInvites()) {
+			buddyRecords.add(new CharacterDAO.BuddyRecord(invite.getKey(), invite.getValue(), BuddyListEntry.STATUS_INVITED));
 		}
+		CharacterDAO.replaceBuddies(con, getDataId(), buddyRecords);
 	}
 
 	private void updateDbParty(Connection con) throws SQLException {
@@ -563,53 +460,23 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 	}
 
 	private void updateDbMinigameStats(Connection con) throws SQLException {
-		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `minigamescores` WHERE `characterid` = ?")) {
-			ps.setInt(1, getDataId());
-			ps.executeUpdate();
-		}
-
-		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `minigamescores` "
-				+ "(`characterid`,`gametype`,`wins`,`ties`,`losses`) "
-				+ "VALUES (?, ?, ?, ?, ?)")) {
-			ps.setInt(1, getDataId());
-			synchronized(minigameStats) {
-				for (Entry<MiniroomType, Map<MinigameResult, AtomicInteger>> stats : minigameStats.entrySet()) {
-					ps.setByte(2, stats.getKey().byteValue());
-					ps.setInt(3, stats.getValue().get(MinigameResult.WIN).get());
-					ps.setInt(4, stats.getValue().get(MinigameResult.TIE).get());
-					ps.setInt(5, stats.getValue().get(MinigameResult.LOSS).get());
-					ps.addBatch();
-				}
+		List<CharacterDAO.MinigameScoreRecord> scores = new ArrayList<>();
+		synchronized(minigameStats) {
+			for (Entry<MiniroomType, Map<MinigameResult, AtomicInteger>> stats : minigameStats.entrySet()) {
+				scores.add(new CharacterDAO.MinigameScoreRecord(
+					stats.getKey().byteValue(),
+					stats.getValue().get(MinigameResult.WIN).get(),
+					stats.getValue().get(MinigameResult.TIE).get(),
+					stats.getValue().get(MinigameResult.LOSS).get()
+				));
 			}
-			ps.executeBatch();
-		} catch (SQLException e) {
-			throw new SQLException("Failed to save minigame stats of character " + name, e);
 		}
+		CharacterDAO.replaceMinigameScores(con, getDataId(), scores);
 	}
 
 	private void updateDbFameLog(Connection con) throws SQLException {
-		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `famelog` WHERE `from` = ?")) {
-			ps.setInt(1, getDataId());
-			ps.executeUpdate();
-		}
-
-		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `famelog` (`from`,`to`,`millis`) VALUES (?,?,?)")) {
-			ps.setInt(1, getDataId());
-			long threshold = System.currentTimeMillis() - 1000L * 60 * 60 * 24 * 30;
-			synchronized(famesThisMonth) {
-				for (Entry<Integer, Long> fameEntry : famesThisMonth.entrySet()) {
-					long time = fameEntry.getValue().longValue();
-					//given time >= now - 30 days
-					if (time >= threshold) {
-						ps.setInt(2, fameEntry.getKey().intValue());
-						ps.setLong(3, fameEntry.getValue().longValue());
-						ps.addBatch();
-					}
-				}
-			}
-			ps.executeBatch();
-		} catch (SQLException e) {
-			throw new SQLException("Failed to save fame log of character " + name, e);
+		synchronized(famesThisMonth) {
+			CharacterDAO.replaceFameLog(con, getDataId(), famesThisMonth);
 		}
 	}
 

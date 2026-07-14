@@ -25,6 +25,9 @@ import argonms.common.net.external.RemoteClient;
 import argonms.common.util.DatabaseManager;
 import argonms.common.util.DatabaseManager.DatabaseType;
 import argonms.common.util.TimeTool;
+import argonms.common.util.dao.AccountDAO;
+import argonms.common.util.dao.AccountDAO.AuthRecord;
+import argonms.common.util.dao.DataAccessException;
 import argonms.login.character.LoginCharacter;
 import java.net.InetSocketAddress;
 import java.sql.Connection;
@@ -311,24 +314,18 @@ public class LoginClient extends RemoteClient {
 
 	public void setGender(byte gender) {
 		this.gender = gender;
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-				PreparedStatement ps = con.prepareStatement("UPDATE `accounts` SET `gender` = ? WHERE `id` = ?")) {
-			ps.setByte(1, gender);
-			ps.setInt(2, getAccountId());
-			ps.executeUpdate();
-		} catch (SQLException ex) {
+		try {
+			AccountDAO.updateGender(getAccountId(), gender);
+		} catch (DataAccessException ex) {
 			LOG.log(Level.WARNING, "Could not set gender of account " + getAccountId(), ex);
 		}
 	}
 
 	public void setPin(String pin) {
 		this.pin = pin;
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-				PreparedStatement ps = con.prepareStatement("UPDATE `accounts` SET `pin` = ? WHERE `id` = ?")) {
-			ps.setString(1, pin);
-			ps.setInt(2, getAccountId());
-			ps.executeUpdate();
-		} catch (SQLException ex) {
+		try {
+			AccountDAO.updatePin(getAccountId(), pin);
+		} catch (DataAccessException ex) {
 			LOG.log(Level.WARNING, "Could not set pin of account " + getAccountId(), ex);
 		}
 	}
