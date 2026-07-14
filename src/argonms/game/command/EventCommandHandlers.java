@@ -30,10 +30,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class EventCommandHandlers implements CommandCollection<CommandCaller> {
 	private static class EventUtilCommandHandler extends AbstractCommandDefinition<CommandCaller> {
 		@Override
@@ -59,7 +55,7 @@ public class EventCommandHandlers implements CommandCollection<CommandCaller> {
 			}
 
 			String option = args.next();
-			if (option.equalsIgnoreCase("ROLL")) {
+			if ("ROLL".equalsIgnoreCase(option)) {
 				final String usage = "Usage: !eventutil roll <possibilities>|--usage";
 
 				if (!args.hasNext()) {
@@ -69,7 +65,7 @@ public class EventCommandHandlers implements CommandCollection<CommandCaller> {
 				}
 
 				String possibilities = args.next();
-				if (possibilities.equalsIgnoreCase("--USAGE")) {
+				if ("--USAGE".equalsIgnoreCase(possibilities)) {
 					resp.printOut(usage);
 					resp.printOut("Roll an \"n\" sided dice and have the result be sent to everyone in your map.");
 					return;
@@ -81,13 +77,13 @@ public class EventCommandHandlers implements CommandCollection<CommandCaller> {
 					resp.printErr(possibilities + " is not a valid number of possibilities.");
 					resp.printErr(usage);
 				}
-			} else if (option.equalsIgnoreCase("STUN")) {
+			} else if ("STUN".equalsIgnoreCase(option)) {
 				final String usage = "Usage: !eventutil stun [<target>]|--usage";
 
 				List<CommandTarget.CharacterManipulation> change = Collections.singletonList(new CommandTarget.CharacterManipulation(CommandTarget.CharacterManipulationKey.STUN, Boolean.valueOf(true)));
 				String targetName = args.extractTarget(null, null);
 				if (targetName != null) {
-					if (targetName.equalsIgnoreCase("--USAGE")) {
+					if ("--USAGE".equalsIgnoreCase(targetName)) {
 						resp.printOut(usage);
 						resp.printOut("Cast stun on one target player. The entire map will be stunned if target is omitted.");
 						return;
@@ -105,13 +101,13 @@ public class EventCommandHandlers implements CommandCollection<CommandCaller> {
 					for (MapEntity ent : caller.getMap().getAllEntities(MapEntity.EntityType.PLAYER))
 						new LocalChannelCommandTarget((GameCharacter) ent).mutate(change);
 				}
-			} else if (option.equalsIgnoreCase("UNSTUN")) {
+			} else if ("UNSTUN".equalsIgnoreCase(option)) {
 				final String usage = "Usage: !eventutil unstun [<target>]|--usage";
 
 				List<CommandTarget.CharacterManipulation> change = Collections.singletonList(new CommandTarget.CharacterManipulation(CommandTarget.CharacterManipulationKey.STUN, Boolean.valueOf(false)));
 				String targetName = args.extractTarget(null, null);
 				if (targetName != null) {
-					if (targetName.equalsIgnoreCase("--USAGE")) {
+					if ("--USAGE".equalsIgnoreCase(targetName)) {
 						resp.printOut(usage);
 						resp.printOut("Cancel the stun effect for one target player. The entire map will be unstunned if target is omitted.");
 						return;
@@ -129,7 +125,7 @@ public class EventCommandHandlers implements CommandCollection<CommandCaller> {
 					for (MapEntity ent : caller.getMap().getAllEntities(MapEntity.EntityType.PLAYER))
 						new LocalChannelCommandTarget((GameCharacter) ent).mutate(change);
 				}
-			} else if (option.equalsIgnoreCase("ADMIT")) {
+			} else if ("ADMIT".equalsIgnoreCase(option)) {
 				final String usage = "Usage: !eventutil admit (<source map> [<target player>])|--usage";
 
 				if (!args.hasNext()) {
@@ -138,7 +134,7 @@ public class EventCommandHandlers implements CommandCollection<CommandCaller> {
 					return;
 				}
 				String arg = args.next();
-				if (arg.equalsIgnoreCase("--USAGE")) {
+				if ("--USAGE".equalsIgnoreCase(arg)) {
 					resp.printOut(usage);
 					resp.printOut("Move everyone from a map (on your channel) to the map that the target player is in. If target player is omitted, the players will be warped to your location.");
 					return;
@@ -167,8 +163,9 @@ public class EventCommandHandlers implements CommandCollection<CommandCaller> {
 				}
 
 				CommandTarget.MapValue destination = (CommandTarget.MapValue) target.access(CommandTarget.CharacterProperty.MAP);
-				if (destination.channel != caller.getChannel())
+				if (destination.channel != caller.getChannel()) {
 					resp.printOut("Players from map " + mapId + " will be transferred to channel " + destination.channel + ".");
+				}
 				List<CommandTarget.CharacterManipulation> change = Collections.singletonList(new CommandTarget.CharacterManipulation(CommandTarget.CharacterManipulationKey.CHANGE_MAP, destination));
 				for (MapEntity ent : sourceMap.getAllEntities(MapEntity.EntityType.PLAYER))
 					new LocalChannelCommandTarget((GameCharacter) ent).mutate(change);
@@ -178,6 +175,6 @@ public class EventCommandHandlers implements CommandCollection<CommandCaller> {
 
 	@Override
 	public Map<String, AbstractCommandDefinition<CommandCaller>> getDefinitions() {
-		return Collections.<String, AbstractCommandDefinition<CommandCaller>>unmodifiableMap(Collections.singletonMap("!eventutil", new EventUtilCommandHandler()));
+		return Collections.unmodifiableMap(Collections.singletonMap("!eventutil", new EventUtilCommandHandler()));
 	}
 }

@@ -24,17 +24,13 @@ import argonms.shop.loading.cashshop.Commodity;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class CommodityOverrideDataLoader {
 	private static CommodityOverrideDataLoader instance;
 
 	protected final Map<Integer, Map<CommodityMod, Object>> mods;
 
 	protected CommodityOverrideDataLoader() {
-		mods = new HashMap<Integer, Map<CommodityMod, Object>>();
+		mods = new HashMap<>();
 	}
 
 	public boolean loadAll() {
@@ -75,11 +71,7 @@ public abstract class CommodityOverrideDataLoader {
 
 	public static void setInstance(DataFileType wzType, String wzPath) {
 		if (instance == null) {
-			switch (wzType) {
-				default:
-					instance = new JsonCommodityOverrideDataLoader();
-					break;
-			}
+			instance = new JsonCommodityOverrideDataLoader();
 		}
 	}
 

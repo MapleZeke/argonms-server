@@ -22,13 +22,10 @@ import argonms.common.loading.DataFileType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class StringDataLoader {
 	private static StringDataLoader instance;
 
@@ -41,13 +38,13 @@ public abstract class StringDataLoader {
 	protected final Map<Integer, String> itemMsgs;
 
 	protected StringDataLoader() {
-		itemNames = new HashMap<Integer, String>();
-		skillNames = new HashMap<Integer, String>();
-		streetNames = new HashMap<Integer, String>();
-		mapNames = new HashMap<Integer, String>();
-		mobNames = new HashMap<Integer, String>();
-		npcNames = new HashMap<Integer, String>();
-		itemMsgs = new HashMap<Integer, String>();
+		itemNames = new HashMap<>();
+		skillNames = new HashMap<>();
+		streetNames = new HashMap<>();
+		mapNames = new HashMap<>();
+		mobNames = new HashMap<>();
+		npcNames = new HashMap<>();
+		itemMsgs = new HashMap<>();
 	}
 
 	public abstract boolean loadAll();
@@ -77,60 +74,63 @@ public abstract class StringDataLoader {
 	}
 
 	public List<String> getSimilarNamedItems(String reference) {
-		List<String> retItems = new ArrayList<String>();
+		List<String> retItems = new ArrayList<>();
 		for (Entry<Integer, String> name : itemNames.entrySet())
-			if (name.getValue().toLowerCase().contains(reference.toLowerCase()))
+			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT))) {
 				retItems.add(name.getKey() + " - " + name.getValue());
+			}
 		return retItems;
 	}
 
 	public List<String> getSimilarNamedSkills(String reference) {
-		List<String> retSkills = new ArrayList<String>();
+		List<String> retSkills = new ArrayList<>();
 		for (Entry<Integer, String> name : skillNames.entrySet())
-			if (name.getValue().toLowerCase().contains(reference.toLowerCase()))
+			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT))) {
 				retSkills.add(name.getKey() + " - " + name.getValue());
+			}
 		return retSkills;
 	}
 
 	public List<String> getSimilarNamedMaps(String reference) {
-		List<String> retMaps = new ArrayList<String>();
+		List<String> retMaps = new ArrayList<>();
 		for (Entry<Integer, String> name : mapNames.entrySet()) {
 			String streetAndMap = streetNames != null ? streetNames.get(name.getKey()) : null;
-			if (streetAndMap != null)
+			if (streetAndMap != null) {
 				streetAndMap += ": " + name.getValue();
-			else
+			} else {
 				streetAndMap = name.getValue();
-			if (streetAndMap.toLowerCase().contains(reference.toLowerCase()))
+			}
+			if (streetAndMap.toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT))) {
 				retMaps.add(name.getKey() + " - " + streetAndMap);
+			}
 		}
 		return retMaps;
 	}
 
 	public List<String> getSimilarNamedMobs(String reference) {
-		List<String> retMobs = new ArrayList<String>();
+		List<String> retMobs = new ArrayList<>();
 		for (Entry<Integer, String> name : mobNames.entrySet())
-			if (name.getValue().toLowerCase().contains(reference.toLowerCase()))
+			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT))) {
 				retMobs.add(name.getKey() + " - " + name.getValue());
+			}
 		return retMobs;
 	}
 
 	public List<String> getSimilarNamedNpcs(String reference) {
-		List<String> retNpcs = new ArrayList<String>();
+		List<String> retNpcs = new ArrayList<>();
 		for (Entry<Integer, String> name : npcNames.entrySet())
-			if (name.getValue().toLowerCase().contains(reference.toLowerCase()))
+			if (name.getValue().toLowerCase(Locale.ROOT).contains(reference.toLowerCase(Locale.ROOT))) {
 				retNpcs.add(name.getKey() + " - " + name.getValue());
+			}
 		return retNpcs;
 	}
 
 	public static void setInstance(DataFileType wzType, String wzPath) {
 		if (instance == null) {
-			switch (wzType) {
-				case KVJ:
-					instance = new KvjStringDataLoader(wzPath);
-					break;
-				case MCDB:
-					instance = new McdbStringDataLoader();
-					break;
+			if (wzType == DataFileType.KVJ) {
+				instance = new KvjStringDataLoader(wzPath);
+			} else if (wzType == DataFileType.MCDB) {
+				instance = new McdbStringDataLoader();
 			}
 		}
 	}

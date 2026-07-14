@@ -24,28 +24,23 @@ import argonms.common.util.input.LittleEndianReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class KvjSkillDataLoader extends SkillDataLoader {
 	private static final Logger LOG = Logger.getLogger(KvjSkillDataLoader.class.getName());
 
-	private static final byte //skill props
-		NEXT_SKILL = 1,
-		ELEM_ATTR = 2,
-		DELAY = 3,
-		SUMMON = 4,
-		PREPARED = 5,
-		KEY_DOWN = 6,
-		KEY_DOWN_END = 7,
-		NEXT_LEVEL = 8
-	;
+	private static final byte NEXT_SKILL = 1;
+	private static final byte ELEM_ATTR = 2;
+	private static final byte DELAY = 3;
+	private static final byte SUMMON = 4;
+	private static final byte PREPARED = 5;
+	private static final byte KEY_DOWN = 6;
+	private static final byte KEY_DOWN_END = 7;
+	private static final byte NEXT_LEVEL = 8;
 
 	private final String dataPath;
 	private final Set<Integer> loadedFiles;
@@ -57,14 +52,15 @@ public class KvjSkillDataLoader extends SkillDataLoader {
 
 	@Override
 	protected void loadPlayerSkill(int skillid) {
-		String id = String.format("%07d", skillid);
+		String id = String.format(Locale.ROOT, "%07d", skillid);
 
 		try {
 			Integer key = Integer.valueOf(Integer.parseInt(id.substring(0, 3)));
 			if (!loadedFiles.contains(key)) {
-				File f = new File(new StringBuilder(dataPath).append("Skill.wz").append(File.separator).append(id.substring(0, 3)).append(".img.kvj").toString());
-				if (f.exists())
+				File f = new File(dataPath + "Skill.wz" + (File.separator) + id.substring(0, 3) + ".img.kvj");
+				if (f.exists()) {
 					doWork(new LittleEndianByteArrayReader(f));
+				}
 				loadedFiles.add(key);
 			}
 		} catch (IOException e) {
@@ -77,9 +73,10 @@ public class KvjSkillDataLoader extends SkillDataLoader {
 		try {
 			Integer key = Integer.valueOf(-1);
 			if (!loadedFiles.contains(key)) {
-				File f = new File(new StringBuilder(dataPath).append("Skill.wz").append(File.separator).append("MobSkill.img.kvj").toString());
-				if (f.exists())
+				File f = new File(dataPath + "Skill.wz" + (File.separator) + "MobSkill.img.kvj");
+				if (f.exists()) {
 					doMobWork(new LittleEndianByteArrayReader(f));
+				}
 				loadedFiles.add(key);
 			}
 		} catch (IOException e) {
@@ -92,7 +89,7 @@ public class KvjSkillDataLoader extends SkillDataLoader {
 		try {
 			File root = new File(dataPath + "Skill.wz");
 			for (String kvj : root.list()) {
-				if (kvj.equals("MobSkill.img.kvj")) {
+				if ("MobSkill.img.kvj".equals(kvj)) {
 					doMobWork(new LittleEndianByteArrayReader(new File(root.getAbsolutePath() + File.separatorChar + kvj)));
 					//InputStream is = new BufferedInputStream(new FileInputStream(root.getAbsolutePath() + File.separatorChar + kvj));
 					//doMobWork(new LittleEndianStreamReader(is));
@@ -115,26 +112,30 @@ public class KvjSkillDataLoader extends SkillDataLoader {
 
 	@Override
 	public boolean canLoadPlayerSkill(int skillid) {
-		if (skillStats.containsKey(Integer.valueOf(skillid)))
+		if (skillStats.containsKey(Integer.valueOf(skillid))) {
 			return true;
-		if (loadedFiles.contains(Integer.valueOf(skillid / 10000)))
+		}
+		if (loadedFiles.contains(Integer.valueOf(skillid / 10000))) {
 			return false;
+		}
 		//TODO: actually load the file to see if the skill exists so we can use
 		//this method as an "does exist" instead of just "is loadable"?
-		String id = String.format("%07d", skillid);
-		File f = new File(new StringBuilder(dataPath).append("Skill.wz").append(File.separator).append(id.substring(0, 3)).append(".img.kvj").toString());
+		String id = String.format(Locale.ROOT, "%07d", skillid);
+		File f = new File(dataPath + "Skill.wz" + (File.separator) + id.substring(0, 3) + ".img.kvj");
 		return f.exists();
 	}
 
 	@Override
 	public boolean canLoadMobSkill(short skillid) {
-		if (mobSkillStats.containsKey(Short.valueOf(skillid)))
+		if (mobSkillStats.containsKey(Short.valueOf(skillid))) {
 			return true;
-		if (loadedFiles.contains(Integer.valueOf(-1)))
+		}
+		if (loadedFiles.contains(Integer.valueOf(-1))) {
 			return false;
+		}
 		//TODO: actually load the file to see if the skill exists so we can use
 		//this method as an "does exist" instead of just "is loadable"?
-		File f = new File(new StringBuilder(dataPath).append("Skill.wz").append(File.separator).append("MobSkill.img.kvj").toString());
+		File f = new File(dataPath + "Skill.wz" + (File.separator) + "MobSkill.img.kvj");
 		return f.exists();
 	}
 

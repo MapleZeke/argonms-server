@@ -40,15 +40,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
-/**
- *
- * @author GoldenKevin
- */
-public class CommandProcessor {
+public final class CommandProcessor {
 	private static final Pattern argSplit;
 	private static final CommandProcessor singleton;
 	private final Map<String, AbstractCommandDefinition<GameCharacterCommandCaller>> inGameOnlyCommands;
@@ -61,9 +58,9 @@ public class CommandProcessor {
 	}
 
 	private CommandProcessor() {
-		inGameOnlyCommands = new LinkedHashMap<String, AbstractCommandDefinition<GameCharacterCommandCaller>>();
-		byTelnetOnlyCommands = new LinkedHashMap<String, AbstractCommandDefinition<RemoteAdminCommandCaller>>();
-		universalCommands = new LinkedHashMap<String, AbstractCommandDefinition<CommandCaller>>();
+		inGameOnlyCommands = new LinkedHashMap<>();
+		byTelnetOnlyCommands = new LinkedHashMap<>();
+		universalCommands = new LinkedHashMap<>();
 		populateDefinitions();
 	}
 
@@ -91,7 +88,7 @@ public class CommandProcessor {
 				}
 
 				List<CommandTarget.CharacterManipulation> changes = new ArrayList<CommandTarget.CharacterManipulation>();
-				changes.add(new CommandTarget.CharacterManipulation(CommandTarget.CharacterManipulationKey.CANCEL_DEBUFFS, new PlayerStatusEffect[] {
+				changes.add(new CommandTarget.CharacterManipulation(CommandTarget.CharacterManipulationKey.CANCEL_DEBUFFS, new PlayerStatusEffect[]{
 						PlayerStatusEffect.CURSE, PlayerStatusEffect.DARKNESS,
 						PlayerStatusEffect.POISON, PlayerStatusEffect.SEAL,
 						PlayerStatusEffect.WEAKNESS
@@ -259,8 +256,9 @@ public class CommandProcessor {
 				param = args.next();
 				try {
 					status = Byte.parseByte(param);
-					if (status < QuestEntry.STATE_NOT_STARTED || status > QuestEntry.STATE_COMPLETED)
+					if (status < QuestEntry.STATE_NOT_STARTED || status > QuestEntry.STATE_COMPLETED) {
 						throw new NumberFormatException();
+					}
 				} catch (NumberFormatException e) {
 					resp.printErr(param + " is not a valid quest status.");
 					resp.printErr(getUsage());
@@ -294,7 +292,8 @@ public class CommandProcessor {
 			@Override
 			public void doAction(CommandCaller caller, CommandArguments args, CommandOutput resp) {
 				int skillId;
-				byte skillLevel, masterLevel = -1;
+				byte skillLevel;
+				byte masterLevel = -1;
 				SkillStats s;
 
 				String targetName = args.extractOptionalTarget(caller.getName());
@@ -317,8 +316,9 @@ public class CommandProcessor {
 				try {
 					skillId = Integer.parseInt(param);
 					s = SkillDataLoader.getInstance().getSkill(skillId);
-					if (s == null)
+					if (s == null) {
 						throw new NumberFormatException();
+					}
 				} catch (NumberFormatException e) {
 					resp.printErr(param + " is not a valid skillid.");
 					resp.printErr(getUsage());
@@ -332,8 +332,9 @@ public class CommandProcessor {
 				param = args.next();
 				try {
 					skillLevel = Byte.parseByte(param);
-					if (skillLevel != 0 && s.getLevel(skillLevel) == null)
+					if (skillLevel != 0 && s.getLevel(skillLevel) == null) {
 						throw new NumberFormatException();
+					}
 				} catch (NumberFormatException e) {
 					resp.printErr(param + " is not a valid level of skill " + skillId + ".");
 					resp.printErr(getUsage());
@@ -344,8 +345,9 @@ public class CommandProcessor {
 					param = args.next();
 					try {
 						masterLevel = Byte.parseByte(param);
-						if (masterLevel != 0 && s.getLevel(masterLevel) == null)
+						if (masterLevel != 0 && s.getLevel(masterLevel) == null) {
 							throw new NumberFormatException();
+						}
 					} catch (NumberFormatException e) {
 						resp.printErr(param + " is not a valid master level of skill " + skillId + ".");
 						resp.printErr(getUsage());
@@ -458,10 +460,11 @@ public class CommandProcessor {
 				byte channel = map.channel;
 				StringBuilder sb = new StringBuilder();
 				sb.append("PlayerId=").append(target.access(CommandTarget.CharacterProperty.PLAYER_ID));
-				if (channel != 0)
+				if (channel != 0) {
 					sb.append("; Channel=").append(channel);
-				else
+				} else {
 					sb.append("; Offline");
+				}
 				sb.append("; Map=").append(map.mapId);
 				sb.append("; Position(").append(pos.x).append(",").append(pos.y).append(")");
 				resp.printOut(sb.toString());
@@ -498,11 +501,11 @@ public class CommandProcessor {
 				}
 
 				byte type;
-				if (key.equalsIgnoreCase("exp")) {
+				if ("exp".equalsIgnoreCase(key)) {
 					type = GameRegistry.RATE_EXP;
-				} else if (key.equalsIgnoreCase("meso")) {
+				} else if ("meso".equalsIgnoreCase(key)) {
 					type = GameRegistry.RATE_MESO;
-				} else if (key.equalsIgnoreCase("drop")) {
+				} else if ("drop".equalsIgnoreCase(key)) {
 					type = GameRegistry.RATE_DROP;
 				} else {
 					resp.printErr(getUsage());
@@ -568,12 +571,11 @@ public class CommandProcessor {
 
 			@Override
 			public void doAction(CommandCaller caller, CommandArguments args, CommandOutput resp) {
-				if (args.hasOpt("-gc"))
-					System.gc();
+				args.hasOpt("-gc");
 
 				long startMillis = GameServer.getChannel(caller.getChannel()).getTimeStarted();
 				long upTimeMillis = System.currentTimeMillis() - startMillis;
-				DateFormat fmt = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.LONG);
+				DateFormat fmt = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.LONG, Locale.ROOT);
 				resp.printOut("This game server was started on " + fmt.format(startMillis) + ".");
 
 				long upDays = upTimeMillis / (1000 * 60 * 60 * 24);
@@ -581,14 +583,18 @@ public class CommandProcessor {
 				long upMinutes = ((upTimeMillis % (1000 * 60 * 60 * 24)) % (1000 * 60 * 60)) / (1000 * 60);
 				long upSeconds = (((upTimeMillis % (1000 * 60 * 60 * 24)) % (1000 * 60 * 60)) % (1000 * 60)) / 1000;
 				String upTimeStr = "It has been up for ";
-				if (upDays > 0)
+				if (upDays > 0) {
 					upTimeStr += upDays + (upDays != 1 ? " days, " : " day, ");
-				if (upHours > 0)
+				}
+				if (upHours > 0) {
 					upTimeStr += upHours + (upHours != 1 ? " hours, " : " hour, ");
-				if (upMinutes > 0)
+				}
+				if (upMinutes > 0) {
 					upTimeStr += upMinutes + (upMinutes != 1 ? " minutes, " : " minute, ");
-				if (upSeconds > 0)
+				}
+				if (upSeconds > 0) {
 					upTimeStr += upSeconds + (upSeconds != 1 ? " seconds, " : " second, ");
+				}
 				resp.printOut(upTimeStr.substring(0, upTimeStr.length() - 2) + ".");
 
 				long heapNow = Runtime.getRuntime().totalMemory() / (1024 * 1024);
@@ -605,7 +611,7 @@ public class CommandProcessor {
 
 	public void process(GameCharacter p, String line) {
 		String[] args = argSplit.split(line);
-		AbstractCommandDefinition<CommandCaller> def1 = universalCommands.get(args[0].toLowerCase());
+		AbstractCommandDefinition<CommandCaller> def1 = universalCommands.get(args[0].toLowerCase(Locale.ROOT));
 		CommandOutput resp = new CommandOutput.InChat(p.getClient());
 		if (def1 != null && p.getPrivilegeLevel() >= def1.minPrivilegeLevel()) {
 			CommandArguments argsContainer = new CommandArguments(args);
@@ -616,7 +622,7 @@ public class CommandProcessor {
 				resp.printOut(def1.getHelpMessage());
 			}
 		} else {
-			AbstractCommandDefinition<GameCharacterCommandCaller> def2 = inGameOnlyCommands.get(args[0].toLowerCase());
+			AbstractCommandDefinition<GameCharacterCommandCaller> def2 = inGameOnlyCommands.get(args[0].toLowerCase(Locale.ROOT));
 			if (def2 != null && p.getPrivilegeLevel() >= def2.minPrivilegeLevel()) {
 				CommandArguments argsContainer = new CommandArguments(args);
 				if (!argsContainer.hasOpt("--help")) {
@@ -645,25 +651,30 @@ public class CommandProcessor {
 		public void doAction(CommandCaller caller, CommandArguments args, CommandOutput resp) {
 			if (!args.hasNext()) {
 				for (Entry<String, AbstractCommandDefinition<CommandCaller>> entry : universalCommands.entrySet())
-					if (caller.getPrivilegeLevel() >= entry.getValue().minPrivilegeLevel())
+					if (caller.getPrivilegeLevel() >= entry.getValue().minPrivilegeLevel()) {
 						resp.printOut(entry.getKey() + " - " + entry.getValue().getHelpMessage());
+					}
 				if (caller.isInGame()) {
 					for (Entry<String, AbstractCommandDefinition<GameCharacterCommandCaller>> entry : inGameOnlyCommands.entrySet())
-						if (caller.getPrivilegeLevel() >= entry.getValue().minPrivilegeLevel())
+						if (caller.getPrivilegeLevel() >= entry.getValue().minPrivilegeLevel()) {
 							resp.printOut(entry.getKey() + " - " + entry.getValue().getHelpMessage());
+						}
 				} else {
 					for (Entry<String, AbstractCommandDefinition<RemoteAdminCommandCaller>> entry : byTelnetOnlyCommands.entrySet())
-						if (caller.getPrivilegeLevel() >= entry.getValue().minPrivilegeLevel())
+						if (caller.getPrivilegeLevel() >= entry.getValue().minPrivilegeLevel()) {
 							resp.printOut(entry.getKey() + " - " + entry.getValue().getHelpMessage());
+						}
 				}
 			} else {
 				String param = args.next();
-				AbstractCommandDefinition def = universalCommands.get(param.toLowerCase());
-				if (def == null || caller.getPrivilegeLevel() < def.minPrivilegeLevel())
-					if (caller.isInGame())
-						def = inGameOnlyCommands.get(param.toLowerCase());
-					else
-						def = byTelnetOnlyCommands.get(param.toLowerCase());
+				AbstractCommandDefinition def = universalCommands.get(param.toLowerCase(Locale.ROOT));
+				if (def == null || caller.getPrivilegeLevel() < def.minPrivilegeLevel()) {
+					if (caller.isInGame()) {
+						def = inGameOnlyCommands.get(param.toLowerCase(Locale.ROOT));
+					} else {
+						def = byTelnetOnlyCommands.get(param.toLowerCase(Locale.ROOT));
+					}
+				}
 				if (def == null || caller.getPrivilegeLevel() < def.minPrivilegeLevel()) {
 					resp.printErr(param + " is not a valid command.");
 					resp.printErr(getUsage());

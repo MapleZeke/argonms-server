@@ -21,10 +21,6 @@ package argonms.common.character.inventory;
 import argonms.game.field.Positionable;
 import java.awt.Point;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Pet extends InventorySlot implements Positionable {
 	private String name;
 	private byte level;

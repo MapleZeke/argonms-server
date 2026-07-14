@@ -30,15 +30,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * All methods of this class are thread safe.
- * @author GoldenKevin
  */
 public class OrderedQueue {
 	private final SortedMap<Integer, ByteBuffer> queued;
-	private final AtomicInteger nextPopCursor, nextPushCursor;
+	private final AtomicInteger nextPopCursor;
+	private final AtomicInteger nextPushCursor;
 	private final AtomicBoolean writeInProgress;
 
 	public OrderedQueue() {
-		queued = new ConcurrentSkipListMap<Integer, ByteBuffer>();
+		queued = new ConcurrentSkipListMap<>();
 		nextPopCursor = new AtomicInteger(0);
 		nextPushCursor = new AtomicInteger(0);
 		writeInProgress = new AtomicBoolean(false);
@@ -88,7 +88,7 @@ public class OrderedQueue {
 	 * insert(). The list has no gaps in order numbers.
 	 */
 	public List<ByteBuffer> pop() {
-		List<ByteBuffer> consecutive = new ArrayList<ByteBuffer>();
+		List<ByteBuffer> consecutive = new ArrayList<>();
 		Iterator<Entry<Integer, ByteBuffer>> elements = queued.entrySet().iterator();
 		if (elements.hasNext()) {
 			Entry<Integer, ByteBuffer> lastPopped = elements.next();
@@ -100,8 +100,9 @@ public class OrderedQueue {
 				for (int i = firstToPop; i == lastPopped.getKey().intValue(); i++) {
 					consecutive.add(lastPopped.getValue());
 					elements.remove();
-					if (elements.hasNext())
+					if (elements.hasNext()) {
 						lastPopped = elements.next();
+					}
 				}
 			} else if (smallestKey < firstToPop) {
 				//nextPushCursor overflowed while we still have keys from before

@@ -18,46 +18,43 @@
 
 package argonms.common.character;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CenterServerSynchronizationOps {
-	public static final byte
-		PARTY_CREATE = 0,
-		PARTY_DISBAND = 1,
-		PARTY_ADD_PLAYER = 2,
-		PARTY_REMOVE_PLAYER = 3,
-		PARTY_CHANGE_LEADER = 4,
-		PARTY_JOIN_ERROR = 5,
-		PARTY_FETCH_LIST = 6,
-		PARTY_MEMBER_CONNECTED = 7,
-		PARTY_MEMBER_DISCONNECTED = 8,
-		PARTY_MEMBER_STAT_UPDATED = 9,
-		GUILD_CREATE = 10,
-		GUILD_CONTRACT = 11,
-		GUILD_FETCH_LIST = 12,
-		GUILD_MEMBER_CONNECTED = 13,
-		GUILD_MEMBER_DISCONNECTED = 14,
-		GUILD_MEMBER_STAT_UPDATED = 15,
-		GUILD_ADD_PLAYER = 16,
-		GUILD_JOIN_ERROR = 17,
-		GUILD_REMOVE_PLAYER = 18,
-		GUILD_EXPAND = 19,
-		GUILD_EMBLEM_UPDATE = 20,
-		GUILD_TITLES_UPDATE = 21,
-		GUILD_MEMBER_RANK_UPDATE = 22,
-		GUILD_NOTICE_UPDATE = 23,
-		GUILD_CONTRACT_VOTE = 24,
-		GUILD_CREATED = 25,
-		GUILD_DISBAND = 26,
-		CHATROOM_CREATE = 27,
-		CHATROOM_ADD_PLAYER = 28,
-		CHATROOM_REMOVE_PLAYER = 29,
-		CHATROOM_UPDATE_AVATAR_CHANNEL = 30,
-		CHATROOM_UPDATE_AVATAR_LOOK = 31,
-		CHATROOM_CREATED = 32,
-		CHATROOM_ROOM_CHANGED = 33,
-		CHATROOM_SLOT_CHANGED = 34
-	;
+	public static final byte PARTY_CREATE = 0;
+	public static final byte PARTY_DISBAND = 1;
+	public static final byte PARTY_ADD_PLAYER = 2;
+	public static final byte PARTY_REMOVE_PLAYER = 3;
+	public static final byte PARTY_CHANGE_LEADER = 4;
+	public static final byte PARTY_JOIN_ERROR = 5;
+	public static final byte PARTY_FETCH_LIST = 6;
+	public static final byte PARTY_MEMBER_CONNECTED = 7;
+	public static final byte PARTY_MEMBER_DISCONNECTED = 8;
+	public static final byte PARTY_MEMBER_STAT_UPDATED = 9;
+	public static final byte GUILD_CREATE = 10;
+	public static final byte GUILD_CONTRACT = 11;
+	public static final byte GUILD_FETCH_LIST = 12;
+	public static final byte GUILD_MEMBER_CONNECTED = 13;
+	public static final byte GUILD_MEMBER_DISCONNECTED = 14;
+	public static final byte GUILD_MEMBER_STAT_UPDATED = 15;
+	public static final byte GUILD_ADD_PLAYER = 16;
+	public static final byte GUILD_JOIN_ERROR = 17;
+	public static final byte GUILD_REMOVE_PLAYER = 18;
+	public static final byte GUILD_EXPAND = 19;
+	public static final byte GUILD_EMBLEM_UPDATE = 20;
+	public static final byte GUILD_TITLES_UPDATE = 21;
+	public static final byte GUILD_MEMBER_RANK_UPDATE = 22;
+	public static final byte GUILD_NOTICE_UPDATE = 23;
+	public static final byte GUILD_CONTRACT_VOTE = 24;
+	public static final byte GUILD_CREATED = 25;
+	public static final byte GUILD_DISBAND = 26;
+	public static final byte CHATROOM_CREATE = 27;
+	public static final byte CHATROOM_ADD_PLAYER = 28;
+	public static final byte CHATROOM_REMOVE_PLAYER = 29;
+	public static final byte CHATROOM_UPDATE_AVATAR_CHANNEL = 30;
+	public static final byte CHATROOM_UPDATE_AVATAR_LOOK = 31;
+	public static final byte CHATROOM_CREATED = 32;
+	public static final byte CHATROOM_ROOM_CHANGED = 33;
+	public static final byte CHATROOM_SLOT_CHANGED = 34;
+
+	private CenterServerSynchronizationOps() {
+	}
 }

@@ -28,10 +28,6 @@ import argonms.game.net.external.handler.ChatHandler;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class PlayerScriptInteraction {
 	protected final Scriptable globalScope;
 	private GameClient client;
@@ -74,7 +70,7 @@ public abstract class PlayerScriptInteraction {
 		Pair<Integer, Byte> location = client.getPlayer().getRememberedMap(MapMemoryVariable.valueOf(variable));
 		Context cx = Context.enter();
 		try {
-			return cx.newArray(globalScope, new Object[] { location.left, location.right });
+			return cx.newArray(globalScope, new Object[]{location.left, location.right});
 		} finally {
 			Context.exit();
 		}
@@ -84,7 +80,7 @@ public abstract class PlayerScriptInteraction {
 		Pair<Integer, Byte> location = client.getPlayer().resetRememberedMap(MapMemoryVariable.valueOf(variable));
 		Context cx = Context.enter();
 		try {
-			return cx.newArray(globalScope, new Object[] { location.left, location.right });
+			return cx.newArray(globalScope, new Object[]{location.left, location.right});
 		} finally {
 			Context.exit();
 		}

@@ -27,10 +27,6 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class McdbReactorDataLoader extends ReactorDataLoader {
 	private static final Logger LOG = Logger.getLogger(McdbReactorDataLoader.class.getName());
 
@@ -67,8 +63,9 @@ public class McdbReactorDataLoader extends ReactorDataLoader {
 			ps.setInt(1, reactorid);
 			rs = ps.executeQuery();
 			if (rs.next()) {
-				if (stats == null)
+				if (stats == null) {
 					stats = new ReactorStats(reactorid);
+				}
 				stats.setScript(rs.getString(1));
 			}
 		} catch (SQLException e) {
@@ -128,8 +125,9 @@ public class McdbReactorDataLoader extends ReactorDataLoader {
 
 	@Override
 	public boolean canLoad(int reactorid) {
-		if (reactorStats.containsKey(reactorid))
+		if (reactorStats.containsKey(reactorid)) {
 			return true;
+		}
 		Connection con = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -138,8 +136,9 @@ public class McdbReactorDataLoader extends ReactorDataLoader {
 			ps = con.prepareStatement("SELECT * FROM `reactoreventdata` WHERE `reactorid` = ?");
 			ps.setInt(1, reactorid);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				return true;
+			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not use MCDB to determine whether reactor " + reactorid + " is valid.", e);
 		} finally {
@@ -153,8 +152,9 @@ public class McdbReactorDataLoader extends ReactorDataLoader {
 			ps = con.prepareStatement("SELECT * FROM `reactorscriptnames` WHERE `reactorid` = ?");
 			ps.setInt(1, reactorid);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				return true;
+			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not use reactor scripts table to determine whether reactor " + reactorid + " is valid.", e);
 		} finally {

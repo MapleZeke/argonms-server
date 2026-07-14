@@ -47,10 +47,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CashShopStaging implements IInventory {
 	private static final Logger LOG = Logger.getLogger(ShopCharacter.class.getName());
 
@@ -123,8 +119,9 @@ public class CashShopStaging implements IInventory {
 		/* package-private */ static CashPurchaseProperties loadFromDatabase(ResultSet rs, int itemId, int defaultAccount) throws SQLException {
 			CashPurchaseProperties props = new CashPurchaseProperties();
 			props.purchaserAccountId = rs.getInt(1);
-			if (rs.wasNull())
-				props.purchaserAccountId = defaultAccount;
+		if (rs.wasNull()) {
+			props.purchaserAccountId = defaultAccount;
+		}
 			props.gifterName = rs.getString(2);
 			props.serialNumber = rs.getInt(3);
 			return props;
@@ -139,8 +136,9 @@ public class CashShopStaging implements IInventory {
 				ps = con.prepareStatement("SELECT `purchaseracctid`,`gifterchrname`,`serialnumber` FROM `cashshoppurchases` WHERE `uniqueid` = ?");
 				ps.setLong(1, uniqueId);
 				rs = ps.executeQuery();
-				if (rs.next())
+				if (rs.next()) {
 					return loadFromDatabase(rs, itemId, defaultAccount);
+				}
 			} catch (SQLException ex) {
 				LOG.log(Level.WARNING, "Could not load cash shop purchase properties from database", ex);
 			} finally {
@@ -163,9 +161,9 @@ public class CashShopStaging implements IInventory {
 		//forgo to the overhead of ConcurrentHashMap. with no scripts and
 		//commands, we are guaranteed to not do much concurrency in cash shop
 		locks = new ReentrantReadWriteLock();
-		slots = new LinkedHashMap<Long, InventorySlot>();
-		purchaseProperties = new HashMap<Long, CashPurchaseProperties>();
-		giftNotifications = new ArrayList<CashItemGiftNotification>();
+		slots = new LinkedHashMap<>();
+		purchaseProperties = new HashMap<>();
+		giftNotifications = new ArrayList<>();
 	}
 
 	public void loadPurchaseProperties(int accountId) {
@@ -181,8 +179,9 @@ public class CashShopStaging implements IInventory {
 			for (Long uniqueId : slots.keySet()) {
 				ps.setLong(1, uniqueId.longValue());
 				rs = ps.executeQuery();
-				if (rs.next())
+				if (rs.next()) {
 					purchaseProperties.put(uniqueId, CashPurchaseProperties.loadFromDatabase(rs, slots.get(uniqueId).getDataId(), accountId));
+				}
 				rs.close();
 			}
 			ps.close();
@@ -200,7 +199,7 @@ public class CashShopStaging implements IInventory {
 				InventorySlot item = slots.get(oUid);
 				CashPurchaseProperties props = purchaseProperties.get(oUid);
 				if (item == null || props == null) {
-					LOG.log(Level.FINE, "Dropping gift with unique ID {0} for {1}. Missing item data or not owned by recipient.", new Object[] { oUid, Integer.valueOf(accountId) });
+					LOG.log(Level.FINE, "Dropping gift with unique ID {0} for {1}. Missing item data or not owned by recipient.", new Object[]{oUid, Integer.valueOf(accountId)});
 					continue;
 				}
 
@@ -268,7 +267,7 @@ public class CashShopStaging implements IInventory {
 		//throw new UnsupportedOperationException("CashShopStaging has no concept of slot positions");
 		lockRead();
 		try {
-			Map<Short, InventorySlot> slotBasedMap = new LinkedHashMap<Short, InventorySlot>();
+			Map<Short, InventorySlot> slotBasedMap = new LinkedHashMap<>();
 			short slot = 1;
 			for (InventorySlot item : getAllValues()) {
 				slotBasedMap.put(Short.valueOf(slot), item);
@@ -340,8 +339,9 @@ public class CashShopStaging implements IInventory {
 		try {
 			Long oUid = Long.valueOf(item.getUniqueId());
 			slots.put(oUid, item);
-			if (props != null)
+			if (props != null) {
 				purchaseProperties.put(oUid, props);
+			}
 		} finally {
 			unlockWrite();
 		}
@@ -386,17 +386,19 @@ public class CashShopStaging implements IInventory {
 
 	public static Pair<InventorySlot, CashPurchaseProperties> createItem(Commodity c, int serialNumber, int senderAcctId, String senderName) {
 		InventorySlot item = InventoryTools.makeItemWithId(c.itemDataId);
-		if (!InventoryTools.isPet(c.itemDataId))
+		if (!InventoryTools.isPet(c.itemDataId)) {
 			item.setExpiration(System.currentTimeMillis() + (c.period * 1000L * 60 * 60 * 24));
-		else
+		} else {
 			item.setExpiration(System.currentTimeMillis() + (ItemDataLoader.getInstance().getPetPeriod(c.itemDataId) * 1000L * 60 * 60 * 24));
-		if (c.quantity != 1)
+		}
+		if (c.quantity != 1) {
 			item.setQuantity(c.quantity);
+		}
 
 		CashShopStaging.CashPurchaseProperties props = new CashShopStaging.CashPurchaseProperties(senderAcctId, senderName, serialNumber);
 		CashShopStaging.attachCashPurchaseProperties(item.getUniqueId(), props);
 
-		return new Pair<InventorySlot, CashPurchaseProperties>(item, props);
+		return new Pair<>(item, props);
 	}
 
 	public static boolean giveGift(int senderAcctId, String senderName, int recipientAcctId, int[] serialNumbers, String message, ItemManipulator itemManipulator) {
@@ -411,20 +413,23 @@ public class CashShopStaging implements IInventory {
 			ps = con.prepareStatement("SELECT `id` FROM `characters` WHERE `accountid` = ?");
 			ps.setInt(1, recipientAcctId);
 			rs = ps.executeQuery();
-			while (recipient == null && rs.next())
+			while (recipient == null && rs.next()) {
 				recipient = ShopServer.getInstance().getPlayerById(rs.getInt(1));
+			}
 			rs.close();
 			ps.close();
 			if (recipient != null) {
-				if (!recipient.getCashShopInventory().canFit(serialNumbers.length))
+				if (!recipient.getCashShopInventory().canFit(serialNumbers.length)) {
 					return false;
+				}
 
 				CashShopDataLoader csdl = CashShopDataLoader.getInstance();
 				for (int serialNumber : serialNumbers) {
 					Commodity c = csdl.getCommodity(serialNumber);
 					Pair<InventorySlot, CashPurchaseProperties> item = createItem(c, serialNumber, senderAcctId, senderName);
-					if (itemManipulator != null && !itemManipulator.manipulate(item.left, serialNumber, c))
+					if (itemManipulator != null && !itemManipulator.manipulate(item.left, serialNumber, c)) {
 						continue;
+					}
 
 					recipient.getCashShopInventory().append(item.left, item.right);
 					recipient.onExpirableItemAdded(item.left);
@@ -439,18 +444,20 @@ public class CashShopStaging implements IInventory {
 			ps.setInt(1, recipientAcctId);
 			rs = ps.executeQuery();
 			short position = (short) ((rs.next() ? rs.getShort(1) : 0) + 1);
-			if (position - 1 + serialNumbers.length > MAX_SLOTS)
+			if (position - 1 + serialNumbers.length > MAX_SLOTS) {
 				return false;
+			}
 			rs.close();
 			ps.close();
 
-			final Map<Short, InventorySlot> inv = new LinkedHashMap<Short, InventorySlot>(serialNumbers.length);
+			final Map<Short, InventorySlot> inv = new LinkedHashMap<>(serialNumbers.length);
 			CashShopDataLoader csdl = CashShopDataLoader.getInstance();
 			for (int serialNumber : serialNumbers) {
 				Commodity c = csdl.getCommodity(serialNumber);
 				final Pair<InventorySlot, CashPurchaseProperties> item = createItem(c, serialNumber, senderAcctId, senderName);
-				if (itemManipulator != null && !itemManipulator.manipulate(item.left, serialNumber, c))
+				if (itemManipulator != null && !itemManipulator.manipulate(item.left, serialNumber, c)) {
 					continue;
+				}
 
 				inv.put(Short.valueOf(position), item.left);
 				position++;
@@ -514,8 +521,9 @@ public class CashShopStaging implements IInventory {
 			con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
 			ps = con.prepareStatement("SELECT `serialnumber` FROM `cashshoppurchases` WHERE `serialnumber` IS NOT NULL GROUP BY `serialnumber` ORDER BY COUNT(*) DESC LIMIT 5");
 			rs = ps.executeQuery();
-			for (int i = 0; rs.next(); i++)
+			for (int i = 0; rs.next(); i++) {
 				bestItems[i] = rs.getInt(1);
+			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not get best cash items from database", ex);
 		} finally {

@@ -33,10 +33,6 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class GameClient extends RemoteClient {
 	private static final Logger LOG = Logger.getLogger(GameClient.class.getName());
 
@@ -124,21 +120,20 @@ public class GameClient extends RemoteClient {
 	public void disconnected() {
 		final boolean quickCleanup = GameServer.getInstance().isTerminated();
 		final boolean changingChannels = isMigrating();
-		if (npc != null)
+		if (npc != null) {
 			npc.endConversation();
-		if (npcRoom instanceof NpcStorageKeeper && player != null)
+		}
+		if (npcRoom instanceof NpcStorageKeeper && player != null) {
 			player.getStorageInventory().collapse();
+		}
 		if (getSession().getQueuedReads() == 0) {
 			dissociate(quickCleanup, changingChannels);
 		} else {
-			getSession().setEmptyReadQueueHandler(new Runnable() {
-				@Override
-				public void run() {
-					dissociate(quickCleanup, changingChannels);
-				}
-			});
+			getSession().setEmptyReadQueueHandler(() ->
+				dissociate(quickCleanup, changingChannels));
 		}
-		if (!quickCleanup && !changingChannels)
+		if (!quickCleanup && !changingChannels) {
 			updateState(STATUS_NOTLOGGEDIN);
+		}
 	}
 }

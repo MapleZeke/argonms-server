@@ -22,10 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-/**
- *
- * @author GoldenKevin
- */
 public class MapStats {
 	private final int mapid;
 	private final Map<Byte, PortalData> portals;
@@ -53,11 +49,11 @@ public class MapStats {
 
 	protected MapStats(int mapid) {
 		this.mapid = mapid;
-		portals = new HashMap<Byte, PortalData>();
-		areas = new HashMap<String, AreaData>();
+		portals = new HashMap<>();
+		areas = new HashMap<>();
 		footholds = new FootholdTree();
-		life = new HashMap<Integer, SpawnData>();
-		reactors = new HashMap<Integer, ReactorData>();
+		life = new HashMap<>();
+		reactors = new HashMap<>();
 	}
 
 	protected void setTown() {

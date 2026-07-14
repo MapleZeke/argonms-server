@@ -24,10 +24,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class BeautyDataLoader {
 	private static BeautyDataLoader instance;
 
@@ -35,8 +31,8 @@ public abstract class BeautyDataLoader {
 	protected final SortedSet<Short> hairStyles;
 
 	protected BeautyDataLoader() {
-		eyeStyles = new TreeSet<Short>();
-		hairStyles = new TreeSet<Short>();
+		eyeStyles = new TreeSet<>();
+		hairStyles = new TreeSet<>();
 	}
 
 	public abstract boolean loadAll();
@@ -59,13 +55,10 @@ public abstract class BeautyDataLoader {
 
 	public static void setInstance(DataFileType wzType, String wzPath) {
 		if (instance == null) {
-			switch (wzType) {
-				case KVJ:
-					instance = new KvjBeautyDataLoader(wzPath);
-					break;
-				case MCDB:
-					instance = new McdbBeautyDataLoader();
-					break;
+			if (wzType == DataFileType.KVJ) {
+				instance = new KvjBeautyDataLoader(wzPath);
+			} else if (wzType == DataFileType.MCDB) {
+				instance = new McdbBeautyDataLoader();
 			}
 		}
 	}

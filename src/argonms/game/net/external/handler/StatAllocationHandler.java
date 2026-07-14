@@ -30,21 +30,18 @@ import argonms.game.net.external.GamePackets;
 import java.util.EnumMap;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class StatAllocationHandler {
 	public static void handleApAllocation(LittleEndianReader packet, GameClient gc) {
 		GameCharacter p = gc.getPlayer();
 		/*int time = */packet.readInt();
 		int updateMask = packet.readInt();
-		Map<ClientUpdateKey, Short> updatedStats = new EnumMap<ClientUpdateKey, Short>(ClientUpdateKey.class);
+		Map<ClientUpdateKey, Short> updatedStats = new EnumMap<>(ClientUpdateKey.class);
 		p.writeLockStats();
 		try {
 			for (ClientUpdateKey key : ClientUpdateKey.valueOf(updateMask)) {
-				if (p.getAp() <= 0)
+				if (p.getAp() <= 0) {
 					return;
+				}
 				switch (key) {
 					case STR:
 						if (p.getStr() < Short.MAX_VALUE) {
@@ -74,10 +71,12 @@ public final class StatAllocationHandler {
 						if (p.getMaxHp() < 30000) {
 							byte level;
 							int increase = 1;
-							if ((level = p.getSkillLevel(Skills.IMPROVE_MAXHP)) > 0)
+							if ((level = p.getSkillLevel(Skills.IMPROVE_MAXHP)) > 0) {
 								increase += SkillDataLoader.getInstance().getSkill(Skills.IMPROVE_MAXHP).getLevel(level).getY();
-							if ((level = p.getSkillLevel(Skills.IMPROVED_MAXHP_INCREASE)) > 0)
+							}
+							if ((level = p.getSkillLevel(Skills.IMPROVED_MAXHP_INCREASE)) > 0) {
 								increase += SkillDataLoader.getInstance().getSkill(Skills.IMPROVED_MAXHP_INCREASE).getLevel(level).getY();
+							}
 							updatedStats.put(ClientUpdateKey.MAXHP, Short.valueOf(p.incrementMaxHp(increase)));
 							updatedStats.put(ClientUpdateKey.AVAILABLEAP, Short.valueOf(p.decrementLocalAp()));
 						}
@@ -86,8 +85,9 @@ public final class StatAllocationHandler {
 						if (p.getMaxMp() < 30000) {
 							byte level;
 							int increase = 1;
-							if ((level = p.getSkillLevel(Skills.IMPROVED_MAXMP_INCREASE)) > 0)
+							if ((level = p.getSkillLevel(Skills.IMPROVED_MAXMP_INCREASE)) > 0) {
 								increase += SkillDataLoader.getInstance().getSkill(Skills.IMPROVED_MAXMP_INCREASE).getLevel(level).getY();
+							}
 							updatedStats.put(ClientUpdateKey.MAXMP, Short.valueOf(p.incrementMaxMp(increase)));
 							updatedStats.put(ClientUpdateKey.AVAILABLEAP, Short.valueOf(p.decrementLocalAp()));
 						}

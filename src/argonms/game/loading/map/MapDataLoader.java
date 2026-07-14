@@ -23,17 +23,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 //FIXME: Thread safety for concurrent read/writes (if we're not preloading)
-/**
- *
- * @author GoldenKevin
- */
 public abstract class MapDataLoader {
 	private static MapDataLoader instance;
 
 	protected final Map<Integer, MapStats> mapStats;
 
 	protected MapDataLoader() {
-		mapStats = new HashMap<Integer, MapStats>();
+		mapStats = new HashMap<>();
 	}
 
 	protected abstract void load(int mapid);
@@ -47,8 +43,9 @@ public abstract class MapDataLoader {
 		MapStats stats;
 		//do {
 			oId = Integer.valueOf(id);
-			if (!mapStats.containsKey(oId))
-				load(id);
+		if (!mapStats.containsKey(oId)) {
+			load(id);
+		}
 			stats = mapStats.get(oId);
 			//id = stats != null ? stats.getLink() : 0;
 		//} while (id != 0);
@@ -57,13 +54,10 @@ public abstract class MapDataLoader {
 
 	public static void setInstance(DataFileType wzType, String wzPath) {
 		if (instance == null) {
-			switch (wzType) {
-				case KVJ:
-					instance = new KvjMapDataLoader(wzPath);
-					break;
-				case MCDB:
-					instance = new McdbMapDataLoader();
-					break;
+			if (wzType == DataFileType.KVJ) {
+				instance = new KvjMapDataLoader(wzPath);
+			} else if (wzType == DataFileType.MCDB) {
+				instance = new McdbMapDataLoader();
 			}
 		}
 	}

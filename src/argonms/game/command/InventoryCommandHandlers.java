@@ -23,12 +23,9 @@ import argonms.common.character.inventory.Inventory;
 import argonms.common.loading.item.ItemDataLoader;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class InventoryCommandHandlers implements CommandCollection<CommandCaller> {
 	private static class ClearInventoryCommandHandler extends AbstractCommandDefinition<CommandCaller> {
 		@Override
@@ -67,14 +64,15 @@ public class InventoryCommandHandlers implements CommandCollection<CommandCaller
 			}
 			Inventory.InventoryType type;
 			try {
-				type = Inventory.InventoryType.valueOf(args.next().toUpperCase());
+				type = Inventory.InventoryType.valueOf(args.next().toUpperCase(Locale.ROOT));
 			} catch (IllegalArgumentException e) {
 				resp.printErr("Please specify the inventory type you wish to clear slots of.");
 				resp.printErr(getUsage());
 				return;
 			}
 
-			short startSlot = 1, endSlot = 0xFF;
+			short startSlot = 1;
+			short endSlot = 0xFF;
 			if (args.hasNext()) {
 				String[] range = args.restOfString().replaceAll("\\s", "").split("-");
 				switch (range.length) {
@@ -107,8 +105,9 @@ public class InventoryCommandHandlers implements CommandCollection<CommandCaller
 		}
 	}
 
-	private static abstract class ChangeItemQuantityCommandHandler extends AbstractCommandDefinition<CommandCaller> {
-		private final int defaultQuantity, factor;
+	private abstract static class ChangeItemQuantityCommandHandler extends AbstractCommandDefinition<CommandCaller> {
+		private final int defaultQuantity;
+		private final int factor;
 
 		private ChangeItemQuantityCommandHandler(int defaultQuantity, int factor) {
 			this.defaultQuantity = defaultQuantity;
@@ -178,7 +177,7 @@ public class InventoryCommandHandlers implements CommandCollection<CommandCaller
 
 	@Override
 	public Map<String, AbstractCommandDefinition<CommandCaller>> getDefinitions() {
-		Map<String, AbstractCommandDefinition<CommandCaller>> definitions = new HashMap<String, AbstractCommandDefinition<CommandCaller>>();
+		Map<String, AbstractCommandDefinition<CommandCaller>> definitions = new HashMap<>();
 		definitions.put("!clearinv", new ClearInventoryCommandHandler());
 		definitions.put("!give", new ChangeItemQuantityCommandHandler(1, 1) {
 			@Override

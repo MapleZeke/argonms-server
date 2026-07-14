@@ -39,20 +39,17 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class EnterShopHandler {
 	public static void handlePlayerConnection(LittleEndianReader packet, ShopClient sc) {
 		int cid = packet.readInt();
 		ShopCharacter player = ShopCharacter.loadPlayer(sc, cid);
-		if (player == null)
+		if (player == null) {
 			return;
+		}
 		sc.setPlayer(player);
 		boolean allowLogin;
 		byte state = sc.getOnlineState();
-		allowLogin = (state == RemoteClient.STATUS_MIGRATION);
+		allowLogin = state == RemoteClient.STATUS_MIGRATION;
 		if (!allowLogin) {
 			sc.getSession().close(player.getName() + " tried to double login on shop");
 			return;
@@ -69,23 +66,27 @@ public final class EnterShopHandler {
 
 		sc.setChannel(context.getOriginChannel());
 		sserv.getCrossServerInterface().sendBuddyLogInNotifications(player);
-		if (player.getPartyId() != 0)
+		if (player.getPartyId() != 0) {
 			sserv.getCrossServerInterface().sendPartyMemberLogInNotifications(player);
-		if (player.getGuildId() != 0)
+		}
+		if (player.getGuildId() != 0) {
 			sserv.getCrossServerInterface().sendGuildMemberLogInNotifications(player);
-		if (context.getChatroomId() != 0)
+		}
+		if (context.getChatroomId() != 0) {
 			sserv.getCrossServerInterface().sendLeaveChatroom(context.getChatroomId(), player);
+		}
 		player.setReturnContext(context);
 
 		sc.getSession().send(writeGender(player.getGender()));
-		if (context.isEnteringCashShop())
+		if (context.isEnteringCashShop()) {
 			sc.getSession().send(writeEnterCs(player,
-					ShopServer.getInstance().getBlockedSerials(),
-					CommodityOverrideDataLoader.getInstance().getAllModifications(),
-					CashShopStaging.getBestItems(),
-					LimitedCommodityDataLoader.getInstance().getAllLimitedCommodities()));
-		else
+				ShopServer.getInstance().getBlockedSerials(),
+				CommodityOverrideDataLoader.getInstance().getAllModifications(),
+				CashShopStaging.getBestItems(),
+				LimitedCommodityDataLoader.getInstance().getAllLimitedCommodities()));
+		} else {
 			sc.getSession().send(writeEnterMts(player));
+		}
 		//sc.getSession().send(ShopPackets.writeEnableCsOrMts());
 		if (context.isEnteringCashShop()) {
 			sc.getSession().send(CashShopPackets.writeCashShopCurrencyBalance(player));
@@ -105,8 +106,9 @@ public final class EnterShopHandler {
 		}
 
 		String serverMessage = ShopServer.getInstance().getNewsTickerMessage();
-		if (!serverMessage.isEmpty())
+		if (!serverMessage.isEmpty()) {
 			sc.getSession().send(CashShopPackets.writeNewsTickerMessage(serverMessage));
+		}
 	}
 
 	private static byte[] writeGender(byte gender) {
@@ -206,13 +208,16 @@ public final class EnterShopHandler {
 				int[] days = new int[7];
 				int beginDayIndex = beginDay.get(Calendar.DAY_OF_WEEK);
 				int endDayIndex = endDay.get(Calendar.DAY_OF_WEEK);
-				for (int i = beginDayIndex - 1; i != endDayIndex; i = (i + 1) % 7)
+				for (int i = beginDayIndex - 1; i != endDayIndex; i = (i + 1) % 7) {
 					days[i] = 1;
-				for (int i = 0; i < 7; i++) //0 = Sunday, 6 = Saturday
+				}
+				for (int i = 0; i < 7; i++) { //0 = Sunday, 6 = Saturday
 					lew.writeInt(days[i]);
+				}
 			} else {
-				for (int i = 0; i < 7; i++)
+				for (int i = 0; i < 7; i++) {
 					lew.writeInt(1);
+				}
 			}
 		}
 

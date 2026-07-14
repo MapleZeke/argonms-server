@@ -18,23 +18,13 @@
 
 package argonms.common.character;
 
-/**
- *
- * @author GoldenKevin
- */
-public class KeyBinding {
-	private final byte type;
-	private final int action;
-
-	public KeyBinding(byte type, int action) {
-		this.type = type;
-		this.action = action;
-	}
-
+public record KeyBinding(byte type, int action) {
+	@Deprecated(since = "0.6.0")
 	public byte getType() {
 		return type;
 	}
 
+	@Deprecated(since = "0.6.0")
 	public int getAction() {
 		return action;
 	}

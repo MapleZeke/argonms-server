@@ -23,17 +23,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 //FIXME: Thread safety for concurrent read/writes (if we're not preloading)
-/**
- *
- * @author GoldenKevin
- */
 public abstract class ReactorDataLoader {
 	private static ReactorDataLoader instance;
 
 	protected final Map<Integer, ReactorStats> reactorStats;
 
 	protected ReactorDataLoader() {
-		reactorStats = new HashMap<Integer, ReactorStats>();
+		reactorStats = new HashMap<>();
 	}
 
 	protected abstract void load(int reactorid);
@@ -47,8 +43,9 @@ public abstract class ReactorDataLoader {
 		ReactorStats stats;
 		do {
 			oId = Integer.valueOf(id);
-			if (!reactorStats.containsKey(oId))
+			if (!reactorStats.containsKey(oId)) {
 				load(id);
+			}
 			stats = reactorStats.get(oId);
 			id = stats != null ? stats.getLink() : 0;
 		} while (id != 0);
@@ -57,13 +54,10 @@ public abstract class ReactorDataLoader {
 
 	public static void setInstance(DataFileType wzType, String wzPath) {
 		if (instance == null) {
-			switch (wzType) {
-				case KVJ:
-					instance = new KvjReactorDataLoader(wzPath);
-					break;
-				case MCDB:
-					instance = new McdbReactorDataLoader();
-					break;
+			if (wzType == DataFileType.KVJ) {
+				instance = new KvjReactorDataLoader(wzPath);
+			} else if (wzType == DataFileType.MCDB) {
+				instance = new McdbReactorDataLoader();
 			}
 		}
 	}

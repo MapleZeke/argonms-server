@@ -38,6 +38,7 @@ import argonms.game.script.binding.ScriptPlayerNpc;
 import argonms.game.script.binding.ScriptQuest;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,11 +47,7 @@ import org.mozilla.javascript.ContinuationPending;
 import org.mozilla.javascript.Script;
 import org.mozilla.javascript.Scriptable;
 
-/**
- *
- * @author GoldenKevin
- */
-public class NpcScriptManager {
+public final class NpcScriptManager {
 	private static final Logger LOG = Logger.getLogger(NpcScriptManager.class.getName());
 
 	private static NpcScriptManager singleton;
@@ -93,24 +90,26 @@ public class NpcScriptManager {
 		int npcId = npc.getDataId();
 		String scriptName = NpcDataLoader.getInstance().getScriptName(npcId);
 		if (scriptName == null) {
-			if (!openDefault(npcId, client))
+			if (!openDefault(npcId, client)) {
 				client.getSession().send(missingShop(npcId));
+			}
 			return;
 		}
 		Context cx = Context.enter();
 		ScriptNpc convoMan = null;
 		try {
-			FileReader reader = new FileReader(npcPath + scriptName + ".js");
+			FileReader reader = new FileReader(npcPath + scriptName + ".js", StandardCharsets.UTF_8);
 			Scriptable globalScope = cx.initStandardObjects();
 			cx.setOptimizationLevel(-1); // must use interpreter mode
 			cx.setLanguageVersion(Context.VERSION_1_7);
 			cx.getWrapFactory().setJavaPrimitiveWrap(false);
 			Script script = cx.compileReader(reader, "npcs/" + scriptName + ".js", 1, null);
 			reader.close();
-			if (npc.isPlayerNpc())
+			if (npc.isPlayerNpc()) {
 				convoMan = new ScriptPlayerNpc((PlayerNpc) npc, client, globalScope);
-			else
+			} else {
 				convoMan = new ScriptNpc(npcId, client, globalScope);
+			}
 			globalScope.put("npc", globalScope, Context.javaToJS(convoMan, globalScope));
 			globalScope.put("player", globalScope, Context.javaToJS(new ScriptPlayer(client.getPlayer()), globalScope));
 			globalScope.put("map", globalScope, Context.javaToJS(new ScriptField(client.getPlayer().getMap(), globalScope), globalScope));
@@ -133,7 +132,7 @@ public class NpcScriptManager {
 		Context cx = Context.enter();
 		ScriptQuest convoMan = null;
 		try {
-			FileReader reader = new FileReader(questPath + scriptName + ".js");
+			FileReader reader = new FileReader(questPath + scriptName + ".js", StandardCharsets.UTF_8);
 			Scriptable globalScope = cx.initStandardObjects();
 			cx.setOptimizationLevel(-1); // must use interpreter mode
 			cx.setLanguageVersion(Context.VERSION_1_7);
@@ -161,15 +160,17 @@ public class NpcScriptManager {
 
 	public void runStartQuestScript(int npcId, short questId, GameClient client) {
 		String scriptName = QuestDataLoader.getInstance().getStartScriptName(questId);
-		if (scriptName == null)
+		if (scriptName == null) {
 			scriptName = "q" + questId + "s";
+		}
 		runQuestScript(npcId, questId, client, scriptName);
 	}
 
 	public void runCompleteQuestScript(int npcId, short questId, GameClient client) {
 		String scriptName = QuestDataLoader.getInstance().getEndScriptName(questId);
-		if (scriptName == null)
+		if (scriptName == null) {
 			scriptName = "q" + questId + "e";
+		}
 		runQuestScript(npcId, questId, client, scriptName);
 	}
 
@@ -216,8 +217,9 @@ public class NpcScriptManager {
 	}
 
 	public static void setInstance(String scriptPath) {
-		if (singleton == null)
+		if (singleton == null) {
 			singleton = new NpcScriptManager(scriptPath);
+		}
 	}
 
 	public static NpcScriptManager getInstance() {

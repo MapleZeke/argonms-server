@@ -24,16 +24,14 @@ import argonms.game.character.MapMemoryVariable;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
-/**
- *
- * @author GoldenKevin
- */
 public class DisciplinaryCommandHandlers implements CommandCollection<CommandCaller> {
 	@Override
 	public Map<String, AbstractCommandDefinition<CommandCaller>> getDefinitions() {
-		Map<String, AbstractCommandDefinition<CommandCaller>> commands = new HashMap<String, AbstractCommandDefinition<CommandCaller>>();
+		Map<String, AbstractCommandDefinition<CommandCaller>> commands = new HashMap<>();
 		commands.put("!jail", new CommandDefinition<CommandCaller>(new CommandDefinition.CommandAction<CommandCaller>() {
 			@Override
 			public String getUsage() {
@@ -120,14 +118,14 @@ public class DisciplinaryCommandHandlers implements CommandCollection<CommandCal
 					expireCal.set(Calendar.SECOND, 0);
 					expireCal.set(Calendar.MILLISECOND, 0);
 
-					if (expireCal.before(Calendar.getInstance())) {
+					if (expireCal.before(Calendar.getInstance(TimeZone.getDefault(), Locale.ROOT))) {
 						resp.printErr("Expire date must not be in the past.");
 						resp.printErr(getUsage());
 						return;
 					}
 					expireTimestamp = expireCal.getTimeInMillis();
 				} catch (NumberFormatException e) {
-					if (!param.equalsIgnoreCase("perm")) {
+					if (!"perm".equalsIgnoreCase(param)) {
 						resp.printErr("Expire date must be in the form of YYYYMMDD.");
 						resp.printErr(getUsage());
 						return;

@@ -26,10 +26,6 @@ import argonms.game.character.Chatroom;
 import argonms.game.character.GameCharacter;
 import argonms.game.net.external.GameClient;
 
-/**
- *
- * @author GoldenKevin
- */
 public class MessengerHandler {
 	public static void handleAction(LittleEndianReader packet, GameClient gc) {
 		GameCharacter p = gc.getPlayer();
@@ -41,10 +37,11 @@ public class MessengerHandler {
 					return;
 				}
 				int roomId = packet.readInt();
-				if (roomId == 0) //create
+				if (roomId == 0) { //create
 					GameServer.getChannel(gc.getChannel()).getCrossServerInterface().sendMakeChatroom(p);
-				else //join
+				} else { //join
 					GameServer.getChannel(gc.getChannel()).getCrossServerInterface().sendJoinChatroom(p, roomId);
+				}
 				break;
 			}
 			case Chatroom.ACT_EXIT:
@@ -63,9 +60,10 @@ public class MessengerHandler {
 
 				room.lockRead();
 				try {
-					if (room.isFull())
+					if (room.isFull()) {
 						//TODO: send response that room is full
 						return;
+					}
 				} finally {
 					room.unlockRead();
 				}
@@ -87,5 +85,8 @@ public class MessengerHandler {
 				GameServer.getChannel(gc.getChannel()).getCrossServerInterface().sendChatroomText(text, room, p.getId());
 				break;
 		}
+	}
+
+	private MessengerHandler() {
 	}
 }

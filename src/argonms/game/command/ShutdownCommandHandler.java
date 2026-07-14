@@ -21,10 +21,6 @@ package argonms.game.command;
 import argonms.common.UserPrivileges;
 import argonms.game.GameServer;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ShutdownCommandHandler extends AbstractCommandDefinition<CommandCaller> {
 	@Override
 	public String getHelpMessage() {
@@ -43,7 +39,9 @@ public class ShutdownCommandHandler extends AbstractCommandDefinition<CommandCal
 
 	@Override
 	public void execute(CommandCaller caller, CommandArguments args, CommandOutput resp) {
-		boolean halt = false, restart = false, cancel = false;;
+		boolean halt = false;
+		boolean restart = false;
+		boolean cancel = false;
 		boolean option;
 		String param;
 		do {
@@ -52,17 +50,17 @@ public class ShutdownCommandHandler extends AbstractCommandDefinition<CommandCal
 				return;
 			}
 			param = args.next();
-			if (param.equalsIgnoreCase("-H")) {
+			if ("-H".equalsIgnoreCase(param)) {
 				restart = false;
 				cancel = false;
 				halt = true;
 				option = true;
-			} else if (param.equalsIgnoreCase("-R")) {
+			} else if ("-R".equalsIgnoreCase(param)) {
 				halt = false;
 				cancel = false;
 				restart = true;
 				option = true;
-			} else if (param.equalsIgnoreCase("-C")) {
+			} else if ("-C".equalsIgnoreCase(param)) {
 				halt = false;
 				restart = false;
 				cancel = true;
@@ -74,7 +72,7 @@ public class ShutdownCommandHandler extends AbstractCommandDefinition<CommandCal
 
 		//TODO: support hh:mm for time
 		int seconds;
-		if (param.equalsIgnoreCase("NOW")) {
+		if ("NOW".equalsIgnoreCase(param)) {
 			seconds = 0;
 		} else {
 			try {
@@ -86,8 +84,9 @@ public class ShutdownCommandHandler extends AbstractCommandDefinition<CommandCal
 		}
 
 		String message = null;
-		if (args.hasNext())
+		if (args.hasNext()) {
 			message = args.restOfString();
+		}
 
 		GameServer.getChannel(caller.getChannel()).getCrossServerInterface().sendServerShutdown(halt, restart, cancel, seconds, message);
 	}

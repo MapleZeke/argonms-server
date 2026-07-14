@@ -22,7 +22,6 @@ import argonms.common.util.HexTool;
 
 /**
  *
- * @author GoldenKevin
  * @version 1.1
  */
 public class LittleEndianByteArrayWriter extends LittleEndianWriter {
@@ -47,16 +46,18 @@ public class LittleEndianByteArrayWriter extends LittleEndianWriter {
 
 	@Override
 	public void write(byte b) {
-		if (index == data.length)
+		if (index == data.length) {
 			grow(1);
+		}
 
 		data[index++] = b;
 	}
 
 	@Override
 	public void write(byte... bytes) {
-		if (index + bytes.length >= data.length + 1)
+		if (index + bytes.length >= data.length + 1) {
 			grow(bytes.length);
+		}
 
 		System.arraycopy(bytes, 0, data, index, bytes.length);
 		index += bytes.length;
@@ -84,8 +85,9 @@ public class LittleEndianByteArrayWriter extends LittleEndianWriter {
 	}
 
 	public byte[] getBytes() {
-		if (index == data.length)
+		if (index == data.length) {
 			return data;
+		}
 
 		byte[] trimmed = new byte[index];
 		System.arraycopy(data, 0, trimmed, 0, index);

@@ -21,10 +21,6 @@ package argonms.center.net.internal;
 import argonms.common.ServerType;
 import argonms.common.net.SessionDataModel;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class CenterRemoteInterface implements SessionDataModel {
 	private final CenterRemoteSession session;
 	protected boolean online;
@@ -69,12 +65,15 @@ public abstract class CenterRemoteInterface implements SessionDataModel {
 	public abstract void disconnected();
 
 	public static CenterRemoteInterface makeByServerId(byte serverId, CenterRemoteSession session) {
-		if (ServerType.isGame(serverId))
+		if (ServerType.isGame(serverId)) {
 			return new CenterGameInterface(session, serverId);
-		if (ServerType.isLogin(serverId))
+		}
+		if (ServerType.isLogin(serverId)) {
 			return new CenterLoginInterface(session);
-		if (ServerType.isShop(serverId))
+		}
+		if (ServerType.isShop(serverId)) {
 			return new CenterShopInterface(session);
+		}
 		return null;
 	}
 }

@@ -23,7 +23,6 @@ import java.util.Map;
 /**
  * Represents an object that holds items. Allows the loading and saving of items
  * to be less redundant.
- * @author GoldenKevin
  */
 public interface IInventory {
 	public void put(short position, InventorySlot item);

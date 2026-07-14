@@ -23,10 +23,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ShopPlayerContinuation extends AbstractPlayerContinuation {
 	private final Map<Integer, BuffState.PlayerSummonState> activeSummons;
 
@@ -38,13 +34,13 @@ public class ShopPlayerContinuation extends AbstractPlayerContinuation {
 			byte channel, short energyCharge, int chatroom, boolean isEnteringCashShop) {
 		super(activeItems, activeSkills, activeDebuffs, channel, energyCharge);
 		setChatroomId(chatroom);
-		activeSummons = new HashMap<Integer, BuffState.PlayerSummonState>();
+		activeSummons = new HashMap<>();
 		cashShop = isEnteringCashShop;
 	}
 
 	public ShopPlayerContinuation() {
 		super();
-		activeSummons = new HashMap<Integer, BuffState.PlayerSummonState>();
+		activeSummons = new HashMap<>();
 	}
 
 	public Map<Integer, BuffState.PlayerSummonState> getActiveSummons() {
@@ -71,8 +67,9 @@ public class ShopPlayerContinuation extends AbstractPlayerContinuation {
 		long now = System.currentTimeMillis();
 		for (Iterator<BuffState.ItemState> iter = getActiveItems().values().iterator(); iter.hasNext(); ) {
 			BuffState.ItemState buff = iter.next();
-			if (buff.endTime <= now)
+			if (buff.endTime <= now) {
 				iter.remove();
+			}
 		}
 		for (Iterator<Map.Entry<Integer, BuffState.SkillState>> iter = getActiveSkills().entrySet().iterator(); iter.hasNext(); ) {
 			Map.Entry<Integer, BuffState.SkillState> buff = iter.next();
@@ -83,8 +80,9 @@ public class ShopPlayerContinuation extends AbstractPlayerContinuation {
 		}
 		for (Iterator<BuffState.MobSkillState> iter = getActiveDebuffs().values().iterator(); iter.hasNext(); ) {
 			BuffState.MobSkillState buff = iter.next();
-			if (buff.endTime <= now)
+			if (buff.endTime <= now) {
 				iter.remove();
+			}
 		}
 		setChatroomId(0);
 	}

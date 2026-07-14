@@ -18,10 +18,6 @@
 
 package argonms.game.field;
 
-/**
- *
- * @author GoldenKevin
- */
 public interface MapEntity extends Positionable {
 	public enum EntityType {
 		MONSTER, DROP, NPC, PLAYER, REACTOR, MINI_ROOM, DOOR, SUMMON, MIST

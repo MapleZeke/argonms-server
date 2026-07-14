@@ -23,36 +23,24 @@ import argonms.game.field.AbstractEntity;
 import argonms.game.net.external.GamePackets;
 import java.awt.Point;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ItemDrop extends AbstractEntity {
-	public static final byte
-		ITEM = 0,
-		MESOS = 1
-	;
+	public static final byte ITEM = 0;
+	public static final byte MESOS = 1;
 
-	public static final byte
-		PICKUP_ALLOW_OWNER = 0, //give charid for owner
-		PICKUP_ALLOW_PARTY = 1, //give partyid for owner
-		PICKUP_ALLOW_ALL = 2, //no owner
-		PICKUP_EXPLOSION = 3 //give charid for owner i guess
-	;
+	public static final byte PICKUP_ALLOW_OWNER = 0;
+	public static final byte PICKUP_ALLOW_PARTY = 1;
+	public static final byte PICKUP_ALLOW_ALL = 2;
+	public static final byte PICKUP_EXPLOSION = 3;
 
-	public static final byte
-		SPAWN_ANIMATION_DROP = 1,
-		SPAWN_ANIMATION_NONE = 2,
-		SPAWN_ANIMATION_FADE = 3
-	;
+	public static final byte SPAWN_ANIMATION_DROP = 1;
+	public static final byte SPAWN_ANIMATION_NONE = 2;
+	public static final byte SPAWN_ANIMATION_FADE = 3;
 
-	public static final byte
-		DESTROY_ANIMATION_FADE = 0,
-		DESTROY_ANIMATION_NONE = 1,
-		DESTROY_ANIMATION_LOOTED = 2,
-		DESTROY_ANIMATION_EXPLODE = 4,
-		DESTROY_ANIMATION_PET_LOOTED = 5
-	;
+	public static final byte DESTROY_ANIMATION_FADE = 0;
+	public static final byte DESTROY_ANIMATION_NONE = 1;
+	public static final byte DESTROY_ANIMATION_LOOTED = 2;
+	public static final byte DESTROY_ANIMATION_EXPLODE = 4;
+	public static final byte DESTROY_ANIMATION_PET_LOOTED = 5;
 
 	private final byte dropType;
 	private final int id;
@@ -124,10 +112,11 @@ public class ItemDrop extends AbstractEntity {
 		this.owner = looter;
 		this.petLooter = pet;
 		this.gone = true;
-		if (pet == -1)
+		if (pet == -1) {
 			this.mod = DESTROY_ANIMATION_LOOTED;
-		else
+		} else {
 			this.mod = DESTROY_ANIMATION_PET_LOOTED;
+		}
 	}
 
 	public void explode() {

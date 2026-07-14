@@ -26,10 +26,6 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
-/**
- *
- * @author GoldenKevin
- */
 public interface CrossChannelSynchronization {
 	public byte[] getIpAddress() throws UnknownHostException;
 

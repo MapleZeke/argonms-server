@@ -20,10 +20,6 @@ package argonms.login;
 
 import java.awt.Point;
 
-/**
- *
- * @author GoldenKevin
- */
 public class BalloonMessage {
 	private final Point pos;
 	private final String text;

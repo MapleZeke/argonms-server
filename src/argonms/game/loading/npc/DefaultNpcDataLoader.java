@@ -29,17 +29,13 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class DefaultNpcDataLoader extends NpcDataLoader {
 	private static final Logger LOG = Logger.getLogger(DefaultNpcDataLoader.class.getName());
 
 	private final Map<Integer, NpcStorageKeeper> hardCodedTable;
 
 	protected DefaultNpcDataLoader() {
-		hardCodedTable = new HashMap<Integer, NpcStorageKeeper>();
+		hardCodedTable = new HashMap<>();
 		hardCodedTable.put(Integer.valueOf(1002005), new NpcStorageKeeper(100, 0));
 		hardCodedTable.put(Integer.valueOf(1012009), new NpcStorageKeeper(100, 0));
 		hardCodedTable.put(Integer.valueOf(1022005), new NpcStorageKeeper(100, 0));
@@ -75,8 +71,9 @@ public class DefaultNpcDataLoader extends NpcDataLoader {
 			ps = con.prepareStatement("SELECT `script` FROM `npcscriptnames` WHERE `npcid` = ?");
 			ps.setInt(1, npcId);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				scriptNames.put(Integer.valueOf(npcId), rs.getString(1));
+			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not read script name for NPC " + npcId, e);
 		} finally {

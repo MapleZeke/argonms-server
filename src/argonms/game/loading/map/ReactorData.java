@@ -18,10 +18,6 @@
 
 package argonms.game.loading.map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ReactorData {
 	private int id;
 	private short x;
@@ -77,7 +73,9 @@ public class ReactorData {
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("id=").append(id);
-		if (!name.isEmpty()) builder.append(" (").append(name).append(')');
+		if (!name.isEmpty()) {
+			builder.append(" (").append(name).append(')');
+		}
 		builder.append(", loc=(").append(x).append(", ").append(y).append(')');
 		builder.append(", time=").append(reactorTime);
 		return builder.toString();

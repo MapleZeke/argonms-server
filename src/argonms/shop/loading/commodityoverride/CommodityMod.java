@@ -18,10 +18,6 @@
 
 package argonms.shop.loading.commodityoverride;
 
-/**
- *
- * @author GoldenKevin
- */
 public enum CommodityMod {
 	//3A B4 C4 04 FF FF 6F D1 10 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF 00 FF 00 00 00 00 00 00 00 00
 	//3B B4 C4 04 FF FF 71 D1 10 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF 00 FF 00 00 00 00 00 00 00 00

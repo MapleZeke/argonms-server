@@ -28,22 +28,18 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class McdbQuestDataLoader extends QuestDataLoader {
 	private static final Logger LOG = Logger.getLogger(McdbQuestDataLoader.class.getName());
 
 	@Override
 	public boolean loadAll() {
-		if (!loadInfo())
+		if (!loadInfo()) {
 			return false;
-		if (!loadReq())
+		}
+		if (!loadReq()) {
 			return false;
-		if (!loadAct())
-			return false;
-		return true;
+		}
+		return loadAct();
 	}
 
 	@Override
@@ -55,8 +51,9 @@ public class McdbQuestDataLoader extends QuestDataLoader {
 			con = DatabaseManager.getConnection(DatabaseType.WZ);
 			ps = con.prepareStatement("SELECT `objectid`,`name` FROM `stringdata` WHERE `type` = 6");
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				questNames.put(Short.valueOf(rs.getShort(1)), rs.getString(2));
+			}
 			return true;
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Error loading quest info data from the MCDB.", e);
@@ -108,11 +105,13 @@ public class McdbQuestDataLoader extends QuestDataLoader {
 					QuestItemStats qis = new QuestItemStats(rs.getInt(11), rs.getShort(12));
 					qis.setProb(rs.getInt(16));
 					byte gender = rs.getByte(14);
-					if (gender != -1)
+					if (gender != -1) {
 						qis.setGender(gender);
+					}
 					short job = rs.getShort(15);
-					if (job != -1)
+					if (job != -1) {
 						qis.setJob(job);
+					}
 					qr.addRewardItem(qis);
 				} else if (rs.getBoolean(5)) { //exp
 					qr.setRewardExp(rs.getInt(11));

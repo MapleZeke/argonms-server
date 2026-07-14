@@ -40,10 +40,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class GoToHandler {
 	public static void handleChangeChannel(LittleEndianReader packet, GameClient gc) {
 		byte destCh = (byte) (packet.readByte() + 1);
@@ -57,14 +53,15 @@ public final class GoToHandler {
 		String portalName = packet.readLengthPrefixedString();
 		GameCharacter p = gc.getPlayer();
 		if (dest == -1) { //entered portal
-			if (!p.getMap().enterPortal(p, portalName))
+			if (!p.getMap().enterPortal(p, portalName)) {
 				gc.getSession().send(GamePackets.writeEnableActions());
+			}
 		} else if (dest == 0 && !p.isAlive()) { //warp when dead and clicked ok
 			p.setHp((short) 50);
 			p.setStance((byte) 0);
 			p.changeMap(p.getMap().getReturnMap());
 
-			Set<StatusEffectsData> sources = new HashSet<StatusEffectsData>();
+			Set<StatusEffectsData> sources = new HashSet<>();
 			//TODO: race condition for p.getAllEffects() if skill expires while
 			//this loop is running
 			for (Map.Entry<PlayerStatusEffect, PlayerStatusEffectValues> effect : p.getAllEffects().entrySet()) {
@@ -80,8 +77,9 @@ public final class GoToHandler {
 			for (StatusEffectsData e : sources)
 				p.removeCancelEffectTask(e);
 		} else { //client map command
-			if (p.getPrivilegeLevel() <= UserPrivileges.USER || !p.changeMap(dest))
+			if (p.getPrivilegeLevel() <= UserPrivileges.USER || !p.changeMap(dest)) {
 				gc.getSession().send(GamePackets.writeEnableActions());
+			}
 		}
 	}
 
@@ -126,8 +124,9 @@ public final class GoToHandler {
 				CheatTracker.get(gc).suspicious(CheatTracker.Infraction.POSSIBLE_PACKET_EDITING, "Tried to use nonexistent mystic door");
 				return;
 			}
-			if (!door.isInTown())
+			if (!door.isInTown()) {
 				door = door.getComplement();
+			}
 			if (door.getMapId() != p.getMapId() || owner != p && (party == null || party != p.getParty())) {
 				CheatTracker.get(gc).suspicious(CheatTracker.Infraction.POSSIBLE_PACKET_EDITING, "Tried to use nonexistent mystic door");
 				return;

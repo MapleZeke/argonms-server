@@ -36,25 +36,22 @@ import argonms.game.net.external.GamePackets;
 import java.util.EnumMap;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class ItemTools {
 	public static short getPersonalSlotMax(GameCharacter p, int itemid) {
 		short max = ItemDataLoader.getInstance().getSlotMax(Integer.valueOf(itemid));
 		int skillId;
 		byte level;
 		if (InventoryTools.isThrowingStar(itemid) && (level = p.getSkillLevel(skillId = Skills.CLAW_MASTERY)) > 0
-				|| InventoryTools.isBullet(itemid) && (level = p.getSkillLevel(skillId = Skills.GUN_MASTERY)) > 0)
+			|| InventoryTools.isBullet(itemid) && (level = p.getSkillLevel(skillId = Skills.GUN_MASTERY)) > 0) {
 			max += SkillDataLoader.getInstance().getSkill(skillId).getLevel(level).getY();
+		}
 		return max;
 	}
 
 	private static Map<ClientUpdateKey, Number> itemRecovers(GameCharacter p, ItemEffectsData e, int statIncreasePercent) {
 		//might as well save ourself some bandwidth and don't send an individual
 		//packet for each changed stat
-		Map<ClientUpdateKey, Number> ret = new EnumMap<ClientUpdateKey, Number>(ClientUpdateKey.class);
+		Map<ClientUpdateKey, Number> ret = new EnumMap<>(ClientUpdateKey.class);
 		if (e.getHpRecover() != 0) {
 			p.setLocalHp((short) Math.min(p.getHp() + e.getHpRecover() * statIncreasePercent / 100, p.getCurrentMaxHp()));
 			ret.put(ClientUpdateKey.HP, Short.valueOf(p.getHp()));
@@ -77,34 +74,40 @@ public final class ItemTools {
 		}
 		if (e.curesCurse()) {
 			PlayerStatusEffectValues v = p.getEffectValue(PlayerStatusEffect.CURSE);
-			if (v != null)
+			if (v != null) {
 				DiseaseTools.cancelDebuff(p, (short) v.getSource(), v.getLevelWhenCast());
+			}
 		}
 		if (e.curesDarkness()) {
 			PlayerStatusEffectValues v = p.getEffectValue(PlayerStatusEffect.DARKNESS);
-			if (v != null)
+			if (v != null) {
 				DiseaseTools.cancelDebuff(p, (short) v.getSource(), v.getLevelWhenCast());
+			}
 		}
 		if (e.curesPoison()) {
 			PlayerStatusEffectValues v = p.getEffectValue(PlayerStatusEffect.POISON);
-			if (v != null)
+			if (v != null) {
 				DiseaseTools.cancelDebuff(p, (short) v.getSource(), v.getLevelWhenCast());
+			}
 		}
 		if (e.curesSeal()) {
 			PlayerStatusEffectValues v = p.getEffectValue(PlayerStatusEffect.SEAL);
-			if (v != null)
+			if (v != null) {
 				DiseaseTools.cancelDebuff(p, (short) v.getSource(), v.getLevelWhenCast());
+			}
 		}
 		if (e.curesWeakness()) {
 			PlayerStatusEffectValues v = p.getEffectValue(PlayerStatusEffect.WEAKNESS);
-			if (v != null)
+			if (v != null) {
 				DiseaseTools.cancelDebuff(p, (short) v.getSource(), v.getLevelWhenCast());
+			}
 		}
 		if (e.getMoveTo() != 0) {
-			if (e.getMoveTo() == GlobalConstants.NULL_MAP)
+			if (e.getMoveTo() == GlobalConstants.NULL_MAP) {
 				p.changeMap(p.getMap().getReturnMap());
-			else
+			} else {
 				p.changeMap(e.getMoveTo());
+			}
 		}
 		return ret;
 	}
@@ -130,16 +133,13 @@ public final class ItemTools {
 		}
 
 		Map<ClientUpdateKey, Number> statChanges = itemRecovers(p, e, statIncreasePercent);
-		if (!statChanges.isEmpty())
+		if (!statChanges.isEmpty()) {
 			p.getClient().getSession().send(GamePackets.writeUpdatePlayerStats(statChanges, false));
+		}
 		if (duration > 0) { //buff item
 			StatusEffectTools.applyEffectsAndShowVisuals(p, StatusEffectTools.ACTIVE_BUFF, e, (byte) -1, duration);
-			p.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(new Runnable() {
-				@Override
-				public void run() {
-					cancelBuffItem(p, itemId);
-				}
-			}, duration), (byte) 0, System.currentTimeMillis() + duration);
+			p.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(() ->
+				cancelBuffItem(p, itemId), duration), (byte) 0, System.currentTimeMillis() + duration);
 		}
 	}
 
@@ -155,12 +155,8 @@ public final class ItemTools {
 	public static void localUseBuffItem(final GameCharacter p, final int itemId, long endTime) {
 		ItemEffectsData e = ItemDataLoader.getInstance().getEffect(itemId);
 		StatusEffectTools.applyEffects(p, e);
-		p.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(new Runnable() {
-			@Override
-			public void run() {
-				cancelBuffItem(p, itemId);
-			}
-		}, endTime - System.currentTimeMillis()), (byte) 0, endTime);
+		p.addCancelEffectTask(e, Scheduler.getInstance().runAfterDelay(() ->
+			cancelBuffItem(p, itemId), endTime - System.currentTimeMillis()), (byte) 0, endTime);
 	}
 
 	public static void cancelBuffItem(GameCharacter p, int itemId) {

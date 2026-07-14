@@ -21,10 +21,6 @@ package argonms.game.command;
 import argonms.game.character.GameCharacter;
 import argonms.game.field.GameMap;
 
-/**
- *
- * @author GoldenKevin
- */
 public class GameCharacterCommandCaller implements CommandCaller {
 	private final GameCharacter caller;
 

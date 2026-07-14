@@ -18,50 +18,43 @@
 
 package argonms.common.net.internal;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ChannelSynchronizationOps {
-	public static final byte
-		INBOUND_PLAYER = 1,
-		INBOUND_PLAYER_ACCEPTED = 2,
-		PLAYER_SEARCH = 3,
-		PLAYER_SEARCH_RESPONSE = 4,
-		MULTI_CHAT = 5,
-		WHISPER_CHAT = 6,
-		WHISPER_RESPONSE = 7,
-		SPOUSE_CHAT = 8,
-		BUDDY_INVITE = 9,
-		BUDDY_INVITE_RESPONSE = 10,
-		BUDDY_INVITE_RETRACTION = 11,
-		BUDDY_ONLINE = 12,
-		BUDDY_ACCEPTED = 13,
-		BUDDY_ONLINE_RESPONSE = 14,
-		BUDDY_OFFLINE = 15,
-		BUDDY_DELETED = 16,
-		CHATROOM_INVITE = 17,
-		CHATROOM_INVITE_RESPONSE = 18,
-		CHATROOM_DECLINE = 19,
-		CHATROOM_TEXT = 20,
-		CROSS_CHANNEL_COMMAND_CHARACTER_MANIPULATION = 21,
-		CROSS_CHANNEL_COMMAND_CHARACTER_ACCESS = 22,
-		CROSS_CHANNEL_COMMAND_CHARACTER_ACCESS_RESPONSE = 23,
-		SYNCHRONIZED_NOTICE = 24,
-		SYNCHRONIZED_SHUTDOWN = 25,
-		SYNCHRONIZED_RATE_CHANGE = 26,
-		WHO_COMMAND = 27,
-		WHO_COMMAND_RESPONSE = 28
-	;
+	public static final byte INBOUND_PLAYER = 1;
+	public static final byte INBOUND_PLAYER_ACCEPTED = 2;
+	public static final byte PLAYER_SEARCH = 3;
+	public static final byte PLAYER_SEARCH_RESPONSE = 4;
+	public static final byte MULTI_CHAT = 5;
+	public static final byte WHISPER_CHAT = 6;
+	public static final byte WHISPER_RESPONSE = 7;
+	public static final byte SPOUSE_CHAT = 8;
+	public static final byte BUDDY_INVITE = 9;
+	public static final byte BUDDY_INVITE_RESPONSE = 10;
+	public static final byte BUDDY_INVITE_RETRACTION = 11;
+	public static final byte BUDDY_ONLINE = 12;
+	public static final byte BUDDY_ACCEPTED = 13;
+	public static final byte BUDDY_ONLINE_RESPONSE = 14;
+	public static final byte BUDDY_OFFLINE = 15;
+	public static final byte BUDDY_DELETED = 16;
+	public static final byte CHATROOM_INVITE = 17;
+	public static final byte CHATROOM_INVITE_RESPONSE = 18;
+	public static final byte CHATROOM_DECLINE = 19;
+	public static final byte CHATROOM_TEXT = 20;
+	public static final byte CROSS_CHANNEL_COMMAND_CHARACTER_MANIPULATION = 21;
+	public static final byte CROSS_CHANNEL_COMMAND_CHARACTER_ACCESS = 22;
+	public static final byte CROSS_CHANNEL_COMMAND_CHARACTER_ACCESS_RESPONSE = 23;
+	public static final byte SYNCHRONIZED_NOTICE = 24;
+	public static final byte SYNCHRONIZED_SHUTDOWN = 25;
+	public static final byte SYNCHRONIZED_RATE_CHANGE = 26;
+	public static final byte WHO_COMMAND = 27;
+	public static final byte WHO_COMMAND_RESPONSE = 28;
 
-	public static final byte
-		SCAN_PLAYER_CHANNEL_NO_MATCH = 0,
-		SCAN_PLAYER_CHANNEL_HIDDEN = 1,
-		SCAN_PLAYER_CHANNEL_FOUND = 2
-	;
+	public static final byte SCAN_PLAYER_CHANNEL_NO_MATCH = 0;
+	public static final byte SCAN_PLAYER_CHANNEL_HIDDEN = 1;
+	public static final byte SCAN_PLAYER_CHANNEL_FOUND = 2;
 
-	public static final byte
-		CHANNEL_OFFLINE = -1,
-		CHANNEL_CASH_SHOP = 0
-	;
+	public static final byte CHANNEL_OFFLINE = -1;
+	public static final byte CHANNEL_CASH_SHOP = 0;
+
+	private ChannelSynchronizationOps() {
+	}
 }

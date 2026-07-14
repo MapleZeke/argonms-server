@@ -36,10 +36,6 @@ import argonms.game.character.inventory.PetTools;
 import argonms.game.net.external.GameClient;
 import argonms.game.net.external.GamePackets;
 
-/**
- *
- * @author GoldenKevin
- */
 public class PetHandler {
 	public static void handlePetFood(LittleEndianReader packet, GameClient gc) {
 		/*int tickCount = */packet.readInt();
@@ -57,29 +53,35 @@ public class PetHandler {
 		//List<Integer> foodConsumableBy = ItemDataLoader.getInstance().getEffect(foodItemId).getPetsConsumable();
 		Pet[] pets = p.getPets();
 		byte petSlot = 0;
-		for (byte i = 0; i < 3 && pets[i] != null; i++)
-			if (/*foodConsumableBy.contains(Integer.valueOf(pets[i].getDataId())) && */pets[i].getFullness() < pets[petSlot].getFullness())
+		for (byte i = 0; i < 3 && pets[i] != null; i++) {
+			if (/*foodConsumableBy.contains(Integer.valueOf(pets[i].getDataId())) && */pets[i].getFullness() < pets[petSlot].getFullness()) {
 				petSlot = i;
+			}
+		}
 
 		food = InventoryTools.takeFromInventory(inv, foodSlot, (short) 1);
-		if (food != null)
+		if (food != null) {
 			gc.getSession().send(CommonPackets.writeInventoryUpdateSlotQuantity(Inventory.InventoryType.USE, foodSlot, food));
-		else
+		} else {
 			gc.getSession().send(CommonPackets.writeInventoryClearSlot(Inventory.InventoryType.USE, foodSlot));
+		}
 		p.itemCountChanged(foodItemId);
 		Pet pet = pets[petSlot];
-		if (pet == null) //no pets active
+		if (pet == null) { //no pets active
 			return;
+		}
 
 		if (pet.getFullness() < 100) {
 			PetTools.gainFullness(pet, ItemDataLoader.getInstance().getPetFullnessRecover(foodItemId));
-			if (Rng.getGenerator().nextBoolean())
+			if (Rng.getGenerator().nextBoolean()) {
 				PetTools.gainCloseness(p, petSlot, pet, 1);
+			}
 			PetTools.updatePet(p, pet);
 			p.getMap().sendToAll(GamePackets.writePetFoodResponse(p, petSlot, true, PetTools.hasQuoteRing(p, petSlot)));
 		} else {
-			if (Rng.getGenerator().nextBoolean() && PetTools.gainCloseness(p, petSlot, pet, -1))
+			if (Rng.getGenerator().nextBoolean() && PetTools.gainCloseness(p, petSlot, pet, -1)) {
 				PetTools.updatePet(p, pet);
+			}
 			p.getMap().sendToAll(GamePackets.writePetFoodResponse(p, petSlot, false, PetTools.hasQuoteRing(p, petSlot)));
 		}
 	}
@@ -114,13 +116,15 @@ public class PetHandler {
 			return;
 		}
 
-		if (p.getSkillLevel(Skills.FOLLOW_THE_LEAD) == 0 && p.getPets()[0] != null)
+		if (p.getSkillLevel(Skills.FOLLOW_THE_LEAD) == 0 && p.getPets()[0] != null) {
 			p.removePet((byte) 0, (byte) 0);
+		}
 
-		if (boss)
+		if (boss) {
 			p.addFirstPet(pet);
-		else
+		} else {
 			p.addLastPet(pet);
+		}
 	}
 
 	public static void handlePetChat(LittleEndianReader packet, GameClient gc) {
@@ -200,10 +204,11 @@ public class PetHandler {
 		}
 
 		changed = InventoryTools.takeFromInventory(inv, slot, (short) 1);
-		if (changed != null)
+		if (changed != null) {
 			gc.getSession().send(CommonPackets.writeInventoryUpdateSlotQuantity(Inventory.InventoryType.USE, slot, changed));
-		else
+		} else {
 			gc.getSession().send(CommonPackets.writeInventoryClearSlot(Inventory.InventoryType.USE, slot));
+		}
 		p.itemCountChanged(itemId);
 		ItemTools.useItem(p, itemId);
 	}
@@ -220,8 +225,9 @@ public class PetHandler {
 
 		byte count = packet.readByte();
 		int[] itemIds = new int[count];
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++) {
 			itemIds[i] = packet.readInt(); //== Integer.MAX_VALUE for mesos
+		}
 		p.setPetItemIgnores(uniqueId, itemIds);
 	}
 
@@ -247,5 +253,8 @@ public class PetHandler {
 		lew.writeLengthPrefixedString(message);
 		lew.writeBool(hasQuoteRing); //chat item
 		return lew.getBytes();
+	}
+
+	private PetHandler() {
 	}
 }

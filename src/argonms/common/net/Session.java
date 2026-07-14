@@ -23,7 +23,6 @@ import java.net.SocketAddress;
 /**
  * Contains the low level networking state of connections of a certain protocol.
  * May also contain 
- * @author GoldenKevin
  */
 public interface Session {
 	public enum MessageType { HEADER, BODY }

@@ -23,17 +23,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 //FIXME: Thread safety for concurrent read/writes (if we're not preloading)
-/**
- *
- * @author GoldenKevin
- */
 public abstract class MobDataLoader {
 	private static MobDataLoader instance;
 
 	protected final Map<Integer, MobStats> mobStats;
 
 	protected MobDataLoader() {
-		mobStats = new HashMap<Integer, MobStats>();
+		mobStats = new HashMap<>();
 	}
 
 	protected abstract void load(int mobid);
@@ -47,8 +43,9 @@ public abstract class MobDataLoader {
 		MobStats stats;
 		//do {
 			oId = Integer.valueOf(id);
-			if (!mobStats.containsKey(oId))
-				load(id);
+		if (!mobStats.containsKey(oId)) {
+			load(id);
+		}
 			stats = mobStats.get(oId);
 			//id = stats != null ? stats.getLink() : 0;
 		//} while (id != 0);
@@ -57,13 +54,10 @@ public abstract class MobDataLoader {
 
 	public static void setInstance(DataFileType wzType, String wzPath) {
 		if (instance == null) {
-			switch (wzType) {
-				case KVJ:
-					instance = new KvjMobDataLoader(wzPath);
-					break;
-				case MCDB:
-					instance = new McdbMobDataLoader();
-					break;
+			if (wzType == DataFileType.KVJ) {
+				instance = new KvjMobDataLoader(wzPath);
+			} else if (wzType == DataFileType.MCDB) {
+				instance = new McdbMobDataLoader();
 			}
 		}
 	}

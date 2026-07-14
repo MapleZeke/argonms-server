@@ -28,7 +28,6 @@ import argonms.login.LoginServer;
 /**
  * Provides an interface for the login server between it and the center server.
  * 
- * @author GoldenKevin
  */
 public class LoginCenterInterface extends RemoteCenterInterface {
 	private final LoginServer local;

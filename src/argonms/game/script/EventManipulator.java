@@ -31,7 +31,6 @@ import org.mozilla.javascript.Scriptable;
 
 /**
  * Interface was inspired by Vana's instance handling.
- * @author GoldenKevin
  */
 public class EventManipulator {
 	private final Scriptable globalScope;
@@ -54,7 +53,7 @@ public class EventManipulator {
 		if (f != Scriptable.NOT_FOUND) {
 			Context cx = Context.enter();
 			try {
-				((Function) f).call(cx, globalScope, globalScope, new Object[] { Context.javaToJS(new ScriptPlayer(p), globalScope) });
+				((Function) f).call(cx, globalScope, globalScope, new Object[]{Context.javaToJS(new ScriptPlayer(p), globalScope)});
 			} finally {
 				Context.exit();
 			}
@@ -66,7 +65,7 @@ public class EventManipulator {
 		if (f != Scriptable.NOT_FOUND) {
 			Context cx = Context.enter();
 			try {
-				((Function) f).call(cx, globalScope, globalScope, new Object[] { Context.javaToJS(new ScriptPlayer(p), globalScope) });
+				((Function) f).call(cx, globalScope, globalScope, new Object[]{Context.javaToJS(new ScriptPlayer(p), globalScope)});
 			} finally {
 				Context.exit();
 			}
@@ -78,7 +77,7 @@ public class EventManipulator {
 		if (f != Scriptable.NOT_FOUND) {
 			Context cx = Context.enter();
 			try {
-				((Function) f).call(cx, globalScope, globalScope, new Object[] { Context.javaToJS(new ScriptPlayer(p), globalScope), Context.javaToJS(new ScriptField(p.getMap(), globalScope), globalScope) });
+				((Function) f).call(cx, globalScope, globalScope, new Object[]{Context.javaToJS(new ScriptPlayer(p), globalScope), Context.javaToJS(new ScriptField(p.getMap(), globalScope), globalScope)});
 			} finally {
 				Context.exit();
 			}
@@ -90,7 +89,7 @@ public class EventManipulator {
 		if (f != Scriptable.NOT_FOUND) {
 			Context cx = Context.enter();
 			try {
-				((Function) f).call(cx, globalScope, globalScope, new Object[] { timerId });
+				((Function) f).call(cx, globalScope, globalScope, new Object[]{timerId});
 			} finally {
 				Context.exit();
 			}
@@ -102,7 +101,7 @@ public class EventManipulator {
 		if (f != Scriptable.NOT_FOUND) {
 			Context cx = Context.enter();
 			try {
-				((Function) f).call(cx, globalScope, globalScope, new Object[] { Context.javaToJS(new ScriptParty(p.getClient().getChannel(), p.getParty(), globalScope), globalScope), Context.javaToJS(new ScriptPlayer(p), globalScope) });
+				((Function) f).call(cx, globalScope, globalScope, new Object[]{Context.javaToJS(new ScriptParty(p.getClient().getChannel(), p.getParty(), globalScope), globalScope), Context.javaToJS(new ScriptPlayer(p), globalScope)});
 			} finally {
 				Context.exit();
 			}
@@ -114,7 +113,7 @@ public class EventManipulator {
 		if (f != Scriptable.NOT_FOUND) {
 			Context cx = Context.enter();
 			try {
-				((Function) f).call(cx, globalScope, globalScope, new Object[] { Context.javaToJS(new ScriptMob(m), globalScope) });
+				((Function) f).call(cx, globalScope, globalScope, new Object[]{Context.javaToJS(new ScriptMob(m), globalScope)});
 			} finally {
 				Context.exit();
 			}
@@ -126,7 +125,7 @@ public class EventManipulator {
 		if (f != Scriptable.NOT_FOUND) {
 			Context cx = Context.enter();
 			try {
-				((Function) f).call(cx, globalScope, globalScope, new Object[] { Context.javaToJS(new ScriptMob(m), globalScope) });
+				((Function) f).call(cx, globalScope, globalScope, new Object[]{Context.javaToJS(new ScriptMob(m), globalScope)});
 			} finally {
 				Context.exit();
 			}
@@ -138,7 +137,7 @@ public class EventManipulator {
 		if (f != Scriptable.NOT_FOUND) {
 			Context cx = Context.enter();
 			try {
-				((Function) f).call(cx, globalScope, globalScope, new Object[] { Context.javaToJS(new ScriptMob(m), globalScope) });
+				((Function) f).call(cx, globalScope, globalScope, new Object[]{Context.javaToJS(new ScriptMob(m), globalScope)});
 			} finally {
 				Context.exit();
 			}
@@ -150,7 +149,7 @@ public class EventManipulator {
 		if (f != Scriptable.NOT_FOUND) {
 			Context cx = Context.enter();
 			try {
-				((Function) f).call(cx, globalScope, globalScope, new Object[] { });
+				((Function) f).call(cx, globalScope, globalScope, new Object[]{});
 			} finally {
 				Context.exit();
 			}

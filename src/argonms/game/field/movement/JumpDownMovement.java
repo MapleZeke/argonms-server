@@ -24,10 +24,6 @@ import java.awt.Point;
 import java.util.EnumSet;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public class JumpDownMovement implements PositionChangedMovementFragment, FootholdChangedMovementFragment, StanceChangedMovementFragment {
 	private final Point position;
 	private final Point pixelsPerSecond;

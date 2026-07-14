@@ -19,12 +19,9 @@
 package argonms.common.util;
 
 import java.util.Calendar;
+import java.util.Locale;
 import java.util.TimeZone;
 
-/**
- *
- * @author GoldenKevin
- */
 public class TimeTool {
 	/**
 	 * Number of 100 nanosecond units from 1/1/1601 to 1/1/1970
@@ -39,7 +36,7 @@ public class TimeTool {
 	public static final long NO_EXPIRATION;
 
 	static {
-		TimeZone tz = Calendar.getInstance().getTimeZone();
+		TimeZone tz = TimeZone.getDefault();
 		TIME_ZONE_OFFSET = tz.getRawOffset() + tz.getDSTSavings();
 		NO_EXPIRATION = 3439756800000L - TimeTool.TIME_ZONE_OFFSET;
 	}
@@ -52,12 +49,12 @@ public class TimeTool {
 	 * @return FILETIME
 	 */
 	public static long unixToWindowsTime(long unixTime) {
-		return ((unixTime + TIME_ZONE_OFFSET) * 10000 + EPOCH_BIAS);
+		return (unixTime + TIME_ZONE_OFFSET) * 10000 + EPOCH_BIAS;
 	}
 
 	public static Calendar intDateToCalendar(int idate) {
 		String timeStr = Integer.toString(idate);
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = Calendar.getInstance(TimeZone.getDefault(), Locale.ROOT);
 		switch (timeStr.length()) {
 			case 8: //YYYYMMDD
 				cal.set(Integer.parseInt(timeStr.substring(0, 4)), Integer.parseInt(timeStr.substring(4, 6)) - 1, Integer.parseInt(timeStr.substring(6, 8)));
@@ -73,6 +70,9 @@ public class TimeTool {
 	}
 
 	public static Calendar currentDateTime() {
-		return Calendar.getInstance();
+		return Calendar.getInstance(TimeZone.getDefault(), Locale.ROOT);
+	}
+
+	private TimeTool() {
 	}
 }

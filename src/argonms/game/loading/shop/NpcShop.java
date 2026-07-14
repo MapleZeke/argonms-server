@@ -24,10 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class NpcShop implements NpcMiniroom {
 	public static class ShopSlot {
 		public final int itemId;
@@ -67,18 +63,22 @@ public abstract class NpcShop implements NpcMiniroom {
 	protected static class DefaultNpcShopStock extends NpcShop {
 		protected DefaultNpcShopStock(List<ShopSlot> items) {
 			super(items);
-			this.rechargeableOnly = new HashMap<Integer, Double>();
-			for (int itemId = 2070000; itemId <= 2070018; itemId++) //stars
-				if (itemId != 2070014 && itemId != 2070017)
+			this.rechargeableOnly = new HashMap<>();
+			for (int itemId = 2070000; itemId <= 2070018; itemId++) { //stars
+				if (itemId != 2070014 && itemId != 2070017) {
 					rechargeableOnly.put(Integer.valueOf(itemId), Double.valueOf(ItemDataLoader.getInstance().getUnitPrice(itemId)));
-			for (int itemId = 2330000; itemId <= 2330006; itemId++) //bullets
+				}
+			}
+			for (int itemId = 2330000; itemId <= 2330006; itemId++) { //bullets
 				rechargeableOnly.put(Integer.valueOf(itemId), Double.valueOf(ItemDataLoader.getInstance().getUnitPrice(itemId)));
+			}
 			//more bullets - Blaze and Glaze Capsules
 			rechargeableOnly.put(Integer.valueOf(2331000), Double.valueOf(ItemDataLoader.getInstance().getUnitPrice(2331000)));
 			rechargeableOnly.put(Integer.valueOf(2332000), Double.valueOf(ItemDataLoader.getInstance().getUnitPrice(2332000)));
 			for (ShopSlot item : allItems())
-				if (rechargeableOnly.containsKey(Integer.valueOf(item.itemId)))
+				if (rechargeableOnly.containsKey(Integer.valueOf(item.itemId))) {
 					rechargeableOnly.remove(Integer.valueOf(item.itemId));
+				}
 		}
 
 		@Override
@@ -98,10 +98,11 @@ public abstract class NpcShop implements NpcMiniroom {
 		protected McdbNpcShopStock(Map<Integer, Double> rechargeables, List<ShopSlot> items) {
 			super(items);
 			this.rechargeables = rechargeables;
-			this.rechargeableOnly = new HashMap<Integer, Double>(rechargeables);
+			this.rechargeableOnly = new HashMap<>(rechargeables);
 			for (ShopSlot item : allItems())
-				if (rechargeableOnly.containsKey(Integer.valueOf(item.itemId)))
+				if (rechargeableOnly.containsKey(Integer.valueOf(item.itemId))) {
 					rechargeableOnly.remove(Integer.valueOf(item.itemId));
+				}
 		}
 
 		@Override
@@ -112,7 +113,7 @@ public abstract class NpcShop implements NpcMiniroom {
 		@Override
 		public int rechargeCost(int itemId, int amount) {
 			Double unitCost = rechargeables.get(Integer.valueOf(itemId));
-			return (unitCost != null) ? ((int) Math.ceil(unitCost.doubleValue() * amount)) : -1;
+			return unitCost != null ? ((int) Math.ceil(unitCost.doubleValue() * amount)) : -1;
 		}
 	}
 }

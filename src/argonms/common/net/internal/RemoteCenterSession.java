@@ -38,11 +38,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
-public class RemoteCenterSession<T extends RemoteCenterInterface> implements Session, SessionCreator {
+public final class RemoteCenterSession<T extends RemoteCenterInterface> implements Session, SessionCreator {
 	private static final Logger LOG = Logger.getLogger(RemoteCenterSession.class.getName());
 	private static final int HEADER_LENGTH = 4;
 	//1kb as the initial buffer size for each client isn't too unreasonable...
@@ -56,13 +52,9 @@ public class RemoteCenterSession<T extends RemoteCenterInterface> implements Ses
 	private ByteBuffer readBuffer;
 	private final T server;
 
-	private KeepAliveTask heartbeatTask;
-	private final Runnable idleTask = new Runnable() {
-		@Override
-		public void run() {
-			startPingTask();
-		}
-	};
+	private final KeepAliveTask heartbeatTask;
+	private final Runnable idleTask = () ->
+		startPingTask();
 	private ScheduledFuture<?> idleTaskFuture;
 
 	private MessageType nextMessageType;
@@ -116,7 +108,9 @@ public class RemoteCenterSession<T extends RemoteCenterInterface> implements Ses
 		try {
 			//spin loop if we don't write the entire buffer (although in
 			//blocking mode, that should never happen...)
-			while (buf.remaining() != commChn.write(buf));
+			while (buf.remaining() != commChn.write(buf)) {
+				continue;
+			}
 		} catch (IOException ex) {
 			//does an IOException in write always mean an invalid channel?
 			close(ex.getMessage());
@@ -146,11 +140,12 @@ public class RemoteCenterSession<T extends RemoteCenterInterface> implements Ses
 			}
 			stopPingTask();
 			//this check is thread safe - idleTaskFuture can never be null again after it has been assigned a non-null value
-			if (idleTaskFuture != null)
+			if (idleTaskFuture != null) {
 				//client closed before we could send init packet
 				idleTaskFuture.cancel(false);
+			}
 
-			LOG.log(Level.FINE, "Disconnected from center server ({0}): {1}", new Object[] { getAddress(), reason });
+			LOG.log(Level.FINE, "Disconnected from center server ({0}): {1}", new Object[]{getAddress(), reason});
 			server.disconnected();
 			return true;
 		}
@@ -237,7 +232,7 @@ public class RemoteCenterSession<T extends RemoteCenterInterface> implements Ses
 		private final AtomicReference<ScheduledFuture<?>> future;
 
 		public KeepAliveTask() {
-			future = new AtomicReference<ScheduledFuture<?>>(null);
+			future = new AtomicReference<>(null);
 		}
 
 		public void sendPing() {
@@ -259,8 +254,9 @@ public class RemoteCenterSession<T extends RemoteCenterInterface> implements Ses
 
 		public void stop() {
 			ScheduledFuture<?> old = future.getAndSet(null);
-			if (old != null)
+			if (old != null) {
 				old.cancel(false);
+			}
 		}
 	}
 
@@ -275,18 +271,18 @@ public class RemoteCenterSession<T extends RemoteCenterInterface> implements Ses
 			private final ThreadGroup group;
 
 			{
-				SecurityManager s = System.getSecurityManager();
-				group = (s != null)? s.getThreadGroup() :
-									 Thread.currentThread().getThreadGroup();
+				group = Thread.currentThread().getThreadGroup();
 			}
 
 			@Override
 			public Thread newThread(Runnable r) {
 				Thread t = new Thread(group, r, "internal-worker-thread", 0);
-				if (t.isDaemon())
+				if (t.isDaemon()) {
 					t.setDaemon(false);
-				if (t.getPriority() != Thread.NORM_PRIORITY)
+				}
+				if (t.getPriority() != Thread.NORM_PRIORITY) {
 					t.setPriority(Thread.NORM_PRIORITY);
+				}
 				return t;
 			}
 		});
@@ -296,7 +292,7 @@ public class RemoteCenterSession<T extends RemoteCenterInterface> implements Ses
 			center.socket().setTcpNoDelay(false);
 			center.configureBlocking(true);
 			center.connect(new InetSocketAddress(ip, port));
-			final RemoteCenterSession<T> session = new RemoteCenterSession<T>(center, serverState, authKey, workerThreadPool);
+			final RemoteCenterSession<T> session = new RemoteCenterSession<>(center, serverState, authKey, workerThreadPool);
 			serverState.setSession(session);
 			LOG.log(Level.FINE, "Connected to Center server at {0}", session.getAddress());
 			workerThreadPool.submit(new Runnable() {

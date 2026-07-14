@@ -21,10 +21,6 @@ package argonms.common.character;
 import argonms.common.util.Scheduler;
 import java.util.concurrent.ScheduledFuture;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Cooldown {
 	private final long endTime;
 	private final ScheduledFuture<?> expiration;

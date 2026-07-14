@@ -23,6 +23,7 @@ import argonms.common.util.collections.Pair;
 import argonms.game.script.binding.ScriptEvent;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -32,10 +33,6 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
 
-/**
- *
- * @author GoldenKevin
- */
 public class EventManager {
 	private static final Logger LOG = Logger.getLogger(EventManager.class.getName());
 
@@ -46,7 +43,7 @@ public class EventManager {
 	public EventManager(String scriptPath, byte channel, String[] activateNow) {
 		eventPath = scriptPath + "events" + GlobalConstants.DIR_DELIMIT;
 		this.channel = channel;
-		activatedEvents = new ConcurrentHashMap<String, Pair<ScriptEvent, EventManipulator>>();
+		activatedEvents = new ConcurrentHashMap<>();
 		for (String script : activateNow)
 			runScript(script, true, null);
 	}
@@ -66,7 +63,7 @@ public class EventManager {
 		EventManipulator delegator;
 		Context cx = Context.enter();
 		try {
-			FileReader reader = new FileReader(eventPath + scriptName + ".js");
+			FileReader reader = new FileReader(eventPath + scriptName + ".js", StandardCharsets.UTF_8);
 			Scriptable globalScope = cx.initStandardObjects();
 			cx.setOptimizationLevel(1);
 			cx.setLanguageVersion(Context.VERSION_1_7);
@@ -75,16 +72,18 @@ public class EventManager {
 			event = new ScriptEvent(associateWithName ? scriptName : null, channel, delegator, globalScope);
 			delegator.setVariables(event.getVariables());
 
-			if (associateWithName && activatedEvents.putIfAbsent(scriptName, new Pair<ScriptEvent, EventManipulator>(event, delegator)) != null)
+			if (associateWithName && activatedEvents.putIfAbsent(scriptName, new Pair<ScriptEvent, EventManipulator>(event, delegator)) != null) {
 				return null;
+			}
 
 			globalScope.put("event", globalScope, Context.javaToJS(event, globalScope));
 			cx.evaluateReader(globalScope, reader, "events/" + scriptName + ".js", 1, null);
 			reader.close();
 
 			Object f = globalScope.get("init", globalScope);
-			if (f != Scriptable.NOT_FOUND)
-				((Function) f).call(cx, globalScope, globalScope, new Object[] { attachment });
+			if (f != Scriptable.NOT_FOUND) {
+				((Function) f).call(cx, globalScope, globalScope, new Object[]{attachment});
+			}
 		} catch (FileNotFoundException ex) {
 			LOG.log(Level.WARNING, "Missing event script {0}", scriptName);
 			return null;
@@ -104,8 +103,9 @@ public class EventManager {
 	 */
 	public ScriptEvent getRunningScript(String scriptName) {
 		Pair<ScriptEvent, EventManipulator> event = activatedEvents.get(scriptName);
-		if (event == null)
+		if (event == null) {
 			return null;
+		}
 
 		return event.left;
 	}
@@ -117,8 +117,9 @@ public class EventManager {
 	 */
 	public EventManipulator getScriptInterface(String scriptName) {
 		Pair<ScriptEvent, EventManipulator> event = activatedEvents.get(scriptName);
-		if (event == null)
+		if (event == null) {
 			return null;
+		}
 
 		return event.right;
 	}
@@ -135,8 +136,9 @@ public class EventManager {
 	 */
 	public void endScript(String scriptName) {
 		Pair<ScriptEvent, EventManipulator> event = activatedEvents.remove(scriptName);
-		if (event == null)
+		if (event == null) {
 			return;
+		}
 
 		endScript(event.left, event.right);
 	}

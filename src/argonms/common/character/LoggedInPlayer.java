@@ -30,25 +30,21 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class LoggedInPlayer extends Player {
-	protected static abstract class ItemExpireTask implements Runnable {
+	protected abstract static class ItemExpireTask implements Runnable {
 		private final NavigableMap<Long, Set<Long>> itemExpires;
 		private ScheduledFuture<?> nextItemExpire;
 		private long scheduledRun;
 		private Set<Long> uniqueIds;
 
 		public ItemExpireTask() {
-			itemExpires = new TreeMap<Long, Set<Long>>();
+			itemExpires = new TreeMap<>();
 		}
 
 		public synchronized void addExpire(long expiration, long uniqueId) {
 			Set<Long> sameTimeExpires = itemExpires.get(Long.valueOf(expiration));
 			if (sameTimeExpires == null) {
-				sameTimeExpires = new HashSet<Long>();
+				sameTimeExpires = new HashSet<>();
 				itemExpires.put(Long.valueOf(expiration), sameTimeExpires);
 				if (itemExpires.firstKey().longValue() == expiration) {
 					//just added item is at front of queue
@@ -154,22 +150,26 @@ public abstract class LoggedInPlayer extends Player {
 	public abstract void checkForExpiredItems();
 
 	public void onExpirableItemAdded(InventorySlot item) {
-		if (item.getExpiration() != 0)
+		if (item.getExpiration() != 0) {
 			itemExpireTask.addExpire(item.getExpiration(), item.getUniqueId());
+		}
 	}
 
 	public byte indexOfPet(long uniqueId) {
 		Pet[] pets = getPets();
-		for (byte i = 0; i < 3 && pets[i] != null; i++)
-			if (pets[i].getUniqueId() == uniqueId)
+		for (byte i = 0; i < 3 && pets[i] != null; i++) {
+			if (pets[i].getUniqueId() == uniqueId) {
 				return i;
+			}
+		}
 		return -1;
 	}
 
 	public void removePet(byte slot) {
 		Pet[] pets = getPets();
-		for (int i = slot; i < 2; i++)
+		for (int i = slot; i < 2; i++) {
 			pets[i] = pets[i + 1];
+		}
 		pets[2] = null;
 	}
 }

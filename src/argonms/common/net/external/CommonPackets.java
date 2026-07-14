@@ -43,10 +43,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class CommonPackets {
 	private static final int[] ROCK_MAPS = { //there has to be exactly 5!
 		GlobalConstants.NULL_MAP, GlobalConstants.NULL_MAP,
@@ -79,8 +75,9 @@ public final class CommonPackets {
 	 * @param show Show the expiration time.
 	 */
 	public static void writeItemExpire(LittleEndianWriter lew, long time, boolean show) {
-		if (!show || time <= 0)
+		if (!show || time <= 0) {
 			time = TimeTool.NO_EXPIRATION;
+		}
 		lew.writeLong(TimeTool.unixToWindowsTime(time));
 	}
 
@@ -92,8 +89,9 @@ public final class CommonPackets {
 		lew.writeInt(p.getEyes()); // face
 		lew.writeInt(p.getHair()); // hair
 		Pet[] pets = p.getPets();
-		for (int i = 0; i < 3; i++)
+		for (int i = 0; i < 3; i++) {
 			lew.writeLong(pets[i] == null ? 0 : pets[i].getUniqueId());
+		}
 		lew.writeByte((byte) p.getLevel()); // level
 		lew.writeShort(p.getJob()); // job
 		lew.writeShort(p.getStr()); // str
@@ -122,8 +120,8 @@ public final class CommonPackets {
 		lew.writeBool(!messenger);
 		lew.writeInt(hair); // hair
 
-		Map<Byte, Integer> visEquip = new LinkedHashMap<Byte, Integer>();
-		Map<Byte, Integer> maskedEquip = new LinkedHashMap<Byte, Integer>();
+		Map<Byte, Integer> visEquip = new LinkedHashMap<>();
+		Map<Byte, Integer> maskedEquip = new LinkedHashMap<>();
 		int cashWeapon = 0;
 		for (Entry<Short, Integer> ent : equips.entrySet()) {
 			//assume that all items in equipped have negative positions
@@ -131,18 +129,20 @@ public final class CommonPackets {
 			if (pos > 100) { //cash equips
 				Byte oPos = Byte.valueOf((byte) (pos - 100));
 				if (pos != 111) { //accessories/armor
-					if (visEquip.containsKey(oPos)) //existing normal equip needs to be moved to masked
+					if (visEquip.containsKey(oPos)) { //existing normal equip needs to be moved to masked
 						maskedEquip.put(oPos, visEquip.get(oPos));
+					}
 					visEquip.put(oPos, ent.getValue());
 				} else { //cash weapon
 					cashWeapon = ent.getValue().intValue();
 				}
 			} else { //normal equips
 				Byte oPos = Byte.valueOf(pos);
-				if (visEquip.containsKey(oPos)) //cash equip already masked this
+				if (visEquip.containsKey(oPos)) { //cash equip already masked this
 					maskedEquip.put(oPos, ent.getValue());
-				else
+				} else {
 					visEquip.put(oPos, ent.getValue());
+				}
 			}
 		}
 
@@ -160,8 +160,9 @@ public final class CommonPackets {
 
 		lew.writeInt(cashWeapon);
 
-		for (int i = 0; i < 3; i++)
+		for (int i = 0; i < 3; i++) {
 			lew.writeInt(pets[i] == null ? 0 : pets[i].getDataId());
+		}
 	}
 
 	public static void writeAvatar(LittleEndianWriter lew, Player p, boolean messenger) {
@@ -175,8 +176,9 @@ public final class CommonPackets {
 		lew.writeByte(item.getTypeByte());
 		lew.writeInt(item.getDataId());
 		lew.writeBool(cashItem);
-		if (cashItem)
+		if (cashItem) {
 			lew.writeLong(item.getUniqueId());
+		}
 		writeItemExpire(lew, item.getExpiration(), showExpire);
 
 		switch (item.getType()) {
@@ -215,10 +217,11 @@ public final class CommonPackets {
 
 				if (!shopTransfer) {
 					lew.writeShort(equip.getFlag());
-					if (!cashItem) //Vicious' Hammer was introduced in v0.59...
+					if (!cashItem) { //Vicious' Hammer was introduced in v0.59...
 						lew.writeLong(0); //one of these values has to be for it
+					}
 				} else {
-					lew.writeBytes(new byte[] { 0x40, (byte) 0xE0, (byte) 0xFD, 0x3B, 0x37, 0x4F, 0x01 });
+					lew.writeBytes(new byte[]{0x40, (byte) 0xE0, (byte) 0xFD, 0x3B, 0x37, 0x4F, 0x01});
 					lew.writeInt(-1);
 				}
 				break;
@@ -241,8 +244,9 @@ public final class CommonPackets {
 			InventorySlot item) {
 		if (pos < 0) { //equipped inventory has negative positions
 			pos *= -1;
-			if (pos > 100) //masking equips (cash equips) have positions < -100
+			if (pos > 100) { //masking equips (cash equips) have positions < -100
 				pos -= 100;
+			}
 		}
 		lew.writeByte((byte) pos);
 		writeItemInfo(lew, item, true, false);
@@ -443,25 +447,28 @@ public final class CommonPackets {
 		lew.writeByte((byte) p.getInventory(InventoryType.CASH).getMaxSlots()); // cash slots
 
 		Map<Short, InventorySlot> iv = p.getInventory(InventoryType.EQUIPPED).getAll();
-		Map<Short, InventorySlot> visible = new TreeMap<Short, InventorySlot>();
-		Map<Short, InventorySlot> masked = new TreeMap<Short, InventorySlot>();
-		List<Ring> coupleRings = new ArrayList<Ring>();
-		List<Ring> friendshipRings = new ArrayList<Ring>();
-		List<Ring> weddingRings = new ArrayList<Ring>();
+		Map<Short, InventorySlot> visible = new TreeMap<>();
+		Map<Short, InventorySlot> masked = new TreeMap<>();
+		List<Ring> coupleRings = new ArrayList<>();
+		List<Ring> friendshipRings = new ArrayList<>();
+		List<Ring> weddingRings = new ArrayList<>();
 		synchronized(iv) {
 			for (Entry<Short, InventorySlot> entry : iv.entrySet()) {
 				InventorySlot item = entry.getValue();
-				if (entry.getKey().shortValue() < -100)
+				if (entry.getKey().shortValue() < -100) {
 					masked.put(entry.getKey(), item);
-				else
+				} else {
 					visible.put(entry.getKey(), item);
-				if (item.getType() == ItemType.RING)
-					if (InventoryTools.isCoupleRing(item.getDataId()))
+				}
+				if (item.getType() == ItemType.RING) {
+					if (InventoryTools.isCoupleRing(item.getDataId())) {
 						coupleRings.add((Ring) item);
-					else if (InventoryTools.isFriendshipRing(item.getDataId()))
+					} else if (InventoryTools.isFriendshipRing(item.getDataId())) {
 						friendshipRings.add((Ring) item);
-					else if (InventoryTools.isWeddingRing(item.getDataId()))
+					} else if (InventoryTools.isWeddingRing(item.getDataId())) {
 						weddingRings.add((Ring) item);
+					}
+				}
 			}
 		}
 
@@ -475,19 +482,21 @@ public final class CommonPackets {
 		iv = p.getInventory(InventoryType.EQUIP).getAll();
 		synchronized(iv) {
 			for (Entry<Short, InventorySlot> entry : iv.entrySet()) {
-				if (entry.getValue().getType() == ItemType.RING)
-					if (InventoryTools.isCoupleRing(entry.getValue().getDataId()))
+				if (entry.getValue().getType() == ItemType.RING) {
+					if (InventoryTools.isCoupleRing(entry.getValue().getDataId())) {
 						coupleRings.add((Ring) entry.getValue());
-					else if (InventoryTools.isFriendshipRing(entry.getValue().getDataId()))
+					} else if (InventoryTools.isFriendshipRing(entry.getValue().getDataId())) {
 						friendshipRings.add((Ring) entry.getValue());
-					else if (InventoryTools.isWeddingRing(entry.getValue().getDataId()))
+					} else if (InventoryTools.isWeddingRing(entry.getValue().getDataId())) {
 						weddingRings.add((Ring) entry.getValue());
+					}
+				}
 				writeItemInfo(lew, entry.getKey().shortValue(), entry.getValue());
 			}
 		}
 		lew.writeByte((byte) 0); //end of equip inventory
 
-		for (InventoryType invType : new InventoryType[] { InventoryType.USE, InventoryType.SETUP, InventoryType.ETC, InventoryType.CASH }) {
+		for (InventoryType invType : new InventoryType[]{InventoryType.USE, InventoryType.SETUP, InventoryType.ETC, InventoryType.CASH}) {
 			iv = p.getInventory(invType).getAll();
 			synchronized(iv) {
 				for (Entry<Short, InventorySlot> entry : iv.entrySet())
@@ -503,8 +512,9 @@ public final class CommonPackets {
 			SkillEntry skill = entry.getValue();
 			lew.writeInt(skillid);
 			lew.writeInt(skill.getLevel());
-			if (Skills.isFourthJob(skillid))
+			if (Skills.isFourthJob(skillid)) {
 				lew.writeInt(skill.getMasterLevel());
+			}
 		}
 		Map<Integer, Cooldown> cooldowns = p.getCooldowns();
 		lew.writeShort((short) cooldowns.size());
@@ -513,8 +523,8 @@ public final class CommonPackets {
 			lew.writeShort(cooling.getValue().getSecondsRemaining());
 		}
 
-		Map<Short, QuestEntry> started = new HashMap<Short, QuestEntry>();
-		Map<Short, QuestEntry> completed = new HashMap<Short, QuestEntry>();
+		Map<Short, QuestEntry> started = new HashMap<>();
+		Map<Short, QuestEntry> completed = new HashMap<>();
 		p.readLockQuests();
 		try {
 			for (Entry<Short, QuestEntry> entry : p.getAllQuests().entrySet()) {
@@ -562,10 +572,12 @@ public final class CommonPackets {
 		}
 		lew.writeShort((short) 0); //possibly wedding ring
 
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < 5; i++) {
 			lew.writeInt(ROCK_MAPS[i]);
-		for (int i = 0; i < 10; i++)
+		}
+		for (int i = 0; i < 10; i++) {
 			lew.writeInt(VIP_MAPS[i]);
+		}
 		lew.writeInt(0);
 	}
 

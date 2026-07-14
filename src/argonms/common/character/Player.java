@@ -43,10 +43,6 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class Player {
 	private static final Logger LOG = Logger.getLogger(Player.class.getName());
 
@@ -54,14 +50,23 @@ public abstract class Player {
 	private byte gm;
 
 	protected String name;
-	protected short eyes, hair;
+	protected short eyes;
+	protected short hair;
 	protected byte skin;
 	protected byte gender;
 
 	protected volatile short level;
 	protected volatile short job;
-	protected volatile short baseStr, baseDex, baseInt, baseLuk, baseMaxHp, baseMaxMp;
-	protected volatile short remHp, remMp, remAp, remSp;
+	protected volatile short baseStr;
+	protected volatile short baseDex;
+	protected volatile short baseInt;
+	protected volatile short baseLuk;
+	protected volatile short baseMaxHp;
+	protected volatile short baseMaxMp;
+	protected volatile short remHp;
+	protected volatile short remMp;
+	protected volatile short remAp;
+	protected volatile short remSp;
 	protected volatile int exp;
 	protected volatile short fame;
 
@@ -76,7 +81,7 @@ public abstract class Player {
 	protected Player() {
 		//doesn't need to be synchronized because we only add/remove entries
 		//before we can possibly get them
-		inventories = new EnumMap<InventoryType, Inventory>(InventoryType.class);
+		inventories = new EnumMap<>(InventoryType.class);
 		pets = new Pet[3];
 	}
 
@@ -307,14 +312,21 @@ public abstract class Player {
 	}
 
 	private static byte indexOf(Pet[] pets, Pet search) {
-		for (byte i = 0; i < 3; i++)
-			if (pets[i] == search)
+		for (byte i = 0; i < 3; i++) {
+			if (pets[i] == search) {
 				return i;
+			}
+		}
 		return -1;
 	}
 
 	public static void commitInventory(int characterId, int accountId, Pet[] pets, Connection con, Map<InventoryType, ? extends IInventory> inventories) throws SQLException {
-		PreparedStatement ps = null, eps = null, rps = null, pps = null, mps = null, cps = null;
+		PreparedStatement ps = null;
+		PreparedStatement eps = null;
+		PreparedStatement rps = null;
+		PreparedStatement pps = null;
+		PreparedStatement mps = null;
+		PreparedStatement cps = null;
 		ResultSet rs = null;
 		try {
 			ps = con.prepareStatement("INSERT INTO `inventoryitems` "
@@ -542,8 +554,9 @@ public abstract class Player {
 							pet.setCloseness(irs.getShort(6));
 							pet.setFullness(irs.getByte(7));
 							byte pos = irs.getByte(3);
-							if (pos >= 0 && pos < 3)
+							if (pos >= 0 && pos < 3) {
 								pets[pos] = pet;
+							}
 						}
 						irs.close();
 						ips.close();
@@ -557,8 +570,9 @@ public abstract class Player {
 					ips = con.prepareStatement("SELECT `uniqueid` FROM `cashshoppurchases` WHERE `inventoryitemid` = ?");
 					ips.setInt(1, inventoryKey);
 					irs = ips.executeQuery();
-					if (irs.next())
+					if (irs.next()) {
 						item.setUniqueId(irs.getLong(1));
+					}
 					irs.close();
 					ips.close();
 				}
@@ -585,8 +599,9 @@ public abstract class Player {
 			ps = con.prepareStatement("SELECT `name` FROM `characters` WHERE `id` = ?");
 			ps.setInt(1, characterid);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				name = rs.getString(1);
+			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not find name of character " + characterid, ex);
 		} finally {
@@ -605,8 +620,9 @@ public abstract class Player {
 			ps = con.prepareStatement("SELECT `id` FROM `characters` WHERE `name` = ?");
 			ps.setString(1, name);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				id = rs.getInt(1);
+			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not find id of character " + name, ex);
 		} finally {

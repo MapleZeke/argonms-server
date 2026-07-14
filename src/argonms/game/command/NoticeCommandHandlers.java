@@ -25,10 +25,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class NoticeCommandHandlers implements CommandCollection<CommandCaller> {
 	private static class NoticeCommandHandler extends AbstractCommandDefinition<CommandCaller> {
 		@Override
@@ -47,10 +43,12 @@ public class NoticeCommandHandlers implements CommandCollection<CommandCaller> {
 		}
 
 		private ChatHandler.TextStyle getStyle(String option) {
-			if (option.equalsIgnoreCase("POPUP"))
+			if ("POPUP".equalsIgnoreCase(option)) {
 				return ChatHandler.TextStyle.OK_BOX;
-			if (option.equalsIgnoreCase("CHAT"))
+			}
+			if ("CHAT".equalsIgnoreCase(option)) {
 				return ChatHandler.TextStyle.LIGHT_BLUE_TEXT_CLEAR_BG;
+			}
 			return null;
 		}
 
@@ -93,10 +91,11 @@ public class NoticeCommandHandlers implements CommandCollection<CommandCaller> {
 		@Override
 		public void execute(CommandCaller caller, CommandArguments args, CommandOutput resp) {
 			String message;
-			if (args.hasNext())
+			if (args.hasNext()) {
 				message = args.restOfString();
-			else
+			} else {
 				message = "";
+			}
 
 			GameServer.getChannel(caller.getChannel()).getCrossServerInterface().sendWorldWideNotice(ChatHandler.TextStyle.TICKER.byteValue(), message);
 		}
@@ -104,7 +103,7 @@ public class NoticeCommandHandlers implements CommandCollection<CommandCaller> {
 
 	@Override
 	public Map<String, AbstractCommandDefinition<CommandCaller>> getDefinitions() {
-		Map<String, AbstractCommandDefinition<CommandCaller>> definitions = new HashMap<String, AbstractCommandDefinition<CommandCaller>>();
+		Map<String, AbstractCommandDefinition<CommandCaller>> definitions = new HashMap<>();
 		definitions.put("!notice", new NoticeCommandHandler());
 		definitions.put("!ticker", new TickerCommandHandler());
 		return Collections.unmodifiableMap(definitions);

@@ -18,12 +18,9 @@
 
 package argonms.common.character;
 
-/**
- *
- * @author GoldenKevin
- */
 public class SkillEntry {
-	private byte level, master;
+	private byte level;
+	private byte master;
 
 	public SkillEntry(byte currentLevel, byte masterLevel) {
 		this.level = currentLevel;

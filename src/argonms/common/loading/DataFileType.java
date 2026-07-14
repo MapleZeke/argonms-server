@@ -18,10 +18,6 @@
 
 package argonms.common.loading;
 
-/**
- *
- * @author GoldenKevin
- */
 public enum DataFileType {
 	KVJ, MCDB
 }

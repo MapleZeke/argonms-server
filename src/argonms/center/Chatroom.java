@@ -25,10 +25,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Chatroom {
 	public static class Avatar {
 		private final int playerId;
@@ -108,12 +104,13 @@ public class Chatroom {
 
 	private final Avatar[] occupants;
 	private final Set<Byte> channels;
-	private final Lock readLock, writeLock;
+	private final Lock readLock;
+	private final Lock writeLock;
 	private int count;
 
 	public Chatroom(Avatar creator) {
 		occupants = new Avatar[3];
-		channels = new HashSet<Byte>(3);
+		channels = new HashSet<>(3);
 		ReadWriteLock locks = new ReentrantReadWriteLock();
 		readLock = locks.readLock();
 		writeLock = locks.writeLock();
@@ -151,9 +148,11 @@ public class Chatroom {
 
 	private void rebuildChannelSet() {
 		channels.clear();
-		for (byte i = 0; i < 3; i++)
-			if (occupants[i] != null)
+		for (byte i = 0; i < 3; i++) {
+			if (occupants[i] != null) {
 				channels.add(Byte.valueOf(occupants[i].getChannel()));
+			}
+		}
 	}
 
 	/**
@@ -175,8 +174,9 @@ public class Chatroom {
 	 * @param a 
 	 */
 	public void setPlayer(byte pos, Avatar a) {
-		if (occupants[pos] == null)
+		if (occupants[pos] == null) {
 			count++;
+		}
 		occupants[pos] = a;
 		rebuildChannelSet();
 	}
@@ -195,9 +195,11 @@ public class Chatroom {
 	 * @return 
 	 */
 	public byte positionOf(int playerId) {
-		for (byte i = 0; i < 3; i++)
-			if (occupants[i] != null && occupants[i].getPlayerId() == playerId)
+		for (byte i = 0; i < 3; i++) {
+			if (occupants[i] != null && occupants[i].getPlayerId() == playerId) {
 				return i;
+			}
+		}
 		return -1;
 	}
 

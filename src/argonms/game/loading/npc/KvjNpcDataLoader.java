@@ -22,21 +22,16 @@ import argonms.common.util.input.LittleEndianByteArrayReader;
 import argonms.common.util.input.LittleEndianReader;
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class KvjNpcDataLoader extends NpcDataLoader {
 	private static final Logger LOG = Logger.getLogger(KvjNpcDataLoader.class.getName());
 
-	private static final byte
-		SCRIPT_NAME = 1,
-		TRUNK_PUT = 2,
-		TRUNK_GET = 3
-	;
+	private static final byte SCRIPT_NAME = 1;
+	private static final byte TRUNK_PUT = 2;
+	private static final byte TRUNK_GET = 3;
 
 	private final String dataPath;
 
@@ -46,12 +41,13 @@ public class KvjNpcDataLoader extends NpcDataLoader {
 
 	@Override
 	protected void load(int npcId) {
-		String id = String.format("%07d", npcId);
+		String id = String.format(Locale.ROOT, "%07d", npcId);
 
 		try {
-			File f = new File(new StringBuilder(dataPath).append("Npc.wz").append(File.separator).append(id).append(".img.kvj").toString());
-			if (f.exists())
+			File f = new File(dataPath + "Npc.wz" + (File.separator) + id + ".img.kvj");
+			if (f.exists()) {
 				doWork(new LittleEndianByteArrayReader(f), npcId);
+			}
 		} catch (IOException e) {
 			LOG.log(Level.WARNING, "Could not read KVJ data file for NPC " + npcId, e);
 		}
@@ -78,7 +74,8 @@ public class KvjNpcDataLoader extends NpcDataLoader {
 	}
 
 	private void doWork(LittleEndianReader reader, int npcId) {
-		int withdrawCost = 0, depositCost = 0;
+		int withdrawCost = 0;
+		int depositCost = 0;
 		for (byte now = reader.readByte(); now != -1; now = reader.readByte()) {
 			switch (now) {
 				case SCRIPT_NAME:
@@ -92,7 +89,8 @@ public class KvjNpcDataLoader extends NpcDataLoader {
 					break;
 			}
 		}
-		if (withdrawCost != 0 || depositCost != 0)
+		if (withdrawCost != 0 || depositCost != 0) {
 			storageCosts.put(Integer.valueOf(npcId), new NpcStorageKeeper(depositCost, withdrawCost));
+		}
 	}
 }

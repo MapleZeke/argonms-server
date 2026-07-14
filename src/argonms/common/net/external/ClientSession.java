@@ -42,18 +42,12 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ClientSession<T extends RemoteClient> implements Session {
-	public static final byte
-		CLIENT_DISTRIBUTION_JAPAN = 3,
-		CLIENT_DISTRIBUTION_TEST = 5,
-		CLIENT_DISTRIBUTION_SEA = 7,
-		CLIENT_DISTRIBUTION_GLOBAL = 8,
-		CLIENT_DISTRIBUTION_BRAZIL = 9
-	;
+	public static final byte CLIENT_DISTRIBUTION_JAPAN = 3;
+	public static final byte CLIENT_DISTRIBUTION_TEST = 5;
+	public static final byte CLIENT_DISTRIBUTION_SEA = 7;
+	public static final byte CLIENT_DISTRIBUTION_GLOBAL = 8;
+	public static final byte CLIENT_DISTRIBUTION_BRAZIL = 9;
 
 	private static final Logger LOG = Logger.getLogger(ClientSession.class.getName());
 	private static final int INIT_HEADER_LENGTH = 2;
@@ -75,19 +69,16 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	private final SelectionKey selectionKey;
 	private final OrderedQueue sendQueue;
 
-	private KeepAliveTask heartbeatTask;
-	private final Runnable idleTask = new Runnable() {
-		@Override
-		public void run() {
-			startPingTask();
-		}
-	};
+	private final KeepAliveTask heartbeatTask;
+	private final Runnable idleTask = () ->
+		startPingTask();
 	private ScheduledFuture<?> idleTaskFuture;
 
 	private MessageType nextMessageType;
 
 	private final Lock sendIvLock;
-	private byte[] recvIv, sendIv;
+	private byte[] recvIv;
+	private byte[] sendIv;
 
 	/* package-private */ interface CloseListener<T extends RemoteClient> {
 		public void closed(ClientSession<T> session);
@@ -173,8 +164,9 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	}
 
 	public void readDequeued() {
-		if (queuedReads.decrementAndGet() == 0 && emptyReadQueueHandler != null)
+		if (queuedReads.decrementAndGet() == 0 && emptyReadQueueHandler != null) {
 			emptyReadQueueHandler.run();
+		}
 	}
 
 	public int getQueuedReads() {
@@ -208,11 +200,12 @@ public class ClientSession<T extends RemoteClient> implements Session {
 			}
 			stopPingTask();
 			//this check is thread safe - idleTaskFuture can never be null again after it has been assigned a non-null value
-			if (idleTaskFuture != null)
+			if (idleTaskFuture != null) {
 				//client closed before we could send init packet
 				idleTaskFuture.cancel(false);
+			}
 
-			LOG.log(Level.FINE, "Client {0} ({1}) disconnected: {2}", new Object[] { getAccountName(), getAddress(), reason });
+			LOG.log(Level.FINE, "Client {0} ({1}) disconnected: {2}", new Object[]{getAccountName(), getAddress(), reason});
 			client.disconnected();
 			onClose.closed(this);
 			return true;
@@ -227,8 +220,9 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	 * channel is closed.
 	 */
 	/* package-private */ byte tryFlushSendQueue() {
-		if (!sendQueue.shouldWrite())
-			return -1;
+	if (!sendQueue.shouldWrite()) {
+		return -1;
+	}
 		try {
 			do {
 				int success = 0;
@@ -241,8 +235,9 @@ public class ClientSession<T extends RemoteClient> implements Session {
 						} else {
 							int i = sendQueue.currentPopBlock() + success;
 							sendQueue.insert(i++, buf);
-							while (iter.hasNext())
+							while (iter.hasNext()) {
 								sendQueue.insert(i++, iter.next());
+							}
 							return 0;
 						}
 					}
@@ -327,8 +322,9 @@ public class ClientSession<T extends RemoteClient> implements Session {
 				int length = ClientEncryption.getPacketLength(message);
 
 				readBuffer.clear();
-				if (length > readBuffer.remaining())
+				if (length > readBuffer.remaining()) {
 					readBuffer = ByteBuffer.allocate(length);
+				}
 				readBuffer.limit(length);
 				nextMessageType = MessageType.BODY;
 				idleTaskFuture = Scheduler.getWheelTimer().runAfterDelay(idleTask, IDLE_TIME);
@@ -348,7 +344,7 @@ public class ClientSession<T extends RemoteClient> implements Session {
 				readBuffer.limit(HEADER_LENGTH);
 				nextMessageType = MessageType.HEADER;
 				idleTaskFuture = Scheduler.getWheelTimer().runAfterDelay(idleTask, IDLE_TIME);
-				return new byte[][] { iv, message };
+				return new byte[][]{iv, message};
 			}
 			default:
 				return null;
@@ -365,7 +361,7 @@ public class ClientSession<T extends RemoteClient> implements Session {
 		private final AtomicReference<ScheduledFuture<?>> future;
 
 		public KeepAliveTask() {
-			future = new AtomicReference<ScheduledFuture<?>>(null);
+			future = new AtomicReference<>(null);
 		}
 
 		public void sendPing() {
@@ -387,8 +383,9 @@ public class ClientSession<T extends RemoteClient> implements Session {
 
 		public void stop() {
 			ScheduledFuture<?> old = future.getAndSet(null);
-			if (old != null)
+			if (old != null) {
 				old.cancel(false);
+			}
 		}
 	}
 }

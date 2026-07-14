@@ -29,7 +29,6 @@ import argonms.common.util.output.LittleEndianByteArrayWriter;
 /**
  * Processes packet sent from the shop server and received at the center
  * server.
- * @author GoldenKevin
  */
 public class ShopCenterPacketProcessor extends GameOrShopPacketProcessor {
 	private final CenterShopInterface r;
@@ -59,7 +58,7 @@ public class ShopCenterPacketProcessor extends GameOrShopPacketProcessor {
 		}
 	}
 
-	private void serverOnline(LittleEndianReader packet)  {
+	private void serverOnline(LittleEndianReader packet) {
 		r.setHost(packet.readLengthPrefixedString());
 		int port = packet.readInt();
 		r.setClientPort(port);
@@ -75,8 +74,9 @@ public class ShopCenterPacketProcessor extends GameOrShopPacketProcessor {
 		lew.writeBytes(packet.readBytes(packet.available()));
 		byte[] message = lew.getBytes();
 		for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(world, ServerType.UNDEFINED))
-			if (cgi.isOnline() && cgi.getChannels().contains(Byte.valueOf(channel)))
+			if (cgi.isOnline() && cgi.getChannels().contains(Byte.valueOf(channel))) {
 				cgi.getSession().send(message);
+			}
 	}
 
 	private void processCenterServerSynchronization(LittleEndianReader packet) {

@@ -18,29 +18,23 @@
 
 package argonms.common;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class StatEffect {
-	public static final byte //indicies for a stats array (bonus or req)
-		STR = 0,
-		DEX = 1,
-		INT = 2,
-		LUK = 3,
-		PAD = 4,
-		PDD = 5,
-		MAD = 6,
-		MDD = 7,
-		ACC = 8,
-		EVA = 9,
-		MHP = 10,
-		MMP = 11,
-		Speed = 12,
-		Jump = 13,
-		Level = 14,
-		MaxLevel = 15
-	;
+	public static final byte STR = 0;
+	public static final byte DEX = 1;
+	public static final byte INT = 2;
+	public static final byte LUK = 3;
+	public static final byte PAD = 4;
+	public static final byte PDD = 5;
+	public static final byte MAD = 6;
+	public static final byte MDD = 7;
+	public static final byte ACC = 8;
+	public static final byte EVA = 9;
+	public static final byte MHP = 10;
+	public static final byte MMP = 11;
+	public static final byte Speed = 12;
+	public static final byte Jump = 13;
+	public static final byte Level = 14;
+	public static final byte MaxLevel = 15;
 
 	private StatEffect() {
 		//uninstantiable...

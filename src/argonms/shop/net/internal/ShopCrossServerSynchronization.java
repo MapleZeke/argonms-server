@@ -30,18 +30,14 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ShopCrossServerSynchronization {
 	private final Map<Byte, Map<Byte, ShopChannelSynchronization>> allChannels;
 	private final Map<Byte, ShopCenterServerSynchronization> intraworldGroups;
 	private final ReadWriteLock locks;
 
 	public ShopCrossServerSynchronization() {
-		allChannels = new HashMap<Byte, Map<Byte, ShopChannelSynchronization>>();
-		intraworldGroups = new HashMap<Byte, ShopCenterServerSynchronization>();
+		allChannels = new HashMap<>();
+		intraworldGroups = new HashMap<>();
 		locks = new ReentrantReadWriteLock();
 	}
 
@@ -65,7 +61,7 @@ public class ShopCrossServerSynchronization {
 		lockRead();
 		try {
 			ShopChannelSynchronization css = allChannels.get(Byte.valueOf(world)).get(Byte.valueOf(ch));
-			return new Pair<byte[], Integer>(css.getIpAddress(), Integer.valueOf(css.getPort()));
+			return new Pair<>(css.getIpAddress(), Integer.valueOf(css.getPort()));
 		} finally {
 			unlockRead();
 		}
@@ -76,7 +72,7 @@ public class ShopCrossServerSynchronization {
 		try {
 			Map<Byte, ShopChannelSynchronization> worldChannels = allChannels.get(Byte.valueOf(world));
 			if (worldChannels == null) {
-				worldChannels = new HashMap<Byte, ShopChannelSynchronization>();
+				worldChannels = new HashMap<>();
 				allChannels.put(Byte.valueOf(world), worldChannels);
 				intraworldGroups.put(Byte.valueOf(world), new ShopCenterServerSynchronization(world));
 			}
@@ -95,8 +91,9 @@ public class ShopCrossServerSynchronization {
 			Map<Byte, ShopChannelSynchronization> worldChannels = allChannels.get(Byte.valueOf(world));
 			if (worldChannels != null) {
 				worldChannels.keySet().removeAll(channels);
-				if (worldChannels.isEmpty())
+				if (worldChannels.isEmpty()) {
 					intraworldGroups.remove(Byte.valueOf(world));
+				}
 			}
 		} finally {
 			unlockWrite();
@@ -109,8 +106,9 @@ public class ShopCrossServerSynchronization {
 			Map<Byte, ShopChannelSynchronization> worldChannels = allChannels.get(Byte.valueOf(world));
 			if (worldChannels != null) {
 				ShopChannelSynchronization cpccs = worldChannels.get(Byte.valueOf(channel));
-				if (cpccs != null)
+				if (cpccs != null) {
 					cpccs.setPort(port);
+				}
 			}
 		} finally {
 			unlockWrite();
@@ -149,13 +147,15 @@ public class ShopCrossServerSynchronization {
 
 	public void sendBuddyLogInNotifications(ShopCharacter p) {
 		Collection<BuddyListEntry> buddies = p.getBuddyList().getBuddies();
-		if (buddies.isEmpty())
+		if (buddies.isEmpty()) {
 			return;
+		}
 		int[] recipients = new int[buddies.size()];
 		int i = 0;
 		for (BuddyListEntry buddy : buddies)
-			if (buddy.getStatus() == BuddyListEntry.STATUS_MUTUAL)
+			if (buddy.getStatus() == BuddyListEntry.STATUS_MUTUAL) {
 				recipients[i++] = buddy.getId();
+			}
 		if (recipients.length != i) {
 			//just trim recipients of extra 0s
 			int[] temp = new int[i];
@@ -174,13 +174,15 @@ public class ShopCrossServerSynchronization {
 
 	public void sendBuddyLogOffNotifications(ShopCharacter p) {
 		Collection<BuddyListEntry> buddies = p.getBuddyList().getBuddies();
-		if (buddies.isEmpty())
+		if (buddies.isEmpty()) {
 			return;
+		}
 		int[] recipients = new int[buddies.size()];
 		int i = 0;
 		for (BuddyListEntry buddy : buddies)
-			if (buddy.getStatus() == BuddyListEntry.STATUS_MUTUAL)
+			if (buddy.getStatus() == BuddyListEntry.STATUS_MUTUAL) {
 				recipients[i++] = buddy.getId();
+			}
 		lockRead();
 		try {
 			for (ShopChannelSynchronization scs : allChannels.get(Byte.valueOf(p.getClient().getWorld())).values())

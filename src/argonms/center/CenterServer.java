@@ -33,6 +33,7 @@ import argonms.common.util.DatabaseManager.DatabaseType;
 import argonms.common.util.Scheduler;
 import argonms.common.util.output.LittleEndianByteArrayWriter;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -51,11 +52,7 @@ import java.util.logging.Logger;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
-/**
- *
- * @author GoldenKevin
- */
-public class CenterServer {
+public final class CenterServer {
 	private static final Logger LOG = Logger.getLogger(CenterServer.class.getName());
 
 	private static CenterServer instance;
@@ -69,8 +66,8 @@ public class CenterServer {
 	private final Lock writeLock;
 
 	private CenterServer() {
-		gameServers = new HashMap<Byte, CenterGameInterface>();
-		worldGroups = new HashMap<Byte, IntraworldGroups>();
+		gameServers = new HashMap<>();
+		worldGroups = new HashMap<>();
 		ReentrantReadWriteLock locks = new ReentrantReadWriteLock();
 		readLock = locks.readLock();
 		writeLock = locks.writeLock();
@@ -83,7 +80,7 @@ public class CenterServer {
 		int telnetPort;
 		boolean useNio;
 		try {
-			FileReader fr = new FileReader(System.getProperty("argonms.center.config.file", "center.properties"));
+			FileReader fr = new FileReader(System.getProperty("argonms.center.config.file", "center.properties"), StandardCharsets.UTF_8);
 			prop.read(fr);
 			fr.close();
 			port = prop.getInt("argonms.center.port");
@@ -107,7 +104,7 @@ public class CenterServer {
 		}
 		prop = new PropertiesConfiguration();
 		try {
-			FileReader fr = new FileReader(System.getProperty("argonms.db.config.file", "db.properties"));
+			FileReader fr = new FileReader(System.getProperty("argonms.db.config.file", "db.properties"), StandardCharsets.UTF_8);
 			prop.read(fr);
 			fr.close();
 			DatabaseManager.setProps(prop, false, useNio);
@@ -141,29 +138,32 @@ public class CenterServer {
 
 		Scanner scan = null;
 		try {
-			scan = new Scanner(new FileReader(System.getProperty("argonms.ct.macbanblacklist.file", "macbanblacklist.txt")));
+			scan = new Scanner(new FileReader(System.getProperty("argonms.ct.macbanblacklist.file", "macbanblacklist.txt"), StandardCharsets.UTF_8));
 			CheatTracker.setBlacklistedMacBans(scan);
 		} catch (IOException ex) {
 			LOG.log(Level.SEVERE, "Could not load macban blacklist!", ex);
 			System.exit(3);
 			return;
 		} finally {
-			if (scan != null)
+			if (scan != null) {
 				scan.close();
+			}
 		}
 
 		Scheduler.enable(true, true);
 
 		listener = new RemoteServerListener(authKey, useNio);
-		if (listener.bind(port))
+		if (listener.bind(port)) {
 			LOG.log(Level.INFO, "Center Server is online.");
-		else
+		} else {
 			System.exit(5);
+		}
 		if (telnetPort != -1) {
-			if (new TelnetListener(useNio).bind(telnetPort))
+			if (new TelnetListener(useNio).bind(telnetPort)) {
 				LOG.log(Level.INFO, "Telnet Server online.");
-			else
+			} else {
 				System.exit(5);
+			}
 		}
 	}
 
@@ -174,12 +174,13 @@ public class CenterServer {
 	public List<CenterGameInterface> getAllServersOfWorld(byte world, byte exclusion) {
 		readLock.lock();
 		try {
-			List<CenterGameInterface> servers = new ArrayList<CenterGameInterface>();
+			List<CenterGameInterface> servers = new ArrayList<>();
 			for (Entry<Byte, CenterGameInterface> entry : gameServers.entrySet()) {
 				byte serverId = entry.getKey().byteValue();
 				CenterGameInterface server = entry.getValue();
-				if (serverId != exclusion && server.getWorld() == world)
+				if (serverId != exclusion && server.getWorld() == world) {
 					servers.add(server);
+				}
 			}
 			return servers;
 		} finally {
@@ -205,8 +206,9 @@ public class CenterServer {
 		writeLock.lock();
 		try {
 			gameServers.put(Byte.valueOf(serverId), remote);
-			if (!worldGroups.containsKey(Byte.valueOf(remote.getWorld())))
+			if (!worldGroups.containsKey(Byte.valueOf(remote.getWorld()))) {
 				worldGroups.put(Byte.valueOf(remote.getWorld()), new IntraworldGroups(remote.getWorld()));
+			}
 			remote.serverOnline();
 			notifyGameConnected(serverId, remote.getWorld(), remote.getHost(), remote.getClientPorts());
 			sendConnectedShop(remote);
@@ -260,8 +262,9 @@ public class CenterServer {
 					break;
 				}
 			}
-			if (deleteWorldParty)
+			if (deleteWorldParty) {
 				worldGroups.remove(Byte.valueOf(remote.getWorld()));
+			}
 			gameServers.remove(Byte.valueOf(serverId));
 		} finally {
 			writeLock.unlock();
@@ -289,13 +292,16 @@ public class CenterServer {
 
 		readLock.lock();
 		try {
-			if (loginServer != null && loginServer.isOnline())
+			if (loginServer != null && loginServer.isOnline()) {
 				loginServer.getSession().send(bytes);
-			if (shopServer != null && shopServer.isOnline())
+			}
+			if (shopServer != null && shopServer.isOnline()) {
 				shopServer.getSession().send(bytes);
+			}
 			for (CenterGameInterface gameServer : getAllServersOfWorld(world, serverId))
-				if (gameServer.isOnline())
+				if (gameServer.isOnline()) {
 					gameServer.getSession().send(bytes);
+				}
 		} finally {
 			readLock.unlock();
 		}
@@ -307,13 +313,16 @@ public class CenterServer {
 	private void notifyGameConnected(byte serverId, byte world, String host, Map<Byte, Integer> ports) {
 		byte[] bytes = writeGameConnected(serverId, world, host, ports);
 
-		if (loginServer != null && loginServer.isOnline())
+		if (loginServer != null && loginServer.isOnline()) {
 			loginServer.getSession().send(bytes);
-		if (shopServer != null && shopServer.isOnline())
+		}
+		if (shopServer != null && shopServer.isOnline()) {
 			shopServer.getSession().send(bytes);
+		}
 		for (CenterGameInterface gameServer : getAllServersOfWorld(world, serverId))
-			if (gameServer.isOnline())
+			if (gameServer.isOnline()) {
 				gameServer.getSession().send(bytes);
+			}
 	}
 
 	/**
@@ -326,13 +335,16 @@ public class CenterServer {
 		lew.writeByte(world);
 		byte[] bytes = lew.getBytes();
 
-		if (loginServer != null && loginServer.isOnline())
+		if (loginServer != null && loginServer.isOnline()) {
 			loginServer.getSession().send(bytes);
-		if (shopServer != null && shopServer.isOnline())
+		}
+		if (shopServer != null && shopServer.isOnline()) {
 			shopServer.getSession().send(bytes);
+		}
 		for (CenterGameInterface gameServer : getAllServersOfWorld(world, serverId))
-			if (gameServer.isOnline())
+			if (gameServer.isOnline()) {
 				gameServer.getSession().send(bytes);
+			}
 	}
 
 	/**
@@ -342,8 +354,9 @@ public class CenterServer {
 		byte[] bytes = writeShopConnected(host, port);
 
 		for (CenterGameInterface gameServer : gameServers.values())
-			if (gameServer.isOnline())
+			if (gameServer.isOnline()) {
 				gameServer.getSession().send(bytes);
+			}
 	}
 
 	/**
@@ -355,17 +368,19 @@ public class CenterServer {
 		byte[] bytes = lew.getBytes();
 
 		for (CenterGameInterface gameServer : gameServers.values())
-			if (gameServer.isOnline())
+			if (gameServer.isOnline()) {
 				gameServer.getSession().send(bytes);
+			}
 	}
 
 	/**
 	 * All calls of this method must have acquired either a read or write lock.
 	 */
 	private void sendConnectedShop(CenterGameInterface game) {
-		if (shopServer != null && shopServer.isOnline())
+		if (shopServer != null && shopServer.isOnline()) {
 			game.getSession().send(writeShopConnected(shopServer.getHost(),
-					shopServer.getClientPort()));
+				shopServer.getClientPort()));
+		}
 	}
 
 	/**
@@ -373,9 +388,10 @@ public class CenterServer {
 	 */
 	private void sendConnectedGames(CenterRemoteInterface connected) {
 		for (CenterGameInterface game : gameServers.values())
-			if (game.isOnline())
+			if (game.isOnline()) {
 				connected.getSession().send(writeGameConnected(game.getServerId(),
-						game.getWorld(), game.getHost(), game.getClientPorts()));
+					game.getWorld(), game.getHost(), game.getClientPorts()));
+			}
 	}
 
 	/**
@@ -385,22 +401,26 @@ public class CenterServer {
 		byte ourServerId = connected.getServerId();
 		byte ourWorld = connected.getWorld();
 		for (CenterGameInterface game : gameServers.values())
-			if (game.isOnline() && game.getServerId() != ourServerId && game.getWorld() == ourWorld)
+			if (game.isOnline() && game.getServerId() != ourServerId && game.getWorld() == ourWorld) {
 				connected.getSession().send(writeGameConnected(game.getServerId(),
-						game.getWorld(), game.getHost(), game.getClientPorts()));
+					game.getWorld(), game.getHost(), game.getClientPorts()));
+			}
 	}
 
 	public boolean isServerConnected(byte serverId) {
 		readLock.lock();
 		try {
 			CenterRemoteInterface server = null;
-			if (ServerType.isGame(serverId))
+			if (ServerType.isGame(serverId)) {
 				server = gameServers.get(Byte.valueOf(serverId));
-			if (ServerType.isLogin(serverId))
+			}
+			if (ServerType.isLogin(serverId)) {
 				server = loginServer;
-			if (ServerType.isShop(serverId))
+			}
+			if (ServerType.isShop(serverId)) {
 				server = shopServer;
-			return (server != null && server.isOnline());
+			}
+			return server != null && server.isOnline();
 		} finally {
 			readLock.unlock();
 		}
@@ -409,8 +429,9 @@ public class CenterServer {
 	public void sendToLogin(byte[] message) {
 		readLock.lock();
 		try {
-			if (loginServer != null && loginServer.isOnline())
+			if (loginServer != null && loginServer.isOnline()) {
 				loginServer.getSession().send(message);
+			}
 		} finally {
 			readLock.unlock();
 		}
@@ -420,8 +441,9 @@ public class CenterServer {
 		readLock.lock();
 		try {
 			CenterGameInterface gameServer = gameServers.get(Byte.valueOf(serverId));
-			if (gameServer != null && gameServer.isOnline())
+			if (gameServer != null && gameServer.isOnline()) {
 				gameServer.getSession().send(message);
+			}
 		} finally {
 			readLock.unlock();
 		}
@@ -430,8 +452,9 @@ public class CenterServer {
 	public void sendToShop(byte[] message) {
 		readLock.lock();
 		try {
-			if (shopServer != null && shopServer.isOnline())
+			if (shopServer != null && shopServer.isOnline()) {
 				shopServer.getSession().send(message);
+			}
 		} finally {
 			readLock.unlock();
 		}

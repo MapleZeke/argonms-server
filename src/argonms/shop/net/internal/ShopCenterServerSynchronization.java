@@ -27,10 +27,6 @@ import argonms.common.util.output.LittleEndianWriter;
 import argonms.shop.ShopServer;
 import argonms.shop.character.ShopCharacter;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ShopCenterServerSynchronization {
 	private final byte world;
 
@@ -49,9 +45,6 @@ public class ShopCenterServerSynchronization {
 	}
 
 	public void receivedCenterServerSynchronizationPacket(LittleEndianReader packet) {
-		switch (packet.readByte()) {
-			
-		}
 	}
 
 	public void sendPartyMemberOnline(ShopCharacter p) {

@@ -20,6 +20,7 @@ package argonms.common.util.output;
 
 import java.awt.Point;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Write data to a stream using little endian byte ordering for
@@ -27,11 +28,10 @@ import java.nio.charset.Charset;
  * Characters (and character strings) are encoded in ASCII.
  * Each method returns the instance of LittleEndianWriter it was called on to
  * allow method chaining (in turn, implementing a fluent interface).
- * @author GoldenKevin
  * @version 1.1
  */
 public abstract class LittleEndianWriter {
-	private static final Charset asciiEncoder = Charset.forName("US-ASCII");
+	private static final Charset asciiEncoder = StandardCharsets.US_ASCII;
 
 	protected abstract void write(byte b);
 	protected abstract void write(byte... bytes);
@@ -85,8 +85,9 @@ public abstract class LittleEndianWriter {
 	}
 
 	public LittleEndianWriter writeNullTerminatedString(String str) {
-		if (str != null)
+		if (str != null) {
 			writeBytes(str.getBytes(asciiEncoder));
+		}
 		writeChar('\0');
 		return this;
 	}

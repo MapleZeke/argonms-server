@@ -26,25 +26,22 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-/**
- *
- * @author GoldenKevin
- */
 public class MapFactory {
-	private ConcurrentMap<Integer, GameMap> maps;
-	private Set<GameMap> instanceMaps;
+	private final ConcurrentMap<Integer, GameMap> maps;
+	private final Set<GameMap> instanceMaps;
 
 	public MapFactory() {
-		maps = new ConcurrentHashMap<Integer, GameMap>();
+		maps = new ConcurrentHashMap<>();
 		instanceMaps = Collections.newSetFromMap(new ConcurrentHashMap<GameMap, Boolean>());
 	}
 
 	private GameMap newMap(int mapId) {
 		MapStats stats = MapDataLoader.getInstance().getMapStats(mapId);
-		if (stats == null)
+		if (stats == null) {
 			return null;
-		else
+		} else {
 			return new GameMap(stats);
+		}
 	}
 
 	public GameMap getMap(int mapid) {
@@ -52,14 +49,16 @@ public class MapFactory {
 		GameMap map = maps.get(oId);
 		if (map == null) {
 			map = newMap(mapid);
-			if (map == null)
+			if (map == null) {
 				return null;
+			}
 
 			GameMap existing = maps.putIfAbsent(oId, map);
-			if (existing != null)
+			if (existing != null) {
 				//some other thread was loading the same map and beat us in
 				//instantiating it. no big deal, just use their instance instead
 				map = existing;
+			}
 		}
 		return map;
 	}

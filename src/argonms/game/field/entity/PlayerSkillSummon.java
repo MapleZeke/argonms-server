@@ -26,10 +26,6 @@ import argonms.game.loading.skill.SkillStats;
 import argonms.game.net.external.GamePackets;
 import java.awt.Point;
 
-/**
- *
- * @author GoldenKevin
- */
 public class PlayerSkillSummon extends AbstractEntity {
 	private final byte summonType; //0 = stationary, 1 = follow, 2/4 = only tele follow, 3 = bird follow
 	private final int ownerEid;

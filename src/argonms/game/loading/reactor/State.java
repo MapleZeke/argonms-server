@@ -20,10 +20,6 @@ package argonms.game.loading.reactor;
 
 import java.awt.Point;
 
-/**
- *
- * @author GoldenKevin
- */
 public class State {
 	private byte type;
 	private byte nextState;
@@ -86,7 +82,7 @@ public class State {
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		boolean itemEvent = (type == 100);
+		boolean itemEvent = type == 100;
 		builder.append("type=").append(type).append(" (itemEvent=").append(itemEvent).append(')');
 		builder.append(", nextState=").append(nextState);
 		if (itemEvent) {

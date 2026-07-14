@@ -25,10 +25,6 @@ import java.awt.Rectangle;
 import java.util.EnumSet;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public interface StatusEffectsData {
 	public enum EffectSource { ITEM, PLAYER_SKILL, MOB_SKILL }
 
@@ -66,8 +62,9 @@ public interface StatusEffectsData {
 		}
 
 		public void setDuration(int time) {
-			if (time != 0) //the only buff with time of 0 is HIDE as far as I know.
+			if (time != 0) { //the only buff with time of 0 is HIDE as far as I know.
 				this.duration = time;
+			}
 		}
 
 		public void setWatk(short pad) {

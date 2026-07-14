@@ -32,10 +32,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class McdbItemDataLoader extends ItemDataLoader {
 	private static final Logger LOG = Logger.getLogger(McdbItemDataLoader.class.getName());
 
@@ -49,17 +45,19 @@ public class McdbItemDataLoader extends ItemDataLoader {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		String query;
-		if (InventoryTools.isEquip(itemid))
+		if (InventoryTools.isEquip(itemid)) {
 			query = "SELECT * FROM `equipdata` WHERE `equipid` = ?";
-		else
+		} else {
 			query = "SELECT * FROM `itemdata` WHERE `itemid` = ?";
+		}
 		try {
 			con = DatabaseManager.getConnection(DatabaseType.WZ);
 			ps = con.prepareStatement(query);
 			ps.setInt(1, itemid);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				doWork(itemid, rs, con);
+			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not read MCDB data for item " + itemid, e);
 		} finally {
@@ -77,15 +75,17 @@ public class McdbItemDataLoader extends ItemDataLoader {
 			con = DatabaseManager.getConnection(DatabaseType.WZ);
 			ps = con.prepareStatement("SELECT * FROM `itemdata`");
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				doWork(rs.getInt("itemid"), rs, con);
+			}
 			rs.close();
 			ps.close();
 
 			ps = con.prepareStatement("SELECT * FROM `equipdata`");
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				doWork(rs.getInt("equipid"), rs, con);
+			}
 			return true;
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load all item data from MCDB.", ex);
@@ -97,24 +97,27 @@ public class McdbItemDataLoader extends ItemDataLoader {
 
 	@Override
 	public boolean canLoad(int itemid) {
-		if (loaded.contains(Integer.valueOf(itemid)))
+		if (loaded.contains(Integer.valueOf(itemid))) {
 			return true;
+		}
 		Connection con = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		boolean exists = false;
 		String query;
-		if (InventoryTools.isEquip(itemid))
+		if (InventoryTools.isEquip(itemid)) {
 			query = "SELECT * FROM `equipdata` WHERE `equipid` = ?";
-		else
+		} else {
 			query = "SELECT * FROM `itemdata` WHERE `itemid` = ?";
+		}
 		try {
 			con = DatabaseManager.getConnection(DatabaseType.WZ);
 			ps = con.prepareStatement(query);
 			ps.setInt(1, itemid);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				exists = true;
+			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not use MCDB to determine whether item " + itemid + " is valid.", e);
 		} finally {
@@ -128,7 +131,7 @@ public class McdbItemDataLoader extends ItemDataLoader {
 		Integer oId = itemid;
 		wholePrice.put(oId, Integer.valueOf(rs.getInt("price")));
 		short[] incStats = new short[16];
-		if (cat.equals("Equip")) {
+		if ("Equip".equals(cat)) {
 			incStats[StatEffect.STR] = rs.getShort("str");
 			incStats[StatEffect.DEX] = rs.getShort("dex");
 			incStats[StatEffect.INT] = rs.getShort("int");
@@ -146,23 +149,25 @@ public class McdbItemDataLoader extends ItemDataLoader {
 
 			tuc.put(oId, Byte.valueOf(rs.getByte("slots")));
 
-			if (InventoryTools.getCharCat(itemid).equals("TamingMob")) {
+			if ("TamingMob".equals(InventoryTools.getCharCat(itemid))) {
 				byte tMobId = rs.getByte("tmob");
-				if (tMobId != 0)
+				if (tMobId != 0) {
 					tamingMobIds.put(oId, tMobId);
+				}
 			}
 		} else {
 			slotMax.put(oId, Short.valueOf(rs.getShort("maxslot")));
 
-			if (cat.equals("Pet")) {
+			if ("Pet".equals(cat)) {
 				PreparedStatement ps = null;
 				ResultSet prs = null;
 				try {
 					ps = con.prepareStatement("SELECT `hunger` FROM `petdata` WHERE `id` = ?");
 					ps.setInt(1, itemid);
 					prs = ps.executeQuery();
-					if (prs.next())
+					if (prs.next()) {
 						petHunger.put(oId, Integer.valueOf(prs.getInt(1)));
+					}
 					prs.close();
 					ps.close();
 
@@ -170,9 +175,10 @@ public class McdbItemDataLoader extends ItemDataLoader {
 					ps.setInt(1, itemid);
 					prs = ps.executeQuery();
 					if (prs.next()) {
-						if (!petCommands.containsKey(oId))
+						if (!petCommands.containsKey(oId)) {
 							petCommands.put(oId, new HashMap<Byte, int[]>());
-						petCommands.get(oId).put(Byte.valueOf(prs.getByte(1)), new int[] { prs.getInt(3), prs.getInt(2) });
+						}
+						petCommands.get(oId).put(Byte.valueOf(prs.getByte(1)), new int[]{prs.getInt(3), prs.getInt(2)});
 					}
 				} catch (SQLException e) {
 					throw new SQLException("Failed to load pet specific data of item " + itemid, e);
@@ -180,7 +186,7 @@ public class McdbItemDataLoader extends ItemDataLoader {
 					DatabaseManager.cleanup(DatabaseType.WZ, prs, ps, null);
 				}
 			}
-			if (cat.equals("Consume")) {
+			if ("Consume".equals(cat)) {
 				incStats[StatEffect.STR] = rs.getShort("istr");
 				incStats[StatEffect.DEX] = rs.getShort("idex");
 				incStats[StatEffect.INT] = rs.getShort("iint");
@@ -196,59 +202,70 @@ public class McdbItemDataLoader extends ItemDataLoader {
 				incStats[StatEffect.Speed] = rs.getShort("ispeed");
 				incStats[StatEffect.Jump] = rs.getShort("ijump");
 
-				ArrayList<int[]> mobsToSpawn = new ArrayList<int[]>();
+				ArrayList<int[]> mobsToSpawn = new ArrayList<>();
 				PreparedStatement ps = null;
 				ResultSet urs = null;
 				try {
 					ps = con.prepareStatement("SELECT `mobid`,`chance` FROM `itemsummondata` WHERE `itemid` = ?");
 					ps.setInt(1, oId.intValue());
 					urs = ps.executeQuery();
-					while (urs.next())
-						mobsToSpawn.add(new int[] { urs.getInt(1), urs.getInt(2) } );
+					while (urs.next()) {
+						mobsToSpawn.add(new int[]{urs.getInt(1), urs.getInt(2)});
+					}
 				} catch (SQLException e) {
 					throw new SQLException("Failed to load summoning bag specific data of item " + itemid, e);
 				} finally {
 					DatabaseManager.cleanup(DatabaseType.WZ, urs, ps, null);
 				}
-				if (!mobsToSpawn.isEmpty())
+				if (!mobsToSpawn.isEmpty()) {
 					summons.put(oId, mobsToSpawn);
+				}
 
 				int chance = rs.getInt("success");
-				if (chance != 0)
+				if (chance != 0) {
 					success.put(oId, Integer.valueOf(chance));
+				}
 				chance = rs.getInt("cursed");
-				if (chance != 0)
+				if (chance != 0) {
 					cursed.put(oId, Integer.valueOf(chance));
-				if (rs.getBoolean("randstat"))
+				}
+				if (rs.getBoolean("randstat")) {
 					randStat.add(oId);
-				if (rs.getBoolean("recover"))
+				}
+				if (rs.getBoolean("recover")) {
 					recover.add(oId);
-				if (itemid == 2040727) //TODO: hackish
+				}
+				if (itemid == 2040727) { //TODO: hackish
 					preventSlip.add(oId);
-				if (itemid == 2041058) //TODO: hackish
+				}
+				if (itemid == 2041058) { //TODO: hackish
 					warmSupport.add(oId);
+				}
 
-				List<Integer> skillIds = new ArrayList<Integer>();
+				List<Integer> skillIds = new ArrayList<>();
 				try {
 					ps = con.prepareStatement("SELECT `skillid` FROM `itemskilldata` WHERE `itemid` = ?");
 					ps.setInt(1, itemid);
 					urs = ps.executeQuery();
-					while (urs.next())
+					while (urs.next()) {
 						skillIds.add(Integer.valueOf(urs.getInt(1)));
+					}
 				} catch (SQLException e) {
 					throw new SQLException("Failed to load skill book specific data of item " + itemid, e);
 				} finally {
 					DatabaseManager.cleanup(DatabaseType.WZ, urs, ps, null);
 				}
-				if (!skillIds.isEmpty())
+				if (!skillIds.isEmpty()) {
 					skills.put(oId, skillIds);
+				}
 
 				try {
 					ps = con.prepareStatement("SELECT `price` FROM `rechargedata` WHERE `itemid` = ?");
 					ps.setInt(1, itemid);
 					urs = ps.executeQuery();
-					if (urs.next())
+					if (urs.next()) {
 						unitPrice.put(oId, Double.valueOf(urs.getDouble(1)));
+					}
 				} catch (SQLException e) {
 					throw new SQLException("Failed to load projectile specific data of item " + itemid, e);
 				} finally {
@@ -371,9 +388,11 @@ public class McdbItemDataLoader extends ItemDataLoader {
 				break;
 			}
 		}
-		if (rs.getInt("notrade") != 0)
+		if (rs.getInt("notrade") != 0) {
 			tradeBlocked.add(oId);
-		if (rs.getInt("quest") != 0)
+		}
+		if (rs.getInt("quest") != 0) {
 			questItem.add(oId);
+		}
 	}
 }

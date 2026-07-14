@@ -21,20 +21,17 @@ package argonms.common.net.internal;
 /**
  * Opcodes for packets sent from a remote server and received on the center
  * server.
- * @author GoldenKevin
  */
 public final class RemoteCenterOps {
-	public static final byte
-		AUTH = 0x00,
-		PING = 0x01,
-		PONG = 0x02,
-		ONLINE = 0x03,
-		POPULATION_CHANGED = 0x04,
-		MODIFY_CHANNEL_PORT = 0x05,
-		CROSS_CHANNEL_SYNCHRONIZATION = 0x06,
-		SHOP_CHANNEL_SHOP_SYNCHRONIZATION = 0x07,
-		CENTER_SERVER_SYNCHRONIZATION = 0x08
-	;
+	public static final byte AUTH = 0x00;
+	public static final byte PING = 0x01;
+	public static final byte PONG = 0x02;
+	public static final byte ONLINE = 0x03;
+	public static final byte POPULATION_CHANGED = 0x04;
+	public static final byte MODIFY_CHANNEL_PORT = 0x05;
+	public static final byte CROSS_CHANNEL_SYNCHRONIZATION = 0x06;
+	public static final byte SHOP_CHANNEL_SHOP_SYNCHRONIZATION = 0x07;
+	public static final byte CENTER_SERVER_SYNCHRONIZATION = 0x08;
 
 	private RemoteCenterOps() {
 		//uninstantiable...

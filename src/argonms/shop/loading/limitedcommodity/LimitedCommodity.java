@@ -21,26 +21,26 @@ package argonms.shop.loading.limitedcommodity;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- * @author GoldenKevin
- */
 public class LimitedCommodity {
 	private final List<Number> serialNumbers;
-	private int initial, remaining;
-	private int beginDate, endDate;
-	private int beginHour, endHour;
+	private int initial;
+	private int remaining;
+	private int beginDate;
+	private int endDate;
+	private int beginHour;
+	private int endHour;
 
 	public LimitedCommodity() {
-		serialNumbers = new ArrayList<Number>();
+		serialNumbers = new ArrayList<>();
 	}
 
 	public void addSerialNumbers(List<?> sns) {
 		for (Object sn : sns) {
-			if (sn instanceof Number) {
-				serialNumbers.add((Number) sn);
-				if (serialNumbers.size() == 10)
+			if (sn instanceof Number number) {
+				serialNumbers.add(number);
+				if (serialNumbers.size() == 10) {
 					break;
+				}
 			}
 		}
 	}

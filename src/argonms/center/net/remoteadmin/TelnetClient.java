@@ -32,10 +32,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class TelnetClient implements SessionDataModel {
 	private static final Logger LOG = Logger.getLogger(TelnetClient.class.getName());
 
@@ -43,27 +39,23 @@ public class TelnetClient implements SessionDataModel {
 
 	private enum TelnetOptions { ECHO }
 
-	public static final byte
-		IAC = (byte) 0xFF,
-		DONT = (byte) 0xFE,
-		DO = (byte) 0xFD,
-		WONT = (byte) 0xFC,
-		WILL = (byte) 0xFB,
-		SB = (byte) 0xFA,
-		SE = (byte) 0xF0
-	;
+	public static final byte IAC = (byte) 0xFF;
+	public static final byte DONT = (byte) 0xFE;
+	public static final byte DO = (byte) 0xFD;
+	public static final byte WONT = (byte) 0xFC;
+	public static final byte WILL = (byte) 0xFB;
+	public static final byte SB = (byte) 0xFA;
+	public static final byte SE = (byte) 0xF0;
 
-	public static final byte
-		BINARY = 0,
-		ECHO = 1,
-		SUPPRESS_GO_AHEAD = 3,
-		TERMINAL_TYPE = 24,
-		NAWS = 31,
-		TERMINAL_SPEED = 32,
-		LINEMODE = 34,
-		AUTHENTICATION = 37,
-		NEW_ENVIRON = 39
-	;
+	public static final byte BINARY = 0;
+	public static final byte ECHO = 1;
+	public static final byte SUPPRESS_GO_AHEAD = 3;
+	public static final byte TERMINAL_TYPE = 24;
+	public static final byte NAWS = 31;
+	public static final byte TERMINAL_SPEED = 32;
+	public static final byte LINEMODE = 34;
+	public static final byte AUTHENTICATION = 37;
+	public static final byte NEW_ENVIRON = 39;
 
 	private final Set<TelnetOptions> flags;
 	private TelnetSession session;
@@ -80,7 +72,7 @@ public class TelnetClient implements SessionDataModel {
 		//just to make sure - may have established this earlier during the
 		//handshake, but we sure as hell don't want the client to local echo
 		//when the password comes up
-		session.send(new byte[] { IAC, WILL, ECHO });
+		session.send(new byte[]{IAC, WILL, ECHO});
 
 		session.send("Please use the same credentials as your in-game account.\r\n");
 		session.send("Login: ");
@@ -95,7 +87,7 @@ public class TelnetClient implements SessionDataModel {
 				switch (array[index + 1]) {
 					case LINEMODE:
 						flags.remove(TelnetOptions.ECHO);
-						session.send(new byte[] { IAC, DO, LINEMODE });
+						session.send(new byte[]{IAC, DO, LINEMODE});
 						break;
 					case TERMINAL_TYPE:
 						break;
@@ -106,29 +98,24 @@ public class TelnetClient implements SessionDataModel {
 					case NEW_ENVIRON:
 						break;
 					case SUPPRESS_GO_AHEAD:
-						session.send(new byte[] { IAC, DO, SUPPRESS_GO_AHEAD });
+						session.send(new byte[]{IAC, DO, SUPPRESS_GO_AHEAD});
 						break;
 				}
 				break;
 			case DO:
 				delta++;
-				switch (array[index + 1]) {
-					case ECHO:
-						flags.add(TelnetOptions.ECHO);
-						session.send(new byte[] { IAC, WILL, ECHO });
-						break;
-					case SUPPRESS_GO_AHEAD:
-						session.send(new byte[] { IAC, WILL, SUPPRESS_GO_AHEAD });
-						break;
+				if (array[index + 1] == ECHO) {
+					flags.add(TelnetOptions.ECHO);
+					session.send(new byte[]{IAC, WILL, ECHO});
+				} else if (array[index + 1] == SUPPRESS_GO_AHEAD) {
+					session.send(new byte[]{IAC, WILL, SUPPRESS_GO_AHEAD});
 				}
 				break;
 			case DONT:
 				delta++;
-				switch (array[index + 1]) {
-					case ECHO:
-						flags.remove(TelnetOptions.ECHO);
-						session.send(new byte[] { IAC, WONT, ECHO });
-						break;
+				if (array[index + 1] == ECHO) {
+					flags.remove(TelnetOptions.ECHO);
+					session.send(new byte[]{IAC, WONT, ECHO});
 				}
 				break;
 		}
@@ -188,8 +175,9 @@ public class TelnetClient implements SessionDataModel {
 					irs = ips.executeQuery();
 					if (irs.next()) {
 						long thisBanExpire = irs.getLong(1);
-						if (thisBanExpire > banExpire)
+						if (thisBanExpire > banExpire) {
 							banExpire = thisBanExpire;
+						}
 					}
 				} finally {
 					DatabaseManager.cleanup(DatabaseType.STATE, irs, ips, null);
@@ -216,7 +204,9 @@ public class TelnetClient implements SessionDataModel {
 				byte[] salt = rs.getBytes(3);
 				byte gm = rs.getByte(4);
 
-				boolean correct, hashUpdate, hasSalt = (salt != null && salt.length != 0);
+				boolean correct;
+				boolean hashUpdate;
+				boolean hasSalt = salt != null && salt.length != 0;
 				switch (passhash.length) {
 					case 20: //sha-1 (160 bits = 20 bytes)
 						correct = hasSalt && HashFunctions.checkSaltedSha1Hash(passhash, pwd, salt) || !hasSalt && HashFunctions.checkSha1Hash(passhash, pwd);

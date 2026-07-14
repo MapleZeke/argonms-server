@@ -32,19 +32,13 @@ import argonms.game.field.MapEntity.EntityType;
 import argonms.game.net.external.GameClient;
 import java.util.List;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class PersonalInfoHandler {
-	private static final byte
-		FAME_OPERATION_RESPONSE_SUCCESS = 0,
-		FAME_OPERATION_RESPONSE_NOT_IN_MAP = 1,
-		FAME_OPERATION_RESPONSE_UNDER_LEVEL = 2,
-		FAME_OPEARTION_RESPONSE_NOT_TODAY = 3,
-		FAME_OPERATION_RESPONSE_NOT_THIS_MONTH = 4,
-		FAME_OPERATION_FAME_CHANGED = 5
-	;
+	private static final byte FAME_OPERATION_RESPONSE_SUCCESS = 0;
+	private static final byte FAME_OPERATION_RESPONSE_NOT_IN_MAP = 1;
+	private static final byte FAME_OPERATION_RESPONSE_UNDER_LEVEL = 2;
+	private static final byte FAME_OPEARTION_RESPONSE_NOT_TODAY = 3;
+	private static final byte FAME_OPERATION_RESPONSE_NOT_THIS_MONTH = 4;
+	private static final byte FAME_OPERATION_FAME_CHANGED = 5;
 
 	public static void handleFameUp(LittleEndianReader packet, GameClient gc) {
 		GameCharacter self = gc.getPlayer();
@@ -71,10 +65,11 @@ public final class PersonalInfoHandler {
 			gc.getSession().send(writeFameError(FAME_OPERATION_RESPONSE_NOT_THIS_MONTH));
 			return;
 		}
-		if (add)
+		if (add) {
 			receiver.setFame((short) (receiver.getFame() + 1));
-		else
+		} else {
 			receiver.setFame((short) (receiver.getFame() - 1));
+		}
 		self.gaveFame(receiver.getId());
 		gc.getSession().send(writeFameSuccess(add, receiver.getName(), receiver.getFame()));
 		receiver.getClient().getSession().send(writeFameChanged(add, self.getName()));
@@ -83,8 +78,9 @@ public final class PersonalInfoHandler {
 	public static void handleOpenInfo(LittleEndianReader packet, GameClient gc) {
 		/*int tickCount = */packet.readInt();
 		GameCharacter p = (GameCharacter) gc.getPlayer().getMap().getEntityById(EntityType.PLAYER, packet.readInt());
-		if (p != null)
+		if (p != null) {
 			gc.getSession().send(writePersonalInfo(p, packet.readBool()));
+		}
 	}
 
 	private static byte[] writeFameSuccess(boolean add, String to, short newFame) {

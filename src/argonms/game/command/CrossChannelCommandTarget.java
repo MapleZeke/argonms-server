@@ -30,12 +30,9 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CrossChannelCommandTarget implements CommandTarget {
-	private final byte localChannel, targetChannel;
+	private final byte localChannel;
+	private final byte targetChannel;
 	private final String targetName;
 
 	public CrossChannelCommandTarget(byte localChannel, byte targetChannel, String targetName) {
@@ -170,7 +167,7 @@ public class CrossChannelCommandTarget implements CommandTarget {
 
 	public static List<CharacterManipulation> deserialize(LittleEndianReader packet) {
 		short count = packet.readShort();
-		List<CharacterManipulation> updates = new ArrayList<CharacterManipulation>(count);
+		List<CharacterManipulation> updates = new ArrayList<>(count);
 		for (int i = 0; i < count; i++) {
 			CharacterManipulationKey key = CharacterManipulationKey.valueOf(packet.readByte());
 			Object value = null;
@@ -242,8 +239,9 @@ public class CrossChannelCommandTarget implements CommandTarget {
 					long mask = packet.readLong();
 					Set<PlayerStatusEffect> values = EnumSet.noneOf(PlayerStatusEffect.class);
 					for (PlayerStatusEffect e : PlayerStatusEffect.values())
-						if ((mask & e.longValue()) != 0)
+						if ((mask & e.longValue()) != 0) {
 							values.add(e);
+						}
 					value = values.toArray(new PlayerStatusEffect[values.size()]);
 					break;
 				}

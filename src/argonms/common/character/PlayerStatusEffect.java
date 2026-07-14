@@ -20,10 +20,6 @@ package argonms.common.character;
 
 //if you're adding on to this, PLEASE keep it sorted by the mask. you'll
 //break a hell of a lot of routines if you don't keep it in order.
-/**
- *
- * @author GoldenKevin
- */
 public enum PlayerStatusEffect { //byte numbers are from left to right
 	//byte 1
 	SLOW			(0x0000000000000001L, (byte) 5),

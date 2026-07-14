@@ -22,10 +22,6 @@ import argonms.common.loading.DataFileType;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class CashShopDataLoader {
 	private static CashShopDataLoader instance;
 
@@ -33,8 +29,8 @@ public abstract class CashShopDataLoader {
 	protected final Map<Integer, int[]> packages;
 
 	protected CashShopDataLoader() {
-		commodities = new HashMap<Integer, Commodity>();
-		packages = new HashMap<Integer, int[]>();
+		commodities = new HashMap<>();
+		packages = new HashMap<>();
 	}
 
 	public abstract boolean loadAll();
@@ -53,13 +49,10 @@ public abstract class CashShopDataLoader {
 
 	public static void setInstance(DataFileType wzType, String wzPath) {
 		if (instance == null) {
-			switch (wzType) {
-				case KVJ:
-					instance = new KvjCashShopDataLoader(wzPath);
-					break;
-				default:
-					instance = new DefaultCashShopDataLoader();
-					break;
+			if (wzType == DataFileType.KVJ) {
+				instance = new KvjCashShopDataLoader(wzPath);
+			} else {
+				instance = new DefaultCashShopDataLoader();
 			}
 		}
 	}

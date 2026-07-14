@@ -29,10 +29,6 @@ import java.awt.Rectangle;
 import java.util.EnumSet;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public class PlayerSkillEffectsData extends BuffsData implements MonsterStatusEffectsData {
 	private final byte level;
 	private short mpCon;
@@ -56,7 +52,8 @@ public class PlayerSkillEffectsData extends BuffsData implements MonsterStatusEf
 	private short moneyCon;
 	private final Set<MonsterStatusEffect> monsterDiseases;
 	private boolean isFreeze;
-	private short hp, mp;
+	private short hp;
+	private short mp;
 
 	protected PlayerSkillEffectsData(int skillid, byte level) {
 		super(skillid);
@@ -424,8 +421,9 @@ public class PlayerSkillEffectsData extends BuffsData implements MonsterStatusEf
 	@Override
 	public int getDuration() {
 		//freeze skills have weird times...
-		if (isFreeze)
+		if (isFreeze) {
 			return super.getDuration() * 2;
+		}
 		return super.getDuration();
 	}
 
@@ -457,7 +455,10 @@ public class PlayerSkillEffectsData extends BuffsData implements MonsterStatusEf
 
 	@Override
 	public Rectangle getBoundingBox(Point posFrom, boolean facingLeft) {
-		int ltx, lty, rbx, rby;
+		int ltx;
+		int lty;
+		int rbx;
+		int rby;
 		if (facingLeft) {
 			ltx = lt.x + posFrom.x;
 			rbx = rb.x + posFrom.x;
@@ -467,8 +468,7 @@ public class PlayerSkillEffectsData extends BuffsData implements MonsterStatusEf
 		}
 		lty = lt.y + posFrom.y;
 		rby = rb.y + posFrom.y;
-		Rectangle bounds = new Rectangle(ltx, lty, rbx - ltx, rby - lty);
-		return bounds;
+		return new Rectangle(ltx, lty, rbx - ltx, rby - lty);
 	}
 
 	public byte getMobCount() {

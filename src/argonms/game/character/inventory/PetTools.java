@@ -32,24 +32,22 @@ import argonms.game.net.external.GamePackets;
 import java.util.List;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class PetTools {
 	private static final byte MAX_PET_LEVEL = 30;
 
 	private static short getInventorySlot(GameCharacter p, long uniqueId) {
 		for (Map.Entry<Short, InventorySlot> slot : p.getInventory(Inventory.InventoryType.CASH).getAll().entrySet())
-			if (slot.getValue().getUniqueId() == uniqueId)
+			if (slot.getValue().getUniqueId() == uniqueId) {
 				return slot.getKey().shortValue();
+			}
 
 		return 0;
 	}
 
 	public static boolean gainCloseness(GameCharacter p, byte petSlot, Pet pet, int gain) {
-		if (gain == 0)
+		if (gain == 0) {
 			return false;
+		}
 
 		int newCloseness = (int) pet.getCloseness() + gain;
 		newCloseness = checkForLevelUp(p, petSlot, pet, newCloseness);
@@ -59,16 +57,19 @@ public class PetTools {
 	}
 
 	private static int checkForLevelUp(GameCharacter p, byte petSlot, Pet pet, int closeness) {
-		if (closeness >= ExpTables.getClosenessForPetLevel(MAX_PET_LEVEL - 1))
+		if (closeness >= ExpTables.getClosenessForPetLevel(MAX_PET_LEVEL - 1)) {
 			closeness = ExpTables.getClosenessForPetLevel(MAX_PET_LEVEL - 1);
-		if (pet.getLevel() >= MAX_PET_LEVEL || closeness < ExpTables.getClosenessForPetLevel(pet.getLevel()))
+		}
+		if (pet.getLevel() >= MAX_PET_LEVEL || closeness < ExpTables.getClosenessForPetLevel(pet.getLevel())) {
 			return closeness;
+		}
 
 		boolean singleLevelOnly = !GameServer.getVariables().doMultiLevel();
 		do {
 			pet.setLevel((byte) (pet.getLevel() + 1));
-			if (singleLevelOnly && pet.getLevel() < MAX_PET_LEVEL && closeness >= ExpTables.getClosenessForPetLevel(pet.getLevel()))
+			if (singleLevelOnly && pet.getLevel() < MAX_PET_LEVEL && closeness >= ExpTables.getClosenessForPetLevel(pet.getLevel())) {
 				closeness = ExpTables.getClosenessForPetLevel(pet.getLevel()) - 1;
+			}
 		} while (pet.getLevel() < MAX_PET_LEVEL && closeness >= ExpTables.getClosenessForPetLevel(pet.getLevel()));
 
 		p.getClient().getSession().send(GamePackets.writeShowPetLevelUp(petSlot));
@@ -78,16 +79,19 @@ public class PetTools {
 	}
 
 	private static int checkForLevelDown(GameCharacter p, Pet pet, int closeness) {
-		if (closeness <= 0)
+		if (closeness <= 0) {
 			closeness = 0;
-		if (pet.getLevel() <= 1 || closeness >= ExpTables.getClosenessForPetLevel(pet.getLevel() - 1))
+		}
+		if (pet.getLevel() <= 1 || closeness >= ExpTables.getClosenessForPetLevel(pet.getLevel() - 1)) {
 			return closeness;
+		}
 
 		boolean singleLevelOnly = !GameServer.getVariables().doMultiLevel();
 		do {
 			pet.setLevel((byte) (pet.getLevel() - 1));
-			if (singleLevelOnly && pet.getLevel() > 1 && closeness < ExpTables.getClosenessForPetLevel(pet.getLevel() - 1))
+			if (singleLevelOnly && pet.getLevel() > 1 && closeness < ExpTables.getClosenessForPetLevel(pet.getLevel() - 1)) {
 				closeness = ExpTables.getClosenessForPetLevel(pet.getLevel() - 1);
+			}
 		} while (pet.getLevel() > 1 && closeness < ExpTables.getClosenessForPetLevel(pet.getLevel() - 1));
 
 		return closeness;
@@ -106,8 +110,9 @@ public class PetTools {
 
 	public static Pet revivePet(GameCharacter p, long uniqueId) {
 		Pet pet = (Pet) p.getInventory(Inventory.InventoryType.CASH).get(getInventorySlot(p, uniqueId));
-		if (pet == null)
+		if (pet == null) {
 			return null;
+		}
 
 		pet.setExpiration(System.currentTimeMillis() + (ItemDataLoader.getInstance().getPetPeriod(pet.getDataId()) * 1000L * 60 * 60 * 24));	
 		return pet;
@@ -115,14 +120,16 @@ public class PetTools {
 
 	public static void evolvePet(GameCharacter p, Pet pet, byte petSlot) {
 		List<int[]> evolveChoices = ItemDataLoader.getInstance().getPetEvolveChoices(pet.getDataId());
-		if (evolveChoices == null)
+		if (evolveChoices == null) {
 			return;
+		}
 
 		int itemId = -1;
 		int sumItemProbs = 0;
 		for (int[] evolveChoice : evolveChoices)
 			sumItemProbs += evolveChoice[1];
-		int random = Rng.getGenerator().nextInt(sumItemProbs), runningProbs = 0;
+		int random = Rng.getGenerator().nextInt(sumItemProbs);
+		int runningProbs = 0;
 		for (int[] evolveChoice : evolveChoices) {
 			if (random < (runningProbs += evolveChoice[1])) {
 				itemId = evolveChoice[0];
@@ -132,11 +139,13 @@ public class PetTools {
 
 		boolean usesDefaultName = pet.getName().equals(StringDataLoader.getInstance().getItemNameFromId(pet.getDataId()));
 		pet.setDataId(itemId);
-		if (usesDefaultName)
+		if (usesDefaultName) {
 			pet.setName(StringDataLoader.getInstance().getItemNameFromId(itemId));
+		}
 
-		if (petSlot != -1)
+		if (petSlot != -1) {
 			p.getMap().sendToAll(GamePackets.writeShowPet(pet, p.getId(), petSlot, true, PetTools.hasLabelRing(p, petSlot), PetTools.hasQuoteRing(p, petSlot)));
+		}
 	}
 
 	public static boolean hasLabelRing(GameCharacter p, byte pos) {
@@ -173,5 +182,8 @@ public class PetTools {
 
 	public static void updatePet(GameCharacter p, Pet pet) {
 		p.getClient().getSession().send(CommonPackets.writeInventoryUpdatePet(getInventorySlot(p, pet.getUniqueId()), pet));
+	}
+
+	private PetTools() {
 	}
 }

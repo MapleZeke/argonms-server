@@ -28,15 +28,11 @@ import argonms.common.util.output.LittleEndianWriter;
 import argonms.game.character.PlayerContinuation;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ChannelShopSynchronization extends ChannelOrShopSynchronization {
 	private final byte localWorld;
 	private final byte localCh;
 	private final byte[] ipAddress;
-	private int port;
+	private final int port;
 
 	public ChannelShopSynchronization(CrossServerSynchronization self, byte localWorld, byte localCh, byte[] ipAddress, int port) {
 		super(self, ChannelSynchronizationOps.CHANNEL_CASH_SHOP);
@@ -107,17 +103,21 @@ public class ChannelShopSynchronization extends ChannelOrShopSynchronization {
 		PlayerContinuation context = new PlayerContinuation();
 		int playerId = packet.readInt();
 		byte count = packet.readByte();
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++) {
 			context.addItemBuff(packet.readInt(), packet.readLong());
+		}
 		count = packet.readByte();
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++) {
 			context.addSkillBuff(packet.readInt(), packet.readByte(), packet.readLong());
+		}
 		count = packet.readByte();
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++) {
 			context.addMonsterDebuff(packet.readShort(), packet.readByte(), packet.readLong());
+		}
 		count = packet.readByte();
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++) {
 			context.addActiveSummon(packet.readInt(), playerId, packet.readPos(), packet.readByte());
+		}
 		context.setEnergyCharge(packet.readShort());
 		context.setChatroomId(packet.readInt());
 		context.setOriginChannel(targetCh);

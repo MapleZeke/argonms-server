@@ -42,10 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-/**
- *
- * @author GoldenKevin
- */
 public class QuestRewards {
 	private final List<QuestItemStats> items;
 	private final Map<Short, Byte> questChanges;
@@ -63,10 +59,10 @@ public class QuestRewards {
 	private long endDate;
 
 	protected QuestRewards() {
-		items = new ArrayList<QuestItemStats>();
-		questChanges = new HashMap<Short, Byte>();
-		jobs = new ArrayList<Short>();
-		skillChanges = new ArrayList<SkillReward>();
+		items = new ArrayList<>();
+		questChanges = new HashMap<>();
+		jobs = new ArrayList<>();
+		skillChanges = new ArrayList<>();
 	}
 
 	protected void addRewardItem(QuestItemStats item) {
@@ -129,8 +125,9 @@ public class QuestRewards {
 
 	protected SkillReward getSkillReward(int skillId) {
 		for (SkillReward sr : skillChanges)
-			if (sr.skillId == skillId)
+			if (sr.skillId == skillId) {
 				return sr;
+			}
 		return null;
 	}
 
@@ -177,8 +174,9 @@ public class QuestRewards {
 	private void takeItem(GameCharacter p, int itemId, short quantity) {
 		InventoryType type = InventoryTools.getCategory(itemId);
 		Inventory inv = p.getInventory(InventoryTools.getCategory(itemId));
-		if (quantity == 0)
+		if (quantity == 0) {
 			quantity = (short) -InventoryTools.getAmountOfItem(inv, itemId);
+		}
 		UpdatedSlots changedSlots = InventoryTools.removeFromInventory(p, itemId, -quantity);
 		ClientSession<?> ses = p.getClient().getSession();
 		short pos;
@@ -195,14 +193,15 @@ public class QuestRewards {
 	}
 
 	private boolean awardItems(GameCharacter p, int selection) {
-		boolean findRandomItem = (sumItemProbs > 0);
+		boolean findRandomItem = sumItemProbs > 0;
 		int selectableItemIndex = 0;
-		int random = findRandomItem ? Rng.getGenerator().nextInt(sumItemProbs) : 0, runningProbs = 0;
+		int random = findRandomItem ? Rng.getGenerator().nextInt(sumItemProbs) : 0;
+		int runningProbs = 0;
 
-		List<Pair<Pair<Integer, Short>, Integer>> itemsToGain = new ArrayList<Pair<Pair<Integer, Short>, Integer>>();
-		List<Pair<Integer, Short>> itemsToLose = new ArrayList<Pair<Integer, Short>>();
+		List<Pair<Pair<Integer, Short>, Integer>> itemsToGain = new ArrayList<>();
+		List<Pair<Integer, Short>> itemsToLose = new ArrayList<>();
 		//fails if there are multiple rewards of the same itemid, but that never happens!
-		Map<InventoryType, Integer> netEmptySlotRemovals = new EnumMap<InventoryType, Integer>(InventoryType.class);
+		Map<InventoryType, Integer> netEmptySlotRemovals = new EnumMap<>(InventoryType.class);
 		netEmptySlotRemovals.put(InventoryType.EQUIP, Integer.valueOf(0));
 		netEmptySlotRemovals.put(InventoryType.USE, Integer.valueOf(0));
 		netEmptySlotRemovals.put(InventoryType.SETUP, Integer.valueOf(0));
@@ -215,23 +214,25 @@ public class QuestRewards {
 				if (item.getProb() == -1) {
 					//items List better keep the order of the item rewards in
 					//Quest.wz/Act.img...
-					if (selectableItemIndex != selection)
+					if (selectableItemIndex != selection) {
 						applicable = false;
+					}
 					selectableItemIndex++;
 				} else {
-					if (findRandomItem && random < (runningProbs += item.getProb()))
+					if (findRandomItem && random < (runningProbs += item.getProb())) {
 						//use this item - leave give = true and don't look for more random items
 						findRandomItem = false;
-					else
+					} else {
 						//don't give this item
 						applicable = false;
+					}
 				}
 			}
 			if (applicable) {
 				short quantity = item.getCount();
 				InventoryType type = InventoryTools.getCategory(item.getItemId());
 
-				Pair<Integer, Short> idAndQty = new Pair<Integer, Short>(Integer.valueOf(item.getItemId()), Short.valueOf(quantity));
+				Pair<Integer, Short> idAndQty = new Pair<>(Integer.valueOf(item.getItemId()), Short.valueOf(quantity));
 				if (quantity > 0) {
 					itemsToGain.add(new Pair<Pair<Integer, Short>, Integer>(idAndQty, Integer.valueOf(item.getPeriod())));
 					netEmptySlotRemovals.put(type, Integer.valueOf(netEmptySlotRemovals.get(type).intValue() + InventoryTools.slotsNeeded(p.getInventory(type), item.getItemId(), quantity, false)));
@@ -243,8 +244,9 @@ public class QuestRewards {
 		}
 
 		for (Map.Entry<InventoryType, Integer> netEmptySlotChange : netEmptySlotRemovals.entrySet())
-			if (p.getInventory(netEmptySlotChange.getKey()).freeSlots() < netEmptySlotChange.getValue().intValue())
+			if (p.getInventory(netEmptySlotChange.getKey()).freeSlots() < netEmptySlotChange.getValue().intValue()) {
 				return false;
+			}
 
 		for (Pair<Integer, Short> itemToLose : itemsToLose)
 			takeItem(p, itemToLose.left.intValue(), itemToLose.right.shortValue());
@@ -255,55 +257,63 @@ public class QuestRewards {
 
 	public short giveRewards(GameCharacter p, int selection) {
 		//some requirements are repeated in the act data - we might as well recheck them
-		if (endDate != 0 && System.currentTimeMillis() >= endDate)
+		if (endDate != 0 && System.currentTimeMillis() >= endDate) {
 			return -QuestEntry.QUEST_ACTION_ERROR_EXPIRED;
+		}
 		if (minLevel != 0 && p.getLevel() < minLevel
-				|| !jobs.isEmpty() && !jobs.contains(Short.valueOf(p.getJob())) && !PlayerJob.isGameMaster(p.getJob()))
+			|| !jobs.isEmpty() && !jobs.contains(Short.valueOf(p.getJob())) && !PlayerJob.isGameMaster(p.getJob())) {
 			return -QuestEntry.QUEST_ACTION_ERROR_UNKNOWN;
-		if (!awardItems(p, selection))
+		}
+		if (!awardItems(p, selection)) {
 			return -QuestEntry.QUEST_ACTION_ERROR_INVENTORY_FULL;
+		}
 		for (Entry<Short, Byte> entry : questChanges.entrySet()) {
-			switch (entry.getValue().byteValue()) {
-				case QuestEntry.STATE_STARTED:
-					if (p.isQuestInactive(entry.getKey().shortValue()))
-						p.localStartQuest(entry.getKey().shortValue());
-					break;
-				case QuestEntry.STATE_COMPLETED:
-					if (p.isQuestStarted(entry.getKey().shortValue()))
-						p.localCompleteQuest(entry.getKey().shortValue(), -1);
-					break;
+			if (entry.getValue().byteValue() == QuestEntry.STATE_STARTED) {
+				if (p.isQuestInactive(entry.getKey().shortValue())) {
+					p.localStartQuest(entry.getKey().shortValue());
+				}
+			} else if (entry.getValue().byteValue() == QuestEntry.STATE_COMPLETED) {
+				if (p.isQuestStarted(entry.getKey().shortValue())) {
+					p.localCompleteQuest(entry.getKey().shortValue(), -1);
+				}
 			}
 		}
 		for (SkillReward skill : skillChanges)
 			skill.applyTo(p);
-		if (giveExp != 0)
+		if (giveExp != 0) {
 			p.gainExp((int) Math.min((long) giveExp * GameServer.getVariables().getExpRate(), Integer.MAX_VALUE), false, true);
-		if (giveMesos != 0)
-			if (giveMesos > 0)
+		}
+		if (giveMesos != 0) {
+			if (giveMesos > 0) {
 				p.gainMesos((int) Math.min((long) giveMesos * GameServer.getVariables().getMesoRate(), Integer.MAX_VALUE), true);
-			else
+			} else {
 				p.gainMesos(giveMesos, true);
-		if (giveBuff != 0)
+			}
+		}
+		if (giveBuff != 0) {
 			ItemTools.useItem(p, giveBuff);
+		}
 		if (givePetTameness != 0) {
 			//TODO: WHICH PET DO WE APPLY THIS TO?
 		}
 		if (givePetSkill != 0) {
 			//TODO: WHICH PET DO WE APPLY THIS TO?
 		}
-		if (giveFame != 0)
+		if (giveFame != 0) {
 			p.gainFame(giveFame, true);
+		}
 		return nextQuest;
 	}
 
 	protected static class SkillReward {
 		private final List<Short> compatibleJobs;
 		private int skillId;
-		private byte currentLevel, masterLevel;
+		private byte currentLevel;
+		private byte masterLevel;
 		private boolean onlyMasterLevel;
 
 		protected SkillReward(int skillId, byte skillLevel, byte masterLevel, boolean onlyMasterLevel) {
-			this.compatibleJobs = new ArrayList<Short>();
+			this.compatibleJobs = new ArrayList<>();
 			this.skillId = skillId;
 			this.currentLevel = skillLevel;
 			this.masterLevel = masterLevel;
@@ -315,8 +325,9 @@ public class QuestRewards {
 		}
 
 		protected void applyTo(GameCharacter p) {
-			if (!compatibleJobs.contains(Short.valueOf(p.getJob())))
+			if (!compatibleJobs.contains(Short.valueOf(p.getJob()))) {
 				return;
+			}
 			p.setSkillLevel(skillId, currentLevel, masterLevel, onlyMasterLevel);
 		}
 	}

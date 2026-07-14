@@ -18,10 +18,6 @@
 
 package argonms.common.character.inventory;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class InventorySlot implements Comparable<InventorySlot>, Cloneable {
 	//TODO: store database entry id so we can save some keys, because right now,
 	//we can do a maximum of 1403584 logouts in worst case.
@@ -35,19 +31,15 @@ public abstract class InventorySlot implements Comparable<InventorySlot>, Clonea
 	//database storage space.
 	public enum ItemType { EQUIP, ITEM, PET, RING, MOUNT }
 
-	public static final byte
-		EQUIP = 1,
-		ITEM = 2,
-		PET = 3
-	;
+	public static final byte EQUIP = 1;
+	public static final byte ITEM = 2;
+	public static final byte PET = 3;
 
-	public static final byte
-		FLAG_LOCK = 0x01,
-		FLAG_SPIKES = 0x02,
-		FLAG_COLD_PROTECTION = 0x04,
-		FLAG_TRADE_UNAVAILABLE = 0x08,
-		FLAG_KARMA_SCISSORS = 0x10
-	;
+	public static final byte FLAG_LOCK = 0x01;
+	public static final byte FLAG_SPIKES = 0x02;
+	public static final byte FLAG_COLD_PROTECTION = 0x04;
+	public static final byte FLAG_TRADE_UNAVAILABLE = 0x08;
+	public static final byte FLAG_KARMA_SCISSORS = 0x10;
 
 	private int id;
 	private long expire;
@@ -105,10 +97,11 @@ public abstract class InventorySlot implements Comparable<InventorySlot>, Clonea
 	}
 
 	public void setFlagBit(byte bit, boolean value) {
-		if (value)
+		if (value) {
 			this.flag |= bit;
-		else
+		} else {
 			this.flag &= ~bit;
+		}
 	}
 
 	@Override

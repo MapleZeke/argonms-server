@@ -18,10 +18,6 @@
 
 package argonms.game.loading.map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class SpawnData {
 	private char type;
 	private int id;

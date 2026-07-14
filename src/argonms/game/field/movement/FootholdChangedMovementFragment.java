@@ -18,10 +18,6 @@
 
 package argonms.game.field.movement;
 
-/**
- *
- * @author GoldenKevin
- */
 public interface FootholdChangedMovementFragment extends LifeMovementFragment {
 	public short getFoothold();
 }

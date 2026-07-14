@@ -23,7 +23,6 @@ package argonms.common.util;
  *
  * Taken from an OdinMS-derived source with a few modifications.
  *
- * @author Frz
  * @since Revision 206
  * @version 1.1
  */
@@ -66,8 +65,9 @@ public final class ByteTool {
 	 */
 	public static byte[] multiplyBytes(byte[] in, int count, int mul) {
 		byte[] ret = new byte[count * mul];
-		for (int i = 0; i < mul; i++)
+		for (int i = 0; i < mul; i++) {
 			System.arraycopy(in, 0, ret, i * count, count);
+		}
 		return ret;
 	}
 

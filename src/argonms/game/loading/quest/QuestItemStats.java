@@ -21,10 +21,6 @@ package argonms.game.loading.quest;
 import argonms.common.character.PlayerJob;
 import argonms.common.util.TimeTool;
 
-/**
- *
- * @author GoldenKevin
- */
 public class QuestItemStats {
 	private final int itemId;
 	private final short qty;

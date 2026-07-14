@@ -25,10 +25,6 @@ import argonms.login.net.external.handler.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ClientLoginPacketProcessor extends ClientPacketProcessor<LoginClient> {
 	private static final Logger LOG = Logger.getLogger(ClientPacketProcessor.class.getName());
 
@@ -88,6 +84,7 @@ public class ClientLoginPacketProcessor extends ClientPacketProcessor<LoginClien
 				break;
 			case ClientRecvOps.CLIENT_ERROR:
 				lc.clientError(reader.readLengthPrefixedString());
+				break;
 			case ClientRecvOps.AES_IV_UPDATE_REQUEST:
 				//no-op
 				break;
@@ -103,7 +100,7 @@ public class ClientLoginPacketProcessor extends ClientPacketProcessor<LoginClien
 				//no-op
 				break;
 			default:
-				LOG.log(Level.FINE, "Received unhandled client packet {0} bytes long:\n{1}", new Object[] { reader.available() + 2, reader });
+				LOG.log(Level.FINE, "Received unhandled client packet {0} bytes long:\n{1}", new Object[]{reader.available() + 2, reader});
 				break;
 		}
 	}

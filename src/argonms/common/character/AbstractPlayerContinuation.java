@@ -21,10 +21,6 @@ package argonms.common.character;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class AbstractPlayerContinuation {
 	private final Map<Integer, BuffState.ItemState> activeItems;
 	private final Map<Integer, BuffState.SkillState> activeSkills;
@@ -44,9 +40,9 @@ public abstract class AbstractPlayerContinuation {
 	}
 
 	public AbstractPlayerContinuation() {
-		activeItems = new HashMap<Integer, BuffState.ItemState>();
-		activeSkills = new HashMap<Integer, BuffState.SkillState>();
-		activeDebuffs = new HashMap<Short, BuffState.MobSkillState>();
+		activeItems = new HashMap<>();
+		activeSkills = new HashMap<>();
+		activeDebuffs = new HashMap<>();
 	}
 
 	public Map<Integer, BuffState.ItemState> getActiveItems() {

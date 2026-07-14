@@ -18,11 +18,11 @@
 
 package argonms.common.util;
 
+import java.security.SecureRandom;
 import java.util.Random;
 
 /**
  * Provides a central area to acquire a ThreadLocal random number generator.
- * @author GoldenKevin
  */
 public final class Rng {
 	//here is what Sun documented in Math.random():
@@ -34,13 +34,13 @@ public final class Rng {
 	//make this ThreadLocal to improve performance.
 	//In addition, in section 15.3 of Java Concurrency in Practice, the graphs
 	//clearly show the increased throughput of ThreadLocal RNGs.
-	private final static ThreadLocal<Random> GENERATOR;
+	private static final ThreadLocal<Random> GENERATOR;
 
 	static {
-		GENERATOR = new ThreadLocal<Random>() {
+		GENERATOR = new ThreadLocal<>() {
 			 @Override
 			protected Random initialValue() {
-				 return new Random();
+				 return new SecureRandom();
 			}
 		};
 	}

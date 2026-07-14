@@ -35,10 +35,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Trade extends Miniroom {
 	private final InventorySlot[][] items;
 	private final int[] mesos;
@@ -89,7 +85,7 @@ public class Trade extends Miniroom {
 				p.getClient().getSession().send(GamePackets.writeShowInventoryFull());
 				return false;
 			}
-			itemQtys = new HashMap<Integer, Short>();
+			itemQtys = new HashMap<>();
 			for (InventorySlot item : items[traderPos]) {
 				if (item != null) {
 					Integer oId = Integer.valueOf(item.getDataId());
@@ -98,7 +94,7 @@ public class Trade extends Miniroom {
 				}
 			}
 
-			Map<InventoryType, Integer> netEmptySlotRemovals = new EnumMap<InventoryType, Integer>(InventoryType.class);
+			Map<InventoryType, Integer> netEmptySlotRemovals = new EnumMap<>(InventoryType.class);
 			netEmptySlotRemovals.put(InventoryType.EQUIP, Integer.valueOf(0));
 			netEmptySlotRemovals.put(InventoryType.USE, Integer.valueOf(0));
 			netEmptySlotRemovals.put(InventoryType.SETUP, Integer.valueOf(0));
@@ -129,25 +125,27 @@ public class Trade extends Miniroom {
 	}
 
 	private static int subtractTax(int mesos) {
-		if (mesos < 50000)
+		if (mesos < 50000) {
 			return mesos;
-		else if (mesos < 100000)
+		} else if (mesos < 100000) {
 			return round(mesos * 0.995);
-		else if (mesos < 1000000)
+		} else if (mesos < 1000000) {
 			return round(mesos * 0.99);
-		else if (mesos < 5000000)
+		} else if (mesos < 5000000) {
 			return round(mesos * 0.98);
-		else if (mesos < 10000000)
+		} else if (mesos < 10000000) {
 			return round(mesos * 0.97);
-		else
+		} else {
 			return round(mesos * 0.96);
+		}
 	}
 
 	private void giveItemsAndMesos(GameCharacter to, byte from, boolean taxAndShowGain) {
-		if (taxAndShowGain)
+		if (taxAndShowGain) {
 			to.gainMesos(subtractTax(mesos[from]), false);
-		else
+		} else {
 			to.setMesos(to.getMesos() + mesos[from]);
+		}
 		for (InventorySlot item : items[from]) {
 			if (item != null) {
 				InventoryType type = InventoryTools.getCategory(item.getDataId());
@@ -165,8 +163,9 @@ public class Trade extends Miniroom {
 					ses.send(CommonPackets.writeInventoryAddSlot(type, pos, inv.get(pos)));
 				}
 				to.itemCountChanged(item.getDataId());
-				if (taxAndShowGain)
+				if (taxAndShowGain) {
 					ses.send(GamePackets.writeShowItemGain(item.getDataId(), item.getQuantity()));
+				}
 			}
 		}
 	}
@@ -175,10 +174,13 @@ public class Trade extends Miniroom {
 	public void closeRoom(GameMap map) {
 		GameCharacter v;
 		super.closeRoom(map);
-		if (!tradeCompleted)
-			for (byte i = 0; i < getMaxPlayers(); i++)
-				if ((v = getPlayerByPosition(i)) != null)
+		if (!tradeCompleted) {
+			for (byte i = 0; i < getMaxPlayers(); i++) {
+				if ((v = getPlayerByPosition(i)) != null) {
 					giveItemsAndMesos(v, i, false);
+				}
+			}
+		}
 	}
 
 	private void performTrade() {
@@ -217,7 +219,7 @@ public class Trade extends Miniroom {
 
 	public void addMesos(GameCharacter p, int gain) {
 		byte pos = positionOf(p);
-		int newMesos = (mesos[pos] += gain);
+		int newMesos = mesos[pos] += gain;
 		p.getClient().getSession().send(writeMesoSet((byte) 0, newMesos));
 		pos = (byte) ((pos + 1) % 2);
 		getPlayerByPosition(pos).getClient().getSession().send(writeMesoSet((byte) 1, newMesos));
@@ -226,11 +228,14 @@ public class Trade extends Miniroom {
 	public void confirmTrade(GameCharacter p) {
 		confirmed[positionOf(p)] = true;
 		boolean completeTrade = true;
-		for (int i = 0; i < getMaxPlayers() && completeTrade; i++)
-			if (!confirmed[i])
+		for (int i = 0; i < getMaxPlayers() && completeTrade; i++) {
+			if (!confirmed[i]) {
 				completeTrade = false;
-		if (completeTrade)
+			}
+		}
+		if (completeTrade) {
 			performTrade();
+		}
 	}
 
 	@Override
@@ -250,9 +255,11 @@ public class Trade extends Miniroom {
 		lew.writeByte(getMaxPlayers());
 		lew.writeByte(positionOf(p));
 
-		for (byte i = 0; i < getMaxPlayers(); i++)
-			if ((v = getPlayerByPosition(i)) != null)
+		for (byte i = 0; i < getMaxPlayers(); i++) {
+			if ((v = getPlayerByPosition(i)) != null) {
 				writeMiniroomAvatar(lew, v, i);
+			}
+		}
 		lew.writeByte((byte) 0xFF);
 
 		return lew.getBytes();

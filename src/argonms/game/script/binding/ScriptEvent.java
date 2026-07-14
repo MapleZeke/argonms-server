@@ -29,10 +29,6 @@ import java.util.logging.Logger;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ScriptEvent {
 	private static final Logger LOG = Logger.getLogger(ScriptEvent.class.getName());
 
@@ -48,8 +44,8 @@ public class ScriptEvent {
 		this.name = scriptName;
 		this.channel = channel;
 		this.hooks = hooks;
-		variables = new ConcurrentHashMap<String, Object>();
-		timers = new ConcurrentHashMap<String, ScheduledFuture<?>>();
+		variables = new ConcurrentHashMap<>();
+		timers = new ConcurrentHashMap<>();
 	}
 
 	protected EventManipulator getScriptInterface() {
@@ -81,23 +77,21 @@ public class ScriptEvent {
 	}
 
 	public void startTimer(final String key, int millisDelay) {
-		timers.put(key, Scheduler.getInstance().runAfterDelay(new Runnable() {
-			@Override
-			public void run() {
-				timers.remove(key);
-				try {
-					hooks.timerExpired(key);
-				} catch (Throwable ex) {
-					LOG.log(Level.SEVERE, "Uncaught exception while processing event timer.", ex);
-				}
+		timers.put(key, Scheduler.getInstance().runAfterDelay(() -> {
+			timers.remove(key);
+			try {
+				hooks.timerExpired(key);
+			} catch (Throwable ex) {
+				LOG.log(Level.SEVERE, "Uncaught exception while processing event timer.", ex);
 			}
 		}, millisDelay));
 	}
 
 	public void stopTimer(String key) {
 		ScheduledFuture<?> future = timers.remove(key);
-		if (future != null)
+		if (future != null) {
 			future.cancel(false);
+		}
 	}
 
 	public void stopTimers() {
@@ -106,9 +100,10 @@ public class ScriptEvent {
 	}
 
 	public void destroyEvent() {
-		if (name == null)
+		if (name == null) {
 			GameServer.getChannel(channel).getEventManager().endScript(this, hooks);
-		else
+		} else {
 			GameServer.getChannel(channel).getEventManager().endScript(name);
+		}
 	}
 }

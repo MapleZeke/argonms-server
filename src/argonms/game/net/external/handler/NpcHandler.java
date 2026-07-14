@@ -31,10 +31,6 @@ import argonms.game.script.NpcScriptManager;
 import argonms.game.script.binding.ScriptNpc;
 import argonms.game.script.binding.ScriptObjectManipulator;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class NpcHandler {
 	public static void handleStartConversation(LittleEndianReader packet, GameClient gc) {
 		int entId = packet.readInt();
@@ -45,8 +41,9 @@ public final class NpcHandler {
 
 	public static void handleContinueConversation(LittleEndianReader packet, GameClient gc) {
 		ScriptNpc npc = gc.getNpc();
-		if (npc != null)
+		if (npc != null) {
 			ScriptObjectManipulator.npcResponseReceived(npc, packet);
+		}
 	}
 
 	public static void handleQuestAction(LittleEndianReader packet, GameClient gc) {

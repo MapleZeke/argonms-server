@@ -25,10 +25,6 @@ import argonms.game.character.GameCharacter;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CommandArguments implements Iterator<String> {
 	private final String[] values;
 	private int index;
@@ -39,9 +35,11 @@ public class CommandArguments implements Iterator<String> {
 	}
 
 	public boolean hasOpt(String search) {
-		for (int i = 0; i < values.length; i++)
-			if (values[i].equalsIgnoreCase(search))
+		for (int i = 0; i < values.length; i++) {
+			if (values[i].equalsIgnoreCase(search)) {
 				return true;
+			}
+		}
 		return false;
 	}
 
@@ -70,9 +68,10 @@ public class CommandArguments implements Iterator<String> {
 								previousQuote--;
 							}
 						}
-						value += word ;
-						if (quoteCount % 2 == 0) //even amount of quotes means all of them are matched
+						value += word;
+						if (quoteCount % 2 == 0) { //even amount of quotes means all of them are matched
 							return value;
+						}
 						//otherwise, look for the final end quote in the next word if we can
 						value += ' ';
 					}
@@ -93,8 +92,9 @@ public class CommandArguments implements Iterator<String> {
 
 	@Override
 	public String next() {
-		if (!hasNext())
+		if (!hasNext()) {
 			throw new NoSuchElementException("Reached the end of command");
+		}
 		return values[index++];
 	}
 
@@ -104,12 +104,14 @@ public class CommandArguments implements Iterator<String> {
 	}
 
 	public String restOfString() {
-		if (!hasNext())
+		if (!hasNext()) {
 			throw new NoSuchElementException("Reached the end of command");
+		}
 
 		StringBuilder sb = new StringBuilder();
-		while (hasNext())
+		while (hasNext()) {
 			sb.append(next()).append(' ');
+		}
 		return sb.substring(0, sb.length() - 1);
 	}
 
@@ -124,17 +126,21 @@ public class CommandArguments implements Iterator<String> {
 	 * error.
 	 */
 	public String extractTarget(String flag, String def) {
-		if (flag == null)
-			if (hasNext())
+		if (flag == null) {
+			if (hasNext()) {
 				return next();
-			else
+			} else {
 				return def;
+			}
+		}
 
-		if (hasNext() && values[index].equalsIgnoreCase(flag))
-			if (++index >= values.length)
+		if (hasNext() && values[index].equalsIgnoreCase(flag)) {
+			if (++index >= values.length) {
 				return null;
-			else
+			} else {
 				return next();
+			}
+		}
 		return def;
 	}
 
@@ -154,15 +160,18 @@ public class CommandArguments implements Iterator<String> {
 
 	public CommandTarget getTargetByName(String name, CommandCaller caller) {
 		GameCharacter onLocalChannel = GameServer.getChannel(caller.getChannel()).getPlayerByName(name);
-		if (onLocalChannel != null)
+		if (onLocalChannel != null) {
 			return new LocalChannelCommandTarget(onLocalChannel);
+		}
 
 		byte channel = GameServer.getChannel(caller.getChannel()).getCrossServerInterface().scanChannelOfPlayer(name, false);
-		if (channel > ChannelSynchronizationOps.CHANNEL_CASH_SHOP)
+		if (channel > ChannelSynchronizationOps.CHANNEL_CASH_SHOP) {
 			return new CrossChannelCommandTarget(caller.getChannel(), channel, name);
+		}
 
-		if (Player.characterExists(name, caller.getWorld()))
+		if (Player.characterExists(name, caller.getWorld())) {
 			return new OfflineCharacterCommandTarget(name);
+		}
 
 		return null;
 	}

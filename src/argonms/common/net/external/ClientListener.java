@@ -40,17 +40,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ClientListener<T extends RemoteClient> implements SessionCreator {
 	public interface ClientFactory<T extends RemoteClient> {
 		public T newInstance();
 	}
 
 	private static final Logger LOG = Logger.getLogger(ClientListener.class.getName());
-	private final ExecutorService bossThreadPool, workerThreadPool;
+	private final ExecutorService bossThreadPool;
+	private final ExecutorService workerThreadPool;
 	private final ClientPacketProcessor<T> pp;
 	private final ClientFactory<T> clientCtor;
 	private ServerSocketChannel listener;
@@ -62,18 +59,18 @@ public class ClientListener<T extends RemoteClient> implements SessionCreator {
 			private final ThreadGroup group;
 
 			{
-				SecurityManager s = System.getSecurityManager();
-				group = (s != null)? s.getThreadGroup() :
-									 Thread.currentThread().getThreadGroup();
+				group = Thread.currentThread().getThreadGroup();
 			}
 
 			@Override
 			public Thread newThread(Runnable r) {
 				Thread t = new Thread(group, r, "external-boss-thread", 0);
-				if (t.isDaemon())
+				if (t.isDaemon()) {
 					t.setDaemon(false);
-				if (t.getPriority() != Thread.NORM_PRIORITY)
+				}
+				if (t.getPriority() != Thread.NORM_PRIORITY) {
 					t.setPriority(Thread.NORM_PRIORITY);
+				}
 				return t;
 			}
 		});
@@ -82,18 +79,18 @@ public class ClientListener<T extends RemoteClient> implements SessionCreator {
 			private final AtomicInteger threadNumber = new AtomicInteger(1);
 
 			{
-				SecurityManager s = System.getSecurityManager();
-				group = (s != null)? s.getThreadGroup() :
-									 Thread.currentThread().getThreadGroup();
+				group = Thread.currentThread().getThreadGroup();
 			}
 
 			@Override
 			public Thread newThread(Runnable r) {
 				Thread t = new Thread(group, r, "external-worker-pool-thread-" + threadNumber.getAndIncrement(), 0);
-				if (t.isDaemon())
+				if (t.isDaemon()) {
 					t.setDaemon(false);
-				if (t.getPriority() != Thread.NORM_PRIORITY)
+				}
+				if (t.getPriority() != Thread.NORM_PRIORITY) {
 					t.setPriority(Thread.NORM_PRIORITY);
+				}
 				return t;
 			}
 		});
@@ -114,7 +111,7 @@ public class ClientListener<T extends RemoteClient> implements SessionCreator {
 					try {
 						Selector selector = Selector.open();
 						SelectionKey acceptorKey = listener.register(selector, SelectionKey.OP_ACCEPT);
-						final Map<SelectionKey, ClientSession<T>> connected = new ConcurrentHashMap<SelectionKey, ClientSession<T>>();
+						final Map<SelectionKey, ClientSession<T>> connected = new ConcurrentHashMap<>();
 						while (selector.isOpen()) {
 							selector.select();
 							Set<SelectionKey> keys = selector.selectedKeys();
@@ -132,7 +129,7 @@ public class ClientListener<T extends RemoteClient> implements SessionCreator {
 											LOG.log(Level.FINE, "Client connected from {0}", client.socket().getRemoteSocketAddress());
 											final SelectionKey acceptedKey = client.register(selector, SelectionKey.OP_READ);
 											T clientState = clientCtor.newInstance();
-											ClientSession<T> session = new ClientSession<T>(client, acceptedKey, clientState, new CloseListener<T>() {
+											ClientSession<T> session = new ClientSession<>(client, acceptedKey, clientState, new CloseListener<T>() {
 												@Override
 												public void closed(ClientSession<T> session) {
 													connected.remove(acceptedKey);
@@ -186,9 +183,11 @@ public class ClientListener<T extends RemoteClient> implements SessionCreator {
 												session.close(ex.getMessage());
 											}
 										}
-										if (key.isValid() && key.isWritable())
-											if (session.tryFlushSendQueue() == 1)
+										if (key.isValid() && key.isWritable()) {
+											if (session.tryFlushSendQueue() == 1) {
 												key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
+											}
+										}
 									} catch (CancelledKeyException e) {
 										//don't worry about it - session is already closed
 									}
@@ -214,10 +213,11 @@ public class ClientListener<T extends RemoteClient> implements SessionCreator {
 			} catch (IOException ex) {
 				LOG.log(Level.WARNING, "Error while unbinding external facing selector (" + listener.socket().getLocalSocketAddress() + ")", ex);
 			}
-			if (reasonExc == null)
-				LOG.log(Level.FINE, "External facing selector ({0}) closed: {1}", new Object[] { listener.socket().getLocalSocketAddress(), reason });
-			else
+			if (reasonExc == null) {
+				LOG.log(Level.FINE, "External facing selector ({0}) closed: {1}", new Object[]{listener.socket().getLocalSocketAddress(), reason});
+			} else {
 				LOG.log(Level.FINE, "External facing selector (" + listener.socket().getLocalSocketAddress() + ") closed: " + reason, reasonExc);
+			}
 			bossThreadPool.shutdown();
 			workerThreadPool.shutdown();
 		}

@@ -31,10 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-/**
- *
- * @author GoldenKevin
- */
 public class MobSkillEffectsData implements MonsterStatusEffectsData {
 	private final short skillid;
 	private final byte level;
@@ -56,28 +52,32 @@ public class MobSkillEffectsData implements MonsterStatusEffectsData {
 
 	protected MobSkillEffectsData(short skillid, byte level) {
 		this.maxHpPerc = 100;
-		this.summons = new TreeMap<Byte, Integer>();
+		this.summons = new TreeMap<>();
 		this.skillid = skillid;
 		this.level = level;
 		this.prop = 100;
 		switch (skillid) {
 			case MobSkills.WATK_UP_AOE:
 				aoe = true;
+				break;
 			case MobSkills.WATK_UP:
 				monsterBuff = MonsterStatusEffect.WATK;
 				break;
 			case MobSkills.MATK_UP_AOE:
 				aoe = true;
+				break;
 			case MobSkills.MATK_UP:
 				monsterBuff = MonsterStatusEffect.MATK;
 				break;
 			case MobSkills.WDEF_UP_AOE:
 				aoe = true;
+				break;
 			case MobSkills.WDEF_UP:
 				monsterBuff = MonsterStatusEffect.WDEF;
 				break;
 			case MobSkills.MDEF_UP_AOE:
 				aoe = true;
+				break;
 			case MobSkills.MDEF_UP:
 				monsterBuff = MonsterStatusEffect.MDEF;
 				break;
@@ -182,7 +182,10 @@ public class MobSkillEffectsData implements MonsterStatusEffectsData {
 
 	@Override
 	public Rectangle getBoundingBox(Point posFrom, boolean facingLeft) {
-		int ltx, lty, rbx, rby;
+		int ltx;
+		int lty;
+		int rbx;
+		int rby;
 		if (facingLeft) {
 			ltx = lt.x + posFrom.x;
 			rbx = rb.x + posFrom.x;
@@ -192,8 +195,7 @@ public class MobSkillEffectsData implements MonsterStatusEffectsData {
 		}
 		lty = lt.y + posFrom.y;
 		rby = rb.y + posFrom.y;
-		Rectangle bounds = new Rectangle(ltx, lty, rbx - ltx, rby - lty);
-		return bounds;
+		return new Rectangle(ltx, lty, rbx - ltx, rby - lty);
 	}
 
 	public short getProp() {
@@ -241,10 +243,11 @@ public class MobSkillEffectsData implements MonsterStatusEffectsData {
 
 	@Override
 	public Set<MonsterStatusEffect> getMonsterEffects() {
-		if (monsterBuff == null)
+		if (monsterBuff == null) {
 			return Collections.emptySet();
-		else
+		} else {
 			return Collections.singleton(monsterBuff);
+		}
 	}
 
 	@Override
@@ -254,8 +257,9 @@ public class MobSkillEffectsData implements MonsterStatusEffectsData {
 
 	@Override
 	public Set<PlayerStatusEffect> getEffects() {
-		if (playerDisease != null)
+		if (playerDisease != null) {
 			return EnumSet.of(playerDisease);
+		}
 		return EnumSet.noneOf(PlayerStatusEffect.class);
 	}
 }

@@ -36,13 +36,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class TelnetListener implements SessionCreator {
 	private static final Logger LOG = Logger.getLogger(TelnetListener.class.getName());
-	private final ExecutorService bossThreadPool, workerThreadPool;
+	private final ExecutorService bossThreadPool;
+	private final ExecutorService workerThreadPool;
+	private final boolean useVirtualThreads;
 	private final TelnetCommandProcessor packetProc;
 	private final TelnetSession.CommandReceivedDelegate packetDelegate;
 	private ServerSocketChannel listener;
@@ -50,53 +48,51 @@ public class TelnetListener implements SessionCreator {
 
 	public TelnetListener(boolean useNio) {
 		closeEventsTriggered = new AtomicBoolean(false);
+		useVirtualThreads = Boolean.parseBoolean(System.getProperty("argonms.virtualThreads", "true"));
 		bossThreadPool = Executors.newSingleThreadExecutor(new ThreadFactory() {
 			private final ThreadGroup group;
 
 			{
-				SecurityManager s = System.getSecurityManager();
-				group = (s != null)? s.getThreadGroup() :
-									 Thread.currentThread().getThreadGroup();
+				group = Thread.currentThread().getThreadGroup();
 			}
 
 			@Override
 			public Thread newThread(Runnable r) {
 				Thread t = new Thread(group, r, "telnet-boss-thread", 0);
-				if (t.isDaemon())
+				if (t.isDaemon()) {
 					t.setDaemon(false);
-				if (t.getPriority() != Thread.NORM_PRIORITY)
+				}
+				if (t.getPriority() != Thread.NORM_PRIORITY) {
 					t.setPriority(Thread.NORM_PRIORITY);
+				}
 				return t;
 			}
 		});
-		workerThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2, new ThreadFactory() {
+		workerThreadPool = useVirtualThreads ? Executors.newVirtualThreadPerTaskExecutor() : Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2, new ThreadFactory() {
 			private final ThreadGroup group;
 			private final AtomicInteger threadNumber = new AtomicInteger(1);
 
 			{
-				SecurityManager s = System.getSecurityManager();
-				group = (s != null)? s.getThreadGroup() :
-									 Thread.currentThread().getThreadGroup();
+				group = Thread.currentThread().getThreadGroup();
 			}
 
 			@Override
 			public Thread newThread(Runnable r) {
 				Thread t = new Thread(group, r, "telnet-worker-pool-thread-" + threadNumber.getAndIncrement(), 0);
-				if (t.isDaemon())
+				if (t.isDaemon()) {
 					t.setDaemon(false);
-				if (t.getPriority() != Thread.NORM_PRIORITY)
+				}
+				if (t.getPriority() != Thread.NORM_PRIORITY) {
 					t.setPriority(Thread.NORM_PRIORITY);
+				}
 				return t;
 			}
 		});
 
 		this.packetProc = new TelnetCommandProcessor();
-		this.packetDelegate = new TelnetSession.CommandReceivedDelegate() {
-			@Override
-			public void lineReceived(String message, TelnetClient client) {
-				packetProc.process(message, client);
-			}
-		};
+		this.packetDelegate = (message, client) ->
+			packetProc.process(message, client);
+		LOG.log(Level.INFO, "Telnet listener using {0}", useVirtualThreads ? "virtual-thread worker executor" : "platform-thread worker pool");
 	}
 
 	public boolean bind(int port) {
@@ -160,9 +156,11 @@ public class TelnetListener implements SessionCreator {
 												session.close(ex.getMessage());
 											}
 										}
-										if (key.isValid() && key.isWritable())
-											if (session.tryFlushSendQueue() == 1)
+										if (key.isValid() && key.isWritable()) {
+											if (session.tryFlushSendQueue() == 1) {
 												key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
+											}
+										}
 									} catch (CancelledKeyException e) {
 										//don't worry about it - session is already closed
 									}
@@ -188,10 +186,11 @@ public class TelnetListener implements SessionCreator {
 			} catch (IOException ex) {
 				LOG.log(Level.WARNING, "Error while unbinding telnet selector (" + listener.socket().getLocalSocketAddress() + ")", ex);
 			}
-			if (reasonExc == null)
-				LOG.log(Level.FINE, "Telnet selector ({0}) closed: {1}", new Object[] { listener.socket().getLocalSocketAddress(), reason });
-			else
+			if (reasonExc == null) {
+				LOG.log(Level.FINE, "Telnet selector ({0}) closed: {1}", new Object[]{listener.socket().getLocalSocketAddress(), reason});
+			} else {
 				LOG.log(Level.FINE, "Telnet selector (" + listener.socket().getLocalSocketAddress() + ") closed: " + reason, reasonExc);
+			}
 			bossThreadPool.shutdown();
 			workerThreadPool.shutdown();
 		}

@@ -24,10 +24,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ShopBuddyList implements ReadableBuddyList {
 	private final short capacity;
 	private final List<BuddyListEntry> buddies;

@@ -22,10 +22,6 @@ import argonms.common.net.internal.CenterRemoteOps;
 import argonms.common.util.input.LittleEndianReader;
 import argonms.common.util.output.LittleEndianByteArrayWriter;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class RemoteCenterPacketProcessor {
 	public abstract void process(LittleEndianReader packet);
 

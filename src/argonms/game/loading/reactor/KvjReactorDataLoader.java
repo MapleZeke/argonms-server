@@ -22,6 +22,7 @@ import argonms.common.util.input.LittleEndianByteArrayReader;
 import argonms.common.util.input.LittleEndianReader;
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,19 +30,13 @@ import java.util.logging.Logger;
 //reactor has any item drops, it looks kinda unnatural to drop the items
 //immediately after it is destroyed (analagous to mobs dropping items with no
 //delay when using MCDB).
-/**
- *
- * @author GoldenKevin
- */
 public class KvjReactorDataLoader extends ReactorDataLoader {
 	private static final Logger LOG = Logger.getLogger(KvjReactorDataLoader.class.getName());
 
-	private static final byte
-		LINK = 1,
-		HIT_EVENT = 2,
-		ITEM_EVENT = 3,
-		SCRIPT_NAME = 4
-	;
+	private static final byte LINK = 1;
+	private static final byte HIT_EVENT = 2;
+	private static final byte ITEM_EVENT = 3;
+	private static final byte SCRIPT_NAME = 4;
 
 	private final String dataPath;
 
@@ -51,11 +46,11 @@ public class KvjReactorDataLoader extends ReactorDataLoader {
 
 	@Override
 	protected void load(int reactorid) {
-		String id = String.format("%07d", reactorid);
+		String id = String.format(Locale.ROOT, "%07d", reactorid);
 
 		ReactorStats stats = null;
 		try {
-			File f = new File(new StringBuilder(dataPath).append("Reactor.wz").append(File.separator).append(id).append(".img.kvj").toString());
+			File f = new File(dataPath + "Reactor.wz" + (File.separator) + id + ".img.kvj");
 			if (f.exists()) {
 				stats = new ReactorStats(reactorid);
 				doWork(new LittleEndianByteArrayReader(f), stats);
@@ -88,10 +83,11 @@ public class KvjReactorDataLoader extends ReactorDataLoader {
 
 	@Override
 	public boolean canLoad(int reactorid) {
-		if (reactorStats.containsKey(reactorid))
+		if (reactorStats.containsKey(reactorid)) {
 			return true;
-		String id = String.format("%07d", reactorid);
-		File f = new File(new StringBuilder(dataPath).append("Reactor.wz").append(File.separator).append(id).append(".img.kvj").toString());
+		}
+		String id = String.format(Locale.ROOT, "%07d", reactorid);
+		File f = new File(dataPath + "Reactor.wz" + (File.separator) + id + ".img.kvj");
 		return f.exists();
 	}
 

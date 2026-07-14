@@ -29,10 +29,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class LimitedCommodityDataLoader {
 	private static final Logger LOG = Logger.getLogger(LimitedCommodityDataLoader.class.getName());
 
@@ -41,7 +37,7 @@ public abstract class LimitedCommodityDataLoader {
 	protected final Map<Integer, LimitedCommodity> limitedCommodities;
 
 	protected LimitedCommodityDataLoader() {
-		limitedCommodities = new HashMap<Integer, LimitedCommodity>();
+		limitedCommodities = new HashMap<>();
 	}
 
 	protected int getUsed(int itemId) {
@@ -53,8 +49,9 @@ public abstract class LimitedCommodityDataLoader {
 			ps = con.prepareStatement("SELECT `used` FROM `cashshoplimitedcommodities` WHERE `itemid` = ?");
 			ps.setInt(1, itemId);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				return rs.getInt(1);
+			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not determine remainder of limited commodity from database", e);
 		} finally {
@@ -92,11 +89,7 @@ public abstract class LimitedCommodityDataLoader {
 
 	public static void setInstance(DataFileType wzType, String wzPath) {
 		if (instance == null) {
-			switch (wzType) {
-				default:
-					instance = new JsonLimitedCommodityDataLoader();
-					break;
-			}
+			instance = new JsonLimitedCommodityDataLoader();
 		}
 	}
 

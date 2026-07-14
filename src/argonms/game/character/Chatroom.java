@@ -26,21 +26,15 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Chatroom {
-	public static final byte
-		ACT_OPEN = 0,
-		ACT_JOIN = 1,
-		ACT_EXIT = 2,
-		ACT_INVITE = 3,
-		ACT_INVITE_RESPONSE = 4,
-		ACT_DECLINE = 5,
-		ACT_CHAT = 6,
-		ACT_REFRESH_AVATAR = 7
-	;
+	public static final byte ACT_OPEN = 0;
+	public static final byte ACT_JOIN = 1;
+	public static final byte ACT_EXIT = 2;
+	public static final byte ACT_INVITE = 3;
+	public static final byte ACT_INVITE_RESPONSE = 4;
+	public static final byte ACT_DECLINE = 5;
+	public static final byte ACT_CHAT = 6;
+	public static final byte ACT_REFRESH_AVATAR = 7;
 
 	public static class Avatar {
 		private final int playerId;
@@ -110,12 +104,13 @@ public class Chatroom {
 	private final int roomId;
 	private final Avatar[] occupants;
 	private final Set<Byte> localAvatarPositions;
-	private final Lock readLock, writeLock;
+	private final Lock readLock;
+	private final Lock writeLock;
 
 	public Chatroom(int roomId) {
 		this.roomId = roomId;
 		occupants = new Avatar[3];
-		localAvatarPositions = new HashSet<Byte>(3);
+		localAvatarPositions = new HashSet<>(3);
 
 		ReadWriteLock locks = new ReentrantReadWriteLock();
 		readLock = locks.readLock();
@@ -139,10 +134,11 @@ public class Chatroom {
 	 */
 	public final void setAvatar(byte pos, Avatar a, boolean local) {
 		occupants[pos] = a;
-		if (local && a != null)
+		if (local && a != null) {
 			localAvatarPositions.add(Byte.valueOf(pos));
-		else
+		} else {
 			localAvatarPositions.remove(Byte.valueOf(pos));
+		}
 	}
 
 	/**
@@ -160,9 +156,11 @@ public class Chatroom {
 	 * @return 
 	 */
 	public byte positionOf(int playerId) {
-		for (byte i = 0; i < 3; i++)
-			if (occupants[i] != null && occupants[i].getPlayerId() == playerId)
+		for (byte i = 0; i < 3; i++) {
+			if (occupants[i] != null && occupants[i].getPlayerId() == playerId) {
 				return i;
+			}
+		}
 		return -1;
 	}
 
@@ -172,9 +170,11 @@ public class Chatroom {
 	 */
 	public boolean isFull() {
 		byte occupied = 0;
-		for (byte i = 0; i < 3; i++)
-			if (occupants[i] != null)
+		for (byte i = 0; i < 3; i++) {
+			if (occupants[i] != null) {
 				occupied++;
+			}
+		}
 		return occupied == 3;
 	}
 
@@ -183,7 +183,7 @@ public class Chatroom {
 	 * @return 
 	 */
 	public Set<Byte> localChannelSlots() {
-		return new HashSet<Byte>(localAvatarPositions);
+		return new HashSet<>(localAvatarPositions);
 	}
 
 	/**
@@ -191,10 +191,12 @@ public class Chatroom {
 	 * @return 
 	 */
 	public Set<Byte> allChannels() {
-		Set<Byte> set = new HashSet<Byte>(3);
-		for (byte i = 0; i < 3; i++)
-			if (occupants[i] != null)
+		Set<Byte> set = new HashSet<>(3);
+		for (byte i = 0; i < 3; i++) {
+			if (occupants[i] != null) {
 				set.add(Byte.valueOf(occupants[i].getChannel()));
+			}
+		}
 		return set;
 	}
 

@@ -32,10 +32,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class IntraworldGroups {
 	private static final Logger LOG = Logger.getLogger(IntraworldGroups.class.getName());
 
@@ -51,8 +47,9 @@ public class IntraworldGroups {
 			ps = con.prepareStatement("SELECT MAX(`partyid`) FROM `parties` WHERE `world` = ?");
 			ps.setByte(1, world);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				partyId = rs.getInt(1);
+			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not get starting party id for world " + world, ex);
 		} finally {
@@ -77,14 +74,14 @@ public class IntraworldGroups {
 		this.world = world;
 
 		nextPartyId = new AtomicInteger(getStartingPartyId(world));
-		parties = new ConcurrentHashMap<Integer, Party>();
+		parties = new ConcurrentHashMap<>();
 
 		loadedGuildNames = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
-		pendingGuildContractVotes = new ConcurrentHashMap<Integer, Set<Integer>>();
-		guilds = new ConcurrentHashMap<Integer, Guild>();
+		pendingGuildContractVotes = new ConcurrentHashMap<>();
+		guilds = new ConcurrentHashMap<>();
 
 		nextRoomId = new AtomicInteger();
-		rooms = new ConcurrentHashMap<Integer, Chatroom>();
+		rooms = new ConcurrentHashMap<>();
 	}
 
 	/**
@@ -112,8 +109,9 @@ public class IntraworldGroups {
 	}
 
 	public boolean guildExists(String name) {
-		if (loadedGuildNames.contains(name))
+		if (loadedGuildNames.contains(name)) {
 			return true;
+		}
 
 		Connection con = null;
 		PreparedStatement ps = null;
@@ -136,8 +134,9 @@ public class IntraworldGroups {
 
 	public int makeGuild(String name, int partyId) {
 		Party p = getParty(partyId);
-		if (p == null)
+		if (p == null) {
 			return -1;
+		}
 
 		int guildId;
 		Connection con = null;
@@ -150,8 +149,9 @@ public class IntraworldGroups {
 			ps.setString(2, name);
 			ps.executeUpdate();
 			rs = ps.getGeneratedKeys();
-			if (!rs.next())
+			if (!rs.next()) {
 				return -1;
+			}
 			guildId = rs.getInt(1);
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not create guild " + name, ex);
@@ -168,12 +168,14 @@ public class IntraworldGroups {
 	public void makePendingGuildContractVotes(int guildId, int partyId) {
 		Set<Integer> pending = Collections.newSetFromMap(new ConcurrentHashMap<Integer, Boolean>());
 		Party p = getParty(partyId);
-		if (p == null)
+		if (p == null) {
 			return;
+		}
 
 		for (Party.Member mem : p.getAllMembers())
-			if (mem.getPlayerId() != p.getLeader())
+			if (mem.getPlayerId() != p.getLeader()) {
 				pending.add(Integer.valueOf(mem.getPlayerId()));
+			}
 		pendingGuildContractVotes.put(Integer.valueOf(guildId), pending);
 	}
 
@@ -187,8 +189,9 @@ public class IntraworldGroups {
 
 	public Guild flushGuild(int guildId) {
 		Guild guild = guilds.remove(Integer.valueOf(guildId));
-		if (guild != null)
+		if (guild != null) {
 			loadedGuildNames.remove(guild.getName());
+		}
 		return guild;
 	}
 

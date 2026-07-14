@@ -23,16 +23,12 @@ import argonms.game.net.external.handler.MovementHandler;
 import java.util.EnumSet;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ChangeEquipMovement implements LifeMovementFragment {
 	/**
 	 * 1 indicates something was equipped, 2 indicates something was unequipped
 	 * and then something else was equipped.
 	 */
-	private byte count;
+	private final byte count;
 
 	public ChangeEquipMovement(byte numChanges) {
 		this.count = numChanges;

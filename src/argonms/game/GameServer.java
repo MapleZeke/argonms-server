@@ -47,6 +47,7 @@ import argonms.game.script.NpcScriptManager;
 import argonms.game.script.PortalScriptManager;
 import argonms.game.script.ReactorScriptManager;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -68,11 +69,7 @@ import java.util.logging.Logger;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
-/**
- *
- * @author GoldenKevin
- */
-public class GameServer implements LocalServer {
+public final class GameServer implements LocalServer {
 	private static final Logger LOG = Logger.getLogger(GameServer.class.getName());
 
 	private static GameServer instance;
@@ -84,7 +81,8 @@ public class GameServer implements LocalServer {
 	private String address;
 	private boolean preloadAll;
 	private DataFileType wzType;
-	private String wzPath, scriptsPath;
+	private String wzPath;
+	private String scriptsPath;
 	private String[] initialEvents;
 	private boolean useNio;
 	private boolean centerConnected;
@@ -95,7 +93,7 @@ public class GameServer implements LocalServer {
 	private GameServer(byte serverid) {
 		this.serverId = serverid;
 		this.registry = new GameRegistry();
-		this.remoteGameChannelMapping = new HashMap<Byte, Set<Byte>>();
+		this.remoteGameChannelMapping = new HashMap<>();
 	}
 
 	public byte getServerId() {
@@ -113,7 +111,7 @@ public class GameServer implements LocalServer {
 		String authKey;
 		String[] chList;
 		try {
-			FileReader fr = new FileReader(System.getProperty("argonms.game.config.file", "game" + serverId + ".properties"));
+			FileReader fr = new FileReader(System.getProperty("argonms.game.config.file", "game" + serverId + ".properties"), StandardCharsets.UTF_8);
 			prop.read(fr);
 			fr.close();
 			address = prop.getString("argonms.game." + serverId + ".host");
@@ -155,23 +153,23 @@ public class GameServer implements LocalServer {
 		wzPath = System.getProperty("argonms.data.dir");
 		scriptsPath = System.getProperty("argonms.scripts.dir");
 
-		channels = new HashMap<Byte, WorldChannel>(chList.length);
+		channels = new HashMap<>(chList.length);
 		for (int i = 0; i < chList.length; i++) {
 			byte chNum = Byte.parseByte(chList[i]);
 			WorldChannel ch = new WorldChannel(world, chNum, prop.getInt("argonms.game." + serverId + ".channel." + chNum + ".port"));
 			ch.createWorldComm();
 			channels.put(Byte.valueOf(chNum), ch);
 		}
-		Map<Byte, CrossServerSynchronization> initializedCss = new HashMap<Byte, CrossServerSynchronization>();
+		Map<Byte, CrossServerSynchronization> initializedCss = new HashMap<>();
 		for (Entry<Byte, WorldChannel> entry : channels.entrySet()) {
 			entry.getValue().getCrossServerInterface().initializeLocalChannels(initializedCss);
 			initializedCss.put(entry.getKey(), entry.getValue().getCrossServerInterface());
 		}
 
-		boolean mcdb = (wzType == DataFileType.MCDB);
+		boolean mcdb = wzType == DataFileType.MCDB;
 		prop = new PropertiesConfiguration();
 		try {
-			FileReader fr = new FileReader(System.getProperty("argonms.db.config.file", "db.properties"));
+			FileReader fr = new FileReader(System.getProperty("argonms.db.config.file", "db.properties"), StandardCharsets.UTF_8);
 			prop.read(fr);
 			fr.close();
 			DatabaseManager.setProps(prop, mcdb, useNio);
@@ -199,12 +197,13 @@ public class GameServer implements LocalServer {
 						int realSubversion = rs.getInt(2);
 						int realGameVersion = rs.getInt(3);
 						if (realVersion != GlobalConstants.MCDB_VERSION || realSubversion != GlobalConstants.MCDB_SUBVERSION) {
-							LOG.log(Level.SEVERE, "MCDB version imcompatible. Expected: {0}.{1} Have: {2}.{3}", new Object[] { GlobalConstants.MCDB_VERSION, GlobalConstants.MCDB_SUBVERSION, realVersion, realSubversion });
+							LOG.log(Level.SEVERE, "MCDB version imcompatible. Expected: {0}.{1} Have: {2}.{3}", new Object[]{GlobalConstants.MCDB_VERSION, GlobalConstants.MCDB_SUBVERSION, realVersion, realSubversion});
 							System.exit(3);
 							return;
 						}
-						if (realGameVersion != GlobalConstants.MAPLE_VERSION) //carry on despite the warning...
-							LOG.log(Level.WARNING, "Your copy of MCDB is based on an incongruent version of the WZ files. ArgonMS: {0} MCDB: {1}", new Object[] { GlobalConstants.MAPLE_VERSION, realGameVersion });
+						if (realGameVersion != GlobalConstants.MAPLE_VERSION) { //carry on despite the warning...
+							LOG.log(Level.WARNING, "Your copy of MCDB is based on an incongruent version of the WZ files. ArgonMS: {0} MCDB: {1}", new Object[]{GlobalConstants.MAPLE_VERSION, realGameVersion});
+						}
 					}
 				} finally {
 					DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
@@ -218,15 +217,16 @@ public class GameServer implements LocalServer {
 
 		Scanner scan = null;
 		try {
-			scan = new Scanner(new FileReader(System.getProperty("argonms.ct.macbanblacklist.file", "macbanblacklist.txt")));
+			scan = new Scanner(new FileReader(System.getProperty("argonms.ct.macbanblacklist.file", "macbanblacklist.txt"), StandardCharsets.UTF_8));
 			CheatTracker.setBlacklistedMacBans(scan);
 		} catch (IOException ex) {
 			LOG.log(Level.SEVERE, "Could not load macban blacklist!", ex);
 			System.exit(3);
 			return;
 		} finally {
-			if (scan != null)
+			if (scan != null) {
 				scan.close();
+			}
 		}
 
 		Scheduler.enable(true, true);
@@ -254,7 +254,8 @@ public class GameServer implements LocalServer {
 		NpcScriptManager.setInstance(scriptsPath);
 		PortalScriptManager.setInstance(scriptsPath);
 		ReactorScriptManager.setInstance(scriptsPath);
-		long start, end;
+		long start;
+		long end;
 		start = System.nanoTime();
 		System.out.print("Loading String data...");
 		StringDataLoader.getInstance().loadAll();
@@ -298,20 +299,19 @@ public class GameServer implements LocalServer {
 	public void registerCenter() {
 		LOG.log(Level.INFO, "Center server registered.");
 		centerConnected = true;
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				initializeData(preloadAll, wzType, wzPath);
-				boolean doingWork = false;
-				for (WorldChannel ch : channels.values()) {
-					ch.listen(useNio);
-					if (ch.getPort() != -1)
-						doingWork = true;
+		new Thread((Runnable) () -> {
+			initializeData(preloadAll, wzType, wzPath);
+			boolean doingWork = false;
+			for (WorldChannel ch : channels.values()) {
+				ch.listen(useNio);
+				if (ch.getPort() != -1) {
+					doingWork = true;
 				}
-				if (doingWork)
-					gci.serverReady();
-				else
-					System.exit(5);
+			}
+			if (doingWork) {
+				gci.serverReady();
+			} else {
+				System.exit(5);
 			}
 		}, "data-preloader-thread").start();
 	}
@@ -330,7 +330,7 @@ public class GameServer implements LocalServer {
 			remoteGameChannelMapping.put(Byte.valueOf(serverId), ports.keySet());
 			for (WorldChannel ch : channels.values())
 				ch.getCrossServerInterface().addRemoteChannels(serverId, ip, ports);
-			LOG.log(Level.INFO, "{0} server registered as {1}.", new Object[] { ServerType.getName(serverId), host });
+			LOG.log(Level.INFO, "{0} server registered as {1}.", new Object[]{ServerType.getName(serverId), host});
 		} catch (UnknownHostException e) {
 			LOG.log(Level.INFO, "Could not accept shop server because its"
 					+ " address could not be resolved!", e);
@@ -349,7 +349,7 @@ public class GameServer implements LocalServer {
 			byte[] ip = InetAddress.getByName(host).getAddress();
 			for (WorldChannel ch : channels.values())
 				ch.getCrossServerInterface().addShopServer(ip, port);
-			LOG.log(Level.INFO, "Shop server registered as {0}:{1}.", new Object[] { host, port });
+			LOG.log(Level.INFO, "Shop server registered as {0}:{1}.", new Object[]{host, port});
 		} catch (UnknownHostException e) {
 			LOG.log(Level.INFO, "Could not accept shop server because its"
 					+ " address could not be resolved!", e);
@@ -373,7 +373,7 @@ public class GameServer implements LocalServer {
 	}
 
 	public Map<Byte, Integer> getClientPorts() {
-		Map<Byte, Integer> ports = new HashMap<Byte, Integer>(channels.size());
+		Map<Byte, Integer> ports = new HashMap<>(channels.size());
 		for (Entry<Byte, WorldChannel> entry : channels.entrySet())
 			ports.put(entry.getKey(), Integer.valueOf(entry.getValue().getPort()));
 		return ports;
@@ -385,15 +385,17 @@ public class GameServer implements LocalServer {
 
 	public byte channelOfPlayer(int characterid) {
 		for (Entry<Byte, WorldChannel> entry : channels.entrySet())
-			if (entry.getValue().isPlayerConnected(characterid))
+			if (entry.getValue().isPlayerConnected(characterid)) {
 				return entry.getKey().byteValue();
+			}
 		return -1;
 	}
 
 	public byte channelOfPlayer(String characterName) {
 		for (Entry<Byte, WorldChannel> entry : channels.entrySet())
-			if (entry.getValue().getPlayerByName(characterName) != null)
+			if (entry.getValue().getPlayerByName(characterName) != null) {
 				return entry.getKey().byteValue();
+			}
 		return -1;
 	}
 
@@ -410,7 +412,7 @@ public class GameServer implements LocalServer {
 
 	private void terminate(boolean halt) {
 		terminated = true;
-		List<GameCharacter> toSave = new ArrayList<GameCharacter>();
+		List<GameCharacter> toSave = new ArrayList<>();
 		for (WorldChannel chn : channels.values()) {
 			chn.shutdown();
 			for (GameCharacter p : chn.getConnectedPlayers()) {
@@ -439,12 +441,8 @@ public class GameServer implements LocalServer {
 		if (time == 0) {
 			terminate(halt);
 		} else {
-			Scheduler.getInstance().runAfterDelay(new Runnable() {
-				@Override
-				public void run() {
-					terminate(halt);
-				}
-			}, time);
+			Scheduler.getInstance().runAfterDelay(() ->
+				terminate(halt), time);
 		}
 	}
 

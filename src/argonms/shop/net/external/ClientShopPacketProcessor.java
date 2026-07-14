@@ -25,10 +25,6 @@ import argonms.shop.net.external.handler.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ClientShopPacketProcessor extends ClientPacketProcessor<ShopClient> {
 	private static final Logger LOG = Logger.getLogger(ClientPacketProcessor.class.getName());
 
@@ -66,7 +62,7 @@ public class ClientShopPacketProcessor extends ClientPacketProcessor<ShopClient>
 				sc.getPlayer().saveCharacter();
 				break;
 			default:
-				LOG.log(Level.FINE, "Received unhandled client packet {0} bytes long:\n{1}", new Object[] { reader.available() + 2, reader });
+				LOG.log(Level.FINE, "Received unhandled client packet {0} bytes long:\n{1}", new Object[]{reader.available() + 2, reader});
 				break;
 		}
 	}

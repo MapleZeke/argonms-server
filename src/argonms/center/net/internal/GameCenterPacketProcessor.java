@@ -46,7 +46,6 @@ import java.util.logging.Logger;
 /**
  * Processes packet sent from the game server and received at the center
  * server.
- * @author GoldenKevin
  */
 public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 	private static final Logger LOG = Logger.getLogger(GameCenterPacketProcessor.class.getName());
@@ -87,13 +86,14 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		}
 	}
 
-	private void serverOnline(LittleEndianReader packet)  {
+	private void serverOnline(LittleEndianReader packet) {
 		r.setHost(packet.readLengthPrefixedString());
 		byte world = packet.readByte();
 		byte size = packet.readByte();
-		Map<Byte, Integer> clientPorts = new HashMap<Byte, Integer>(size);
-		for (int i = 0; i < size; i++)
+		Map<Byte, Integer> clientPorts = new HashMap<>(size);
+		for (int i = 0; i < size; i++) {
 			clientPorts.put(Byte.valueOf(packet.readByte()), packet.readInt());
+		}
 		r.setWorld(world);
 		r.setClientPorts(clientPorts);
 		CenterServer.getInstance().registerGame(r);
@@ -125,8 +125,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		lew.writeBytes(packet.readBytes(packet.available()));
 		byte[] message = lew.getBytes();
 		for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED))
-			if (cgi.isOnline() && cgi.getChannels().contains(Byte.valueOf(channel)))
+			if (cgi.isOnline() && cgi.getChannels().contains(Byte.valueOf(channel))) {
 				cgi.getSession().send(message);
+			}
 	}
 
 	private void processChannelShopSynchronization(LittleEndianReader packet) {
@@ -242,15 +243,17 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 	private void processPartyDisbandment(LittleEndianReader packet) {
 		int partyId = packet.readInt();
 		Party party = CenterServer.getInstance().getGroupsDb(r.getWorld()).flushParty(partyId);
-		if (party == null) //if there was lag, leader may have spammed leave button
+		if (party == null) { //if there was lag, leader may have spammed leave button
 			return;
+		}
 
 		party.lockRead();
 		try {
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : party.allChannels()) {
-					if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+					if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 						continue;
+					}
 
 					LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(7);
 					writeCenterGameSynchronizationPacketHeader(lew, channel.byteValue(), CenterServerSynchronizationOps.PARTY_DISBAND);
@@ -261,8 +264,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 
 			//TODO: not safe if player is being concurrently loaded
 			Collection<Party.Member> offlineMembers = party.getMembersOfChannel(Party.OFFLINE_CH);
-			if (offlineMembers.isEmpty())
+			if (offlineMembers.isEmpty()) {
 				return;
+			}
 
 			Connection con = null;
 			PreparedStatement ps = null;
@@ -291,14 +295,16 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		String leaverName = packet.readLengthPrefixedString();
 		boolean leaverExpelled = packet.readBool();
 		Party party = CenterServer.getInstance().getGroupsDb(r.getWorld()).getParty(partyId);
-		if (party == null) //if there was lag, party may have been disbanded before member clicked leave
+		if (party == null) { //if there was lag, party may have been disbanded before member clicked leave
 			return;
+		}
 
 		party.lockWrite();
 		try {
 			//if there was lag, member may have spammed leave button
-			if (!party.removePlayer(leaverId))
+			if (!party.removePlayer(leaverId)) {
 				return;
+			}
 		} finally {
 			party.unlockWrite();
 		}
@@ -306,18 +312,20 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		party.lockRead();
 		try {
 			Set<Byte> partyChannels = party.allChannels();
-			if (partyChannels.size() == 1 && partyChannels.contains(Byte.valueOf(Party.OFFLINE_CH)))
+			if (partyChannels.size() == 1 && partyChannels.contains(Byte.valueOf(Party.OFFLINE_CH))) {
 				//make sure the leaving player saves himself to the
 				//database. otherwise if another player in the party
 				//logs on before he changes channels or logs off, he
 				//will still be loaded into the party list
 				CenterServer.getInstance().getGroupsDb(r.getWorld()).flushParty(partyId);
-			partyChannels = new HashSet<Byte>(partyChannels);
+			}
+			partyChannels = new HashSet<>(partyChannels);
 			partyChannels.add(Byte.valueOf(leaverChannel));
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : partyChannels) {
-					if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+					if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 						continue;
+					}
 
 					LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(leaverChannel == channel.byteValue() ? 13 : (15 + leaverName.length()));
 					writeCenterGameSynchronizationPacketHeader(lew, channel.byteValue(), CenterServerSynchronizationOps.PARTY_REMOVE_PLAYER);
@@ -325,8 +333,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 					lew.writeInt(leaverId);
 					lew.writeByte(leaverChannel);
 					lew.writeBool(leaverExpelled);
-					if (leaverChannel != channel.byteValue())
+					if (leaverChannel != channel.byteValue()) {
 						lew.writeLengthPrefixedString(leaverName);
+					}
 					cgi.getSession().send(lew.getBytes());
 				}
 			}
@@ -335,8 +344,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		}
 
 		//TODO: not safe if player is being concurrently loaded
-		if (leaverChannel != Party.OFFLINE_CH)
+		if (leaverChannel != Party.OFFLINE_CH) {
 			return;
+		}
 
 		Connection con = null;
 		PreparedStatement ps = null;
@@ -360,8 +370,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		short joinerJob = packet.readShort();
 		short joinerLevel = packet.readShort();
 		Party party = CenterServer.getInstance().getGroupsDb(r.getWorld()).getParty(partyId);
-		if (party == null) //if there was lag, party may have been disbanded before member clicked leave
+		if (party == null) { //if there was lag, party may have been disbanded before member clicked leave
 			return;
+		}
 
 		boolean full;
 		party.lockWrite();
@@ -380,8 +391,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 			try {
 				for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 					for (Byte channel : party.allChannels()) {
-						if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+						if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 							continue;
+						}
 
 						//notify other party members
 						LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(joinerCh == channel.byteValue() ? 12 : (18 + joinerName.length()));
@@ -407,8 +419,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 			writeCenterGameSynchronizationPacketHeader(lew, joinerCh, CenterServerSynchronizationOps.PARTY_JOIN_ERROR);
 			lew.writeInt(joinerId);
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED))
-				if (cgi.isOnline() && cgi.getChannels().contains(Byte.valueOf(joinerCh)))
+				if (cgi.isOnline() && cgi.getChannels().contains(Byte.valueOf(joinerCh))) {
 					cgi.getSession().send(lew.getBytes());
+				}
 		}
 	}
 
@@ -416,8 +429,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		int partyId = packet.readInt();
 		int newLeader = packet.readInt();
 		Party party = CenterServer.getInstance().getGroupsDb(r.getWorld()).getParty(partyId);
-		if (party == null) //if there was lag, party may have been disbanded before member clicked leave
+		if (party == null) { //if there was lag, party may have been disbanded before member clicked leave
 			return;
+		}
 
 		party.setLeader(newLeader);
 
@@ -425,8 +439,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		try {
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : party.allChannels()) {
-					if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+					if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 						continue;
+					}
 
 					LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(11);
 					writeCenterGameSynchronizationPacketHeader(lew, channel.byteValue(), CenterServerSynchronizationOps.PARTY_CHANGE_LEADER);
@@ -465,8 +480,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 				while (rs.next()) {
 					int cid = rs.getInt(1);
 					party.addPlayer(new Party.Member(cid, rs.getString(2), rs.getShort(3), rs.getShort(4), Party.OFFLINE_CH));
-					if (rs.getBoolean(5))
+					if (rs.getBoolean(5)) {
 						party.setLeader(cid);
+					}
 				}
 			} catch (SQLException ex) {
 				LOG.log(Level.WARNING, "Could not load party " + partyId + " of world " + r.getWorld(), ex);
@@ -486,8 +502,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 			for (Party.Member member : members) {
 				lew.writeInt(member.getPlayerId());
 				lew.writeByte(member.getChannel());
-				if (member.getChannel() == responseCh)
+				if (member.getChannel() == responseCh) {
 					continue;
+				}
 
 				lew.writeLengthPrefixedString(member.getName());
 				lew.writeShort(member.getJob());
@@ -507,19 +524,22 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		short newValue = packet.readShort();
 
 		Party party = CenterServer.getInstance().getGroupsDb(r.getWorld()).getParty(partyId);
-		if (party == null) //if there was lag, party may have been disbanded before member clicked leave
+		if (party == null) { //if there was lag, party may have been disbanded before member clicked leave
 			return;
+		}
 
 		party.lockRead();
 		try {
-			if (updateLevel)
+			if (updateLevel) {
 				party.getMember(updatedPlayerId).setLevel(newValue);
-			else
+			} else {
 				party.getMember(updatedPlayerId).setJob(newValue);
+			}
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : party.allChannels()) {
-					if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+					if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 						continue;
+					}
 
 					LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(updatedPlayerCh == channel.byteValue() ? 12 : 15);
 					writeCenterGameSynchronizationPacketHeader(lew, channel.byteValue(), CenterServerSynchronizationOps.PARTY_MEMBER_STAT_UPDATED);
@@ -616,8 +636,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 			lew.writeByte(guild.getEmblemBackgroundColor());
 			lew.writeShort(guild.getEmblemDesign());
 			lew.writeByte(guild.getEmblemDesignColor());
-			for (byte i = 0; i < 5; i++)
+			for (byte i = 0; i < 5; i++) {
 				lew.writeLengthPrefixedString(guild.getTitle(i));
+			}
 			lew.writeByte(guild.getCapacity());
 			lew.writeLengthPrefixedString(guild.getNotice());
 			lew.writeInt(guild.getGp());
@@ -630,8 +651,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 				lew.writeByte(member.getRank());
 				lew.writeByte(member.getSignature());
 				lew.writeByte(member.getAllianceRank());
-				if (member.getChannel() == responseCh)
+				if (member.getChannel() == responseCh) {
 					continue;
+				}
 
 				lew.writeLengthPrefixedString(member.getName());
 				lew.writeShort(member.getJob());
@@ -651,19 +673,22 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		short newValue = packet.readShort();
 
 		Guild guild = CenterServer.getInstance().getGroupsDb(r.getWorld()).getGuild(guildId);
-		if (guild == null)
+		if (guild == null) {
 			return;
+		}
 
 		guild.lockRead();
 		try {
-			if (updateLevel)
+			if (updateLevel) {
 				guild.getMember(updatedPlayerId).setLevel(newValue);
-			else
+			} else {
 				guild.getMember(updatedPlayerId).setJob(newValue);
+			}
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : guild.allChannels()) {
-					if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+					if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 						continue;
+					}
 
 					LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(updatedPlayerCh == channel.byteValue() ? 12 : 15);
 					writeCenterGameSynchronizationPacketHeader(lew, channel.byteValue(), CenterServerSynchronizationOps.GUILD_MEMBER_STAT_UPDATED);
@@ -690,8 +715,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		short joinerJob = packet.readShort();
 		short joinerLevel = packet.readShort();
 		Guild guild = CenterServer.getInstance().getGroupsDb(r.getWorld()).getGuild(guildId);
-		if (guild == null) //if there was lag, guild may have been disbanded before member clicked leave
+		if (guild == null) { //if there was lag, guild may have been disbanded before member clicked leave
 			return;
+		}
 
 		boolean full;
 		guild.lockWrite();
@@ -710,8 +736,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 			try {
 				for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 					for (Byte channel : guild.allChannels()) {
-						if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+						if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 							continue;
+						}
 
 						//notify other guild members
 						LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(joinerCh == channel.byteValue() ? 12 : (18 + joinerName.length()));
@@ -737,8 +764,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 			writeCenterGameSynchronizationPacketHeader(lew, joinerCh, CenterServerSynchronizationOps.GUILD_JOIN_ERROR);
 			lew.writeInt(joinerId);
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED))
-				if (cgi.isOnline() && cgi.getChannels().contains(Byte.valueOf(joinerCh)))
+				if (cgi.isOnline() && cgi.getChannels().contains(Byte.valueOf(joinerCh))) {
 					cgi.getSession().send(lew.getBytes());
+				}
 		}
 	}
 
@@ -749,14 +777,16 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		String leaverName = packet.readLengthPrefixedString();
 		boolean leaverExpelled = packet.readBool();
 		Guild guild = CenterServer.getInstance().getGroupsDb(r.getWorld()).getGuild(guildId);
-		if (guild == null)
+		if (guild == null) {
 			return;
+		}
 
 		guild.lockWrite();
 		try {
 			//if there was lag, member may have spammed leave button
-			if (!guild.removePlayer(leaverId))
+			if (!guild.removePlayer(leaverId)) {
 				return;
+			}
 		} finally {
 			guild.unlockWrite();
 		}
@@ -764,18 +794,20 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		guild.lockRead();
 		try {
 			Set<Byte> guildChannels = guild.allChannels();
-			if (guildChannels.size() == 1 && guildChannels.contains(Byte.valueOf(Guild.OFFLINE_CH)))
+			if (guildChannels.size() == 1 && guildChannels.contains(Byte.valueOf(Guild.OFFLINE_CH))) {
 				//make sure the leaving player saves himself to the
 				//database. otherwise if another player in the guild
 				//logs on before he changes channels or logs off, he
 				//will still be loaded into the guild list
 				CenterServer.getInstance().getGroupsDb(r.getWorld()).flushGuild(guildId);
-			guildChannels = new HashSet<Byte>(guildChannels);
+			}
+			guildChannels = new HashSet<>(guildChannels);
 			guildChannels.add(Byte.valueOf(leaverChannel));
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : guildChannels) {
-					if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+					if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 						continue;
+					}
 
 					LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(leaverChannel == channel.byteValue() ? 13 : (15 + leaverName.length()));
 					writeCenterGameSynchronizationPacketHeader(lew, channel.byteValue(), CenterServerSynchronizationOps.GUILD_REMOVE_PLAYER);
@@ -783,8 +815,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 					lew.writeInt(leaverId);
 					lew.writeByte(leaverChannel);
 					lew.writeBool(leaverExpelled);
-					if (leaverChannel != channel.byteValue())
+					if (leaverChannel != channel.byteValue()) {
 						lew.writeLengthPrefixedString(leaverName);
+					}
 					cgi.getSession().send(lew.getBytes());
 				}
 			}
@@ -793,8 +826,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		}
 
 		//TODO: not safe if player is being concurrently loaded
-		if (leaverChannel != Guild.OFFLINE_CH)
+		if (leaverChannel != Guild.OFFLINE_CH) {
 			return;
+		}
 
 		Connection con = null;
 		PreparedStatement ps = null;
@@ -816,8 +850,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		int guildId = packet.readInt();
 		byte amount = packet.readByte();
 		Guild guild = CenterServer.getInstance().getGroupsDb(r.getWorld()).getGuild(guildId);
-		if (guild == null)
+		if (guild == null) {
 			return;
+		}
 
 		guild.lockWrite();
 		try {
@@ -842,8 +877,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 			}
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : guild.allChannels()) {
-					if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+					if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 						continue;
+					}
 
 					LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(8);
 					writeCenterGameSynchronizationPacketHeader(lew, channel.byteValue(), CenterServerSynchronizationOps.GUILD_EXPAND);
@@ -864,8 +900,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		short design = packet.readShort();
 		byte designColor = packet.readByte();
 		Guild guild = CenterServer.getInstance().getGroupsDb(r.getWorld()).getGuild(guildId);
-		if (guild == null)
+		if (guild == null) {
 			return;
+		}
 
 		guild.lockWrite();
 		try {
@@ -893,8 +930,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 			}
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : guild.allChannels()) {
-					if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+					if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 						continue;
+					}
 
 					LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(9);
 					writeCenterGameSynchronizationPacketHeader(lew, channel.byteValue(), CenterServerSynchronizationOps.GUILD_EMBLEM_UPDATE);
@@ -914,11 +952,13 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 	private void processGuildTitlesUpdate(LittleEndianReader packet) {
 		int guildId = packet.readInt();
 		String[] titles = new String[5];
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < 5; i++) {
 			titles[i] = packet.readLengthPrefixedString();
+		}
 		Guild guild = CenterServer.getInstance().getGroupsDb(r.getWorld()).getGuild(guildId);
-		if (guild == null)
+		if (guild == null) {
 			return;
+		}
 
 		guild.lockWrite();
 		try {
@@ -927,8 +967,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 			guild.unlockWrite();
 		}
 		StringBuilder joined = new StringBuilder(titles[0]);
-		for (int i = 1; i < 5; i++)
+		for (int i = 1; i < 5; i++) {
 			joined.append(',').append(titles[i]);
+		}
 		guild.lockRead();
 		try {
 			Connection con = null;
@@ -946,14 +987,16 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 			}
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : guild.allChannels()) {
-					if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+					if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 						continue;
+					}
 
 					LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter();
 					writeCenterGameSynchronizationPacketHeader(lew, channel.byteValue(), CenterServerSynchronizationOps.GUILD_TITLES_UPDATE);
 					lew.writeInt(guildId);
-					for (int i = 0; i < 5; i++)
+					for (int i = 0; i < 5; i++) {
 						lew.writeLengthPrefixedString(titles[i]);
+					}
 					cgi.getSession().send(lew.getBytes());
 				}
 			}
@@ -967,8 +1010,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		int characterId = packet.readInt();
 		byte newRank = packet.readByte();
 		Guild guild = CenterServer.getInstance().getGroupsDb(r.getWorld()).getGuild(guildId);
-		if (guild == null)
+		if (guild == null) {
 			return;
+		}
 
 		Guild.Member member = guild.getMember(characterId);
 		guild.lockWrite();
@@ -998,8 +1042,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 			}
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : guild.allChannels()) {
-					if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+					if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 						continue;
+					}
 
 					LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(12);
 					writeCenterGameSynchronizationPacketHeader(lew, channel.byteValue(), CenterServerSynchronizationOps.GUILD_MEMBER_RANK_UPDATE);
@@ -1018,8 +1063,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		int guildId = packet.readInt();
 		String notice = packet.readLengthPrefixedString();
 		Guild guild = CenterServer.getInstance().getGroupsDb(r.getWorld()).getGuild(guildId);
-		if (guild == null)
+		if (guild == null) {
 			return;
+		}
 
 		guild.lockWrite();
 		try {
@@ -1045,8 +1091,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : guild.allChannels()) {
-					if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+					if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 						continue;
+					}
 
 					LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(9 + notice.length());
 					writeCenterGameSynchronizationPacketHeader(lew, channel.byteValue(), CenterServerSynchronizationOps.GUILD_NOTICE_UPDATE);
@@ -1066,16 +1113,19 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		boolean accept = packet.readBool();
 		Guild guild;
 		Set<Integer> pendingContractVotes;
-		if (accept)
+		if (accept) {
 			guild = CenterServer.getInstance().getGroupsDb(r.getWorld()).getGuild(guildId);
-		else
+		} else {
 			guild = CenterServer.getInstance().getGroupsDb(r.getWorld()).flushGuild(guildId);
-		if (accept)
+		}
+		if (accept) {
 			pendingContractVotes = CenterServer.getInstance().getGroupsDb(r.getWorld()).getPendingGuildContractVotes(guildId);
-		else
+		} else {
 			pendingContractVotes = CenterServer.getInstance().getGroupsDb(r.getWorld()).removePendingGuildContractVotes(guildId);
-		if (pendingContractVotes == null || guild == null)
+		}
+		if (pendingContractVotes == null || guild == null) {
 			return;
+		}
 
 		if (accept) {
 			pendingContractVotes.remove(Integer.valueOf(characterId));
@@ -1083,8 +1133,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 				CenterServer.getInstance().getGroupsDb(r.getWorld()).removePendingGuildContractVotes(guildId);
 				for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 					for (Byte channel : guild.allChannels()) {
-						if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+						if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 							continue;
+						}
 
 						LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(7);
 						writeCenterGameSynchronizationPacketHeader(lew, channel, CenterServerSynchronizationOps.GUILD_CREATED);
@@ -1110,8 +1161,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : guild.allChannels()) {
-					if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+					if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 						continue;
+					}
 
 					LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(7);
 					writeCenterGameSynchronizationPacketHeader(lew, channel, CenterServerSynchronizationOps.GUILD_CREATED);
@@ -1126,15 +1178,17 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 	private void processGuildDisbandment(LittleEndianReader packet) {
 		int guildId = packet.readInt();
 		Guild guild = CenterServer.getInstance().getGroupsDb(r.getWorld()).flushGuild(guildId);
-		if (guild == null)
+		if (guild == null) {
 			return;
+		}
 
 		guild.lockRead();
 		try {
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : guild.allChannels()) {
-					if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+					if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 						continue;
+					}
 
 					LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(7);
 					writeCenterGameSynchronizationPacketHeader(lew, channel.byteValue(), CenterServerSynchronizationOps.GUILD_DISBAND);
@@ -1163,7 +1217,7 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 
 	private void processCreateChatroom(LittleEndianReader packet) {
 		int creatorId = packet.readInt();
-		Map<Short, Integer> equips = new HashMap<Short, Integer>();
+		Map<Short, Integer> equips = new HashMap<>();
 		for (byte i = packet.readByte(); i > 0; i--) {
 			short slot = packet.readShort();
 			int itemId = packet.readInt();
@@ -1186,7 +1240,7 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 	private void processJoinChatroom(LittleEndianReader packet) {
 		int roomId = packet.readInt();
 		int joinerId = packet.readInt();
-		Map<Short, Integer> equips = new HashMap<Short, Integer>();
+		Map<Short, Integer> equips = new HashMap<>();
 		for (byte i = packet.readByte(); i > 0; i--) {
 			short slot = packet.readShort();
 			int itemId = packet.readInt();
@@ -1199,8 +1253,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		String joinerName = packet.readLengthPrefixedString();
 		byte joinerCh = packet.readByte();
 		Chatroom room = CenterServer.getInstance().getGroupsDb(r.getWorld()).getRoom(roomId);
-		if (room == null)
+		if (room == null) {
 			return;
+		}
 
 		boolean sendAvatars;
 		byte position;
@@ -1253,19 +1308,22 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		}
 		r.getSession().send(lew.getBytes());
 
-		if (position == -1)
+		if (position == -1) {
 			return;
+		}
 
 		room.lockRead();
 		try {
 			List<CenterGameInterface> gameServers = CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED);
 			for (Byte channel : room.allChannels()) {
-				if (channel.byteValue() == joinerCh)
+				if (channel.byteValue() == joinerCh) {
 					continue;
+				}
 
 				for (CenterGameInterface cgi : gameServers) {
-					if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+					if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 						continue;
+					}
 
 					//notify other party members
 					lew = new LittleEndianByteArrayWriter(26 + joinerName.length() + 6 * equips.size());
@@ -1298,8 +1356,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		int roomId = packet.readInt();
 		byte newChannel = packet.readByte();
 		Chatroom room = CenterServer.getInstance().getGroupsDb(r.getWorld()).getRoom(roomId);
-		if (room == null)
+		if (room == null) {
 			return;
+		}
 
 		byte pos;
 		room.lockRead();
@@ -1308,8 +1367,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		} finally {
 			room.unlockRead();
 		}
-		if (pos == -1)
+		if (pos == -1) {
 			return;
+		}
 
 		boolean sendAvatars;
 		Chatroom.Avatar a;
@@ -1362,12 +1422,14 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		try {
 			List<CenterGameInterface> gameServers = CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED);
 			for (Byte channel : room.allChannels()) {
-				if (channel.byteValue() == newChannel)
+				if (channel.byteValue() == newChannel) {
 					continue;
+				}
 
 				for (CenterGameInterface cgi : gameServers) {
-					if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+					if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 						continue;
+					}
 
 					//notify other chatroom members
 					lew = new LittleEndianByteArrayWriter(26 + a.getName().length() + 6 * a.getEquips().size());
@@ -1398,7 +1460,7 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 	private void processUpdateChatroomPlayerLook(LittleEndianReader packet) {
 		int playerId = packet.readInt();
 		int roomId = packet.readInt();
-		Map<Short, Integer> equips = new HashMap<Short, Integer>();
+		Map<Short, Integer> equips = new HashMap<>();
 		for (byte i = packet.readByte(); i > 0; i--) {
 			short slot = packet.readShort();
 			int itemId = packet.readInt();
@@ -1408,8 +1470,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		int eyes = packet.readInt();
 		int hair = packet.readInt();
 		Chatroom room = CenterServer.getInstance().getGroupsDb(r.getWorld()).getRoom(roomId);
-		if (room == null)
+		if (room == null) {
 			return;
+		}
 
 		byte pos;
 		room.lockRead();
@@ -1418,8 +1481,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		} finally {
 			room.unlockRead();
 		}
-		if (pos == -1)
+		if (pos == -1) {
 			return;
+		}
 
 		Chatroom.Avatar a;
 		room.lockWrite();
@@ -1435,8 +1499,9 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		try {
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : room.allChannels()) {
-					if (!cgi.isOnline() || !cgi.getChannels().contains(channel))
+					if (!cgi.isOnline() || !cgi.getChannels().contains(channel)) {
 						continue;
+					}
 
 					LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(26 + a.getName().length() + 6 * a.getEquips().size());
 					writeCenterGameSynchronizationPacketHeader(lew, channel.byteValue(), CenterServerSynchronizationOps.CHATROOM_SLOT_CHANGED);

@@ -47,20 +47,17 @@ import argonms.game.net.external.GameClient;
 import argonms.game.net.external.GamePackets;
 import java.awt.Point;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class BuffHandler {
 	private static boolean isAffected(byte bitset, byte index) {
-		return ((bitset & (1 << (5 - index))) != 0);
+		return (bitset & (1 << (5 - index))) != 0;
 	}
 
 	public static void handleUseSkill(LittleEndianReader packet, GameClient gc) {
 		CheatTracker.get(gc).logTime("hpr", System.currentTimeMillis());
 		GameCharacter p = gc.getPlayer();
-		if (!p.isAlive())
+		if (!p.isAlive()) {
 			return;
+		}
 
 		/*int tickCount = */packet.readInt();
 		int skillId = packet.readInt();
@@ -122,15 +119,17 @@ public final class BuffHandler {
 						for (byte i = 0; i < partySize; i++) {
 							if (isAffected(affected, i)) {
 								GameCharacter memberPlayer = ((PartyList.LocalMember) members[i]).getPlayer();
-								if (p != memberPlayer)
+								if (p != memberPlayer) {
 									expGained += SkillTools.applyHeal(memberPlayer, false, e, recover);
+								}
 							}
 						}
 					} finally {
 						party.unlockRead();
 					}
-					if (expGained != 0)
+					if (expGained != 0) {
 						p.gainExp(expGained, true, false);
+					}
 				}
 				SkillTools.applyHeal(p, true, e, recover);
 				break;
@@ -172,8 +171,9 @@ public final class BuffHandler {
 				for (int i = 0; i < count; i++) {
 					int mobId = packet.readInt();
 					Mob m = (Mob) p.getMap().getEntityById(EntityType.MONSTER, mobId);
-					if (m != null)
+					if (m != null) {
 						MonsterStatusEffectTools.applyEffectsAndShowVisuals(m, p, e);
+					}
 				}
 				break;
 			}
@@ -190,8 +190,9 @@ public final class BuffHandler {
 			case Skills.BUCCANEER_PIRATES_RAGE:
 			case Skills.CORSAIR_PIRATES_RAGE: {
 				PlayerStatusEffectValues v = p.getEffectValue(PlayerStatusEffect.SEDUCE);
-				if (v != null)
+				if (v != null) {
 					StatusEffectTools.dispelEffectsAndShowVisuals(p, v.getEffectsData());
+				}
 				break;
 			}
 			case Skills.RAGE:
@@ -232,8 +233,9 @@ public final class BuffHandler {
 						for (byte i = 0; i < partySize; i++) {
 							if (isAffected(affected, i)) {
 								GameCharacter memberPlayer = ((PartyList.LocalMember) members[i]).getPlayer();
-								if (p != memberPlayer && e.makeChanceResult())
+								if (p != memberPlayer && e.makeChanceResult()) {
 									SkillTools.applyAoeBuff(memberPlayer, e);
+								}
 							}
 						}
 					} finally {
@@ -255,8 +257,9 @@ public final class BuffHandler {
 						for (byte i = 0; i < partySize; i++) {
 							if (isAffected(affected, i)) {
 								GameCharacter memberPlayer = ((PartyList.LocalMember) members[i]).getPlayer();
-								if (p != memberPlayer && e.makeChanceResult())
+								if (p != memberPlayer && e.makeChanceResult()) {
 									SkillTools.applyTimeLeap(memberPlayer, false, e);
+								}
 							}
 						}
 					} finally {
@@ -279,8 +282,9 @@ public final class BuffHandler {
 						for (byte i = 0; i < partySize; i++) {
 							if (isAffected(affected, i)) {
 								GameCharacter memberPlayer = ((PartyList.LocalMember) members[i]).getPlayer();
-								if (p != memberPlayer && e.makeChanceResult())
+								if (p != memberPlayer && e.makeChanceResult()) {
 									SkillTools.applyResurrection(memberPlayer, e);
+								}
 							}
 						}
 					} finally {
@@ -303,8 +307,9 @@ public final class BuffHandler {
 						for (byte i = 0; i < partySize; i++) {
 							if (isAffected(affected, i)) {
 								GameCharacter memberPlayer = ((PartyList.LocalMember) members[i]).getPlayer();
-								if (p != memberPlayer && e.makeChanceResult())
+								if (p != memberPlayer && e.makeChanceResult()) {
 									SkillTools.applyDispel(memberPlayer, false, e);
+								}
 							}
 						}
 					} finally {
@@ -318,8 +323,9 @@ public final class BuffHandler {
 				for (int i = 0; i < count; i++) {
 					int mobId = packet.readInt();
 					Mob m = (Mob) p.getMap().getEntityById(EntityType.MONSTER, mobId);
-					if (m != null && e.makeChanceResult())
+					if (m != null && e.makeChanceResult()) {
 						MonsterStatusEffectTools.applyDispel(m, e);
+					}
 				}
 				break;
 			}
@@ -333,8 +339,9 @@ public final class BuffHandler {
 				for (int i = 0; i < count; i++) {
 					int playerId = packet.readInt();
 					GameCharacter target = (GameCharacter) p.getMap().getEntityById(EntityType.PLAYER, playerId);
-					if (p != target && target != null)
+					if (p != target && target != null) {
 						SkillTools.applyAoeBuff(target, e);
+					}
 				}
 				break;
 			}
@@ -344,8 +351,9 @@ public final class BuffHandler {
 				for (int i = 0; i < count; i++) {
 					int playerId = packet.readInt();
 					GameCharacter target = (GameCharacter) p.getMap().getEntityById(EntityType.PLAYER, playerId);
-					if (target != null)
+					if (target != null) {
 						SkillTools.applyHealAndDispel(target, p == target, e);
+					}
 				}
 				break;
 			}
@@ -356,8 +364,9 @@ public final class BuffHandler {
 					int playerId = packet.readInt();
 					GameCharacter target = (GameCharacter) p.getMap().getEntityById(EntityType.PLAYER, playerId);
 					//assert p != target;
-					if (target != null)
+					if (target != null) {
 						SkillTools.applyResurrection(target, e);
+					}
 				}
 				break;
 			}
@@ -376,8 +385,9 @@ public final class BuffHandler {
 							v = p.getEffectValue(PlayerStatusEffect.SUMMON);
 							break;
 					}
-					if (v != null) //we can only keep track of one PUPPET and one SUMMON at once =/
+					if (v != null) { //we can only keep track of one PUPPET and one SUMMON at once =/
 						SkillTools.cancelBuffSkill(p, v.getSource());
+					}
 					PlayerSkillSummon summon = new PlayerSkillSummon(p, skill.getLevel(skillLevel), summonPos, stance);
 					p.addToSummons(skillId, summon);
 					p.getMap().spawnEntity(summon);
@@ -390,8 +400,9 @@ public final class BuffHandler {
 
 	public static void handleUseItem(LittleEndianReader packet, GameClient gc) {
 		GameCharacter p = gc.getPlayer();
-		if (!p.isAlive())
+		if (!p.isAlive()) {
 			return;
+		}
 
 		/*int tickCount = */packet.readInt();
 		short slot = packet.readShort();
@@ -403,10 +414,11 @@ public final class BuffHandler {
 			return;
 		}
 		changed = InventoryTools.takeFromInventory(inv, slot, (short) 1);
-		if (changed != null)
+		if (changed != null) {
 			gc.getSession().send(CommonPackets.writeInventoryUpdateSlotQuantity(InventoryType.USE, slot, changed));
-		else
+		} else {
 			gc.getSession().send(CommonPackets.writeInventoryClearSlot(InventoryType.USE, slot));
+		}
 		p.itemCountChanged(itemId);
 		ItemTools.useItem(p, itemId);
 	}
@@ -416,10 +428,11 @@ public final class BuffHandler {
 		int skillId = packet.readInt();
 		//method name is kind of a misnomer. this handles buff cancels and
 		//skills with a keydownend (only Hurricane and Rapid Fire at the moment)
-		if (!SkillDataLoader.getInstance().getSkill(skillId).isKeydownEnd())
+		if (!SkillDataLoader.getInstance().getSkill(skillId).isKeydownEnd()) {
 			SkillTools.cancelBuffSkill(p, skillId);
-		else
+		} else {
 			p.getMap().sendToAll(writeEndKeydown(p, skillId), p);
+		}
 	}
 
 	public static void handleCancelItem(LittleEndianReader packet, GameClient gc) {

@@ -20,10 +20,6 @@ package argonms.game.field;
 
 import java.awt.Point;
 
-/**
- *
- * @author GoldenKevin
- */
 public interface Positionable {
 	public Point getPosition();
 	public void setPosition(Point newPos);

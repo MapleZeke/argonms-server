@@ -20,11 +20,11 @@ package argonms.shop.loading.limitedcommodity;
 
 import argonms.shop.ShopServer;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.mozilla.javascript.Callable;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Kit;
 import org.mozilla.javascript.NativeArray;
@@ -32,10 +32,6 @@ import org.mozilla.javascript.NativeJSON;
 import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.Scriptable;
 
-/**
- *
- * @author GoldenKevin
- */
 public class JsonLimitedCommodityDataLoader extends LimitedCommodityDataLoader {
 	private static final Logger LOG = Logger.getLogger(JsonLimitedCommodityDataLoader.class.getName());
 
@@ -48,14 +44,9 @@ public class JsonLimitedCommodityDataLoader extends LimitedCommodityDataLoader {
 		Context cx = Context.enter();
 		FileReader fr = null;
 		try {
-			fr = new FileReader(ShopServer.getInstance().getLimitedCommodityPath());
+			fr = new FileReader(ShopServer.getInstance().getLimitedCommodityPath(), StandardCharsets.UTF_8);
 			final Scriptable globalScope = cx.initStandardObjects();
-			Object json = NativeJSON.parse(cx, globalScope, Kit.readReader(fr), new Callable() {
-				@Override
-				public Object call(Context cntxt, Scriptable s, Scriptable s1, Object[] os) {
-					return os[1];
-				}
-			});
+			Object json = NativeJSON.parse(cx, globalScope, Kit.readReader(fr), (cntxt, s, s1, os) -> os[1]);
 			for (Map.Entry<Object, Object> limitedCommodity : ((NativeObject) json).entrySet()) {
 				Integer itemId = (Integer) limitedCommodity.getKey();
 				LimitedCommodity lc = new LimitedCommodity();

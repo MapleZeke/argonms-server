@@ -34,10 +34,6 @@ import argonms.game.net.external.GameClient;
 import argonms.game.net.external.GamePackets;
 import java.util.List;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CashConsumeHandler {
 	private static void handleHiredMerchant(LittleEndianReader packet, GameCharacter p, int itemId) {
 		//TODO: handle hired merchant
@@ -102,11 +98,14 @@ public class CashConsumeHandler {
 		List<Integer> consumableBy = ItemDataLoader.getInstance().getEffect(itemId).getPetsConsumable();
 		byte petSlot = -1;
 		Pet[] pets = p.getPets();
-		for (byte i = 0; i < 3 && pets[i] != null; i++)
-			if (consumableBy.contains(pets[i].getDataId()) && (petSlot == -1 || pets[i].getFullness() < pets[petSlot].getFullness()))
+		for (byte i = 0; i < 3 && pets[i] != null; i++) {
+			if (consumableBy.contains(pets[i].getDataId()) && (petSlot == -1 || pets[i].getFullness() < pets[petSlot].getFullness())) {
 				petSlot = i;
-		if (petSlot == -1)
+			}
+		}
+		if (petSlot == -1) {
 			return;
+		}
 
 		Pet pet = pets[petSlot];
 		PetTools.gainFullness(pet, ItemDataLoader.getInstance().getPetFullnessRecover(itemId));
@@ -155,10 +154,11 @@ public class CashConsumeHandler {
 			return;
 		}
 		changed = InventoryTools.takeFromInventory(inv, slot, (short) 1);
-		if (changed != null)
+		if (changed != null) {
 			gc.getSession().send(CommonPackets.writeInventoryUpdateSlotQuantity(Inventory.InventoryType.CASH, slot, changed));
-		else
+		} else {
 			gc.getSession().send(CommonPackets.writeInventoryClearSlot(Inventory.InventoryType.CASH, slot));
+		}
 		p.itemCountChanged(itemId);
 
 		switch (itemId / 10000) {
@@ -238,5 +238,8 @@ public class CashConsumeHandler {
 		lew.writeBool(hasLabelRing);
 
 		return lew.getBytes();
+	}
+
+	private CashConsumeHandler() {
 	}
 }

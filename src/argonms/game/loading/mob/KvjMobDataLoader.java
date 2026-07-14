@@ -23,45 +23,40 @@ import argonms.common.util.input.LittleEndianByteArrayReader;
 import argonms.common.util.input.LittleEndianReader;
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class KvjMobDataLoader extends MobDataLoader {
 	private static final Logger LOG = Logger.getLogger(KvjMobDataLoader.class.getName());
 
-	private static final byte
-		LEVEL = 1,
-		MAX_HP = 2,
-		MAX_MP = 3,
-		PHYSICAL_DAMAGE = 4,
-		EXP = 5,
-		UNDEAD = 6,
-		ELEM_ATTR = 7,
-		REMOVE_AFTER = 8,
-		HIDE_HP = 9,
-		HIDE_NAME = 10,
-		HP_TAG_COLOR = 11,
-		HP_TAG_BG_COLOR = 12,
-		BOSS = 13,
-		SELF_DESTRUCT = 14,
-		LOSE_ITEM = 15,
-		INVINCIBLE = 16,
-		REVIVE = 17,
-		FIRST_ATTACK = 18,
-		ATTACK = 19,
-		SKILL = 20,
-		BUFF = 21,
-		DELAY = 22,
-		DROPS = 23,
-		NO_MESOS = 24,
-		QUEST_ITEM_DROPS = 25,
-		DESTROY_ANIMATION = 26,
-		DROP_ITEM_PERIOD = 27
-	;
+	private static final byte LEVEL = 1;
+	private static final byte MAX_HP = 2;
+	private static final byte MAX_MP = 3;
+	private static final byte PHYSICAL_DAMAGE = 4;
+	private static final byte EXP = 5;
+	private static final byte UNDEAD = 6;
+	private static final byte ELEM_ATTR = 7;
+	private static final byte REMOVE_AFTER = 8;
+	private static final byte HIDE_HP = 9;
+	private static final byte HIDE_NAME = 10;
+	private static final byte HP_TAG_COLOR = 11;
+	private static final byte HP_TAG_BG_COLOR = 12;
+	private static final byte BOSS = 13;
+	private static final byte SELF_DESTRUCT = 14;
+	private static final byte LOSE_ITEM = 15;
+	private static final byte INVINCIBLE = 16;
+	private static final byte REVIVE = 17;
+	private static final byte FIRST_ATTACK = 18;
+	private static final byte ATTACK = 19;
+	private static final byte SKILL = 20;
+	private static final byte BUFF = 21;
+	private static final byte DELAY = 22;
+	private static final byte DROPS = 23;
+	private static final byte NO_MESOS = 24;
+	private static final byte QUEST_ITEM_DROPS = 25;
+	private static final byte DESTROY_ANIMATION = 26;
+	private static final byte DROP_ITEM_PERIOD = 27;
 
 	private final String dataPath;
 
@@ -71,11 +66,11 @@ public class KvjMobDataLoader extends MobDataLoader {
 
 	@Override
 	protected void load(int mobid) {
-		String id = String.format("%07d", mobid);
+		String id = String.format(Locale.ROOT, "%07d", mobid);
 
 		MobStats stats = null;
 		try {
-			File f = new File(new StringBuilder(dataPath).append("Mob.wz").append(File.separator).append(id).append(".img.kvj").toString());
+			File f = new File(dataPath + "Mob.wz" + (File.separator) + id + ".img.kvj");
 			if (f.exists()) {
 				stats = new MobStats(mobid);
 				doWork(new LittleEndianByteArrayReader(f), stats);
@@ -108,10 +103,11 @@ public class KvjMobDataLoader extends MobDataLoader {
 
 	@Override
 	public boolean canLoad(int mobid) {
-		if (mobStats.containsKey(mobid))
+		if (mobStats.containsKey(mobid)) {
 			return true;
-		String id = String.format("%07d", mobid);
-		File f = new File(new StringBuilder(dataPath).append("Mob.wz").append(File.separator).append(id).append(".img.kvj").toString());
+		}
+		String id = String.format(Locale.ROOT, "%07d", mobid);
+		File f = new File(dataPath + "Mob.wz" + (File.separator) + id + ".img.kvj");
 		return f.exists();
 	}
 
@@ -188,13 +184,14 @@ public class KvjMobDataLoader extends MobDataLoader {
 					break;
 				case DROPS: {
 					byte amt = reader.readByte();
-					for (int i = amt - 1; i >= 0; --i) {
+					for (int i = amt - 1; i >= 0; i--) {
 						int itemid = reader.readInt();
 						int chance = reader.readInt();
-						if (InventoryTools.isArrowForBow(itemid) || InventoryTools.isArrowForCrossBow(itemid))
+						if (InventoryTools.isArrowForBow(itemid) || InventoryTools.isArrowForCrossBow(itemid)) {
 							stats.addItemDrop(itemid, chance, (short) 10, (short) 25);
-						else
+						} else {
 							stats.addItemDrop(itemid, chance, (short) 1, (short) 1);
+						}
 					}
 					break;
 				}
@@ -203,7 +200,7 @@ public class KvjMobDataLoader extends MobDataLoader {
 					break;
 				case QUEST_ITEM_DROPS: {
 					byte amt = reader.readByte();
-					for (int i = amt - 1; i >= 0; --i) {
+					for (int i = amt - 1; i >= 0; i--) {
 						int itemid = reader.readInt();
 						int chance = reader.readInt();
 						short questId = reader.readShort();

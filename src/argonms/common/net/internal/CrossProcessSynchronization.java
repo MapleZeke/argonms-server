@@ -26,25 +26,22 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class CrossProcessSynchronization {
-	protected static class WeakValueMap<K, V> {
+	protected static final class WeakValueMap<K, V> {
 		private final Map<K, WeakValue<K, V>> backingMap;
 		private final ReferenceQueue<V> queue;
 
 		private WeakValueMap(Map<K, WeakValue<K, V>> backingMap) {
 			this.backingMap = backingMap;
-			queue = new ReferenceQueue<V>();
+			queue = new ReferenceQueue<>();
 		}
 
 		@SuppressWarnings("unchecked")
 		private void processQueue() {
 			WeakValue<K, V> wv;
-			while ((wv = (WeakValue<K, V>) queue.poll()) != null)
+			while ((wv = (WeakValue<K, V>) queue.poll()) != null) {
 				backingMap.remove(wv.key);
+			}
 		}
 
 		private V getReferenceObject(WeakReference<V> ref) {
@@ -65,7 +62,7 @@ public abstract class CrossProcessSynchronization {
 			return getReferenceObject(backingMap.remove(key));
 		}
 
-		private static class WeakValue<K, V> extends WeakReference<V> {
+		private static final class WeakValue<K, V> extends WeakReference<V> {
 			private K key;
 
 			private WeakValue(K key, V value, ReferenceQueue<V> queue) {
@@ -74,28 +71,32 @@ public abstract class CrossProcessSynchronization {
 			}
 
 			private static <K, V> WeakValue<K, V> create(K key, V value, ReferenceQueue<V> queue) {
-				return (value == null ? null : new WeakValue<K, V>(key, value, queue));
+				return value == null ? null : new WeakValue<K, V>(key, value, queue);
 			}
 
 			@Override
 			public boolean equals(Object obj) {
-				if (this == obj)
+				if (this == obj) {
 					return true;
-				if (!(obj instanceof WeakValue))
+				}
+				if (!(obj instanceof WeakValue)) {
 					return false;
+				}
 				Object ref1 = this.get();
 				Object ref2 = ((WeakValue) obj).get();
-				if (ref1 == ref2)
+				if (ref1 == ref2) {
 					return true;
-				if ((ref1 == null) || (ref2 == null))
+				}
+				if ((ref1 == null) || (ref2 == null)) {
 					return false;
+				}
 				return ref1.equals(ref2);
 			}
 
 			@Override
 			public int hashCode() {
 				Object ref = this.get();
-				return (ref == null) ? 0 : ref.hashCode();
+				return ref == null ? 0 : ref.hashCode();
 			}
 		}
 	}
@@ -105,8 +106,7 @@ public abstract class CrossProcessSynchronization {
 
 	protected CrossProcessSynchronization() {
 		//prevents memory leaks in case responses time out and never reach us
-		this.blockingCalls = new WeakValueMap<Integer, BlockingQueue<Pair<Byte, Object>>>
-				(new ConcurrentHashMap<Integer, WeakValueMap.WeakValue<Integer, BlockingQueue<Pair<Byte, Object>>>>());
+		this.blockingCalls = new WeakValueMap<>(new ConcurrentHashMap<Integer, WeakValueMap.WeakValue<Integer, BlockingQueue<Pair<Byte, Object>>>>());
 		this.nextResponseId = new AtomicInteger(0);
 	}
 }

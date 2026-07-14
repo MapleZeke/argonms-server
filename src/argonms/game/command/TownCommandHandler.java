@@ -21,17 +21,14 @@ package argonms.game.command;
 import argonms.common.UserPrivileges;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
-/**
- *
- * @author GoldenKevin
- */
 public class TownCommandHandler extends AbstractCommandDefinition<CommandCaller> {
 	private final Map<String, Integer> lookup;
 
 	public TownCommandHandler() {
-		lookup = new LinkedHashMap<String, Integer>();
+		lookup = new LinkedHashMap<>();
 		lookup.put("southperry", Integer.valueOf(60000));
 		lookup.put("amherst", Integer.valueOf(1010000));
 		lookup.put("henesys", Integer.valueOf(100000000));
@@ -103,14 +100,15 @@ public class TownCommandHandler extends AbstractCommandDefinition<CommandCaller>
 		}
 		String name = args.restOfString();
 
-		if (name.equalsIgnoreCase("list")) {
+		if ("list".equalsIgnoreCase(name)) {
 			resp.printOut("Valid locations: " + getList());
 		} else {
-			Integer mapId = lookup.get(name.toLowerCase());
-			if (mapId != null)
+			Integer mapId = lookup.get(name.toLowerCase(Locale.ROOT));
+			if (mapId != null) {
 				target.mutate(Collections.singletonList(new CommandTarget.CharacterManipulation(CommandTarget.CharacterManipulationKey.CHANGE_MAP, new CommandTarget.MapValue(mapId))));
-			else
+			} else {
 				resp.printErr(name + " is not a recognized location. Type \"!town list\" for a list of locations.");
+			}
 		}
 	}
 }

@@ -29,12 +29,9 @@ import argonms.game.field.GameMap;
 import argonms.game.net.external.GamePackets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ScheduledFuture;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class FreeMarketShop extends Miniroom {
 	protected static class ShopItem {
 		public short bundles;
@@ -47,12 +44,12 @@ public abstract class FreeMarketShop extends Miniroom {
 
 	public FreeMarketShop(GameCharacter owner, String desc, byte type) {
 		super(owner, 4, desc, null, type);
-		items = new ArrayList<ShopItem>();
-		bannedPlayers = new ArrayList<String>();
+		items = new ArrayList<>();
+		bannedPlayers = new ArrayList<>();
 	}
 
 	public void banVisitor(String name) {
-		bannedPlayers.add(name.toLowerCase());
+		bannedPlayers.add(name.toLowerCase(Locale.ROOT));
 		GameCharacter v;
 		for (byte i = 1; i < getMaxPlayers(); i++) {
 			if ((v = getPlayerByPosition(i)) != null && v.getName().equalsIgnoreCase(name)) {
@@ -64,7 +61,7 @@ public abstract class FreeMarketShop extends Miniroom {
 
 	@Override
 	public boolean isPlayerBanned(GameCharacter p) {
-		return bannedPlayers.contains(p.getName().toLowerCase());
+		return bannedPlayers.contains(p.getName().toLowerCase(Locale.ROOT));
 	}
 
 	protected abstract byte[] getSlotUpdateMessage();
@@ -114,9 +111,11 @@ public abstract class FreeMarketShop extends Miniroom {
 			lew.writeByte(getMaxPlayers());
 			lew.writeByte(positionOf(p));
 
-			for (byte i = 0; i < getMaxPlayers(); i++)
-				if ((v = getPlayerByPosition(i)) != null)
+			for (byte i = 0; i < getMaxPlayers(); i++) {
+				if ((v = getPlayerByPosition(i)) != null) {
 					writeMiniroomAvatar(lew, v, i);
+				}
+			}
 			lew.writeByte((byte) 0xFF);
 
 			lew.writeLengthPrefixedString(getMessage());
@@ -139,12 +138,8 @@ public abstract class FreeMarketShop extends Miniroom {
 			ownerName = owner.getName();
 			ownerId = owner.getId();
 			final GameMap map = owner.getMap();
-			expireSchedule = Scheduler.getInstance().runAfterDelay(new Runnable() {
-				@Override
-				public void run() {
-					closeRoom(map);
-				}
-			}, 1000 * 60 * 60 * 24);
+			expireSchedule = Scheduler.getInstance().runAfterDelay(() ->
+				closeRoom(map), 1000 * 60 * 60 * 24);
 		}
 
 		@Override
@@ -195,9 +190,11 @@ public abstract class FreeMarketShop extends Miniroom {
 			lew.writeInt(getStyle() + TYPE_OFFSET);
 			lew.writeLengthPrefixedString("Hired Merchant"); //err, what?
 
-			for (byte i = 0; i < getMaxPlayers(); i++)
-				if ((v = getPlayerByPosition(i)) != null)
+			for (byte i = 0; i < getMaxPlayers(); i++) {
+				if ((v = getPlayerByPosition(i)) != null) {
 					writeMiniroomAvatar(lew, v, i);
+				}
+			}
 			lew.writeByte((byte) 0xFF);
 
 			lew.writeShort((short) 0);

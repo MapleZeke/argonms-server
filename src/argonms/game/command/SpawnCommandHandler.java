@@ -25,10 +25,6 @@ import argonms.game.loading.mob.MobDataLoader;
 import argonms.game.loading.mob.MobStats;
 import java.awt.Point;
 
-/**
- *
- * @author GoldenKevin
- */
 public class SpawnCommandHandler extends AbstractCommandDefinition<GameCharacterCommandCaller> {
 	@Override
 	public String getHelpMessage() {
@@ -54,8 +50,9 @@ public class SpawnCommandHandler extends AbstractCommandDefinition<GameCharacter
 			resp.printErr(getUsage());
 			throw new IllegalArgumentException();
 		}
-		if (s == null)
+		if (s == null) {
 			return -1;
+		}
 		try {
 			return Integer.parseInt(s);
 		} catch (NumberFormatException e) {
@@ -74,8 +71,9 @@ public class SpawnCommandHandler extends AbstractCommandDefinition<GameCharacter
 			resp.printErr(getUsage());
 			throw new IllegalArgumentException();
 		}
-		if (s == null)
+		if (s == null) {
 			return 1;
+		}
 		try {
 			return Integer.parseInt(s);
 		} catch (NumberFormatException e) {
@@ -95,9 +93,9 @@ public class SpawnCommandHandler extends AbstractCommandDefinition<GameCharacter
 		}
 		String key = args.next();
 
-		if (key.equalsIgnoreCase("mob")) {
+		if ("mob".equalsIgnoreCase(key)) {
 			mob = true;
-		} else if (key.equalsIgnoreCase("npc")) {
+		} else if ("npc".equalsIgnoreCase(key)) {
 			mob = false;
 		} else {
 			resp.printErr(key + " is not a valid spawn type.");
@@ -132,8 +130,9 @@ public class SpawnCommandHandler extends AbstractCommandDefinition<GameCharacter
 			int count = getCount(args, resp);
 			Point spawnLoc = map.calcPointBelow(pos);
 			short foothold = map.getStaticData().getFootholds().findBelow(pos).getId();
-			for (int i = 0; i < count; i++)
+			for (int i = 0; i < count; i++) {
 				map.addMonsterSpawn(stats, new Point(spawnLoc), foothold, mobtime);
+			}
 		} else {
 			//TODO: check if npcid is valid.
 			Point pos = caller.getBackingCharacter().getPosition();

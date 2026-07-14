@@ -36,60 +36,60 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * 
- * @author GoldenKevin
- */
 public class RemoteServerListener implements SessionCreator {
 	private static final Logger LOG = Logger.getLogger(RemoteServerListener.class.getName());
-	private final ExecutorService bossThreadPool, workerThreadPool;
+	private final ExecutorService bossThreadPool;
+	private final ExecutorService workerThreadPool;
+	private final boolean useVirtualThreads;
 	private final String interServerPassword;
 	private ServerSocketChannel listener;
 	private final AtomicBoolean closeEventsTriggered;
 
 	public RemoteServerListener(String password, boolean useNio) {
 		closeEventsTriggered = new AtomicBoolean(false);
+		useVirtualThreads = Boolean.parseBoolean(System.getProperty("argonms.virtualThreads", "true"));
 		bossThreadPool = Executors.newSingleThreadExecutor(new ThreadFactory() {
 			private final ThreadGroup group;
 
 			{
-				SecurityManager s = System.getSecurityManager();
-				group = (s != null)? s.getThreadGroup() :
-									 Thread.currentThread().getThreadGroup();
+				group = Thread.currentThread().getThreadGroup();
 			}
 
 			@Override
 			public Thread newThread(Runnable r) {
 				Thread t = new Thread(group, r, "internal-boss-thread", 0);
-				if (t.isDaemon())
+				if (t.isDaemon()) {
 					t.setDaemon(false);
-				if (t.getPriority() != Thread.NORM_PRIORITY)
+				}
+				if (t.getPriority() != Thread.NORM_PRIORITY) {
 					t.setPriority(Thread.NORM_PRIORITY);
+				}
 				return t;
 			}
 		});
-		workerThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2, new ThreadFactory() {
+		workerThreadPool = useVirtualThreads ? Executors.newVirtualThreadPerTaskExecutor() : Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2, new ThreadFactory() {
 			private final ThreadGroup group;
 			private final AtomicInteger threadNumber = new AtomicInteger(1);
 
 			{
-				SecurityManager s = System.getSecurityManager();
-				group = (s != null)? s.getThreadGroup() :
-									 Thread.currentThread().getThreadGroup();
+				group = Thread.currentThread().getThreadGroup();
 			}
 
 			@Override
 			public Thread newThread(Runnable r) {
 				Thread t = new Thread(group, r, "internal-worker-pool-thread-" + threadNumber.getAndIncrement(), 0);
-				if (t.isDaemon())
+				if (t.isDaemon()) {
 					t.setDaemon(false);
-				if (t.getPriority() != Thread.NORM_PRIORITY)
+				}
+				if (t.getPriority() != Thread.NORM_PRIORITY) {
 					t.setPriority(Thread.NORM_PRIORITY);
+				}
 				return t;
 			}
 		});
 
 		this.interServerPassword = password;
+		LOG.log(Level.INFO, "Remote server listener using {0}", useVirtualThreads ? "virtual-thread worker executor" : "platform-thread worker pool");
 	}
 
 	public boolean bind(int port) {
@@ -160,9 +160,11 @@ public class RemoteServerListener implements SessionCreator {
 												session.close(ex.getMessage());
 											}
 										}
-										if (key.isValid() && key.isWritable())
-											if (session.tryFlushSendQueue() == 1)
+										if (key.isValid() && key.isWritable()) {
+											if (session.tryFlushSendQueue() == 1) {
 												key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
+											}
+										}
 									} catch (CancelledKeyException e) {
 										//don't worry about it - session is already closed
 									}
@@ -188,10 +190,11 @@ public class RemoteServerListener implements SessionCreator {
 			} catch (IOException ex) {
 				LOG.log(Level.WARNING, "Error while unbinding internal facing selector (" + listener.socket().getLocalSocketAddress() + ")", ex);
 			}
-			if (reasonExc == null)
-				LOG.log(Level.FINE, "Internal facing selector ({0}) closed: {1}", new Object[] { listener.socket().getLocalSocketAddress(), reason });
-			else
+			if (reasonExc == null) {
+				LOG.log(Level.FINE, "Internal facing selector ({0}) closed: {1}", new Object[]{listener.socket().getLocalSocketAddress(), reason});
+			} else {
 				LOG.log(Level.FINE, "Internal facing selector (" + listener.socket().getLocalSocketAddress() + ") closed: " + reason, reasonExc);
+			}
 			bossThreadPool.shutdown();
 			workerThreadPool.shutdown();
 		}

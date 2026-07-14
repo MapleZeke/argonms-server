@@ -18,10 +18,6 @@
 
 package argonms.center;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Party extends IntraworldGroup<IntraworldGroup.Member> {
 	public static final byte OFFLINE_CH = -1;
 

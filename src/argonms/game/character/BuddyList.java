@@ -27,10 +27,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-/**
- *
- * @author GoldenKevin
- */
 public class BuddyList implements ReadableBuddyList {
 	private short capacity;
 	private final Map<Integer, BuddyListEntry> buddies;
@@ -38,8 +34,8 @@ public class BuddyList implements ReadableBuddyList {
 
 	public BuddyList(short capacity) {
 		this.capacity = capacity;
-		this.buddies = new LinkedHashMap<Integer, BuddyListEntry>();
-		this.pendingInvites = new LinkedHashMap<Integer, String>();
+		this.buddies = new LinkedHashMap<>();
+		this.pendingInvites = new LinkedHashMap<>();
 	}
 
 	public BuddyListEntry getBuddy(int id) {

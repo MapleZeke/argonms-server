@@ -23,10 +23,6 @@ import argonms.common.net.external.CommonPackets;
 import argonms.game.net.external.GameClient;
 import argonms.game.net.external.handler.ChatHandler.TextStyle;
 
-/**
- *
- * @author GoldenKevin
- */
 public interface CommandOutput {
 	public void printOut(String message);
 

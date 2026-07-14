@@ -28,10 +28,6 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class McdbMapDataLoader extends MapDataLoader {
 	private static final Logger LOG = Logger.getLogger(McdbMapDataLoader.class.getName());
 
@@ -88,8 +84,9 @@ public class McdbMapDataLoader extends MapDataLoader {
 
 	@Override
 	public boolean canLoad(int mapid) {
-		if (mapStats.containsKey(mapid))
+		if (mapStats.containsKey(mapid)) {
 			return true;
+		}
 		Connection con = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -99,8 +96,9 @@ public class McdbMapDataLoader extends MapDataLoader {
 			ps = con.prepareStatement("SELECT * FROM `mapdata` WHERE `mapid` = ?");
 			ps.setInt(1, mapid);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				exists = true;
+			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not use MCDB to determine whether map " + mapid + " is valid.", e);
 		} finally {
@@ -116,10 +114,12 @@ public class McdbMapDataLoader extends MapDataLoader {
 		stats.setDecHp(rs.getInt(10));
 		stats.setProtectItem(rs.getInt(11));
 		stats.setMobRate(rs.getFloat(16));
-		if (rs.getInt(17) != 0)
+		if (rs.getInt(17) != 0) {
 			stats.setTown();
-		if (rs.getInt(18) != 0)
+		}
+		if (rs.getInt(18) != 0) {
 			stats.setClock();
+		}
 		if (rs.getInt(19) != 0) {
 			//TODO: hacky
 			switch (mapid) {
@@ -253,14 +253,16 @@ public class McdbMapDataLoader extends MapDataLoader {
 				int to = rs.getInt(6);
 				byte type = 0;
 				String script = rs.getString(8);
-				if (to != GlobalConstants.NULL_MAP) //warp portal
-					type = 2; //1 or 2?
-				else if (name.equals("sp")) //spawnpoint
+				if (to != GlobalConstants.NULL_MAP) { //warp portal
+					type = 2; //7 or 8?
+				} //1 or 2?
+				else if ("sp".equals(name)) { //spawnpoint
 					type = 0;
-				else if (name.equals("tp")) //mystic doors
+				} else if ("tp".equals(name)) { //mystic doors
 					type = 6;
-				else if (script != null && !script.isEmpty()) //scripted portal
-					type = 7; //7 or 8?
+				} else if (script != null && !script.isEmpty()) { //scripted portal
+					type = 7;
+				}
 				p.setPortalType(type);
 				p.setTargetMapId(to);
 				p.setTargetName(rs.getString(7));

@@ -20,10 +20,6 @@ package argonms.center.net.internal;
 
 import argonms.center.CenterServer;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CenterShopInterface extends CenterRemoteInterface {
 	private String host;
 	private int port;

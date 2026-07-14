@@ -28,27 +28,24 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
-public class CouponFactory {
+public final class CouponFactory {
 	private static final Logger LOG = Logger.getLogger(CouponFactory.class.getName());
 
 	private static final CouponFactory INSTANCE = new CouponFactory();
 
-	private ConcurrentMap<String, Coupon> loadedCoupons;
+	private final ConcurrentMap<String, Coupon> loadedCoupons;
 
 	private CouponFactory() {
-		loadedCoupons = new ConcurrentHashMap<String, Coupon>();
+		loadedCoupons = new ConcurrentHashMap<>();
 	}
 
 	public Coupon getCoupon(String code) {
 		Coupon c = new Coupon(code);
 		synchronized (c) {
 			Coupon existing = loadedCoupons.putIfAbsent(code, c);
-			if (existing != null)
+			if (existing != null) {
 				return existing;
+			}
 
 			Connection con = null;
 			PreparedStatement ps = null;
@@ -69,16 +66,18 @@ public class CouponFactory {
 					ps = con.prepareStatement("SELECT `accountid` FROM `cashshopcouponusers` `u` LEFT JOIN `cashshopcoupons` `c` ON `u`.`couponentryid` = `c`.`entryid` WHERE `c`.`code` = ?");
 					ps.setString(1, code);
 					rs = ps.executeQuery();
-					while (rs.next())
+					while (rs.next()) {
 						c.addUser(rs.getInt(1));
+					}
 					rs.close();
 					ps.close();
 
 					ps = con.prepareStatement("SELECT `sn` FROM `cashshopcouponitems` `i` LEFT JOIN `cashshopcoupons` `c` ON `i`.`couponentryid` = `c`.`entryid` WHERE `c`.`code` = ?");
 					ps.setString(1, code);
 					rs = ps.executeQuery();
-					while (rs.next())
+					while (rs.next()) {
 						c.addItem(rs.getInt(1));
+					}
 
 					c.onInitialized();
 					return c;

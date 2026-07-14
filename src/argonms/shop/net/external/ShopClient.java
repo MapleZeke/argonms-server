@@ -33,10 +33,6 @@ import java.util.logging.Logger;
 
 //world and channel are needed to redirect player to game server when they exit
 //world is easy (in characters db table), but how do we get channel...?
-/**
- *
- * @author GoldenKevin
- */
 public class ShopClient extends RemoteClient {
 	private static final Logger LOG = Logger.getLogger(ShopClient.class.getName());
 
@@ -78,8 +74,9 @@ public class ShopClient extends RemoteClient {
 
 	private void dissociate() {
 		if (player != null) {
-			if (!isMigrating())
+			if (!isMigrating()) {
 				player.prepareLogOff();
+			}
 			ShopServer.getInstance().removePlayer(player);
 			player = null;
 		}
@@ -92,14 +89,11 @@ public class ShopClient extends RemoteClient {
 		if (getSession().getQueuedReads() == 0) {
 			dissociate();
 		} else {
-			getSession().setEmptyReadQueueHandler(new Runnable() {
-				@Override
-				public void run() {
-					dissociate();
-				}
-			});
+			getSession().setEmptyReadQueueHandler(() ->
+				dissociate());
 		}
-		if (!isMigrating())
+		if (!isMigrating()) {
 			updateState(STATUS_NOTLOGGEDIN);
+		}
 	}
 }

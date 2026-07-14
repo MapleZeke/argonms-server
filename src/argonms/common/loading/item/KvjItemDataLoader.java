@@ -27,48 +27,41 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class KvjItemDataLoader extends ItemDataLoader {
 	private static final Logger LOG = Logger.getLogger(KvjItemDataLoader.class.getName());
 
-	private static final byte
-		WHOLE_PRICE = 1,
-		SLOT_MAX = 2,
-		IS_TRADE_BLOCKED = 3,
-		IS_ONE_ONLY = 4,
-		IS_QUEST_ITEM = 5,
-		BONUS_STAT = 6,
-		SUMMON = 7,
-		SUCCESS = 8,
-		CURSED = 9,
-		RECOVER = 10,
-		RAND_STAT = 11,
-		PREVENT_SLIP = 12,
-		WARM_SUPPORT = 13,
-		CASH = 14,
-		OPERATING_HOURS = 15,
-		SKILL = 16,
-		UNIT_PRICE = 17,
-		REQ_STAT = 18,
-		UPGRADE_SLOTS = 19,
-		SCROLL_REQUIREMENTS = 20,
-		ITEM_EFFECT = 21,
-		TRIGGER_ITEM = 22,
-		MESO_VALUE = 23,
-
-		PET_COMMAND = 24,
-		PET_HUNGER = 25,
-		PET_PERIOD = 26,
-		PET_EVOLVE = 27,
-
-		TAMING_MOB_ID = 28
-	;
+	private static final byte WHOLE_PRICE = 1;
+	private static final byte SLOT_MAX = 2;
+	private static final byte IS_TRADE_BLOCKED = 3;
+	private static final byte IS_ONE_ONLY = 4;
+	private static final byte IS_QUEST_ITEM = 5;
+	private static final byte BONUS_STAT = 6;
+	private static final byte SUMMON = 7;
+	private static final byte SUCCESS = 8;
+	private static final byte CURSED = 9;
+	private static final byte RECOVER = 10;
+	private static final byte RAND_STAT = 11;
+	private static final byte PREVENT_SLIP = 12;
+	private static final byte WARM_SUPPORT = 13;
+	private static final byte CASH = 14;
+	private static final byte OPERATING_HOURS = 15;
+	private static final byte SKILL = 16;
+	private static final byte UNIT_PRICE = 17;
+	private static final byte REQ_STAT = 18;
+	private static final byte UPGRADE_SLOTS = 19;
+	private static final byte SCROLL_REQUIREMENTS = 20;
+	private static final byte ITEM_EFFECT = 21;
+	private static final byte TRIGGER_ITEM = 22;
+	private static final byte MESO_VALUE = 23;
+	private static final byte PET_COMMAND = 24;
+	private static final byte PET_HUNGER = 25;
+	private static final byte PET_PERIOD = 26;
+	private static final byte PET_EVOLVE = 27;
+	private static final byte TAMING_MOB_ID = 28;
 
 	private final String dataPath;
 
@@ -80,8 +73,9 @@ public class KvjItemDataLoader extends ItemDataLoader {
 	protected void load(int itemid) {
 		File f = getFile(itemid);
 		try {
-			if (f.exists())
+			if (f.exists()) {
 				doWork(itemid, new LittleEndianByteArrayReader(f));
+			}
 		} catch (IOException e) {
 			LOG.log(Level.WARNING, "Could not read KVJ data file for item " + itemid, e);
 		}
@@ -94,7 +88,7 @@ public class KvjItemDataLoader extends ItemDataLoader {
 			File root = new File(dataPath + "Item.wz");
 			for (String cat : root.list()) {
 				File catFolder = new File(root.getAbsolutePath() + File.separatorChar + cat);
-				if (cat.equals("Pet")) {
+				if ("Pet".equals(cat)) {
 					for (String kvj : catFolder.list()) {
 						int itemid = Integer.parseInt(kvj.substring(0, kvj.lastIndexOf(".img.kvj")));
 						doWork(itemid, new LittleEndianByteArrayReader(new File(catFolder.getAbsolutePath() + File.separatorChar + kvj)));
@@ -114,7 +108,7 @@ public class KvjItemDataLoader extends ItemDataLoader {
 			root = new File(dataPath + "Character.wz");
 			for (String cat : root.list()) {
 				File catFolder = new File(root.getAbsolutePath() + File.separatorChar + cat);
-				if (!cat.equals("Afterimage") && !cat.equals("Face.kvj") && !cat.equals("Hair.kvj")) {
+				if (!"Afterimage".equals(cat) && !"Face.kvj".equals(cat) && !"Hair.kvj".equals(cat)) {
 					for (String kvj : catFolder.list()) {
 						int itemid = Integer.parseInt(kvj.substring(0, kvj.lastIndexOf(".img.kvj")));
 						doWork(itemid, new LittleEndianByteArrayReader(new File(catFolder.getAbsolutePath() + File.separatorChar + kvj)));
@@ -132,21 +126,22 @@ public class KvjItemDataLoader extends ItemDataLoader {
 	@Override
 	public boolean canLoad(int itemid) {
 		File f;
-		return (loaded.contains(Integer.valueOf(itemid)) || (f = getFile(itemid)) != null && f.exists());
+		return loaded.contains(Integer.valueOf(itemid)) || (f = getFile(itemid)) != null && f.exists();
 	}
 
 	private File getFile(int iid) {
 		File f;
-		String id = String.format("%08d", iid);
+		String id = String.format(Locale.ROOT, "%08d", iid);
 		String cat = InventoryTools.getCategoryName(iid);
-		if (cat == null)
+		if (cat == null) {
 			f = null;
-		else if (cat.equals("Pet"))
-			f = new File(new StringBuilder(dataPath).append("Item.wz").append(File.separator).append(cat).append(File.separator).append(String.format("%07d", iid)).append(".img.kvj").toString());
-		else if (cat.equals("Equip"))
-			f = new File(new StringBuilder(dataPath).append("Character.wz").append(File.separator).append(InventoryTools.getCharCat(iid)).append(File.separator).append(id).append(".img.kvj").toString());
-		else
-			f = new File(new StringBuilder(dataPath).append("Item.wz").append(File.separator).append(cat).append(File.separator).append(id.substring(0, 4)).append(".img").append(File.separator).append(id).append(".kvj").toString());
+		} else if ("Pet".equals(cat)) {
+			f = new File(dataPath + "Item.wz" + (File.separator) + cat + (File.separator) + String.format(Locale.ROOT, "%07d", iid) + ".img.kvj");
+		} else if ("Equip".equals(cat)) {
+			f = new File(dataPath + "Character.wz" + (File.separator) + InventoryTools.getCharCat(iid) + (File.separator) + id + ".img.kvj");
+		} else {
+			f = new File(dataPath + "Item.wz" + (File.separator) + cat + (File.separator) + id.substring(0, 4) + ".img" + (File.separator) + id + ".kvj");
+		}
 		return f;
 	}
 
@@ -170,13 +165,15 @@ public class KvjItemDataLoader extends ItemDataLoader {
 					questItem.add(oId);
 					break;
 				case BONUS_STAT:
-					if (!bonusStats.containsKey(oId))
+					if (!bonusStats.containsKey(oId)) {
 						bonusStats.put(oId, new short[16]);
+					}
 					processBonusStat(reader, oId);
 					break;
 				case SUMMON:
-					if (!summons.containsKey(oId))
+					if (!summons.containsKey(oId)) {
 						summons.put(oId, new ArrayList<int[]>());
+					}
 					summons.get(oId).add(processSummon(reader));
 					break;
 				case SUCCESS:
@@ -201,21 +198,24 @@ public class KvjItemDataLoader extends ItemDataLoader {
 					cash.add(oId);
 					break;
 				case OPERATING_HOURS:
-					if (!operatingHours.containsKey(oId))
+					if (!operatingHours.containsKey(oId)) {
 						operatingHours.put(oId, new ArrayList<byte[]>());
+					}
 					operatingHours.get(oId).add(processOperatingHours(reader));
 					break;
 				case SKILL:
-					if (!skills.containsKey(oId))
+					if (!skills.containsKey(oId)) {
 						skills.put(oId, new ArrayList<Integer>());
+					}
 					skills.get(oId).add(Integer.valueOf(reader.readInt()));
 					break;
 				case UNIT_PRICE:
 					unitPrice.put(oId, Double.valueOf(reader.readDouble()));
 					break;
 				case REQ_STAT:
-					if (!reqStats.containsKey(oId))
+					if (!reqStats.containsKey(oId)) {
 						reqStats.put(oId, new short[16]);
+					}
 					processReqStat(reader, oId);
 					break;
 				case UPGRADE_SLOTS:
@@ -235,8 +235,9 @@ public class KvjItemDataLoader extends ItemDataLoader {
 					break;
 
 				case PET_COMMAND:
-					if (!petCommands.containsKey(oId))
+					if (!petCommands.containsKey(oId)) {
 						petCommands.put(oId, new HashMap<Byte, int[]>());
+					}
 					processPetCmd(reader, oId);
 					break;
 				case PET_HUNGER:
@@ -246,8 +247,9 @@ public class KvjItemDataLoader extends ItemDataLoader {
 					petPeriod.put(oId, Byte.valueOf(reader.readByte()));
 					break;
 				case PET_EVOLVE:
-					if (!evolveChoices.containsKey(oId))
+					if (!evolveChoices.containsKey(oId)) {
 						evolveChoices.put(oId, new ArrayList<int[]>());
+					}
 					evolveChoices.get(oId).add(processPetEvolve(reader));
 					break;
 
@@ -271,36 +273,37 @@ public class KvjItemDataLoader extends ItemDataLoader {
 	}
 
 	private List<Integer> processScrollReqs(LittleEndianReader reader) {
-		List<Integer> reqs = new ArrayList<Integer>();
-		for (int i = reader.readInt(); i > 0; i--)
+		List<Integer> reqs = new ArrayList<>();
+		for (int i = reader.readInt(); i > 0; i--) {
 			reqs.add(Integer.valueOf(reader.readInt()));
+		}
 		return reqs;
 	}
 
 	private int[] processSummon(LittleEndianReader reader) {
 		int mobId = reader.readInt();
 		int prob = reader.readInt();
-		return new int[] { mobId, prob };
+		return new int[]{mobId, prob};
 	}
 
 	private byte[] processOperatingHours(LittleEndianReader reader) {
 		byte day = reader.readByte();
 		byte startHour = reader.readByte();
 		byte endHour = reader.readByte();
-		return new byte[] { day, startHour, endHour };
+		return new byte[]{day, startHour, endHour};
 	}
 
 	private void processPetCmd(LittleEndianReader reader, Integer oId) {
 		byte commandId = reader.readByte();
 		int prob = reader.readInt();
 		int expInc = reader.readInt();
-		petCommands.get(oId).put(Byte.valueOf(commandId), new int[] { prob, expInc });
+		petCommands.get(oId).put(Byte.valueOf(commandId), new int[]{prob, expInc});
 	}
 
 	private int[] processPetEvolve(LittleEndianReader reader) {
 		int itemId = reader.readInt();
 		int prob = reader.readInt();
-		return new int[] { itemId, prob };
+		return new int[]{itemId, prob};
 	}
 
 	private ItemEffectsData processEffect(int itemid, LittleEndianReader reader) {

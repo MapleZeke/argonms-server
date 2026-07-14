@@ -27,10 +27,6 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class McdbBeautyDataLoader extends BeautyDataLoader {
 	private static final Logger LOG = Logger.getLogger(McdbStringDataLoader.class.getName());
 
@@ -42,15 +38,17 @@ public class McdbBeautyDataLoader extends BeautyDataLoader {
 			con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.WZ);
 			ps = con.prepareStatement("SELECT `faceid` FROM `facedata`");
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				eyeStyles.add(Short.valueOf(rs.getShort(1)));
+			}
 			rs.close();
 			ps.close();
 
 			ps = con.prepareStatement("SELECT `hairid` FROM `hairdata`");
 			rs = ps.executeQuery();
-			while (rs.next())
+			while (rs.next()) {
 				hairStyles.add(Short.valueOf(rs.getShort(1)));
+			}
 			return true;
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Error loading beauty data from the MCDB.", e);

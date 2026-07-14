@@ -29,10 +29,6 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * 
- * @author GoldenKevin
- */
 public class McdbSkillDataLoader extends SkillDataLoader {
 	private static final Logger LOG = Logger.getLogger(McdbSkillDataLoader.class.getName());
 
@@ -123,8 +119,9 @@ public class McdbSkillDataLoader extends SkillDataLoader {
 
 	@Override
 	public boolean canLoadPlayerSkill(int skillid) {
-		if (skillStats.containsKey(Integer.valueOf(skillid)))
+		if (skillStats.containsKey(Integer.valueOf(skillid))) {
 			return true;
+		}
 		Connection con = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -134,8 +131,9 @@ public class McdbSkillDataLoader extends SkillDataLoader {
 			ps = con.prepareStatement("SELECT * FROM `skilldata` WHERE `skillid` = ?");
 			ps.setInt(1, skillid);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				exists = true;
+			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not use MCDB to determine whether skill " + skillid + " is valid.", e);
 		} finally {
@@ -146,8 +144,9 @@ public class McdbSkillDataLoader extends SkillDataLoader {
 
 	@Override
 	public boolean canLoadMobSkill(short skillid) {
-		if (mobSkillStats.containsKey(Short.valueOf(skillid)))
+		if (mobSkillStats.containsKey(Short.valueOf(skillid))) {
 			return true;
+		}
 		Connection con = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -157,8 +156,9 @@ public class McdbSkillDataLoader extends SkillDataLoader {
 			ps = con.prepareStatement("SELECT * FROM `mobskills` WHERE `skillid` = ?");
 			ps.setInt(1, skillid);
 			rs = ps.executeQuery();
-			if (rs.next())
+			if (rs.next()) {
 				exists = true;
+			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not use MCDB to determine whether mob skill " + skillid + " is valid.", e);
 		} finally {
@@ -238,10 +238,11 @@ public class McdbSkillDataLoader extends SkillDataLoader {
 			effect.setJump(rs.getShort(16));
 			effect.setAttackCount(rs.getByte(4));
 			short bulletcon = rs.getShort(11);
-			if (skillid == 4121006 || skillid == 4111005 || skillid == 5201001)
+			if (skillid == 4121006 || skillid == 4111005 || skillid == 5201001) {
 				effect.setBulletConsume(bulletcon);
-			else
+			} else {
 				effect.setBulletCount(bulletcon == 0 ? 1 : (byte) bulletcon);
+			}
 			effect.setItemConsume(rs.getInt(9));
 			effect.setItemConsumeCount(rs.getByte(10));
 			effect.setMoneyConsume(rs.getShort(12));
@@ -272,8 +273,9 @@ public class McdbSkillDataLoader extends SkillDataLoader {
 					summonsPs = con.prepareStatement("SELECT `mobindex`,`mobid` FROM `mobskillsummons` WHERE `level` = ? ORDER BY `mobindex`");
 					summonsPs.setInt(1, level);
 					summons = summonsPs.executeQuery();
-					while (summons.next())
+					while (summons.next()) {
 						effect.addSummon(summons.getByte(1), summons.getInt(2));
+					}
 				} catch (SQLException e) {
 					throw new SQLException("Failed to load summon data of mob skill " + skillid + " (level " + level + ")", e);
 				} finally {

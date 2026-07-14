@@ -40,17 +40,13 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
-public class LoginCharacter extends Player {
+public final class LoginCharacter extends Player {
 	private static final Logger LOG = Logger.getLogger(LoginCharacter.class.getName());
 
 	private static final Map<Byte, KeyBinding> defaultBindings;
 
 	static {
-		Map<Byte, KeyBinding> bindings = new HashMap<Byte, KeyBinding>();
+		Map<Byte, KeyBinding> bindings = new HashMap<>();
 		bindings.put(Byte.valueOf((byte) 2), new KeyBinding((byte) 4, 10));
 		bindings.put(Byte.valueOf((byte) 3), new KeyBinding((byte) 4, 12));
 		bindings.put(Byte.valueOf((byte) 4), new KeyBinding((byte) 4, 13));
@@ -91,8 +87,10 @@ public class LoginCharacter extends Player {
 
 	private Map<Byte, KeyBinding> bindings;
 
-	private int worldRanking, worldRankingChange;
-	private int jobRanking, jobRankingChange;
+	private int worldRanking;
+	private int worldRankingChange;
+	private int jobRanking;
+	private int jobRankingChange;
 
 	private LoginCharacter() {
 		super();
@@ -130,19 +128,19 @@ public class LoginCharacter extends Player {
 			rs = ps.executeQuery();
 			if (!rs.next()) {
 				LOG.log(Level.WARNING, "Client requested to load a nonexistent character w/ id {0} (account {1}).",
-						new Object[] { id, c.getAccountId() });
+						new Object[]{id, c.getAccountId()});
 				return null;
 			}
 			int accountid = rs.getInt(1);
 			if (accountid != c.getAccountId()) { //we are aware of our accountid
 				LOG.log(Level.WARNING, "Client account {0} is trying to load character {1} which belongs to account {2}",
-						new Object[] { c.getAccountId(), id, accountid });
+						new Object[]{c.getAccountId(), id, accountid});
 				return null;
 			}
 			byte world = rs.getByte(2);
 			if (world != c.getWorld()) { //we are aware of our world
 				LOG.log(Level.WARNING, "Client account {0} is trying to load character {1} on world {2} but exists on world {3}",
-						new Object[] { accountid, id, c.getWorld(), world });
+						new Object[]{accountid, id, c.getWorld(), world});
 				return null;
 			}
 			LoginCharacter p = new LoginCharacter();
@@ -232,7 +230,7 @@ public class LoginCharacter extends Player {
 		p.setJob(PlayerJob.JOB_BEGINNER);
 		p.setGm(account.getGm());
 
-		Map<InventoryType, Inventory> inventories = new EnumMap<InventoryType, Inventory>(InventoryType.class);
+		Map<InventoryType, Inventory> inventories = new EnumMap<>(InventoryType.class);
 		Inventory equipment = new Inventory((short) 24);
 		Inventory equipped = new Inventory((short) 0);
 		Inventory etc = new Inventory((short) 24);
@@ -244,13 +242,13 @@ public class LoginCharacter extends Player {
 		//TODO: get real equipped inventory size?
 		inventories.put(InventoryType.EQUIPPED, equipped);
 		InventoryTools.equip(equipment, equipped,
-				InventoryTools.addToInventory(equipment, top, 1).addedOrRemovedSlots.get(0).shortValue(), (short) -5);
+				InventoryTools.addToInventory(equipment, top, 1).addedOrRemovedSlots.getFirst().shortValue(), (short) -5);
 		InventoryTools.equip(equipment, equipped,
-				InventoryTools.addToInventory(equipment, bottom, 1).addedOrRemovedSlots.get(0).shortValue(), (short) -6);
+				InventoryTools.addToInventory(equipment, bottom, 1).addedOrRemovedSlots.getFirst().shortValue(), (short) -6);
 		InventoryTools.equip(equipment, equipped,
-				InventoryTools.addToInventory(equipment, shoes, 1).addedOrRemovedSlots.get(0).shortValue(), (short) -7);
+				InventoryTools.addToInventory(equipment, shoes, 1).addedOrRemovedSlots.getFirst().shortValue(), (short) -7);
 		InventoryTools.equip(equipment, equipped,
-				InventoryTools.addToInventory(equipment, weapon, 1).addedOrRemovedSlots.get(0).shortValue(), (short) -11);
+				InventoryTools.addToInventory(equipment, weapon, 1).addedOrRemovedSlots.getFirst().shortValue(), (short) -11);
 		InventoryTools.addToInventory(etc, 4161001, 1);
 		p.addInventories(inventories);
 
@@ -285,8 +283,9 @@ public class LoginCharacter extends Player {
 			ps.setByte(12, account.getGm());
 			ps.executeUpdate();
 			rs = ps.getGeneratedKeys();
-			if (rs.next())
+			if (rs.next()) {
 				p.setId(rs.getInt(1));
+			}
 			rs.close();
 			ps.close();
 

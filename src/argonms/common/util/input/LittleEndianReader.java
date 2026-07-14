@@ -23,7 +23,6 @@ import java.awt.Point;
 /**
  * Reads a stream that uses little endian byte ordering for multiple-byte
  * integer types. Characters (and strings) are assumed to be encoded in ASCII.
- * @author GoldenKevin
  * @version 1.1
  */
 public abstract class LittleEndianReader {
@@ -35,33 +34,29 @@ public abstract class LittleEndianReader {
 
 	public long readLong() {
 		byte[] bytes = read(8);
-		return (
-				((long) (bytes[0] & 0xFF)) |
-				((long) (bytes[1] & 0xFF) << 8) |
-				((long) (bytes[2] & 0xFF) << 16) |
-				((long) (bytes[3] & 0xFF) << 24) |
-				((long) (bytes[4] & 0xFF) << 32) |
-				((long) (bytes[5] & 0xFF) << 40) |
-				((long) (bytes[6] & 0xFF) << 48) |
-				((long) (bytes[7] & 0xFF) << 56)
-		);
+		return ((long) (bytes[0] & 0xFF))
+				| ((long) (bytes[1] & 0xFF) << 8)
+				| ((long) (bytes[2] & 0xFF) << 16)
+				| ((long) (bytes[3] & 0xFF) << 24)
+				| ((long) (bytes[4] & 0xFF) << 32)
+				| ((long) (bytes[5] & 0xFF) << 40)
+				| ((long) (bytes[6] & 0xFF) << 48)
+				| ((long) (bytes[7] & 0xFF) << 56);
 	}
 
 	public int readInt() {
 		byte[] bytes = read(4);
-		return (
-				((bytes[0] & 0xFF)) |
-				((bytes[1] & 0xFF) << 8) |
-				((bytes[2] & 0xFF) << 16) |
-				((bytes[3] & 0xFF) << 24)
-		);
+		return (bytes[0] & 0xFF)
+				| ((bytes[1] & 0xFF) << 8)
+				| ((bytes[2] & 0xFF) << 16)
+				| ((bytes[3] & 0xFF) << 24);
 	}
 
 	public short readShort() {
 		byte[] bytes = read(2);
 		return (short) (
-				((bytes[0] & 0xFF)) |
-				((bytes[1] & 0xFF) << 8)
+				(bytes[0] & 0xFF)
+				| ((bytes[1] & 0xFF) << 8)
 		);
 	}
 
@@ -80,8 +75,9 @@ public abstract class LittleEndianReader {
 	public String readNullTerminatedString() {
 		StringBuilder builder = new StringBuilder();
 
-		for (char current = readChar(); current != '\0'; current = readChar())
+		for (char current = readChar(); current != '\0'; current = readChar()) {
 			builder.append(current);
+		}
 
 		return builder.toString();
 	}
@@ -93,8 +89,9 @@ public abstract class LittleEndianReader {
 		//uses O(2n) memory, but takes half as long than alternatives
 		byte[] bytes = read(n);
 		char[] ret = new char[n];
-		for (int x = 0; x < n; x++)
+		for (int x = 0; x < n; x++) {
 			ret[x] = (char) bytes[x];
+		}
 		return String.valueOf(ret);
 	}
 
@@ -115,7 +112,7 @@ public abstract class LittleEndianReader {
 	}
 
 	public boolean readBool() {
-		return (readByte() > 0);
+		return readByte() > 0;
 	}
 
 	public byte[] readBytes(int size) {

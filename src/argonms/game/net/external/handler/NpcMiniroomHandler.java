@@ -39,30 +39,20 @@ import argonms.game.net.external.GameClient;
 import java.util.EnumSet;
 import java.util.List;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class NpcMiniroomHandler {
-	private static final byte
-		//shop
-		ACT_BUY = 0,
-		ACT_SELL = 1,
-		ACT_RECHARGE = 2,
-		ACT_EXIT_SHOP = 3,
-		//storage
-		ACT_WITHDRAW_ITEM = 4,
-		ACT_DEPOSIT_ITEM = 5,
-		ACT_ARRANGE_ITEMS = 6,
-		ACT_MESOS_TRANSFER = 7,
-		ACT_EXIT_STORAGE = 8
-	;
+	private static final byte ACT_BUY = 0;
+	private static final byte ACT_SELL = 1;
+	private static final byte ACT_RECHARGE = 2;
+	private static final byte ACT_EXIT_SHOP = 3;
+	private static final byte ACT_WITHDRAW_ITEM = 4;
+	private static final byte ACT_DEPOSIT_ITEM = 5;
+	private static final byte ACT_ARRANGE_ITEMS = 6;
+	private static final byte ACT_MESOS_TRANSFER = 7;
+	private static final byte ACT_EXIT_STORAGE = 8;
 
-	private static final byte
-		TRANSACTION_ADD_ITEM = 0,
-		TRANSACTION_INVENTORY_FULL = 3,
-		TRANSACTION_CHANGE_ITEM = 8
-	;
+	private static final byte TRANSACTION_ADD_ITEM = 0;
+	private static final byte TRANSACTION_INVENTORY_FULL = 3;
+	private static final byte TRANSACTION_CHANGE_ITEM = 8;
 
 	public static void handleNpcShopAction(LittleEndianReader packet, GameClient gc) {
 		NpcShop shop = (NpcShop) gc.getNpcRoom();
@@ -101,8 +91,9 @@ public final class NpcMiniroomHandler {
 					//client normally only allows total quantity to be less than
 					//slot's max - unless the packet bypassed the client checks!
 					if (totalQuantity <= slotMax) {
-						if (InventoryTools.canFitEntirely(inv, itemId, quantity, true))
+						if (InventoryTools.canFitEntirely(inv, itemId, quantity, true)) {
 							changedSlots = InventoryTools.addToInventory(p.getInventory(invType), itemId, totalQuantity);
+						}
 					} else {
 						CheatTracker.get(gc).suspicious(CheatTracker.Infraction.POSSIBLE_PACKET_EDITING, "Tried to buy more items from NPC shop than one slot allows");
 						return;
@@ -115,8 +106,9 @@ public final class NpcMiniroomHandler {
 					synchronized(inv.getAll()) {
 						if (inv.getFreeSlots(totalQuantity).size() >= totalQuantity) {
 							changedSlots = InventoryTools.addToInventory(inv, InventoryTools.makeItemWithId(itemId), slotMax, false);
-							for (int i = 1; i < totalQuantity; i++)
+							for (int i = 1; i < totalQuantity; i++) {
 								changedSlots.union(InventoryTools.addToInventory(inv, InventoryTools.makeItemWithId(itemId), slotMax, false));
+							}
 						}
 					}
 				}
@@ -158,10 +150,12 @@ public final class NpcMiniroomHandler {
 					inventory.remove(slot);
 					gc.getSession().send(CommonPackets.writeInventoryClearSlot(invType, slot));
 					int rechargeCost = shop.rechargeCost(itemId, item.getQuantity());
-					if (rechargeCost < 0)
+					if (rechargeCost < 0) {
 						rechargeCost = (int) Math.ceil(ItemDataLoader.getInstance().getUnitPrice(itemId) * item.getQuantity());
-					if (rechargeCost > 0)
+					}
+					if (rechargeCost > 0) {
 						price += rechargeCost;
+					}
 				} else if (item.getQuantity() == quantity) {
 					inventory.remove(slot);
 					gc.getSession().send(CommonPackets.writeInventoryClearSlot(invType, slot));

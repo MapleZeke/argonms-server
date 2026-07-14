@@ -28,10 +28,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- *
- * @author GoldenKevin
- */
 public class GuildList extends IntraworldGroupList<
 		GuildList.Member,
 		GuildList.RemoteMember,
@@ -130,10 +126,13 @@ public class GuildList extends IntraworldGroupList<
 		}
 	}
 
-	private final Lock bbsWriteLock, bbsReadLock;
+	private final Lock bbsWriteLock;
+	private final Lock bbsReadLock;
 	private String name;
-	private short emblemBg, emblemFg;
-	private byte emblemBgC, emblemFgC;
+	private short emblemBg;
+	private short emblemFg;
+	private byte emblemBgC;
+	private byte emblemFgC;
 	private String[] titles;
 	private byte capacity;
 	private String notice;
@@ -143,7 +142,7 @@ public class GuildList extends IntraworldGroupList<
 	public GuildList(int guildId, String name, PartyList p) {
 		this(guildId);
 		this.name = name;
-		titles = new String[] { "Master", "Jr.Master", "Member", "", "" };
+		titles = new String[]{"Master", "Jr.Master", "Member", "", ""};
 		capacity = 10;
 		notice = "";
 
@@ -192,15 +191,15 @@ public class GuildList extends IntraworldGroupList<
 
 	public byte getLowestRank() {
 		byte i;
-		for (i = 5; i >= 4 && titles[i - 1].isEmpty(); --i);
+		for (i = 5; i >= 4 && titles[i - 1].isEmpty(); i--) {
+		}
 		return i;
 	}
 
 	@Override
 	protected LocalMember createLocalMember(GameCharacter p) {
 		Member existing = getMember(p.getId());
-		LocalMember member = new LocalMember(p, existing != null ? existing.getRank() : getLowestRank());
-		return member;
+		return new LocalMember(p, existing != null ? existing.getRank() : getLowestRank());
 	}
 
 	@Override
@@ -210,7 +209,7 @@ public class GuildList extends IntraworldGroupList<
 
 	@Override
 	public Member[] getAllMembers() {
-		List<Member> list = new ArrayList<Member>();
+		List<Member> list = new ArrayList<>();
 		list.addAll(localMembers.values());
 		for (Map<Integer, RemoteMember> channel : remoteMembers.values())
 			list.addAll(channel.values());
@@ -219,8 +218,9 @@ public class GuildList extends IntraworldGroupList<
 			@Override
 			public int compare(Member o1, Member o2) {
 				int delta = o1.getRank() - o2.getRank();
-				if (delta == 0)
+				if (delta == 0) {
 					delta = o1.getName().compareTo(o2.getName());
+				}
 				return delta;
 			}
 		});
@@ -236,15 +236,16 @@ public class GuildList extends IntraworldGroupList<
 	protected void removeFromOffline(IntraworldGroupList.Member member) {
 		Map<Integer, RemoteMember> others = remoteMembers.get(Byte.valueOf(OFFLINE_CH));
 		others.remove(Integer.valueOf(member.getPlayerId()));
-		if (others.isEmpty())
+		if (others.isEmpty()) {
 			remoteMembers.remove(Byte.valueOf(OFFLINE_CH));
+		}
 	}
 
 	@Override
 	protected RemoteMember addToOffline(IntraworldGroupList.Member member) {
 		Map<Integer, RemoteMember> others = remoteMembers.get(Byte.valueOf(OFFLINE_CH));
 		if (others == null) {
-			others = new HashMap<Integer, RemoteMember>();
+			others = new HashMap<>();
 			remoteMembers.put(Byte.valueOf(OFFLINE_CH), others);
 		}
 		RemoteMember offlineMember = createRemoteMember(member, OFFLINE_CH);
@@ -260,12 +261,14 @@ public class GuildList extends IntraworldGroupList<
 	@Override
 	public Member getMember(int playerId) {
 		Member member = localMembers.get(Integer.valueOf(playerId));
-		if (member != null)
+		if (member != null) {
 			return member;
+		}
 		for (Map<Integer, RemoteMember> channel : remoteMembers.values()) {
 			member = channel.get(Integer.valueOf(playerId));
-			if (member != null)
+			if (member != null) {
 				return member;
+			}
 		}
 		return null;
 	}

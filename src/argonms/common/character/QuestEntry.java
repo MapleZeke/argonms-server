@@ -20,31 +20,24 @@ package argonms.common.character;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class QuestEntry {
-	public static final byte
-		STATE_NOT_STARTED = 0,
-		STATE_STARTED = 1,
-		STATE_COMPLETED = 2
-	;
+	public static final byte STATE_NOT_STARTED = 0;
+	public static final byte STATE_STARTED = 1;
+	public static final byte STATE_COMPLETED = 2;
 
 	//for use with CommonPackets.writeQuestError
-	public static final byte
-		QUEST_ACTION_SUCCESS = 0x08,
-		QUEST_ACTION_ERROR_UNKNOWN = 0x09,
-		QUEST_ACTION_ERROR_INVENTORY_FULL = 0x0A,
-		QUEST_ACTION_ERROR_INSUFFICIENT_FUNDS = 0x0B,
-		QUEST_ACTION_ERROR_EQUIP_WORN = 0x0D,
-		QUEST_ACTION_ERROR_ONLY_ONE = 0x0E,
-		QUEST_ACTION_ERROR_EXPIRED = 0x0F
-	;
+	public static final byte QUEST_ACTION_SUCCESS = 0x08;
+	public static final byte QUEST_ACTION_ERROR_UNKNOWN = 0x09;
+	public static final byte QUEST_ACTION_ERROR_INVENTORY_FULL = 0x0A;
+	public static final byte QUEST_ACTION_ERROR_INSUFFICIENT_FUNDS = 0x0B;
+	public static final byte QUEST_ACTION_ERROR_EQUIP_WORN = 0x0D;
+	public static final byte QUEST_ACTION_ERROR_ONLY_ONE = 0x0E;
+	public static final byte QUEST_ACTION_ERROR_EXPIRED = 0x0F;
 
 	private volatile byte state;
 	private final Map<Integer, AtomicInteger> mobCount;
@@ -57,7 +50,7 @@ public class QuestEntry {
 	 */
 	public QuestEntry(byte state, Set<Integer> mobsToWatch) {
 		this.state = state;
-		Map<Integer, AtomicInteger> tempMobCount = new LinkedHashMap<Integer, AtomicInteger>(mobsToWatch.size());
+		Map<Integer, AtomicInteger> tempMobCount = new LinkedHashMap<>(mobsToWatch.size());
 		for (Integer mobId : mobsToWatch)
 			tempMobCount.put(mobId, new AtomicInteger(0));
 		mobCount = Collections.unmodifiableMap(tempMobCount);
@@ -80,7 +73,7 @@ public class QuestEntry {
 	public String getData() {
 		StringBuilder sb = new StringBuilder(mobCount.size() * 3);
 		for (AtomicInteger c : mobCount.values())
-			sb.append(String.format("%03d", c.get()));
+			sb.append(String.format(Locale.ROOT, "%03d", c.get()));
 		return sb.toString();
 	}
 
@@ -115,8 +108,9 @@ public class QuestEntry {
 		while (true) {
 			int current = i.get();
 			int next = Math.min(Math.max(current + delta, min), max);
-			if (i.compareAndSet(current, next))
+			if (i.compareAndSet(current, next)) {
 				return next;
+			}
 		}
 	}
 

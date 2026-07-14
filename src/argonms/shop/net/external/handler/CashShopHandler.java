@@ -47,28 +47,22 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CashShopHandler {
 	private static final Logger LOG = Logger.getLogger(CashShopHandler.class.getName());
 
-	private static final byte //handleAction opcodes
-		BUY_SIMPLE_ITEM = 3,
-		GIFT_ITEM = 4,
-		UPDATE_WISH_LIST = 5,
-		BUY_INVENTORY_SLOTS = 6,
-		BUY_CASH_INVENTORY_SLOTS = 7,
-		BUY_CHARACTER_SLOTS = 8,
-		TAKE_FROM_STAGING = 12,
-		PLACE_INTO_STAGING = 13,
-		BUY_COUPLE_RING = 27,
-		BUY_PACKAGE = 28,
-		GIFT_PACKAGE = 29,
-		BUY_ITEM_WITH_MESOS = 30,
-		BUY_FRIENDSHIP_RING = 33
-	;
+	private static final byte BUY_SIMPLE_ITEM = 3;
+	private static final byte GIFT_ITEM = 4;
+	private static final byte UPDATE_WISH_LIST = 5;
+	private static final byte BUY_INVENTORY_SLOTS = 6;
+	private static final byte BUY_CASH_INVENTORY_SLOTS = 7;
+	private static final byte BUY_CHARACTER_SLOTS = 8;
+	private static final byte TAKE_FROM_STAGING = 12;
+	private static final byte PLACE_INTO_STAGING = 13;
+	private static final byte BUY_COUPLE_RING = 27;
+	private static final byte BUY_PACKAGE = 28;
+	private static final byte GIFT_PACKAGE = 29;
+	private static final byte BUY_ITEM_WITH_MESOS = 30;
+	private static final byte BUY_FRIENDSHIP_RING = 33;
 
 	public static void handleReturnToChannel(LittleEndianReader packet, ShopClient sc) {
 		if (packet.available() != 0) {
@@ -165,7 +159,7 @@ public class CashShopHandler {
 			return;
 		}
 
-		if (!CashShopStaging.giveGift(p.getClient().getAccountId(), p.getName(), recipientAcct, new int[] { serialNumber }, message, null)) {
+		if (!CashShopStaging.giveGift(p.getClient().getAccountId(), p.getName(), recipientAcct, new int[]{serialNumber}, message, null)) {
 			p.getClient().getSession().send(CashShopPackets.writeGiftError(CashShopPackets.ERROR_INVENTORY_FULL));
 			return;
 		}
@@ -175,7 +169,7 @@ public class CashShopHandler {
 	}
 
 	private static void updateWishList(ShopCharacter p, LittleEndianReader packet) {
-		List<Integer> newList = new ArrayList<Integer>();
+		List<Integer> newList = new ArrayList<>();
 		CashShopDataLoader csdl = CashShopDataLoader.getInstance();
 		for (int i = 0; i < 10; i++) {
 			int sn = packet.readInt();
@@ -207,17 +201,17 @@ public class CashShopHandler {
 					case USE:
 					case ETC:
 						max += 4;
-						if (PlayerJob.getAdvancement(job) > 1)
+						if (PlayerJob.getAdvancement(job) > 1) {
 							max += 4;
+						}
 						break;
 				}
 				break;
 			case PlayerJob.CLASS_MAGICIAN:
-				switch (type) {
-					case ETC:
-						if (PlayerJob.getAdvancement(job) > 1)
-							max += 4;
-						break;
+				if (type == Inventory.InventoryType.ETC) {
+					if (PlayerJob.getAdvancement(job) > 1) {
+						max += 4;
+					}
 				}
 				break;
 			case PlayerJob.CLASS_BOWMAN:
@@ -227,8 +221,9 @@ public class CashShopHandler {
 						max += 4;
 						break;
 					case ETC:
-						if (PlayerJob.getAdvancement(job) > 1)
+						if (PlayerJob.getAdvancement(job) > 1) {
 							max += 4;
+						}
 						break;
 				}
 				break;
@@ -240,8 +235,9 @@ public class CashShopHandler {
 						max += 4;
 						break;
 					case USE:
-						if (PlayerJob.getAdvancement(job) > 1)
+						if (PlayerJob.getAdvancement(job) > 1) {
 							max += 4;
+						}
 						break;
 				}
 				break;
@@ -347,7 +343,7 @@ public class CashShopHandler {
 			return;
 		}
 
-		short slot = freeSlots.get(0).shortValue();
+		short slot = freeSlots.getFirst().shortValue();
 		p.getCashShopInventory().removeByUniqueId(uniqueId);
 		inv.put(slot, item);
 		p.getClient().getSession().send(CashShopPackets.writeMoveFromStaging(item, slot));
@@ -373,8 +369,9 @@ public class CashShopHandler {
 
 		if (item.getType() == InventorySlot.ItemType.PET) {
 			byte petSlot = p.indexOfPet(uniqueId);
-			if (petSlot != -1)
+			if (petSlot != -1) {
 				p.removePet(petSlot);
+			}
 		}
 		CashShopStaging inv = p.getCashShopInventory();
 		CashShopStaging.CashPurchaseProperties props = CashShopStaging.CashPurchaseProperties.loadFromDatabase(uniqueId, item.getDataId(), p.getClient().getAccountId());
@@ -430,7 +427,7 @@ public class CashShopHandler {
 			return;
 		}
 
-		boolean success = CashShopStaging.giveGift(p.getClient().getAccountId(), p.getName(), recipientAcct, new int[] { serialNumber }, message, new CashShopStaging.ItemManipulator() {
+		boolean success = CashShopStaging.giveGift(p.getClient().getAccountId(), p.getName(), recipientAcct, new int[]{serialNumber}, message, new CashShopStaging.ItemManipulator() {
 			@Override
 			public boolean manipulate(InventorySlot partnersRing, int serialNumber, Commodity c) {
 				Pair<InventorySlot, CashShopStaging.CashPurchaseProperties> ourRing = CashShopStaging.createItem(c, serialNumber, p.getClient().getAccountId(), null);
@@ -499,14 +496,16 @@ public class CashShopHandler {
 
 		for (int individualSerialNumber : serialNumbers) {
 			c = CashShopDataLoader.getInstance().getCommodity(individualSerialNumber);
-			if (c == null || ShopServer.getInstance().getBlockedSerials().contains(Integer.valueOf(serialNumber)))
+			if (c == null || ShopServer.getInstance().getBlockedSerials().contains(Integer.valueOf(serialNumber))) {
 				continue;
+			}
 
 			lc = LimitedCommodityDataLoader.getInstance().getLimitedCommodity(c.itemDataId);
 			if (lc != null && lc.getSerialNumbers().contains(Integer.valueOf(individualSerialNumber))) {
 				synchronized (lc) {
-					if (lc.getRemainingStock() == 0)
+					if (lc.getRemainingStock() == 0) {
 						continue;
+					}
 
 					LimitedCommodityDataLoader.getInstance().commitUsed(c.itemDataId, lc.incrementUsed());
 				}
@@ -570,14 +569,16 @@ public class CashShopHandler {
 		CashShopStaging.giveGift(p.getClient().getAccountId(), p.getName(), recipientAcct, serialNumbers, message, new CashShopStaging.ItemManipulator() {
 			@Override
 			public boolean manipulate(InventorySlot partnersRing, int serialNumber, Commodity c) {
-				if (c == null || ShopServer.getInstance().getBlockedSerials().contains(Integer.valueOf(serialNumber)))
+				if (c == null || ShopServer.getInstance().getBlockedSerials().contains(Integer.valueOf(serialNumber))) {
 					return false;
+				}
 
 				LimitedCommodity lc = LimitedCommodityDataLoader.getInstance().getLimitedCommodity(c.itemDataId);
 				if (lc != null && lc.getSerialNumbers().contains(Integer.valueOf(serialNumber))) {
-					synchronized (lc) {
-						if (lc.getRemainingStock() == 0)
+					synchronized(lc) {
+						if (lc.getRemainingStock() == 0) {
 							return false;
+						}
 
 						LimitedCommodityDataLoader.getInstance().commitUsed(c.itemDataId, lc.incrementUsed());
 					}
@@ -693,7 +694,7 @@ public class CashShopHandler {
 			return;
 		}
 
-		boolean success = CashShopStaging.giveGift(p.getClient().getAccountId(), p.getName(), recipientAcct, new int[] { serialNumber }, message, new CashShopStaging.ItemManipulator() {
+		boolean success = CashShopStaging.giveGift(p.getClient().getAccountId(), p.getName(), recipientAcct, new int[]{serialNumber}, message, new CashShopStaging.ItemManipulator() {
 			@Override
 			public boolean manipulate(InventorySlot partnersRing, int serialNumber, Commodity c) {
 				Pair<InventorySlot, CashShopStaging.CashPurchaseProperties> ourRing = CashShopStaging.createItem(c, serialNumber, p.getClient().getAccountId(), null);
@@ -805,5 +806,8 @@ public class CashShopHandler {
 			sc.getPlayer().gainMesos(c.getMesosReward());
 			sc.getSession().send(CashShopPackets.writeCouponRewards(items, c.getMaplePointsReward(), c.getMesosReward()));
 		}
+	}
+
+	private CashShopHandler() {
 	}
 }

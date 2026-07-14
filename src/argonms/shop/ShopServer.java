@@ -27,7 +27,6 @@ import argonms.common.loading.item.ItemDataLoader;
 import argonms.common.loading.string.StringDataLoader;
 import argonms.common.net.external.CheatTracker;
 import argonms.common.net.external.ClientListener;
-import argonms.common.net.external.ClientListener.ClientFactory;
 import argonms.common.net.external.CommonPackets;
 import argonms.common.net.external.PlayerLog;
 import argonms.common.net.internal.RemoteCenterSession;
@@ -45,6 +44,7 @@ import argonms.shop.net.external.ShopClient;
 import argonms.shop.net.internal.ShopCenterInterface;
 import argonms.shop.net.internal.ShopCrossServerSynchronization;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -65,11 +65,7 @@ import java.util.logging.Logger;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
-/**
- *
- * @author GoldenKevin
- */
-public class ShopServer implements LocalServer {
+public final class ShopServer implements LocalServer {
 	private static final Logger LOG = Logger.getLogger(ShopServer.class.getName());
 	private static final int CHANNEL_CHANGE_TIMEOUT = 2000;
 
@@ -91,28 +87,31 @@ public class ShopServer implements LocalServer {
 	private final Map<Integer, ShopPlayerContinuation> enterServerData;
 	private final ShopCrossServerSynchronization worldComm;
 	private String ticker;
-	private String commodityOverridePath, limitedCommodityPath;
+	private String commodityOverridePath;
+	private String limitedCommodityPath;
 	private final Set<Integer> blockedSerials;
 
 	private ShopServer() {
-		channelChangeData = new ConcurrentHashMap<Integer, ShopPlayerContinuation>();
-		queuedChannelChanges = new ConcurrentHashMap<Integer, Pair<Byte, ScheduledFuture<?>>>();
-		onlineWorlds = new HashMap<Byte, ShopWorld>();
-		storage = new PlayerLog<ShopCharacter>();
-		enterServerData = new ConcurrentHashMap<Integer, ShopPlayerContinuation>();
+		channelChangeData = new ConcurrentHashMap<>();
+		queuedChannelChanges = new ConcurrentHashMap<>();
+		onlineWorlds = new HashMap<>();
+		storage = new PlayerLog<>();
+		enterServerData = new ConcurrentHashMap<>();
 		worldComm = new ShopCrossServerSynchronization();
-		blockedSerials = new HashSet<Integer>();
+		blockedSerials = new HashSet<>();
 	}
 
 	private void setBlockedSerials(Scanner scan) {
 		while (scan.hasNext()) {
 			String line = scan.nextLine();
 			int comment = line.indexOf('#');
-			if (comment != -1)
+			if (comment != -1) {
 				line = line.substring(0, comment);
+			}
 			line = line.trim();
-			if (!line.isEmpty())
+			if (!line.isEmpty()) {
 				blockedSerials.add(Integer.valueOf(Integer.parseInt(line)));
+			}
 		}
 	}
 
@@ -122,7 +121,7 @@ public class ShopServer implements LocalServer {
 		int centerPort;
 		String authKey;
 		try {
-			FileReader fr = new FileReader(System.getProperty("argonms.shop.config.file", "shop.properties"));
+			FileReader fr = new FileReader(System.getProperty("argonms.shop.config.file", "shop.properties"), StandardCharsets.UTF_8);
 			prop.read(fr);
 			fr.close();
 			address = prop.getString("argonms.shop.host");
@@ -156,17 +155,12 @@ public class ShopServer implements LocalServer {
 		}
 		wzPath = System.getProperty("argonms.data.dir");
 
-		handler = new ClientListener<ShopClient>(new ClientShopPacketProcessor(), new ClientFactory<ShopClient>() {
-			@Override
-			public ShopClient newInstance() {
-				return new ShopClient();
-			}
-		});
+		handler = new ClientListener<>(new ClientShopPacketProcessor(), () -> new ShopClient());
 
-		boolean mcdb = (wzType == DataFileType.MCDB);
+		boolean mcdb = wzType == DataFileType.MCDB;
 		prop = new PropertiesConfiguration();
 		try {
-			FileReader fr = new FileReader(System.getProperty("argonms.db.config.file", "db.properties"));
+			FileReader fr = new FileReader(System.getProperty("argonms.db.config.file", "db.properties"), StandardCharsets.UTF_8);
 			prop.read(fr);
 			fr.close();
 			DatabaseManager.setProps(prop, mcdb, useNio);
@@ -194,12 +188,13 @@ public class ShopServer implements LocalServer {
 						int realSubversion = rs.getInt(2);
 						int realGameVersion = rs.getInt(3);
 						if (realVersion != GlobalConstants.MCDB_VERSION || realSubversion != GlobalConstants.MCDB_SUBVERSION) {
-							LOG.log(Level.SEVERE, "MCDB version imcompatible. Expected: {0}.{1} Have: {2}.{3}", new Object[] { GlobalConstants.MCDB_VERSION, GlobalConstants.MCDB_SUBVERSION, realVersion, realSubversion });
+							LOG.log(Level.SEVERE, "MCDB version imcompatible. Expected: {0}.{1} Have: {2}.{3}", new Object[]{GlobalConstants.MCDB_VERSION, GlobalConstants.MCDB_SUBVERSION, realVersion, realSubversion});
 							System.exit(3);
 							return;
 						}
-						if (realGameVersion != GlobalConstants.MAPLE_VERSION) //carry on despite the warning...
-							LOG.log(Level.WARNING, "Your copy of MCDB is based on an incongruent version of the WZ files. ArgonMS: {0} MCDB: {1}", new Object[] { GlobalConstants.MAPLE_VERSION, realGameVersion });
+						if (realGameVersion != GlobalConstants.MAPLE_VERSION) { //carry on despite the warning...
+							LOG.log(Level.WARNING, "Your copy of MCDB is based on an incongruent version of the WZ files. ArgonMS: {0} MCDB: {1}", new Object[]{GlobalConstants.MAPLE_VERSION, realGameVersion});
+						}
 					}
 				} finally {
 					DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
@@ -213,18 +208,19 @@ public class ShopServer implements LocalServer {
 
 		Scanner scan = null;
 		try {
-			scan = new Scanner(new FileReader(System.getProperty("argonms.ct.macbanblacklist.file", "macbanblacklist.txt")));
+			scan = new Scanner(new FileReader(System.getProperty("argonms.ct.macbanblacklist.file", "macbanblacklist.txt"), StandardCharsets.UTF_8));
 			CheatTracker.setBlacklistedMacBans(scan);
 			scan.close();
-			scan = new Scanner(new FileReader(System.getProperty("argonms.shop.blockedserials.file", "cashshopblockedserialnumbers.txt")));
+			scan = new Scanner(new FileReader(System.getProperty("argonms.shop.blockedserials.file", "cashshopblockedserialnumbers.txt"), StandardCharsets.UTF_8));
 			setBlockedSerials(scan);
 		} catch (IOException ex) {
 			LOG.log(Level.SEVERE, "Could not load macban and SN blacklist!", ex);
 			System.exit(3);
 			return;
 		} finally {
-			if (scan != null)
+			if (scan != null) {
 				scan.close();
+			}
 		}
 
 		Scheduler.enable(true, true);
@@ -244,7 +240,8 @@ public class ShopServer implements LocalServer {
 		CommodityOverrideDataLoader.setInstance(wzType, wzPath);
 		LimitedCommodityDataLoader.setInstance(wzType, wzPath);
 		ItemDataLoader.setInstance(wzType, wzPath);
-		long start, end;
+		long start;
+		long end;
 		start = System.nanoTime();
 		System.out.print("Loading String data...");
 		StringDataLoader.getInstance().loadAll();
@@ -271,16 +268,13 @@ public class ShopServer implements LocalServer {
 	public void registerCenter() {
 		LOG.log(Level.INFO, "Center server registered.");
 		centerConnected = true;
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				initializeData(preloadAll, wzType, wzPath);
-				if (handler.bind(port)) {
-					LOG.log(Level.INFO, "Shop Server is online.");
-					sci.serverReady();
-				} else {
-					System.exit(5);
-				}
+		new Thread((Runnable) () -> {
+			initializeData(preloadAll, wzType, wzPath);
+			if (handler.bind(port)) {
+				LOG.log(Level.INFO, "Shop Server is online.");
+				sci.serverReady();
+			} else {
+				System.exit(5);
 			}
 		}, "data-preloader-thread").start();
 	}
@@ -303,7 +297,7 @@ public class ShopServer implements LocalServer {
 			}
 			w.addGameServer(ip, ports, serverId);
 			worldComm.addChannels(world, serverId, ip, ports);
-			LOG.log(Level.INFO, "{0} server registered as {1}.", new Object[] { ServerType.getName(serverId), host });
+			LOG.log(Level.INFO, "{0} server registered as {1}.", new Object[]{ServerType.getName(serverId), host});
 		} catch (UnknownHostException e) {
 			LOG.log(Level.INFO, "Could not accept " + ServerType.getName(serverId)
 					+ " server because its address could not be resolved!", e);
@@ -315,8 +309,9 @@ public class ShopServer implements LocalServer {
 		Byte oW = Byte.valueOf(world);
 		ShopWorld w = onlineWorlds.get(oW);
 		worldComm.removeChannels(world, w.removeGameServer(serverId));
-		if (w.getChannelCount() == 0)
+		if (w.getChannelCount() == 0) {
 			onlineWorlds.remove(oW);
+		}
 	}
 
 	/**
@@ -358,12 +353,8 @@ public class ShopServer implements LocalServer {
 	}
 
 	public void requestChannelChange(final ShopCharacter p, byte destCh) {
-		queuedChannelChanges.put(Integer.valueOf(p.getId()), new Pair<Byte, ScheduledFuture<?>>(Byte.valueOf(destCh), Scheduler.getInstance().runAfterDelay(new Runnable() {
-			@Override
-			public void run() {
-				queuedChannelChanges.remove(Integer.valueOf(p.getId()));
-			}
-		}, CHANNEL_CHANGE_TIMEOUT)));
+		queuedChannelChanges.put(Integer.valueOf(p.getId()), new Pair<Byte, ScheduledFuture<?>>(Byte.valueOf(destCh), Scheduler.getInstance().runAfterDelay(() ->
+			queuedChannelChanges.remove(Integer.valueOf(p.getId())), CHANNEL_CHANGE_TIMEOUT)));
 		worldComm.sendChannelChangeRequest(destCh, p);
 	}
 

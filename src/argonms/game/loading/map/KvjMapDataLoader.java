@@ -22,34 +22,29 @@ import argonms.common.util.input.LittleEndianByteArrayReader;
 import argonms.common.util.input.LittleEndianReader;
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class KvjMapDataLoader extends MapDataLoader {
 	private static final Logger LOG = Logger.getLogger(KvjMapDataLoader.class.getName());
 
-	private static final byte
-		TOWN = 1,
-		RETURN_MAP = 2,
-		FORCED_RETURN = 3,
-		MOB_RATE = 4,
-		FIELD_LIMIT = 5,
-		DEC_HP = 6,
-		TIME_LIMIT = 7,
-		PROTECT_ITEM = 8,
-		EVERLAST = 9,
-		LIFE = 10,
-		AREA = 11,
-		CLOCK = 12,
-		BOAT = 13,
-		REACTOR = 14,
-		FOOTHOLD = 15,
-		PORTAL = 16
-	;
+	private static final byte TOWN = 1;
+	private static final byte RETURN_MAP = 2;
+	private static final byte FORCED_RETURN = 3;
+	private static final byte MOB_RATE = 4;
+	private static final byte FIELD_LIMIT = 5;
+	private static final byte DEC_HP = 6;
+	private static final byte TIME_LIMIT = 7;
+	private static final byte PROTECT_ITEM = 8;
+	private static final byte EVERLAST = 9;
+	private static final byte LIFE = 10;
+	private static final byte AREA = 11;
+	private static final byte CLOCK = 12;
+	private static final byte BOAT = 13;
+	private static final byte REACTOR = 14;
+	private static final byte FOOTHOLD = 15;
+	private static final byte PORTAL = 16;
 
 	private final String dataPath;
 
@@ -59,11 +54,11 @@ public class KvjMapDataLoader extends MapDataLoader {
 
 	@Override
 	protected void load(int mapid) {
-		String id = String.format("%09d", mapid);
+		String id = String.format(Locale.ROOT, "%09d", mapid);
 
 		MapStats stats = null;
 		try {
-			File f = new File(new StringBuilder(dataPath).append("Map.wz").append(File.separator).append("Map").append(File.separator).append("Map").append(id.substring(0, 1)).append(File.separator).append(id).append(".img.kvj").toString());
+			File f = new File(dataPath + "Map.wz" + (File.separator) + "Map" + (File.separator) + "Map" + id.substring(0, 1) + (File.separator) + id + ".img.kvj");
 			if (f.exists()) {
 				stats = new MapStats(mapid);
 				doWork(new LittleEndianByteArrayReader(f), stats);
@@ -99,10 +94,11 @@ public class KvjMapDataLoader extends MapDataLoader {
 
 	@Override
 	public boolean canLoad(int mapid) {
-		if (mapStats.containsKey(Integer.valueOf(mapid)))
+		if (mapStats.containsKey(Integer.valueOf(mapid))) {
 			return true;
-		String id = String.format("%09d", mapid);
-		File f = new File(new StringBuilder(dataPath).append("Map.wz").append(File.separator).append("Map").append(File.separator).append("Map").append(id.substring(0, 1)).append(id).append(".img.kvj").toString());
+		}
+		String id = String.format(Locale.ROOT, "%09d", mapid);
+		File f = new File(dataPath + "Map.wz" + (File.separator) + "Map" + (File.separator) + "Map" + id.substring(0, 1) + id + ".img.kvj");
 		return f.exists();
 	}
 

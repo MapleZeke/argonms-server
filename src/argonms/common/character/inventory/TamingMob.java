@@ -18,10 +18,6 @@
 
 package argonms.common.character.inventory;
 
-/**
- *
- * @author GoldenKevin
- */
 public class TamingMob extends Equip {
 	private byte level;
 	private short exp;

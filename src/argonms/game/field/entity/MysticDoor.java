@@ -33,22 +33,14 @@ import argonms.game.net.external.GamePackets;
 import java.awt.Point;
 import java.lang.ref.WeakReference;
 
-/**
- *
- * @author GoldenKevin
- */
-public class MysticDoor extends AbstractEntity {
+public final class MysticDoor extends AbstractEntity {
 	public static final byte OUT_OF_TOWN_PORTAL_ID = (byte) 0x80;
 
-	public static final byte
-		SPAWN_ANIMATION_FALL = 0,
-		SPAWN_ANIMATION_NONE = 1
-	;
+	public static final byte SPAWN_ANIMATION_FALL = 0;
+	public static final byte SPAWN_ANIMATION_NONE = 1;
 
-	private static final byte
-		DESTROY_ANIMATION_FADE = 0,
-		DESTROY_ANIMATION_NONE = 1
-	;
+	private static final byte DESTROY_ANIMATION_FADE = 0;
+	private static final byte DESTROY_ANIMATION_NONE = 1;
 
 	private final WeakReference<GameCharacter> owner;
 	private final GameMap map;
@@ -58,7 +50,7 @@ public class MysticDoor extends AbstractEntity {
 
 	private MysticDoor(GameCharacter owner, GameMap map, Point position, byte townPortalId) {
 		setPosition(position);
-		this.owner = new WeakReference<GameCharacter>(owner);
+		this.owner = new WeakReference<>(owner);
 		this.map = map;
 		this.townPortalId = townPortalId;
 		this.mod = DESTROY_ANIMATION_NONE;
@@ -161,8 +153,9 @@ public class MysticDoor extends AbstractEntity {
 			}
 		}
 		byte destinationPortal = destinationMap.getMysticDoorPortalId(partyPosition);
-		if (destinationPortal == -1)
+		if (destinationPortal == -1) {
 			return null;
+		}
 
 		final MysticDoor source = new MysticDoor(owner, sourceMap, position, OUT_OF_TOWN_PORTAL_ID);
 		final MysticDoor destination = new MysticDoor(owner, destinationMap, destinationMap.getPortalPosition(destinationPortal), destinationPortal);
@@ -187,12 +180,9 @@ public class MysticDoor extends AbstractEntity {
 			owner.getClient().getSession().send(GamePackets.writeSpawnPortal(destination));
 		}
 
-		Scheduler.getInstance().runAfterDelay(new Runnable() {
-			@Override
-			public void run() {
-				source.mod = DESTROY_ANIMATION_FADE;
-				destination.mod = DESTROY_ANIMATION_FADE;
-			}
+		Scheduler.getInstance().runAfterDelay(() -> {
+			source.mod = DESTROY_ANIMATION_FADE;
+			destination.mod = DESTROY_ANIMATION_FADE;
 		}, 2000);
 
 		return source;
@@ -201,11 +191,13 @@ public class MysticDoor extends AbstractEntity {
 	public static void close(GameCharacter owner) {
 		MysticDoor door = owner.getDoor();
 		PartyList party = owner.getParty();
-		if (door == null)
+		if (door == null) {
 			return;
+		}
 
-		if (!door.isInTown())
+		if (!door.isInTown()) {
 			door = door.pipe;
+		}
 		door.map.destroyEntity(door);
 		door.pipe.map.destroyEntity(door.pipe);
 		owner.setDoor(null);
@@ -218,16 +210,18 @@ public class MysticDoor extends AbstractEntity {
 				for (PartyList.LocalMember mem : party.getMembersInLocalChannel()) {
 					GameCharacter memPlayer = mem.getPlayer();
 					memPlayer.getClient().getSession().send(updatedParty);
-					if (memPlayer.getMapId() == door.getMapId())
+					if (memPlayer.getMapId() == door.getMapId()) {
 						memPlayer.getClient().getSession().send(destroyPacket);
+					}
 				}
 			} finally {
 				party.unlockRead();
 			}
 		} else {
 			owner.getClient().getSession().send(GamePackets.writeRemovePortal());
-			if (owner.getMapId() == door.getMapId())
+			if (owner.getMapId() == door.getMapId()) {
 				owner.getClient().getSession().send(destroyPacket);
+			}
 		}
 	}
 }

@@ -11,31 +11,50 @@
             <plugin>
                 <groupId>org.openrewrite.maven</groupId>
                 <artifactId>rewrite-maven-plugin</artifactId>
-                <version>5.34.1</version>
+                <version>5.44.0</version>
                 <configuration>
                     <exportDatatables>true</exportDatatables>
+                    <activeRecipes>
+                        <!-- Static-analysis improvements beyond CommonStaticAnalysis -->
+                        <recipe>org.openrewrite.staticanalysis.CodeCleanup</recipe>
+                        <recipe>org.openrewrite.staticanalysis.RemoveCallsToSystemGc</recipe>
+                        <recipe>org.openrewrite.staticanalysis.RemoveJavaDocAuthorTag</recipe>
+                        <recipe>org.openrewrite.staticanalysis.UseLambdaForFunctionalInterface</recipe>
+                        <!-- OWASP Top-10 A02 – cryptographic failures (SecureRandom, etc.) -->
+                        <recipe>org.openrewrite.java.security.OwaspA02</recipe>
+                    </activeRecipes>
                 </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>org.openrewrite.recipe</groupId>
                         <artifactId>rewrite-migrate-java</artifactId>
-                        <version>2.21.0</version>
+                        <version>2.26.1</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.openrewrite.recipe</groupId>
+                        <artifactId>rewrite-java-security</artifactId>
+                        <version>2.14.0</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.openrewrite.recipe</groupId>
+                        <artifactId>rewrite-static-analysis</artifactId>
+                        <version>1.18.0</version>
                     </dependency>
                 </dependencies>
             </plugin>
         </plugins>
     </build>
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
     </properties>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15 -->
+        <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15</artifactId>
-            <version>1.46</version>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.79</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.mozilla/rhino -->
         <dependency>
@@ -43,11 +62,11 @@
             <artifactId>rhino</artifactId>
             <version>1.7.13</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+        <!-- https://mvnrepository.com/artifact/com.mysql/mysql-connector-j -->
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.22</version>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>8.4.0</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-configuration2 -->
         <dependency>
@@ -56,4 +75,186 @@
             <version>2.7</version>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <!--
+            Quality-baseline profile – opt-in, not active by default.
+            Activate with: mvn verify -P quality-baseline
+        -->
+        <profile>
+            <id>quality-baseline</id>
+            <build>
+                <plugins>
+
+                    <!-- ===== JDK / Maven guardrails ===== -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <version>3.4.1</version>
+                        <executions>
+                            <execution>
+                                <id>enforce-versions</id>
+                                <goals>
+                                    <goal>enforce</goal>
+                                </goals>
+                                <configuration>
+                                    <rules>
+                                        <requireJavaVersion>
+                                            <!-- Require Java 21 or newer -->
+                                            <version>[21,)</version>
+                                        </requireJavaVersion>
+                                        <requireMavenVersion>
+                                            <!-- Require Maven 3.8 or newer -->
+                                            <version>[3.8,)</version>
+                                        </requireMavenVersion>
+                                        <banDuplicatePomDependencyVersions/>
+                                    </rules>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- ===== SpotBugs (with optional FindSecBugs) ===== -->
+                    <plugin>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs-maven-plugin</artifactId>
+                        <version>4.8.3.1</version>
+                        <configuration>
+                            <effort>Max</effort>
+                            <threshold>Medium</threshold>
+                            <failOnError>true</failOnError>
+                            <plugins>
+                                <plugin>
+                                    <groupId>com.h3xstream.findsecbugs</groupId>
+                                    <artifactId>findsecbugs-plugin</artifactId>
+                                    <version>1.13.0</version>
+                                </plugin>
+                            </plugins>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>spotbugs-check</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- ===== Checkstyle ===== -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-checkstyle-plugin</artifactId>
+                        <version>3.6.0</version>
+                        <configuration>
+                            <!--
+                                Uses Google Java Style by default.
+                                Override by placing a custom checkstyle.xml on the
+                                classpath or setting -Dcheckstyle.config.location=<path>.
+                            -->
+                            <configLocation>google_checks.xml</configLocation>
+                            <consoleOutput>true</consoleOutput>
+                            <failsOnError>true</failsOnError>
+                            <violationSeverity>warning</violationSeverity>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>checkstyle-check</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- ===== Forbidden-APIs ===== -->
+                    <plugin>
+                        <groupId>de.thetaphi</groupId>
+                        <artifactId>forbiddenapis</artifactId>
+                        <version>3.7</version>
+                        <configuration>
+                            <failOnUnresolvableSignatures>false</failOnUnresolvableSignatures>
+                            <bundledSignatures>
+                                <!-- Forbid deprecated / unsafe JDK APIs -->
+                                <bundledSignature>jdk-unsafe</bundledSignature>
+                                <bundledSignature>jdk-deprecated</bundledSignature>
+                                <bundledSignature>jdk-non-portable</bundledSignature>
+                                <!-- Forbid dangerous Commons-IO / Commons-Lang APIs -->
+                                <bundledSignature>commons-io-unsafe-2.5</bundledSignature>
+                            </bundledSignatures>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>forbiddenapis-check</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- ===== PMD ===== -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-pmd-plugin</artifactId>
+                        <version>3.21.2</version>
+                        <configuration>
+                            <targetJdk>21</targetJdk>
+                            <failOnViolation>true</failOnViolation>
+                            <printFailingErrors>true</printFailingErrors>
+                            <rulesets>
+                                <ruleset>category/java/bestpractices.xml</ruleset>
+                                <ruleset>category/java/errorprone.xml</ruleset>
+                                <ruleset>category/java/security.xml</ruleset>
+                            </rulesets>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>pmd-check</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- ===== OpenRewrite dry-run ===== -->
+                    <!--
+                        Run with: mvn rewrite:dryRunNoFork -P quality-baseline
+                        This generates diff reports under target/rewrite without
+                        modifying sources.
+                    -->
+                    <plugin>
+                        <groupId>org.openrewrite.maven</groupId>
+                        <artifactId>rewrite-maven-plugin</artifactId>
+                        <version>5.34.1</version>
+                        <configuration>
+                            <exportDatatables>true</exportDatatables>
+                            <activeRecipes>
+                                <recipe>org.openrewrite.java.migrate.UpgradeToJava21</recipe>
+                                <recipe>org.openrewrite.java.security.SecureRandom</recipe>
+                            </activeRecipes>
+                        </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.openrewrite.recipe</groupId>
+                                <artifactId>rewrite-migrate-java</artifactId>
+                                <version>2.21.0</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.openrewrite.recipe</groupId>
+                                <artifactId>rewrite-java-security</artifactId>
+                                <version>2.14.0</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

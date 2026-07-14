@@ -33,10 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-/**
- *
- * @author GoldenKevin
- */
 public class QuestChecks {
 	public enum QuestRequirementType {
 		MOB, ITEM, MESOS, PET, PET_TAMENESS, QUEST
@@ -49,24 +45,27 @@ public class QuestChecks {
 	private final Map<Integer, Integer> reqSkills;
 	private final Map<Integer, Short> reqMobs;
 	private final List<Integer> reqPets;
-	private short minLevel, maxLevel;
+	private short minLevel;
+	private short maxLevel;
 	private short minFame;
 	private long endDate;
-	private String startScript, endScript;
+	private String startScript;
+	private String endScript;
 	private int repeatInterval;
 	private short reqPetTameness;
 	private short reqMountTameness;
 	private short minMesos;
-	private short minPop, maxPop;
+	private short minPop;
+	private short maxPop;
 
 	protected QuestChecks(short questId) {
 		this.questId = questId;
-		reqItems = new ArrayList<QuestItemStats>();
-		reqQuests = new HashMap<Short, Byte>();
-		reqSkills = new HashMap<Integer, Integer>();
-		reqMobs = new LinkedHashMap<Integer, Short>();
-		reqPets = new ArrayList<Integer>();
-		reqJobs = new ArrayList<Short>();
+		reqItems = new ArrayList<>();
+		reqQuests = new HashMap<>();
+		reqSkills = new HashMap<>();
+		reqMobs = new LinkedHashMap<>();
+		reqPets = new ArrayList<>();
+		reqJobs = new ArrayList<>();
 		maxLevel = GlobalConstants.MAX_LEVEL;
 		endDate = Long.MAX_VALUE;
 		repeatInterval = -1;
@@ -145,11 +144,12 @@ public class QuestChecks {
 	}
 
 	private boolean hasPet(GameCharacter p) {
-		if (reqPets.isEmpty())
+		if (reqPets.isEmpty()) {
 			return true;
+		}
 		//client only checks the boss pet
 		Pet pet = p.getPets()[0];
-		return (pet != null && reqPets.contains(Integer.valueOf(pet.getDataId())));
+		return pet != null && reqPets.contains(Integer.valueOf(pet.getDataId()));
 	}
 
 	public boolean isRepeatable() {
@@ -157,18 +157,22 @@ public class QuestChecks {
 	}
 
 	public byte requirementError(GameCharacter p) {
-		if (System.currentTimeMillis() >= endDate)
+		if (System.currentTimeMillis() >= endDate) {
 			return QuestEntry.QUEST_ACTION_ERROR_EXPIRED;
-		if (p.getMesos() < minMesos)
+		}
+		if (p.getMesos() < minMesos) {
 			return QuestEntry.QUEST_ACTION_ERROR_INSUFFICIENT_FUNDS;
+		}
 		if (p.getFame() < minFame || !hasPet(p)
-				|| p.getLevel() < minLevel || p.getLevel() > maxLevel
-				|| !reqJobs.isEmpty() && !reqJobs.contains(Short.valueOf(p.getJob())) && !PlayerJob.isGameMaster(p.getJob()))
+			|| p.getLevel() < minLevel || p.getLevel() > maxLevel
+			|| !reqJobs.isEmpty() && !reqJobs.contains(Short.valueOf(p.getJob())) && !PlayerJob.isGameMaster(p.getJob())) {
 			return QuestEntry.QUEST_ACTION_ERROR_UNKNOWN;
+		}
 		for (QuestItemStats item : reqItems) {
 			int itemId = item.getItemId();
-			if (!p.getInventory(InventoryTools.getCategory(itemId)).hasItem(itemId, item.getCount()))
+			if (!p.getInventory(InventoryTools.getCategory(itemId)).hasItem(itemId, item.getCount())) {
 				return QuestEntry.QUEST_ACTION_ERROR_INVENTORY_FULL;
+			}
 		}
 		Map<Short, QuestEntry> statuses = p.getAllQuests();
 		QuestEntry status;
@@ -177,11 +181,13 @@ public class QuestChecks {
 			for (Entry<Short, Byte> entry : reqQuests.entrySet()) {
 				status = statuses.get(entry.getKey());
 				if (status != null) {
-					if (entry.getValue().byteValue() != status.getState())
+					if (entry.getValue().byteValue() != status.getState()) {
 						return QuestEntry.QUEST_ACTION_ERROR_UNKNOWN;
+					}
 				} else {
-					if (entry.getValue().byteValue() != QuestEntry.STATE_NOT_STARTED)
+					if (entry.getValue().byteValue() != QuestEntry.STATE_NOT_STARTED) {
 						return QuestEntry.QUEST_ACTION_ERROR_UNKNOWN;
+					}
 				}
 			}
 		} finally {
@@ -192,24 +198,29 @@ public class QuestChecks {
 		}
 		status = statuses.get(Short.valueOf(questId));
 		if (!reqMobs.isEmpty()) {
-			if (status == null)
+			if (status == null) {
 				return QuestEntry.QUEST_ACTION_ERROR_UNKNOWN;
+			}
 			for (Entry<Integer, Short> entry : reqMobs.entrySet()) {
-				if (status.getMobCount(entry.getKey().intValue()) < entry.getValue().shortValue())
+				if (status.getMobCount(entry.getKey().intValue()) < entry.getValue().shortValue()) {
 					return QuestEntry.QUEST_ACTION_ERROR_UNKNOWN;
+				}
 			}
 		}
 		if (repeatInterval != -1) {
-			if (status != null && status.getState() == QuestEntry.STATE_COMPLETED)
+			if (status != null && status.getState() == QuestEntry.STATE_COMPLETED) {
 				//repeatInterval is in minutes, so convert it to milliseconds
-				if (System.currentTimeMillis() < status.getCompletionTime() + (long) repeatInterval * 60000)
+				if (System.currentTimeMillis() < status.getCompletionTime() + (long) repeatInterval * 60000) {
 					return QuestEntry.QUEST_ACTION_ERROR_UNKNOWN;
+				}
+			}
 		}
 		if (reqPetTameness != 0) {
 			//client only checks the boss pet
 			Pet pet = p.getPets()[0];
-			if (pet == null || pet.getCloseness() < reqPetTameness)
+			if (pet == null || pet.getCloseness() < reqPetTameness) {
 				return QuestEntry.QUEST_ACTION_ERROR_UNKNOWN;
+			}
 		}
 		if (reqMountTameness != 0) {
 			//TODO: check mount tameness

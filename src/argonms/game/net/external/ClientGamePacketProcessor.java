@@ -25,10 +25,6 @@ import argonms.game.net.external.handler.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ClientGamePacketProcessor extends ClientPacketProcessor<GameClient> {
 	private static final Logger LOG = Logger.getLogger(ClientPacketProcessor.class.getName());
 
@@ -276,7 +272,7 @@ public class ClientGamePacketProcessor extends ClientPacketProcessor<GameClient>
 				//no-op
 				break;
 			default:
-				LOG.log(Level.FINE, "Received unhandled client packet {0} bytes long:\n{1}", new Object[] { reader.available() + 2, reader });
+				LOG.log(Level.FINE, "Received unhandled client packet {0} bytes long:\n{1}", new Object[]{reader.available() + 2, reader});
 				break;
 		}
 	}

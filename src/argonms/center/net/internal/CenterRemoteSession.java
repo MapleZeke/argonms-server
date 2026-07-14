@@ -44,10 +44,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CenterRemoteSession implements Session {
 	private static final Logger LOG = Logger.getLogger(CenterRemoteSession.class.getName());
 	private static final int HEADER_LENGTH = 4;
@@ -65,13 +61,9 @@ public class CenterRemoteSession implements Session {
 	private final SelectionKey selectionKey;
 	private final UnorderedQueue sendQueue;
 
-	private KeepAliveTask heartbeatTask;
-	private final Runnable idleTask = new Runnable() {
-		@Override
-		public void run() {
-			startPingTask();
-		}
-	};
+	private final KeepAliveTask heartbeatTask;
+	private final Runnable idleTask = () ->
+		startPingTask();
 	private ScheduledFuture<?> idleTaskFuture;
 
 	private MessageType nextMessageType;
@@ -159,9 +151,10 @@ public class CenterRemoteSession implements Session {
 			//idleTaskFuture has to be non-null as long as the this pointer was not leaked in the constructor
 			idleTaskFuture.cancel(false);
 
-			LOG.log(Level.FINE, "{0} server ({1}) disconnected: {2}", new Object[] { getServerName(), getAddress(), reason });
-			if (cri != null)
+			LOG.log(Level.FINE, "{0} server ({1}) disconnected: {2}", new Object[]{getServerName(), getAddress(), reason});
+			if (cri != null) {
 				cri.disconnected();
+			}
 			return true;
 		}
 		return false;
@@ -174,20 +167,19 @@ public class CenterRemoteSession implements Session {
 	 * channel is closed.
 	 */
 	/* package-private */ int tryFlushSendQueue() {
-		if (!sendQueue.shouldWrite())
-			return -1;
+	if (!sendQueue.shouldWrite()) {
+		return -1;
+	}
 		try {
 			do {
-				int success = 0;
 				Iterator<ByteBuffer> iter = sendQueue.pop().iterator();
 				while (iter.hasNext()) {
 					ByteBuffer buf = iter.next();
-					if (buf.remaining() == commChn.write(buf)) {
-						success++;
-					} else {
+					if (buf.remaining() != commChn.write(buf)) {
 						sendQueue.insert(buf);
-						while (iter.hasNext())
+						while (iter.hasNext()) {
 							sendQueue.insert(iter.next());
+						}
 						return 0;
 					}
 				}
@@ -203,7 +195,8 @@ public class CenterRemoteSession implements Session {
 	}
 
 	private void recvInitPacket(LittleEndianReader packet) {
-		String response, localError = null;
+		String response;
+		String localError = null;
 
 		if (packet.available() >= 4 && packet.readByte() == RemoteCenterOps.AUTH) {
 			byte serverId = packet.readByte();
@@ -215,18 +208,21 @@ public class CenterRemoteSession implements Session {
 					if (ServerType.isGame(serverId)) {
 						byte world = packet.readByte();
 						byte[] channels = new byte[packet.readByte()];
-						for (int i = 0; i < channels.length; i++)
+						for (int i = 0; i < channels.length; i++) {
 							channels[i] = packet.readByte();
+						}
 						List<CenterGameInterface> servers = CenterServer.getInstance().getAllServersOfWorld(world, serverId);
-						List<Byte> conflicts = new ArrayList<Byte>();
+						List<Byte> conflicts = new ArrayList<>();
 						for (CenterGameInterface server : servers) {
-							if (server.isShuttingDown())
+							if (server.isShuttingDown()) {
 								continue;
+							}
 
 							for (int i = 0; i < channels.length; i++) {
 								Byte ch = Byte.valueOf(channels[i]);
-								if (server.getChannels().contains(ch))
+								if (server.getChannels().contains(ch)) {
 									conflicts.add(ch);
+								}
 							}
 						}
 						if (!conflicts.isEmpty()) {
@@ -329,7 +325,7 @@ public class CenterRemoteSession implements Session {
 		private final AtomicReference<ScheduledFuture<?>> future;
 
 		public KeepAliveTask() {
-			future = new AtomicReference<ScheduledFuture<?>>(null);
+			future = new AtomicReference<>(null);
 		}
 
 		public void sendPing() {
@@ -351,8 +347,9 @@ public class CenterRemoteSession implements Session {
 
 		public void stop() {
 			ScheduledFuture<?> old = future.getAndSet(null);
-			if (old != null)
+			if (old != null) {
 				old.cancel(false);
+			}
 		}
 	}
 }

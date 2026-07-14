@@ -48,10 +48,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-/**
- *
- * @author GoldenKevin
- */
 public class CenterServerSynchronization extends CrossProcessSynchronization {
 	private final CrossServerSynchronization handler;
 	private final WorldChannel self;
@@ -60,9 +56,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 	private final ConcurrentMap<Integer, Chatroom> localChatRooms;
 
 	public CenterServerSynchronization(CrossServerSynchronization handler, WorldChannel self) {
-		this.activeLocalParties = new ConcurrentHashMap<Integer, PartyList>();
-		this.activeLocalGuilds = new ConcurrentHashMap<Integer, GuildList>();
-		this.localChatRooms = new ConcurrentHashMap<Integer, Chatroom>();
+		this.activeLocalParties = new ConcurrentHashMap<>();
+		this.activeLocalGuilds = new ConcurrentHashMap<>();
+		this.localChatRooms = new ConcurrentHashMap<>();
 		this.handler = handler;
 		this.self = self;
 	}
@@ -430,8 +426,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter();
 		writeCenterServerSynchronizationPacketHeader(lew, CenterServerSynchronizationOps.GUILD_TITLES_UPDATE);
 		lew.writeInt(guild.getId());
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < 5; i++) {
 			lew.writeLengthPrefixedString(titles[i]);
+		}
 
 		writeCenterServerSynchronizationPacket(lew.getBytes());
 	}
@@ -531,8 +528,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		}
 		//if there are no other players in the chatroom on the
 		//channel, delete the chatroom from our cache
-		if (others.isEmpty())
+		if (others.isEmpty()) {
 			localChatRooms.remove(Integer.valueOf(room.getRoomId()));
+		}
 	}
 
 	public void sendChatroomPlayerChangedChannels(int playerId, int roomId) {
@@ -567,22 +565,25 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		int partyId = packet.readInt();
 		int leaderId = packet.readInt();
 		GameCharacter leaderPlayer = self.getPlayerById(leaderId);
-		if (leaderPlayer == null)
+		if (leaderPlayer == null) {
 			return;
+		}
 
 		PartyList party = new PartyList(partyId, leaderPlayer);
 		activeLocalParties.put(Integer.valueOf(partyId), party);
 		leaderPlayer.setParty(party);
-		if (leaderPlayer.getDoor() != null)
+		if (leaderPlayer.getDoor() != null) {
 			leaderPlayer.getClient().getSession().send(GamePackets.writeRemovePortal());
+		}
 		leaderPlayer.getClient().getSession().send(GamePackets.writePartyCreated(partyId, leaderPlayer.getDoor()));
 	}
 
 	private void receivedPartyDisbanded(LittleEndianReader packet) {
 		int partyId = packet.readInt();
 		PartyList party = activeLocalParties.remove(Integer.valueOf(partyId));
-		if (party == null)
+		if (party == null) {
 			return;
+		}
 
 		party.lockRead();
 		try {
@@ -598,8 +599,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 						memberPlayer.getClient().getSession().send(GamePackets.writeRemovePortal());
 
 						if (memberPlayer == memPlayer) {
-							if (!door.isInTown())
+							if (!door.isInTown()) {
 								door = door.getComplement();
+							}
 							door.setPosition(door.getMap().getPortalPosition(door.getMap().getMysticDoorPortalId((byte) 0)));
 							memberPlayer.getClient().getSession().send(GamePackets.writeSpawnPortal(door));
 						} else if (door.isInTown() && door.getMapId() == memberPlayer.getMapId() || !door.isInTown() && (door = door.getComplement()).getMapId() == memberPlayer.getMapId()) {
@@ -621,8 +623,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		//TODO: not safe for activeLocalParties when members
 		//concurrently join or leave party, or enter or exit channel
 		PartyList party = activeLocalParties.get(Integer.valueOf(partyId));
-		if (party == null)
+		if (party == null) {
 			return;
+		}
 
 		String leaverName;
 		if (self.getChannelId() == leaverCh) {
@@ -638,7 +641,8 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 			leavingPlayer.setParty(null);
 			leavingPlayer.getClient().getSession().send(GamePackets.writePartyMemberLeft(party, leaverId, leaverName, leaverExpelled));
 
-			boolean removeParty, saveCharacter;
+			boolean removeParty;
+			boolean saveCharacter;
 			party.lockRead();
 			try {
 				removeParty = party.getMembersInLocalChannel().isEmpty();
@@ -651,21 +655,25 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 					//TODO: names above mystic door in towns still a bit messed up after this
 					MysticDoor door = memPlayer.getDoor();
 					if (door != null) {
-						if (!door.isInTown())
+						if (!door.isInTown()) {
 							door = door.getComplement();
+						}
 						leavingPlayer.getClient().getSession().send(GamePackets.writeRemovePortal());
-						if (door.getMapId() == leavingPlayer.getMapId())
+						if (door.getMapId() == leavingPlayer.getMapId()) {
 							leavingPlayer.getClient().getSession().send(door.getDestructionMessage());
+						}
 						door.setPosition(door.getMap().getPortalPosition(door.getMap().getMysticDoorPortalId(party.getPositionById(memPlayer.getId()))));
 						memPlayer.getClient().getSession().send(GamePackets.writeSpawnPortal(door));
 					}
 					door = leavingPlayer.getDoor();
 					if (door != null) {
-						if (!door.isInTown())
+						if (!door.isInTown()) {
 							door = door.getComplement();
+						}
 						memPlayer.getClient().getSession().send(GamePackets.writeRemovePortal());
-						if (door.getMapId() == memPlayer.getMapId())
+						if (door.getMapId() == memPlayer.getMapId()) {
 							memPlayer.getClient().getSession().send(door.getDestructionMessage());
+						}
 						door.setPosition(door.getMap().getPortalPosition(door.getMap().getMysticDoorPortalId((byte) 0)));
 						leavingPlayer.getClient().getSession().send(GamePackets.writeSpawnPortal(door));
 					}
@@ -676,10 +684,12 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 
 			//GameCenterPacketProcessor.processPartyMemberLeft has an
 			//explanation for this
-			if (saveCharacter)
+			if (saveCharacter) {
 				leavingPlayer.saveCharacter();
-			if (removeParty)
+			}
+			if (removeParty) {
 				activeLocalParties.remove(Integer.valueOf(partyId));
+			}
 		} else {
 			leaverName = packet.readLengthPrefixedString();
 			party.lockWrite();
@@ -726,8 +736,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 				party.lockRead();
 				try {
 					for (PartyList.LocalMember mem : party.getMembersInLocalChannel()) {
-						if (mem == joiningPlayer)
+						if (mem == joiningPlayer) {
 							continue;
+						}
 
 						GameCharacter memPlayer = mem.getPlayer();
 						GameCharacter memberPlayer = joiningPlayer.getPlayer();
@@ -740,15 +751,17 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 
 						MysticDoor door = memPlayer.getDoor();
 						if (door != null) {
-							if (!door.isInTown())
+							if (!door.isInTown()) {
 								door = door.getComplement();
+							}
 							door.setPosition(door.getMap().getPortalPosition(door.getMap().getMysticDoorPortalId(party.getPositionById(memPlayer.getId()))));
 							memPlayer.getClient().getSession().send(GamePackets.writeSpawnPortal(door));
 						}
 						door = memberPlayer.getDoor();
 						if (door != null) {
-							if (!door.isInTown())
+							if (!door.isInTown()) {
 								door = door.getComplement();
+							}
 							door.setPosition(door.getMap().getPortalPosition(door.getMap().getMysticDoorPortalId(party.getPositionById(memberPlayer.getId()))));
 							memberPlayer.getClient().getSession().send(GamePackets.writeSpawnPortal(door));
 						}
@@ -785,16 +798,18 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 	private void receivedPartyJoinError(LittleEndianReader packet) {
 		int joinFailedPlayerId = packet.readInt();
 		GameCharacter joinFailedPlayer = self.getPlayerById(joinFailedPlayerId);
-		if (joinFailedPlayer != null)
+		if (joinFailedPlayer != null) {
 			joinFailedPlayer.getClient().getSession().send(GamePackets.writeSimplePartyListMessage(PartyListHandler.PARTY_FULL));
+		}
 	}
 
 	private void receivedPartyLeaderChanged(LittleEndianReader packet) {
 		int partyId = packet.readInt();
 		int newLeader = packet.readInt();
 		PartyList party = activeLocalParties.get(Integer.valueOf(partyId));
-		if (party == null)
+		if (party == null) {
 			return;
+		}
 
 		party.setLeader(newLeader);
 		party.lockRead();
@@ -825,9 +840,10 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		}
 
 		BlockingQueue<Pair<Byte, Object>> consumer = blockingCalls.remove(Integer.valueOf(responseId));
-		if (consumer == null)
+		if (consumer == null) {
 			//timed out and garbage collected
 			return;
+		}
 
 		consumer.add(new Pair<Byte, Object>(Byte.valueOf((byte) -1), Integer.valueOf(leader)));
 		consumer.add(new Pair<Byte, Object>(Byte.valueOf((byte) -1), members));
@@ -864,8 +880,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 				party.lockRead();
 				try {
 					for (PartyList.LocalMember mem : party.getMembersInLocalChannel()) {
-						if (mem == member)
+						if (mem == member) {
 							continue;
+						}
 
 						GameCharacter memPlayer = mem.getPlayer();
 						GameCharacter memberPlayer = member.getPlayer();
@@ -909,8 +926,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		//TODO: not safe for activeLocalParties when members
 		//concurrently join or leave party, or enter or exit channel
 		PartyList party = activeLocalParties.get(Integer.valueOf(partyId));
-		if (party == null)
+		if (party == null) {
 			return;
+		}
 
 		boolean removeParty = false;
 		party.lockWrite();
@@ -942,8 +960,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		int updatedPlayerId = packet.readInt();
 		byte updatedPlayerCh = packet.readByte();
 		PartyList party = activeLocalParties.get(Integer.valueOf(partyId));
-		if (party == null)
+		if (party == null) {
 			return;
+		}
 
 		party.lockRead();
 		try {
@@ -951,10 +970,11 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 				boolean levelUpdated = packet.readBool();
 				short newValue = packet.readShort();
 				PartyList.RemoteMember member = party.getMember(updatedPlayerCh, updatedPlayerId);
-				if (levelUpdated)
+				if (levelUpdated) {
 					member.setLevel(newValue);
-				else
+				} else {
 					member.setJob(newValue);
+				}
 			}
 			for (PartyList.LocalMember mem : party.getMembersInLocalChannel())
 				mem.getPlayer().getClient().getSession().send(GamePackets.writePartyList(party));
@@ -968,8 +988,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		int partyId = packet.readInt();
 		String name = packet.readLengthPrefixedString();
 		PartyList party = activeLocalParties.get(Integer.valueOf(partyId));
-		if (party == null)
+		if (party == null) {
 			return;
+		}
 
 		GameCharacter leader = GameServer.getChannel(self.getChannelId()).getPlayerById(party.getLeader());
 		switch (guildId) {
@@ -1000,8 +1021,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		short emblemDesign = packet.readShort();
 		byte emblemDesignColor = packet.readByte();
 		String[] titles = new String[5];
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < 5; i++) {
 			titles[i] = packet.readLengthPrefixedString();
+		}
 		byte capacity = packet.readByte();
 		String notice = packet.readLengthPrefixedString();
 		int gp = packet.readInt();
@@ -1025,11 +1047,12 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		}
 
 		BlockingQueue<Pair<Byte, Object>> consumer = blockingCalls.remove(Integer.valueOf(responseId));
-		if (consumer == null)
+		if (consumer == null) {
 			//timed out and garbage collected
 			return;
+		}
 
-		consumer.add(new Pair<Byte, Object>(Byte.valueOf((byte) -1), new Object[] {
+		consumer.add(new Pair<Byte, Object>(Byte.valueOf((byte) -1), new Object[]{
 			name,
 			Short.valueOf(emblemBackground), Byte.valueOf(emblemBackgroundColor), Short.valueOf(emblemDesign), Byte.valueOf(emblemDesignColor),
 			titles, Byte.valueOf(capacity), notice, Integer.valueOf(gp), Integer.valueOf(allianceId)
@@ -1070,8 +1093,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 					guild.lockRead();
 					try {
 						for (GuildList.LocalMember mem : guild.getMembersInLocalChannel())
-							if (mem != member)
+							if (mem != member) {
 								mem.getPlayer().getClient().getSession().send(GamePackets.writeGuildMemberLoggedIn(guild, member));
+							}
 					} finally {
 						guild.unlockRead();
 					}
@@ -1109,8 +1133,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		//TODO: not safe for activeLocalParties when members
 		//concurrently join or leave party, or enter or exit channel
 		GuildList guild = activeLocalGuilds.get(Integer.valueOf(guildId));
-		if (guild == null)
+		if (guild == null) {
 			return;
+		}
 
 		boolean removeGuild = false;
 		GuildList.RemoteMember member;
@@ -1143,8 +1168,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		int updatedPlayerId = packet.readInt();
 		byte updatedPlayerCh = packet.readByte();
 		GuildList guild = activeLocalGuilds.get(Integer.valueOf(guildId));
-		if (guild == null)
+		if (guild == null) {
 			return;
+		}
 
 		guild.lockRead();
 		try {
@@ -1152,10 +1178,11 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 				boolean levelUpdated = packet.readBool();
 				short newValue = packet.readShort();
 				GuildList.RemoteMember member = guild.getMember(updatedPlayerCh, updatedPlayerId);
-				if (levelUpdated)
+				if (levelUpdated) {
 					member.setLevel(newValue);
-				else
+				} else {
 					member.setJob(newValue);
+				}
 			}
 			GuildList.Member member = guild.getMember(updatedPlayerId);
 			for (GuildList.LocalMember mem : guild.getMembersInLocalChannel())
@@ -1195,8 +1222,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 				guild.lockRead();
 				try {
 					for (GuildList.LocalMember mem : guild.getMembersInLocalChannel())
-						if (mem != joiningMember)
+						if (mem != joiningMember) {
 							mem.getPlayer().getClient().getSession().send(GamePackets.writeGuildMemberJoined(guild, joiningMember));
+						}
 				} finally {
 					guild.unlockRead();
 				}
@@ -1231,8 +1259,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 	private void receivedGuildJoinError(LittleEndianReader packet) {
 		int joinFailedPlayerId = packet.readInt();
 		GameCharacter joinFailedPlayer = self.getPlayerById(joinFailedPlayerId);
-		if (joinFailedPlayer != null)
+		if (joinFailedPlayer != null) {
 			joinFailedPlayer.getClient().getSession().send(GamePackets.writeSimpleGuildListMessage(GuildListHandler.GENERAL_ERROR));
+		}
 	}
 
 	private void receivedGuildPlayerRemoved(LittleEndianReader packet) {
@@ -1243,8 +1272,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		//TODO: not safe for activeLocalGuilds when members
 		//concurrently join or leave guild, or enter or exit channel
 		GuildList guild = activeLocalGuilds.get(Integer.valueOf(guildId));
-		if (guild == null)
+		if (guild == null) {
 			return;
+		}
 
 		boolean removeGuild = false;
 		String leaverName;
@@ -1257,8 +1287,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 				removeGuild = guild.getMembersInLocalChannel().isEmpty();
 
 				leavingPlayer.setGuild(null);
-				if (leaverExpelled)
+				if (leaverExpelled) {
 					leavingPlayer.getClient().getSession().send(GamePackets.writeGuildMemberLeft(guild, leaverId, leaverName, true));
+				}
 				leavingPlayer.getClient().getSession().send(GamePackets.writeGuildClear());
 
 				//GameCenterPacketProcessor.processGuildMemberLeft
@@ -1271,8 +1302,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 					} finally {
 						guild.unlockRead();
 					}
-					if (save)
+					if (save) {
 						leavingPlayer.saveCharacter();
+					}
 				}
 				leavingPlayer.getMap().sendToAll(GamePackets.writeUpdateGuildName(leavingPlayer, ""), leavingPlayer);
 			} else {
@@ -1299,8 +1331,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		int guildId = packet.readInt();
 		byte newCap = packet.readByte();
 		GuildList guild = activeLocalGuilds.get(Integer.valueOf(guildId));
-		if (guild == null)
+		if (guild == null) {
 			return;
+		}
 
 		guild.lockWrite();
 		try {
@@ -1324,8 +1357,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		short design = packet.readShort();
 		byte designColor = packet.readByte();
 		GuildList guild = activeLocalGuilds.get(Integer.valueOf(guildId));
-		if (guild == null)
+		if (guild == null) {
 			return;
+		}
 
 		guild.lockWrite();
 		try {
@@ -1347,11 +1381,13 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 	private void receivedGuildTitlesUpdate(LittleEndianReader packet) {
 		int guildId = packet.readInt();
 		String[] titles = new String[5];
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < 5; i++) {
 			titles[i] = packet.readLengthPrefixedString();
+		}
 		GuildList guild = activeLocalGuilds.get(Integer.valueOf(guildId));
-		if (guild == null)
+		if (guild == null) {
 			return;
+		}
 
 		guild.lockWrite();
 		try {
@@ -1373,8 +1409,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		int characterId = packet.readInt();
 		byte newRank = packet.readByte();
 		GuildList guild = activeLocalGuilds.get(Integer.valueOf(guildId));
-		if (guild == null)
+		if (guild == null) {
 			return;
+		}
 
 		GuildList.Member member;
 		guild.lockWrite();
@@ -1396,8 +1433,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		int guildId = packet.readInt();
 		String notice = packet.readLengthPrefixedString();
 		GuildList guild = activeLocalGuilds.get(Integer.valueOf(guildId));
-		if (guild == null)
+		if (guild == null) {
 			return;
+		}
 
 		guild.lockWrite();
 		try {
@@ -1418,39 +1456,45 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		int guildId = packet.readInt();
 		boolean create = packet.readBool();
 		GuildList guild;
-		if (create)
+		if (create) {
 			guild = activeLocalGuilds.get(Integer.valueOf(guildId));
-		else
+		} else {
 			guild = activeLocalGuilds.remove(Integer.valueOf(guildId));
-		if (guild == null)
+		}
+		if (guild == null) {
 			return;
+		}
 
 		GameCharacter master = null;
 		if (create) {
 			for (GuildList.LocalMember m : guild.getMembersInLocalChannel()) {
 				m.getPlayer().getClient().getSession().send(GamePackets.writeGuildList(guild));
 				m.getPlayer().getMap().sendToAll(GamePackets.writeUpdateGuildName(m.getPlayer(), guild.getName()), m.getPlayer());
-				if (m.getRank() == 1)
+				if (m.getRank() == 1) {
 					master = m.getPlayer();
+				}
 			}
 		} else {
 			//TODO: get packet for guild contract rejection
 			for (GuildList.LocalMember m : guild.getMembersInLocalChannel()) {
 				m.getPlayer().setGuild(null);
 				m.getPlayer().getClient().getSession().send(CommonPackets.writeServerMessage(ChatHandler.TextStyle.OK_BOX.byteValue(), "Guild contract was not unanimous.", (byte) -1, true));
-				if (m.getRank() == 1)
+				if (m.getRank() == 1) {
 					master = m.getPlayer();
+				}
 			}
 		}
-		if (master != null)
+		if (master != null) {
 			ScriptObjectManipulator.guildNameReceived(master.getClient().getNpc(), null);
+		}
 	}
 
 	private void receivedGuildDisbanded(LittleEndianReader packet) {
 		int guildId = packet.readInt();
 		GuildList guild = activeLocalGuilds.remove(Integer.valueOf(guildId));
-		if (guild == null)
+		if (guild == null) {
 			return;
+		}
 
 		guild.lockRead();
 		try {
@@ -1468,8 +1512,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		int roomId = packet.readInt();
 		int creatorId = packet.readInt();
 		GameCharacter p = self.getPlayerById(creatorId);
-		if (p == null)
+		if (p == null) {
 			return;
+		}
 
 		Chatroom room = new Chatroom(roomId, p);
 		localChatRooms.put(Integer.valueOf(roomId), room);
@@ -1485,20 +1530,22 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		if (roomId != 0) {
 			//this will be false if joiner was in the room before and just changed channels.
 			boolean firstTime = packet.readBool();
-			if (position == -1)
+			if (position == -1) {
 				return; //room is full
 
+			}
 			Set<Byte> existingLocalSlots;
 			Chatroom room = localChatRooms.get(Integer.valueOf(roomId));
 			if (room == null) { //first on this channel to join the chat room
 				room = new Chatroom(roomId);
 				for (byte pos = 0; pos < 3; pos++) {
 					byte channel = packet.readByte();
-					if (channel == 0)
+					if (channel == 0) {
 						continue;
+					}
 
 					int avatarPlayerId = packet.readInt();
-					Map<Short, Integer> equips = new HashMap<Short, Integer>();
+					Map<Short, Integer> equips = new HashMap<>();
 					for (byte i = packet.readByte(); i > 0; i--) {
 						short slot = packet.readShort();
 						int itemId = packet.readInt();
@@ -1541,8 +1588,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 			try {
 				for (Byte pos : existingLocalSlots) {
 					GameCharacter other = self.getPlayerById(room.getAvatar(pos.byteValue()).getPlayerId());
-					if (other != null)
+					if (other != null) {
 						other.getClient().getSession().send(message);
+					}
 				}
 			} finally {
 				room.unlockRead();
@@ -1555,8 +1603,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 				try {
 					for (byte pos = 0; pos < 3; pos++) {
 						a = room.getAvatar(pos);
-						if (position != pos && a != null)
+						if (position != pos && a != null) {
 							p.getClient().getSession().send(GamePackets.writeChatroomAvatar(Chatroom.ACT_OPEN, pos, a, false));
+						}
 					}
 				} finally {
 					room.unlockRead();
@@ -1572,8 +1621,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 
 			if (p != null) {
 				room = p.getChatRoom();
-				if (room == null || room.getRoomId() != roomId)
+				if (room == null || room.getRoomId() != roomId) {
 					return;
+				}
 
 				p.setChatRoom(null);
 			} else {
@@ -1599,8 +1649,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 			try {
 				for (Byte pos : room.localChannelSlots()) {
 					GameCharacter other = self.getPlayerById(room.getAvatar(pos.byteValue()).getPlayerId());
-					if (other != null)
+					if (other != null) {
 						other.getClient().getSession().send(message);
+					}
 				}
 			} finally {
 				room.unlockRead();
@@ -1609,8 +1660,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 			//channel, delete the chatroom from our cache
 			room.lockRead();
 			try {
-				if (room.localChannelSlots().isEmpty())
+				if (room.localChannelSlots().isEmpty()) {
 					localChatRooms.remove(Integer.valueOf(room.getRoomId()));
+				}
 			} finally {
 				room.unlockRead();
 			}
@@ -1622,13 +1674,14 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		byte position = packet.readByte();
 		int playerId = packet.readInt();
 		Chatroom room = localChatRooms.get(Integer.valueOf(roomId));
-		if (room == null)
+		if (room == null) {
 			return;
+		}
 
 		if (playerId != 0) {
 			//TODO: send response message (already closed) if chatroom is empty
 			byte channel = packet.readByte();
-			Map<Short, Integer> equips = new HashMap<Short, Integer>();
+			Map<Short, Integer> equips = new HashMap<>();
 			for (byte i = packet.readByte(); i > 0; i--) {
 				short slot = packet.readShort();
 				int itemId = packet.readInt();
@@ -1645,7 +1698,7 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 			room.lockWrite();
 			try {
 				Chatroom.Avatar a = room.getAvatar(position);
-				boolean firstTime = (a == null);
+				boolean firstTime = a == null;
 				assert firstTime || a.getPlayerId() == playerId;
 				a = new Chatroom.Avatar(playerId, gender, skin, eyes, hair, equips, name, channel);
 				message = GamePackets.writeChatroomAvatar(firstTime ? Chatroom.ACT_OPEN : Chatroom.ACT_REFRESH_AVATAR, position, a, firstTime);
@@ -1661,8 +1714,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 			try {
 				for (Byte pos : slotsToNotify) {
 					GameCharacter other = self.getPlayerById(room.getAvatar(pos.byteValue()).getPlayerId());
-					if (other != null)
+					if (other != null) {
 						other.getClient().getSession().send(message);
+					}
 				}
 			} finally {
 				room.unlockRead();
@@ -1680,8 +1734,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 			try {
 				for (Byte pos : room.localChannelSlots()) {
 					GameCharacter other = self.getPlayerById(room.getAvatar(pos.byteValue()).getPlayerId());
-					if (other != null)
+					if (other != null) {
 						other.getClient().getSession().send(message);
+					}
 				}
 				assert !room.localChannelSlots().isEmpty();
 			} finally {

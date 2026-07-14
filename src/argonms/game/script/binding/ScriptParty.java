@@ -29,10 +29,6 @@ import argonms.game.net.external.GamePackets;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ScriptParty {
 	private final Scriptable globalScope;
 	private final byte channel;
@@ -53,8 +49,9 @@ public class ScriptParty {
 		party.lockRead();
 		try {
 			for (GameCharacter c : party.getLocalMembersInMap(mapId))
-				if (c.getLevel() >= minLevel && c.getLevel() <= maxLevel)
+				if (c.getLevel() >= minLevel && c.getLevel() <= maxLevel) {
 					count++;
+				}
 		} finally {
 			party.unlockRead();
 		}
@@ -96,8 +93,9 @@ public class ScriptParty {
 				GameCharacter player = member.getPlayer();
 				Inventory.InventoryType type = InventoryTools.getCategory(itemId);
 				int quantity = InventoryTools.getAmountOfItem(player.getInventory(type), itemId);
-				if (type == Inventory.InventoryType.EQUIP)
+				if (type == Inventory.InventoryType.EQUIP) {
 					quantity += InventoryTools.getAmountOfItem(player.getInventory(Inventory.InventoryType.EQUIPPED), itemId);
+				}
 
 				if (quantity > 0) {
 					Inventory inv = player.getInventory(type);

@@ -25,7 +25,6 @@ import argonms.common.util.input.LittleEndianReader;
 /**
  * Processes packet sent from the login server and received at the center
  * server.
- * @author GoldenKevin
  */
 public class LoginCenterPacketProcessor extends RemoteCenterPacketProcessor {
 	private final CenterLoginInterface r;
@@ -49,7 +48,7 @@ public class LoginCenterPacketProcessor extends RemoteCenterPacketProcessor {
 		}
 	}
 
-	private void serverOnline(LittleEndianReader packet)  {
+	private void serverOnline(LittleEndianReader packet) {
 		r.setHost(packet.readLengthPrefixedString());
 		int port = packet.readInt();
 		r.setClientPort(port);

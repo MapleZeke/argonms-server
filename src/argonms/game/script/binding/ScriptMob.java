@@ -24,12 +24,8 @@ import argonms.game.field.entity.ItemDrop;
 import argonms.game.field.entity.Mob;
 import java.util.Collections;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ScriptMob {
-	private Mob m;
+	private final Mob m;
 
 	public ScriptMob(Mob m) {
 		this.m = m;
@@ -62,8 +58,9 @@ public class ScriptMob {
 
 	public int getDropAfter(boolean afterHit) {
 		int dropTime = m.getDropItemPeriod() * 1000;
-		if (afterHit)
+		if (afterHit) {
 			dropTime += m.getAnimationTime("hit1");
+		}
 		return dropTime;
 	}
 }

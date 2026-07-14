@@ -21,10 +21,6 @@ package argonms.game.command;
 import argonms.game.GameServer;
 import argonms.game.field.GameMap;
 
-/**
- *
- * @author GoldenKevin
- */
 public class RemoteAdminCommandCaller implements CommandCaller {
 	//telnet clients will be able to choose channel to apply commands on ("cc", analogous to "cd" on a file system)
 	//on telnet login, map and privilegeLevel are loaded from database and channel defaults to 1

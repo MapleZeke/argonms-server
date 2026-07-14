@@ -18,19 +18,17 @@
 
 package argonms.center.net.remoteadmin;
 
-/**
- *
- * @author GoldenKevin
- */
 public class TelnetCommandProcessor {
 	public void process(String message, TelnetClient client) {
-		if (message.equals("exit") || message.equals("quit")) {
+		if ("exit".equals(message) || "quit".equals(message)) {
 			client.getSession().close("User typed '" + message + "'");
 			return;
-		} else if (message.equals("help")) {
-			client.getSession().send("EXIT\t\tCloses the current telnet session.\r\n"
-					+ "HELP\t\tDisplays this message.\r\n"
-					+ "\r\n");
+		} else if ("help".equals(message)) {
+			client.getSession().send("""
+					EXIT		Closes the current telnet session.
+					HELP		Displays this message.
+					
+					""");
 		} else if (!message.trim().isEmpty()) {
 			client.getSession().send('\'' + message.trim().split(" ")[0] + "\' is not recognized as a command. Type 'HELP' for a list of accepted commands.\r\n\r\n");
 		}

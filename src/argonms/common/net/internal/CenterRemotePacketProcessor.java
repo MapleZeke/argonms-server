@@ -24,10 +24,6 @@ import argonms.common.util.output.LittleEndianByteArrayWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author GoldenKevin
- */
 public abstract class CenterRemotePacketProcessor {
 	private static final Logger LOG = Logger.getLogger(CenterRemotePacketProcessor.class.getName());
 
@@ -35,10 +31,11 @@ public abstract class CenterRemotePacketProcessor {
 
 	protected void processAuthResponse(LittleEndianReader packet, LocalServer ls) {
 		String error = packet.readLengthPrefixedString();
-		if (error.length() != 0)
+		if (!error.isEmpty()) {
 			LOG.log(Level.SEVERE, "Unable to auth with Center server: {0}", error);
-		else
+		} else {
 			ls.registerCenter();
+		}
 	}
 
 	protected static byte[] pongMessage() {

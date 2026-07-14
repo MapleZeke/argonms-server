@@ -27,10 +27,6 @@ import argonms.game.net.external.GamePackets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- *
- * @author GoldenKevin
- */
 public final class RoomInviteQueue {
 	private static final RoomInviteQueue INSTANCE = new RoomInviteQueue();
 
@@ -42,8 +38,8 @@ public final class RoomInviteQueue {
 	private final Map<Integer, String> queuedChats;
 
 	private RoomInviteQueue() {
-		queuedTrades = new ConcurrentHashMap<Integer, Integer>();
-		queuedChats = new ConcurrentHashMap<Integer, String>();
+		queuedTrades = new ConcurrentHashMap<>();
+		queuedChats = new ConcurrentHashMap<>();
 	}
 
 	public void queueTradeInvite(GameCharacter sender, int recipient) {
@@ -68,8 +64,9 @@ public final class RoomInviteQueue {
 
 	public void processQueuedTradeInvites(GameCharacter sender, Trade room) {
 		Integer recipient = queuedTrades.remove(Integer.valueOf(sender.getId()));
-		if (recipient != null)
+		if (recipient != null) {
 			inviteToTrade(sender, recipient.intValue(), room);
+		}
 	}
 
 	public void cancelAll(GameCharacter p) {
@@ -89,7 +86,8 @@ public final class RoomInviteQueue {
 
 	public void processQueuedChatInvites(GameCharacter sender, Chatroom room) {
 		String recipient = queuedChats.remove(Integer.valueOf(sender.getId()));
-		if (recipient != null)
+		if (recipient != null) {
 			inviteToChat(sender, recipient, room);
+		}
 	}
 }

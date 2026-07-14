@@ -30,10 +30,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Inventory implements IInventory {
 	public enum InventoryType {
 		EQUIPPED (-1),
@@ -49,7 +45,7 @@ public class Inventory implements IInventory {
 
 		//initialize reverse lookup
 		static {
-			lookup = new HashMap<Byte, InventoryType>(values().length);
+			lookup = new HashMap<>(values().length);
 			for (InventoryType type : values())
 				lookup.put(Byte.valueOf(type.byteValue()), type);
 		}
@@ -102,7 +98,7 @@ public class Inventory implements IInventory {
 	public Map<Short, Integer> getItemIds() {
 		Map<Short, Integer> ids;
 		synchronized(slots) {
-			ids = new LinkedHashMap<Short, Integer>(slots.size());
+			ids = new LinkedHashMap<>(slots.size());
 			for (Entry<Short, InventorySlot> entry : slots.entrySet())
 				ids.put(entry.getKey(), Integer.valueOf(entry.getValue().getDataId()));
 		}
@@ -122,11 +118,12 @@ public class Inventory implements IInventory {
 	 */
 	public Set<Short> getItemSlots(int itemid) {
 		//keep them sorted in ascending order!
-		Set<Short> positions = new TreeSet<Short>();
+		Set<Short> positions = new TreeSet<>();
 		synchronized(slots) {
 			for (Entry<Short, InventorySlot> entry : slots.entrySet())
-				if (entry.getValue().getDataId() == itemid)
+				if (entry.getValue().getDataId() == itemid) {
 					positions.add(entry.getKey());
+				}
 		}
 		return positions;
 	}
@@ -144,26 +141,29 @@ public class Inventory implements IInventory {
 	public List<Short> getFreeSlots(int needed) {
 		//keep it in ascending order! (insertion order should work when
 		//iterationg over SortedMaps)
-		List<Short> empty = new LinkedList<Short>();
+		List<Short> empty = new LinkedList<>();
 		for (short i = 1; i <= maxSlots.get() && empty.size() < needed; i++) {
 			Short slot = Short.valueOf(i);
-			if (!slots.containsKey(slot))
+			if (!slots.containsKey(slot)) {
 				empty.add(slot);
+			}
 		}
 		return empty;
 	}
 
 	public boolean hasItem(int itemid, int minQty) {
-		if (minQty < 0)
+		if (minQty < 0) {
 			throw new IllegalArgumentException("Domain error. Quantity must be >= 0");
+		}
 		int remaining = minQty;
 		for (InventorySlot i : slots.values()) {
 			if (i.getDataId() == itemid) {
 				remaining -= i.getQuantity();
-				if (remaining <= 0)
+				if (remaining <= 0) {
 					//true if our purpose was to find it we have enough of the item.
 					//false if our purpose was to find if we have none of the item.
 					return minQty != 0;
+				}
 			}
 		}
 		//false if our purpose was to find it we have enough of the item.
@@ -199,8 +199,9 @@ public class Inventory implements IInventory {
 		while (true) {
 			int current = i.get();
 			int next = Math.min(Math.max(current + delta, min), max);
-			if (i.compareAndSet(current, next))
+			if (i.compareAndSet(current, next)) {
 				return next;
+			}
 		}
 	}
 

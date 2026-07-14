@@ -21,10 +21,6 @@ package argonms.game.script.binding;
 import argonms.game.net.external.GameClient;
 import org.mozilla.javascript.Scriptable;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ScriptQuest extends ScriptNpc {
 	private final short questId;
 

@@ -18,17 +18,18 @@
 
 package argonms.common.util;
 
+import java.util.Locale;
+
 /**
  * Provides a class for manipulating hexadecimal numbers.
  * 
  * Taken from an OdinMS-derived source. Optimized and modified by GoldenKevin.
  *
- * @author Frz, GoldenKevin
  * @since Revision 206
  * @version 1.2
  */
 public final class HexTool {
-	private static final char[] HEX = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+	private static final char[] HEX = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
 	private static char leftHexDigit(byte byteValue) {
 		return HEX[(byteValue & 0xF0) >>> 4];
@@ -45,7 +46,7 @@ public final class HexTool {
 	 * @return The hexadecimal representation of <code>byteValue</code>
 	 */
 	public static String toString(byte byteValue) {
-		return String.valueOf(new char[] { leftHexDigit(byteValue), rightHexDigit(byteValue) });
+		return String.valueOf(new char[]{leftHexDigit(byteValue), rightHexDigit(byteValue)});
 	}
 
 	/**
@@ -55,7 +56,7 @@ public final class HexTool {
 	 * @return The hexadecimal representation of <code>intValue</code>.
 	 */
 	public static String toString(int intValue) {
-		return Integer.toHexString(intValue).toUpperCase();
+		return Integer.toHexString(intValue).toUpperCase(Locale.ROOT);
 	}
 
 	/**
@@ -70,8 +71,9 @@ public final class HexTool {
 	private static String toString(byte[] input, char delimiter) {
 		char[] output;
 		if (delimiter != '\0') {
-			if (input.length == 0)
+			if (input.length == 0) {
 				return "";
+			}
 
 			output = new char[input.length * 3 - 1];
 			for (int i = 0; i < input.length - 1; i++) {
@@ -135,7 +137,7 @@ public final class HexTool {
 		char[] ret = new char[bytes.length];
 		for (int x = 0; x < bytes.length; x++) {
 			byte b = bytes[x];
-			ret[x] = ((b >= 0x20 && b <= 0x7E) ? ((char) (b & 0xFF)) : '.');
+			ret[x] = b >= 0x20 && b <= 0x7E ? ((char) (b & 0xFF)) : '.';
 		}
 		return String.valueOf(ret);
 	}
@@ -143,13 +145,15 @@ public final class HexTool {
 	private static byte[] getByteArrayFromHexString(String hex, boolean delimited) {
 		if (delimited) {
 			byte[] data = new byte[hex.length() / 3 + 1];
-			for (int i = 0; i < data.length; i++)
+			for (int i = 0; i < data.length; i++) {
 				data[i] = (byte) ((Character.digit(hex.charAt(i * 3), 16) << 4) + Character.digit(hex.charAt(i * 3 + 1), 16));
+			}
 			return data;
 		} else {
 			byte[] data = new byte[hex.length() / 2];
-			for (int i = 0; i < data.length; i++)
+			for (int i = 0; i < data.length; i++) {
 				data[i] = (byte) ((Character.digit(hex.charAt(i * 2), 16) << 4) + Character.digit(hex.charAt(i * 2 + 1), 16));
+			}
 			return data;
 		}
 	}

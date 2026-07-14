@@ -24,12 +24,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
-/**
- *
- * @author GoldenKevin
- */
 public class LoginWorld {
-	private static final String[] names = { "Scania", "Bera", "Broa", "Windia", "Khaini", "Bellocan", "Mardia", "Kradia", "Yellonde", "Demethos", "Elnido", "Kastia", "Judis", "Arkenia", "Plana" };
+	private static final String[] names = {"Scania", "Bera", "Broa", "Windia", "Khaini", "Bellocan", "Mardia", "Kradia", "Yellonde", "Demethos", "Elnido", "Kastia", "Judis", "Arkenia", "Plana"};
 
 	private final String name;
 	private final Map<Byte, byte[]> hosts;
@@ -41,10 +37,10 @@ public class LoginWorld {
 
 	public LoginWorld(String name, byte flag, String message) {
 		this.name = name;
-		this.hosts = new HashMap<Byte, byte[]>();
-		this.channelPorts = new HashMap<Byte, Integer>();
-		this.loads = new TreeMap<Byte, Load>();
-		this.gameToChannelMapping = new HashMap<Byte, Set<Byte>>();
+		this.hosts = new HashMap<>();
+		this.channelPorts = new HashMap<>();
+		this.loads = new TreeMap<>();
+		this.gameToChannelMapping = new HashMap<>();
 		this.flag = flag;
 		this.eventMessage = message;
 	}

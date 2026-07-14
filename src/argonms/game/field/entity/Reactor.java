@@ -28,10 +28,6 @@ import argonms.game.script.ReactorScriptManager;
 import java.awt.Point;
 import java.awt.Rectangle;
 
-/**
- *
- * @author GoldenKevin
- */
 public class Reactor extends AbstractEntity {
 	public static final byte
 		TYPE_ITEM_TRIGGERED = 100
@@ -87,9 +83,10 @@ public class Reactor extends AbstractEntity {
 
 	public Pair<Integer, Short> getItemTrigger() {
 		State s = getState();
-		if (s == null || s.getType() != TYPE_ITEM_TRIGGERED)
+		if (s == null || s.getType() != TYPE_ITEM_TRIGGERED) {
 			return null;
-		return new Pair<Integer, Short>(Integer.valueOf(s.getItemId()), Short.valueOf(s.getItemQuantity()));
+		}
+		return new Pair<>(Integer.valueOf(s.getItemId()), Short.valueOf(s.getItemQuantity()));
 	}
 
 	//precondition: getItemTrigger() does not return null.
@@ -114,16 +111,18 @@ public class Reactor extends AbstractEntity {
 			p.getMap().sendToAll(GamePackets.writeTriggerReactor(this));
 			if (getState() == null) {
 				String script = getScript();
-				if (script != null)
+				if (script != null) {
 					ReactorScriptManager.getInstance().runScript(script, this, p.getClient());
+				}
 			}
 		} else {
 			if (getState() != null) {
 				p.getMap().sendToAll(GamePackets.writeTriggerReactor(this));
 			} else {
 				String script = getScript();
-				if (script != null)
+				if (script != null) {
 					ReactorScriptManager.getInstance().runScript(script, this, p.getClient());
+				}
 				alive = false;
 				p.getMap().destroyReactor(this);
 			}
@@ -132,7 +131,7 @@ public class Reactor extends AbstractEntity {
 
 	public void hit(GameCharacter p, short stance) {
 		State s = getState();
-		boolean itemTrigger = (s.getType() == TYPE_ITEM_TRIGGERED);
+		boolean itemTrigger = s.getType() == TYPE_ITEM_TRIGGERED;
 		state = s.getNextState();
 		triggered(p, itemTrigger);
 	}

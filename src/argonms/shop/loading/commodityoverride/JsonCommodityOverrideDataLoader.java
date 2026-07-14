@@ -20,22 +20,18 @@ package argonms.shop.loading.commodityoverride;
 
 import argonms.shop.ShopServer;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.mozilla.javascript.Callable;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Kit;
 import org.mozilla.javascript.NativeJSON;
 import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.Scriptable;
 
-/**
- *
- * @author GoldenKevin
- */
 public class JsonCommodityOverrideDataLoader extends CommodityOverrideDataLoader {
 	private static final Logger LOG = Logger.getLogger(JsonCommodityOverrideDataLoader.class.getName());
 
@@ -48,35 +44,30 @@ public class JsonCommodityOverrideDataLoader extends CommodityOverrideDataLoader
 		Context cx = Context.enter();
 		FileReader fr = null;
 		try {
-			fr = new FileReader(ShopServer.getInstance().getCommodityOverridePath());
+			fr = new FileReader(ShopServer.getInstance().getCommodityOverridePath(), StandardCharsets.UTF_8);
 			final Scriptable globalScope = cx.initStandardObjects();
-			Object json = NativeJSON.parse(cx, globalScope, Kit.readReader(fr), new Callable() {
-				@Override
-				public Object call(Context cntxt, Scriptable s, Scriptable s1, Object[] os) {
-					return os[1];
-				}
-			});
+			Object json = NativeJSON.parse(cx, globalScope, Kit.readReader(fr), (cntxt, s, s1, os) -> os[1]);
 			for (Map.Entry<Object, Object> commodity : ((NativeObject) json).entrySet()) {
 				Integer sn = (Integer) commodity.getKey();
-				Map<CommodityMod, Object> properties = new EnumMap<CommodityMod, Object>(CommodityMod.class);
+				Map<CommodityMod, Object> properties = new EnumMap<>(CommodityMod.class);
 				for (Map.Entry<Object, Object> property : ((NativeObject) commodity.getValue()).entrySet()) {
 					String propKey = (String) property.getKey();
-					if (propKey.equals("itemId")) {
+					if ("itemId".equals(propKey)) {
 						assert property.getValue() instanceof Number;
 						properties.put(CommodityMod.ITEM_ID, property.getValue());
-					} else if (propKey.equals("count")) {
+					} else if ("count".equals(propKey)) {
 						assert property.getValue() instanceof Number;
 						properties.put(CommodityMod.COUNT, property.getValue());
-					} else if (propKey.equals("price")) {
+					} else if ("price".equals(propKey)) {
 						assert property.getValue() instanceof Number;
 						properties.put(CommodityMod.SALE_PRICE, property.getValue());
-					} else if (propKey.equals("priority")) {
+					} else if ("priority".equals(propKey)) {
 						assert property.getValue() instanceof Number;
 						properties.put(CommodityMod.PRIORITY, property.getValue());
-					} else if (propKey.equals("onSale")) {
+					} else if ("onSale".equals(propKey)) {
 						assert property.getValue() instanceof Number;
 						properties.put(CommodityMod.ON_SALE, property.getValue());
-					} else if (propKey.equals("class")) {
+					} else if ("class".equals(propKey)) {
 						assert property.getValue() instanceof Number;
 						properties.put(CommodityMod.CLASS, property.getValue());
 					}

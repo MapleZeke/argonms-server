@@ -21,10 +21,6 @@ package argonms.game.script.binding;
 import argonms.game.character.PartyList;
 import java.awt.Rectangle;
 
-/**
- *
- * @author GoldenKevin
- */
 public class ScriptPartyMember extends ScriptPlayer {
 	public ScriptPartyMember(PartyList.LocalMember member) {
 		super(member.getPlayer());
