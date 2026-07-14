@@ -19,10 +19,12 @@
 package argonms.common.character;
 
 public record KeyBinding(byte type, int action) {
+	@Deprecated(since = "0.6.0")
 	public byte getType() {
 		return type;
 	}
 
+	@Deprecated(since = "0.6.0")
 	public int getAction() {
 		return action;
 	}
