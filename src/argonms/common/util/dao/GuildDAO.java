@@ -291,4 +291,101 @@ public final class GuildDAO {
 			throw new DataAccessException("Could not check guild master status for character " + characterId, e);
 		}
 	}
+
+	/**
+	 * Checks if a guild with the given name exists in a world.
+	 *
+	 * @param con   the connection (caller manages)
+	 * @param name  the guild name
+	 * @param world the world ID
+	 * @return true if a guild with that name exists
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static boolean guildExistsInWorld(Connection con, String name, byte world) {
+		try (PreparedStatement ps = con.prepareStatement(
+				"SELECT EXISTS(SELECT 1 FROM `guilds` WHERE `name` = ? AND `world` = ? LIMIT 1)")) {
+			ps.setString(1, name);
+			ps.setByte(2, world);
+			try (ResultSet rs = ps.executeQuery()) {
+				rs.next();
+				return rs.getBoolean(1);
+			}
+		} catch (SQLException e) {
+			throw new DataAccessException("Could not check if guild " + name + " exists", e);
+		}
+	}
+
+	/**
+	 * Creates a new guild and returns its generated ID.
+	 *
+	 * @param con   the connection (caller manages)
+	 * @param world the world ID
+	 * @param name  the guild name
+	 * @return the generated guild ID, or -1 if creation failed
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static int createGuild(Connection con, byte world, String name) {
+		try (PreparedStatement ps = con.prepareStatement(
+				"INSERT INTO `guilds` (`world`,`name`) VALUES (?,?)",
+				PreparedStatement.RETURN_GENERATED_KEYS)) {
+			ps.setByte(1, world);
+			ps.setString(2, name);
+			ps.executeUpdate();
+			try (ResultSet rs = ps.getGeneratedKeys()) {
+				if (!rs.next()) {
+					return -1;
+				}
+				return rs.getInt(1);
+			}
+		} catch (SQLException e) {
+			throw new DataAccessException("Could not create guild " + name, e);
+		}
+	}
+
+	/**
+	 * Loads guild metadata by guild ID filtered by world.
+	 *
+	 * @param con     the connection (caller manages)
+	 * @param world   the world ID
+	 * @param guildId the guild ID
+	 * @return the guild info, or null if not found
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static GuildInfo loadGuildInfoByWorld(Connection con, byte world, int guildId) {
+		try (PreparedStatement ps = con.prepareStatement(
+				"SELECT `name`,`titles`,`capacity`,`emblemBackground`,`emblemBackgroundColor`,"
+				+ "`emblemDesign`,`emblemDesignColor`,`notice`,`gp`,`alliance` "
+				+ "FROM `guilds` WHERE `world` = ? AND `id` = ?")) {
+			ps.setByte(1, world);
+			ps.setInt(2, guildId);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (!rs.next()) {
+					return null;
+				}
+				return new GuildInfo(
+					rs.getString(1), rs.getString(2), rs.getByte(3),
+					rs.getShort(4), rs.getByte(5), rs.getShort(6), rs.getByte(7),
+					rs.getString(8), rs.getInt(9), rs.getInt(10)
+				);
+			}
+		} catch (SQLException e) {
+			throw new DataAccessException("Could not load guild " + guildId + " for world " + world, e);
+		}
+	}
+
+	/**
+	 * Deletes a guild (standalone connection).
+	 *
+	 * @param guildId the guild ID
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void deleteGuild(int guildId) {
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("DELETE FROM `guilds` WHERE `id` = ?")) {
+			ps.setInt(1, guildId);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Could not delete guild " + guildId, e);
+		}
+	}
 }

@@ -20,9 +20,10 @@ package argonms.center;
 
 import argonms.common.util.DatabaseManager;
 import argonms.common.util.DatabaseManager.DatabaseType;
+import argonms.common.util.dao.DataAccessException;
+import argonms.common.util.dao.GuildDAO;
+import argonms.common.util.dao.PartyDAO;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Map;
@@ -38,19 +39,12 @@ public class IntraworldGroups {
 	//TODO: partyid will easily be exhausted. either we have to use 64-bit value
 	//or reuse old partyids (cf. InventorySlot)
 	private static int getStartingPartyId(byte world) {
-		int partyId = -1;
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-				PreparedStatement ps = con.prepareStatement("SELECT MAX(`partyid`) FROM `parties` WHERE `world` = ?")) {
-			ps.setByte(1, world);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					partyId = rs.getInt(1);
-				}
-			}
-		} catch (SQLException ex) {
+		try {
+			return PartyDAO.getMaxPartyId(world);
+		} catch (DataAccessException ex) {
 			LOG.log(Level.WARNING, "Could not get starting party id for world " + world, ex);
+			return -1;
 		}
-		return partyId;
 	}
 
 	private final byte world;
@@ -108,15 +102,9 @@ public class IntraworldGroups {
 			return true;
 		}
 
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-				PreparedStatement ps = con.prepareStatement("SELECT EXISTS(SELECT 1 FROM `guilds` WHERE `name` = ? AND `world` = ? LIMIT 1)")) {
-			ps.setString(1, name);
-			ps.setByte(2, world);
-			try (ResultSet rs = ps.executeQuery()) {
-				rs.next();
-				return rs.getBoolean(1);
-			}
-		} catch (SQLException ex) {
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			return GuildDAO.guildExistsInWorld(con, name, world);
+		} catch (SQLException | DataAccessException ex) {
 			LOG.log(Level.WARNING, "Could not determine whether guild " + name + " exists", ex);
 			return false;
 		}
@@ -129,18 +117,9 @@ public class IntraworldGroups {
 		}
 
 		int guildId;
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-				PreparedStatement ps = con.prepareStatement("INSERT INTO `guilds` (`world`,`name`) VALUES (?,?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
-			ps.setByte(1, world);
-			ps.setString(2, name);
-			ps.executeUpdate();
-			try (ResultSet rs = ps.getGeneratedKeys()) {
-				if (!rs.next()) {
-					return -1;
-				}
-				guildId = rs.getInt(1);
-			}
-		} catch (SQLException ex) {
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			guildId = GuildDAO.createGuild(con, world, name);
+		} catch (SQLException | DataAccessException ex) {
 			LOG.log(Level.WARNING, "Could not create guild " + name, ex);
 			return -1;
 		}

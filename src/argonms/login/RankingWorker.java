@@ -18,12 +18,8 @@
 
 package argonms.login;
 
-import argonms.common.util.DatabaseManager;
-import argonms.common.util.DatabaseManager.DatabaseType;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Types;
+import argonms.common.util.dao.DataAccessException;
+import argonms.common.util.dao.RankingDAO;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,27 +39,11 @@ public class RankingWorker implements Runnable {
 		long start;
 		long end;
 		start = System.nanoTime();
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-				CallableStatement ps = con.prepareCall("{call updateranks(?,?)}")) {
-			ps.setString(1, "overall");
-			ps.setNull(2, Types.TINYINT);
-			ps.executeUpdate();
-			ps.setString(1, "world");
-			for (Byte world : LoginServer.getInstance().getAllWorlds().keySet()) {
-				ps.setByte(2, world.byteValue());
-				ps.executeUpdate();
-			}
-			ps.setString(1, "job");
-			for (byte jobClass = 0; jobClass <= 5; jobClass++) { //beginner, warrior, magician, bowman, thief, pirate respectively
-				ps.setByte(2, jobClass);
-				ps.executeUpdate();
-			}
-			ps.setString(1, "fame");
-			ps.setNull(2, Types.TINYINT);
-			ps.executeUpdate();
+		try {
+			RankingDAO.updateAllRankings(LoginServer.getInstance().getAllWorlds().keySet());
 			end = System.nanoTime();
 			LOG.log(Level.FINE, "Sucessfully updated rankings in {0} milliseconds.", (end - start) / 1000000.0);
-		} catch (SQLException ex) {
+		} catch (DataAccessException ex) {
 			LOG.log(Level.WARNING, "Error updating the rankings.", ex);
 		}
 	}

@@ -29,6 +29,7 @@ import argonms.common.character.inventory.Inventory.InventoryType;
 import argonms.common.character.inventory.InventorySlot;
 import argonms.common.util.DatabaseManager;
 import argonms.common.util.DatabaseManager.DatabaseType;
+import argonms.common.util.dao.AccountDAO;
 import argonms.common.util.dao.CharacterDAO;
 import argonms.shop.ShopServer;
 import argonms.shop.net.external.CashShopPackets;
@@ -288,47 +289,30 @@ public final class ShopCharacter extends LoggedInPlayer {
 
 	private void updateDbAccount(Connection con) throws SQLException {
 		try {
-			// split this into two statements; one for increasing max characters
-			// and one for nx
-			try (PreparedStatement ps = con.prepareStatement("UPDATE `accounts` SET `characters` = ? WHERE `id` = ?")) {
-				ps.setByte(1, maxCharacters);
-				ps.setInt(2, client.getAccountId());
-				ps.executeUpdate();
-			}
-			try (PreparedStatement ps = con.prepareStatement(
-					"INSERT INTO `cashshopbalance` (accountid, paypalnx, maplepoints, gamecardnx) "
-					+ "VALUES (?, ?, ?, ?) "
-					+ "ON DUPLICATE KEY UPDATE paypalnx=VALUES(paypalnx), maplepoints=VALUES(maplepoints), gamecardnx=VALUES(gamecardnx)"
-				)) {
-				ps.setInt(1, client.getAccountId());
-				ps.setInt(2, getCashShopCurrency(PAYPAL_NX));
-				ps.setInt(3, getCashShopCurrency(MAPLE_POINTS));
-				ps.setInt(4, getCashShopCurrency(GAME_CARD_NX));
-				ps.executeUpdate();
-			}
+			AccountDAO.updateMaxCharacters(con, client.getAccountId(), maxCharacters);
+			AccountDAO.upsertCashBalance(con, client.getAccountId(),
+					getCashShopCurrency(PAYPAL_NX),
+					getCashShopCurrency(MAPLE_POINTS),
+					getCashShopCurrency(GAME_CARD_NX));
 			con.commit();
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			throw new SQLException("Failed to save account-info of character " + name, e);
 		}
 	}
 
 	private void updateDbStats(Connection con) throws SQLException {
-		try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET "
-				+ "`mesos` = ?, `equipslots` = ?, `useslots` = ?, `setupslots` = ?, `etcslots` = ?, `cashslots` = ? "
-				+ "WHERE `id` = ?")) {
-			ps.setInt(1, mesos);
-			ps.setShort(2, getInventory(InventoryType.EQUIP).getMaxSlots());
-			ps.setShort(3, getInventory(InventoryType.USE).getMaxSlots());
-			ps.setShort(4, getInventory(InventoryType.SETUP).getMaxSlots());
-			ps.setShort(5, getInventory(InventoryType.ETC).getMaxSlots());
-			ps.setShort(6, getInventory(InventoryType.CASH).getMaxSlots());
-			ps.setInt(7, getDataId());
-			int updateRows = ps.executeUpdate();
+		try {
+			int updateRows = CharacterDAO.updateMesosAndSlots(con, getDataId(), mesos,
+					getInventory(InventoryType.EQUIP).getMaxSlots(),
+					getInventory(InventoryType.USE).getMaxSlots(),
+					getInventory(InventoryType.SETUP).getMaxSlots(),
+					getInventory(InventoryType.ETC).getMaxSlots(),
+					getInventory(InventoryType.CASH).getMaxSlots());
 			if (updateRows < 1) {
 				LOG.log(Level.WARNING, "Updating a deleted character with name {0} of account {1}.",
 					new Object[]{name, client.getAccountId()});
 			}
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			throw new SQLException("Failed to save stats of character " + name, e);
 		}
 	}

@@ -129,16 +129,9 @@ public class CashShopStaging implements IInventory {
 		}
 
 		public static CashPurchaseProperties loadFromDatabase(long uniqueId, int itemId, int defaultAccount) {
-			try (Connection con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
-					PreparedStatement ps = con.prepareStatement("SELECT `purchaseracctid`,`gifterchrname`,`serialnumber` FROM `cashshoppurchases` WHERE `uniqueid` = ?")) {
-				ps.setLong(1, uniqueId);
-				try (ResultSet rs = ps.executeQuery()) {
-					if (rs.next()) {
-						return loadFromDatabase(rs, itemId, defaultAccount);
-					}
-				}
-			} catch (SQLException ex) {
-				LOG.log(Level.WARNING, "Could not load cash shop purchase properties from database", ex);
+			CashShopStagingDAO.PurchasePropertyRecord rec = CashShopStagingDAO.loadSinglePurchaseProperty(uniqueId);
+			if (rec != null) {
+				return loadFromRecord(rec, itemId, defaultAccount);
 			}
 			return null;
 		}

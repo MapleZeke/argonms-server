@@ -1247,4 +1247,36 @@ public final class CharacterDAO {
 	 * Guild member record.
 	 */
 	public record GuildMemberRecord(int guildId, byte rank, byte signature, byte allianceRank) {}
+
+	/**
+	 * Updates mesos and inventory slot counts for a character.
+	 *
+	 * @param con         the connection (caller manages)
+	 * @param characterId the character ID
+	 * @param mesos       the mesos amount
+	 * @param equipSlots  equip inventory max slots
+	 * @param useSlots    use inventory max slots
+	 * @param setupSlots  setup inventory max slots
+	 * @param etcSlots    etc inventory max slots
+	 * @param cashSlots   cash inventory max slots
+	 * @return the number of rows updated
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static int updateMesosAndSlots(Connection con, int characterId, int mesos,
+			short equipSlots, short useSlots, short setupSlots, short etcSlots, short cashSlots) {
+		try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET "
+				+ "`mesos` = ?, `equipslots` = ?, `useslots` = ?, `setupslots` = ?, `etcslots` = ?, `cashslots` = ? "
+				+ "WHERE `id` = ?")) {
+			ps.setInt(1, mesos);
+			ps.setShort(2, equipSlots);
+			ps.setShort(3, useSlots);
+			ps.setShort(4, setupSlots);
+			ps.setShort(5, etcSlots);
+			ps.setShort(6, cashSlots);
+			ps.setInt(7, characterId);
+			return ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new DataAccessException("Failed to update mesos/slots for character " + characterId, e);
+		}
+	}
 }

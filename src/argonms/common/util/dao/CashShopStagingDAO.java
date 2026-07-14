@@ -257,4 +257,48 @@ public final class CashShopStagingDAO {
 	 * Gift notification record.
 	 */
 	public record GiftNotificationRecord(long uniqueId, String message) {}
+
+	/**
+	 * Loads purchase properties for a single unique ID.
+	 *
+	 * @param uniqueId the unique ID
+	 * @return the purchase property record, or null if not found
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static PurchasePropertyRecord loadSinglePurchaseProperty(long uniqueId) {
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement(
+						"SELECT `purchaseracctid`,`gifterchrname`,`serialnumber` "
+						+ "FROM `cashshoppurchases` WHERE `uniqueid` = ?")) {
+			ps.setLong(1, uniqueId);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					return new PurchasePropertyRecord(uniqueId, rs.getInt(1), rs.getString(2), rs.getInt(3));
+				}
+				return null;
+			}
+		} catch (SQLException e) {
+			throw new DataAccessException("Could not load purchase properties for uniqueId " + uniqueId, e);
+		}
+	}
+
+	/**
+	 * Generates a new unique ID by inserting into cashshoppurchases table.
+	 *
+	 * @return the generated unique ID, or -1 if generation failed
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static long generateUniqueId() {
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement(
+						"INSERT INTO `cashshoppurchases` VALUES ()",
+						java.sql.Statement.RETURN_GENERATED_KEYS)) {
+			ps.executeUpdate();
+			try (ResultSet rs = ps.getGeneratedKeys()) {
+				return rs.next() ? rs.getLong(1) : -1;
+			}
+		} catch (SQLException e) {
+			throw new DataAccessException("Could not generate cash purchase unique ID", e);
+		}
+	}
 }

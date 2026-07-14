@@ -31,12 +31,12 @@ import argonms.common.net.internal.CenterRemoteOps;
 import argonms.common.util.DatabaseManager;
 import argonms.common.util.DatabaseManager.DatabaseType;
 import argonms.common.util.Scheduler;
+import argonms.common.util.dao.AccountDAO;
 import argonms.common.util.output.LittleEndianByteArrayWriter;
 import java.io.FileReader;
 import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -118,10 +118,9 @@ public final class CenterServer {
 			return;
 		}
 		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
-			try (PreparedStatement ps = con.prepareStatement("UPDATE `accounts` SET `connected` = ?")) {
-				ps.setInt(1, RemoteClient.STATUS_NOTLOGGEDIN);
-				ps.executeUpdate();
-			} catch (SQLException ex) {
+			try {
+				AccountDAO.resetAllConnectedStatus(con, RemoteClient.STATUS_NOTLOGGEDIN);
+			} catch (Exception ex) {
 				LOG.log(Level.WARNING, "Could not reset logged in status of all accounts.", ex);
 			}
 		} catch (SQLException e) {

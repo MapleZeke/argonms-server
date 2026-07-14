@@ -232,6 +232,140 @@ public final class AccountDAO {
 	}
 
 	/**
+	 * Updates the account's max characters field.
+	 *
+	 * @param con       the connection (caller manages)
+	 * @param accountId the account ID
+	 * @param maxChars  the new max characters value
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void updateMaxCharacters(Connection con, int accountId, byte maxChars) {
+		try (PreparedStatement ps = con.prepareStatement(
+				"UPDATE `accounts` SET `characters` = ? WHERE `id` = ?")) {
+			ps.setByte(1, maxChars);
+			ps.setInt(2, accountId);
+			ps.executeUpdate();
+		} catch (SQLException ex) {
+			throw new DataAccessException("Failed to update max characters for account " + accountId, ex);
+		}
+	}
+
+	/**
+	 * Upserts the cash shop balance for an account.
+	 *
+	 * @param con        the connection (caller manages)
+	 * @param accountId  the account ID
+	 * @param paypalNx   the PayPal NX balance
+	 * @param maplePoints the maple points balance
+	 * @param gamecardNx the game card NX balance
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void upsertCashBalance(Connection con, int accountId, int paypalNx,
+			int maplePoints, int gamecardNx) {
+		try (PreparedStatement ps = con.prepareStatement(
+				"INSERT INTO `cashshopbalance` (accountid, paypalnx, maplepoints, gamecardnx) "
+				+ "VALUES (?, ?, ?, ?) "
+				+ "ON DUPLICATE KEY UPDATE paypalnx=VALUES(paypalnx), maplepoints=VALUES(maplepoints), gamecardnx=VALUES(gamecardnx)")) {
+			ps.setInt(1, accountId);
+			ps.setInt(2, paypalNx);
+			ps.setInt(3, maplePoints);
+			ps.setInt(4, gamecardNx);
+			ps.executeUpdate();
+		} catch (SQLException ex) {
+			throw new DataAccessException("Failed to upsert cash balance for account " + accountId, ex);
+		}
+	}
+
+	/**
+	 * Resets the connected status of all accounts to NOT_LOGGED_IN.
+	 *
+	 * @param con    the connection (caller manages)
+	 * @param status the status to set for all accounts
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void resetAllConnectedStatus(Connection con, int status) {
+		try (PreparedStatement ps = con.prepareStatement(
+				"UPDATE `accounts` SET `connected` = ?")) {
+			ps.setInt(1, status);
+			ps.executeUpdate();
+		} catch (SQLException ex) {
+			throw new DataAccessException("Could not reset all account connection statuses", ex);
+		}
+	}
+
+	/**
+	 * Updates the account's recent MAC and IP info.
+	 *
+	 * @param con        the connection (caller manages)
+	 * @param accountId  the account ID
+	 * @param recentMacs the recent MAC addresses as binary
+	 * @param recentIp   the recent IP address as long
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static void updateRecentMacsAndIp(Connection con, int accountId, byte[] recentMacs, long recentIp) {
+		try (PreparedStatement ps = con.prepareStatement(
+				"UPDATE `accounts` SET `recentmacs` = ?, `recentip` = ? WHERE `id` = ?")) {
+			ps.setBytes(1, recentMacs);
+			ps.setLong(2, recentIp);
+			ps.setInt(3, accountId);
+			ps.executeUpdate();
+		} catch (SQLException ex) {
+			throw new DataAccessException("Failed to update MAC/IP info for account " + accountId, ex);
+		}
+	}
+
+	/**
+	 * Checks if any of the given MACs are banned.
+	 *
+	 * @param con       the connection (caller manages)
+	 * @param macBytes  array of 6-byte MAC addresses
+	 * @return set of ban IDs associated with banned MACs
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static java.util.Set<Integer> checkBannedMacs(Connection con, byte[][] macBytes) {
+		StringBuilder query = new StringBuilder("SELECT `banid` FROM `macbans` WHERE `mac` IN (");
+		for (int i = 0; i < macBytes.length; i++) {
+			query.append("?, ");
+		}
+		if (macBytes.length > 0) {
+			int length = query.length();
+			query.replace(length - 2, length, ")");
+		}
+		try (PreparedStatement ps = con.prepareStatement(query.toString())) {
+			for (int i = 0; i < macBytes.length; i++) {
+				ps.setBytes(i + 1, macBytes[i]);
+			}
+			java.util.Set<Integer> banIds = new java.util.HashSet<>();
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					banIds.add(Integer.valueOf(rs.getInt(1)));
+				}
+			}
+			return banIds;
+		} catch (SQLException ex) {
+			throw new DataAccessException("Could not check banned MACs", ex);
+		}
+	}
+
+	/**
+	 * Deletes a character from the characters table.
+	 *
+	 * @param con         the connection (caller manages)
+	 * @param characterId the character ID to delete
+	 * @return the number of rows deleted
+	 * @throws DataAccessException if a database error occurs
+	 */
+	public static int deleteCharacter(Connection con, int characterId) {
+		try (PreparedStatement ps = con.prepareStatement(
+				"DELETE FROM `characters` WHERE `id` = ?")) {
+			ps.setInt(1, characterId);
+			return ps.executeUpdate();
+		} catch (SQLException ex) {
+			throw new DataAccessException("Could not delete character " + characterId, ex);
+		}
+	}
+
+	/**
 	 * Immutable record holding authentication data loaded from the accounts table.
 	 */
 	public record AuthRecord(
