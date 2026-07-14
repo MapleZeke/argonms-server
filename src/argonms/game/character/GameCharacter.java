@@ -225,9 +225,7 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 	public void saveCharacter() {
 		int prevTransactionIsolation = Connection.TRANSACTION_REPEATABLE_READ;
 		boolean prevAutoCommit = true;
-		Connection con = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
 			prevTransactionIsolation = con.getTransactionIsolation();
 			prevAutoCommit = con.getAutoCommit();
 			con.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
@@ -249,27 +247,6 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 			con.commit();
 		} catch (Throwable ex) {
 			LOG.log(Level.WARNING, "Could not save character " + getDataId() + ". Rolling back all changes...", ex);
-			if (con != null) {
-				try {
-					con.rollback();
-				} catch (SQLException ex2) {
-					LOG.log(Level.WARNING, "Error rolling back character.", ex2);
-				}
-			}
-		} finally {
-			if (con != null) {
-				try {
-					con.setAutoCommit(prevAutoCommit);
-					con.setTransactionIsolation(prevTransactionIsolation);
-				} catch (SQLException ex) {
-					LOG.log(Level.WARNING, "Could not reset Connection config after saving character " + getDataId(), ex);
-				}
-				try {
-					con.close();
-				} catch (SQLException ex) {
-					LOG.log(Level.WARNING, "Could not close Connection after saving character " + getDataId(), ex);
-				}
-			}
 		}
 	}
 

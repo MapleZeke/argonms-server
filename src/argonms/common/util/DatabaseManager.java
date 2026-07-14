@@ -156,6 +156,18 @@ public final class DatabaseManager {
 		return exceptions;
 	}
 
+	/**
+	 * Creates a HikariCP data source with sensible defaults.
+	 *
+	 * <p>Pool sizing can be tuned via system properties:
+	 * <ul>
+	 *   <li>{@code argonms.db.maxPoolSize} – maximum pool size (default: 10)</li>
+	 *   <li>{@code argonms.db.minIdle} – minimum idle connections (default: 2)</li>
+	 *   <li>{@code argonms.db.idleTimeout} – idle connection timeout in ms (default: 300000)</li>
+	 *   <li>{@code argonms.db.maxLifetime} – max connection lifetime in ms (default: 600000)</li>
+	 *   <li>{@code argonms.db.connectionTimeout} – connection acquisition timeout in ms (default: 30000)</li>
+	 * </ul>
+	 */
 	private static HikariDataSource createDataSource(String poolName, String driver, String url, String user, String password) {
 		HikariConfig config = new HikariConfig();
 		config.setPoolName(poolName);
