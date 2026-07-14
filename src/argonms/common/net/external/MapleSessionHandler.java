@@ -84,8 +84,9 @@ public final class MapleSessionHandler<T extends RemoteClient> extends ChannelIn
 			return;
 		}
 
-		var client = ctx.channel().attr(CLIENT_KEY).get();
-		if (!(client instanceof RemoteClient remoteClient)) {
+		var channelClient = ctx.channel().attr(CLIENT_KEY).get();
+		var client = session.getClient();
+		if (channelClient == null || client == null || channelClient != client) {
 			return;
 		}
 
@@ -93,9 +94,7 @@ public final class MapleSessionHandler<T extends RemoteClient> extends ChannelIn
 		session.readEnqueued();
 		packetExecutor.submit(() -> {
 			try {
-				@SuppressWarnings("unchecked")
-				var typedClient = (T) remoteClient;
-				packetProcessor.process(new LittleEndianByteArrayReader(payload), typedClient);
+				packetProcessor.process(new LittleEndianByteArrayReader(payload), client);
 			} catch (Throwable ex) {
 				LOG.log(Level.WARNING, "Uncaught exception while processing packet from client " + session.getAccountName() + " (" + session.getAddress() + ")", ex);
 			} finally {
