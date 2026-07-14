@@ -45,16 +45,16 @@
         </plugins>
     </build>
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
     </properties>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15 -->
+        <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15</artifactId>
-            <version>1.46</version>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.79</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.mozilla/rhino -->
         <dependency>
@@ -62,11 +62,11 @@
             <artifactId>rhino</artifactId>
             <version>1.7.13</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+        <!-- https://mvnrepository.com/artifact/com.mysql/mysql-connector-j -->
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.22</version>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>8.4.0</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-configuration2 -->
         <dependency>
@@ -100,8 +100,8 @@
                                 <configuration>
                                     <rules>
                                         <requireJavaVersion>
-                                            <!-- Require Java 17 or newer -->
-                                            <version>[17,)</version>
+                                            <!-- Require Java 21 or newer -->
+                                            <version>[21,)</version>
                                         </requireJavaVersion>
                                         <requireMavenVersion>
                                             <!-- Require Maven 3.8 or newer -->
@@ -202,7 +202,7 @@
                         <artifactId>maven-pmd-plugin</artifactId>
                         <version>3.21.2</version>
                         <configuration>
-                            <targetJdk>17</targetJdk>
+                            <targetJdk>21</targetJdk>
                             <failOnViolation>true</failOnViolation>
                             <printFailingErrors>true</printFailingErrors>
                             <rulesets>
@@ -235,7 +235,7 @@
                         <configuration>
                             <exportDatatables>true</exportDatatables>
                             <activeRecipes>
-                                <recipe>org.openrewrite.java.migrate.UpgradeToJava17</recipe>
+                                <recipe>org.openrewrite.java.migrate.UpgradeToJava21</recipe>
                                 <recipe>org.openrewrite.java.security.SecureRandom</recipe>
                             </activeRecipes>
                         </configuration>

@@ -40,11 +40,15 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GuildListHandler {
 	private static final Logger LOG = Logger.getLogger(GuildListHandler.class.getName());
+	private static final Set<String> BBS_TABLES = Set.of("guilds", "guildbbstopics");
+	private static final Set<String> BBS_FIELDS = Set.of("nextbbstopicid", "nextreplyid");
+	private static final Set<String> BBS_KEYS = Set.of("id", "guildid", "topicid");
 
 	private static final byte CREATE = 0x02;
 	private static final byte INVITE = 0x05;
@@ -238,38 +242,17 @@ public class GuildListHandler {
 		}
 	}
 
-	private static class BbsReply {
-		public final int replyId;
-		public final int poster;
-		public final long postTime;
-		public final String content;
-
-		public BbsReply(int replyId, int poster, long postTime, String content) {
-			this.replyId = replyId;
-			this.poster = poster;
-			this.postTime = postTime;
-			this.content = content;
-		}
+	private record BbsReply(int replyId, int poster, long postTime, String content) {
 	}
 
-	private static class BbsTopic {
-		public final int topicId;
-		public final int poster;
-		public final long postTime;
-		public final String subject;
-		public final String content;
-		public final int icon;
-		public final List<BbsReply> replies;
+	private record BbsTopic(int topicId, int poster, long postTime, String subject, String content, int icon, List<BbsReply> replies) {
+	}
 
-		public BbsTopic(int topicId, int poster, long postTime, String subject, String content, int icon, List<BbsReply> replies) {
-			this.topicId = topicId;
-			this.poster = poster;
-			this.postTime = postTime;
-			this.subject = subject;
-			this.content = content;
-			this.icon = icon;
-			this.replies = replies;
+	private static String requireIdentifier(String value, Set<String> allowedValues, String description) {
+		if (!allowedValues.contains(value)) {
+			throw new IllegalArgumentException("Unsupported " + description + ": " + value);
 		}
+		return value;
 	}
 
 	private static BbsTopic loadTopic(Connection con, ResultSet rs, int guildId, int topicId) throws SQLException {
@@ -359,9 +342,13 @@ public class GuildListHandler {
 
 	private static int getAndIncrement(Connection con, String table, String field, String tableKey1, String tableKey2, int keyValue1, int keyValue2, String description) {
 		int value = -1;
-		String whereClause = "WHERE `" + tableKey1 + "` = ?";
-		if (tableKey2 != null) {
-			whereClause += " AND `" + tableKey2 + "` = ?";
+		String safeTable = requireIdentifier(table, BBS_TABLES, "guild BBS table");
+		String safeField = requireIdentifier(field, BBS_FIELDS, "guild BBS field");
+		String safeTableKey1 = requireIdentifier(tableKey1, BBS_KEYS, "guild BBS key");
+		String safeTableKey2 = tableKey2 == null ? null : requireIdentifier(tableKey2, BBS_KEYS, "guild BBS key");
+		String whereClause = "WHERE `" + safeTableKey1 + "` = ?";
+		if (safeTableKey2 != null) {
+			whereClause += " AND `" + safeTableKey2 + "` = ?";
 		}
 
 		int prevTransactionIsolation = Connection.TRANSACTION_REPEATABLE_READ;
@@ -373,9 +360,9 @@ public class GuildListHandler {
 			prevAutoCommit = con.getAutoCommit();
 			con.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 			con.setAutoCommit(false);
-			ps = con.prepareStatement("SELECT `" + field + "` FROM `" + table + "` " + whereClause + " FOR UPDATE");
+			ps = con.prepareStatement("SELECT `" + safeField + "` FROM `" + safeTable + "` " + whereClause + " FOR UPDATE");
 			ps.setInt(1, keyValue1);
-			if (tableKey2 != null) {
+			if (safeTableKey2 != null) {
 				ps.setInt(2, keyValue2);
 			}
 			rs = ps.executeQuery();
@@ -386,9 +373,9 @@ public class GuildListHandler {
 			value = rs.getInt(1);
 			rs.close();
 			ps.close();
-			ps = con.prepareStatement("UPDATE `" + table + "` SET `" + field + "` = `" + field + "` + 1 " + whereClause);
+			ps = con.prepareStatement("UPDATE `" + safeTable + "` SET `" + safeField + "` = `" + safeField + "` + 1 " + whereClause);
 			ps.setInt(1, keyValue1);
-			if (tableKey2 != null) {
+			if (safeTableKey2 != null) {
 				ps.setInt(2, keyValue2);
 			}
 			ps.executeUpdate();
@@ -700,12 +687,12 @@ public class GuildListHandler {
 	}
 
 	private static void writeBbsEntry(LittleEndianWriter lew, BbsTopic topic) {
-		lew.writeInt(topic.topicId);
-		lew.writeInt(topic.poster);
-		lew.writeLengthPrefixedString(topic.subject);
-		lew.writeLong(TimeTool.unixToWindowsTime(topic.postTime));
-		lew.writeInt(topic.icon);
-		lew.writeInt(topic.replies.size());
+		lew.writeInt(topic.topicId());
+		lew.writeInt(topic.poster());
+		lew.writeLengthPrefixedString(topic.subject());
+		lew.writeLong(TimeTool.unixToWindowsTime(topic.postTime()));
+		lew.writeInt(topic.icon());
+		lew.writeInt(topic.replies().size());
 	}
 
 	private static byte[] writeBbs(BbsTopic notice, List<BbsTopic> topics, int totalTopics) {
@@ -730,18 +717,18 @@ public class GuildListHandler {
 
 		lew.writeShort(ClientSendOps.BBS_OPERATION);
 		lew.writeByte(REPLY_LIST);
-		lew.writeInt(topic.topicId);
-		lew.writeInt(topic.poster);
-		lew.writeLong(TimeTool.unixToWindowsTime(topic.postTime));
-		lew.writeLengthPrefixedString(topic.subject);
-		lew.writeLengthPrefixedString(topic.content);
-		lew.writeInt(topic.icon);
-		lew.writeInt(topic.replies.size());
-		for (BbsReply reply : topic.replies) {
-			lew.writeInt(reply.replyId);
-			lew.writeInt(reply.poster);
-			lew.writeLong(TimeTool.unixToWindowsTime(reply.postTime));
-			lew.writeLengthPrefixedString(reply.content);
+		lew.writeInt(topic.topicId());
+		lew.writeInt(topic.poster());
+		lew.writeLong(TimeTool.unixToWindowsTime(topic.postTime()));
+		lew.writeLengthPrefixedString(topic.subject());
+		lew.writeLengthPrefixedString(topic.content());
+		lew.writeInt(topic.icon());
+		lew.writeInt(topic.replies().size());
+		for (BbsReply reply : topic.replies()) {
+			lew.writeInt(reply.replyId());
+			lew.writeInt(reply.poster());
+			lew.writeLong(TimeTool.unixToWindowsTime(reply.postTime()));
+			lew.writeLengthPrefixedString(reply.content());
 		}
 
 		return lew.getBytes();

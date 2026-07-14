@@ -343,7 +343,7 @@ public class CashShopHandler {
 			return;
 		}
 
-		short slot = freeSlots.get(0).shortValue();
+		short slot = freeSlots.getFirst().shortValue();
 		p.getCashShopInventory().removeByUniqueId(uniqueId);
 		inv.put(slot, item);
 		p.getClient().getSession().send(CashShopPackets.writeMoveFromStaging(item, slot));

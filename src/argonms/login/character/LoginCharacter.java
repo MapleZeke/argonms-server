@@ -242,13 +242,13 @@ public final class LoginCharacter extends Player {
 		//TODO: get real equipped inventory size?
 		inventories.put(InventoryType.EQUIPPED, equipped);
 		InventoryTools.equip(equipment, equipped,
-				InventoryTools.addToInventory(equipment, top, 1).addedOrRemovedSlots.get(0).shortValue(), (short) -5);
+				InventoryTools.addToInventory(equipment, top, 1).addedOrRemovedSlots.getFirst().shortValue(), (short) -5);
 		InventoryTools.equip(equipment, equipped,
-				InventoryTools.addToInventory(equipment, bottom, 1).addedOrRemovedSlots.get(0).shortValue(), (short) -6);
+				InventoryTools.addToInventory(equipment, bottom, 1).addedOrRemovedSlots.getFirst().shortValue(), (short) -6);
 		InventoryTools.equip(equipment, equipped,
-				InventoryTools.addToInventory(equipment, shoes, 1).addedOrRemovedSlots.get(0).shortValue(), (short) -7);
+				InventoryTools.addToInventory(equipment, shoes, 1).addedOrRemovedSlots.getFirst().shortValue(), (short) -7);
 		InventoryTools.equip(equipment, equipped,
-				InventoryTools.addToInventory(equipment, weapon, 1).addedOrRemovedSlots.get(0).shortValue(), (short) -11);
+				InventoryTools.addToInventory(equipment, weapon, 1).addedOrRemovedSlots.getFirst().shortValue(), (short) -11);
 		InventoryTools.addToInventory(etc, 4161001, 1);
 		p.addInventories(inventories);
 

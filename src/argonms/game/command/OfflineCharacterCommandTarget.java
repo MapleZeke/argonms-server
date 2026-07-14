@@ -38,11 +38,38 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class OfflineCharacterCommandTarget implements CommandTarget {
 	private static final Logger LOG = Logger.getLogger(OfflineCharacterCommandTarget.class.getName());
+	private static final Set<String> SAFE_CHARACTER_COLUMNS = Set.of(
+		"ap",
+		"buddyslots",
+		"cashslots",
+		"dex",
+		"equipslots",
+		"etcslots",
+		"exp",
+		"fame",
+		"hp",
+		"int",
+		"job",
+		"level",
+		"luk",
+		"map",
+		"maxhp",
+		"maxmp",
+		"mesos",
+		"mp",
+		"setupslots",
+		"spawnpoint",
+		"sp",
+		"str",
+		"useslots"
+	);
+	private static final Set<String> SAFE_EQUIP_COLUMNS = Set.of("hp", "mp");
 
 	private final String target;
 	private Connection con;
@@ -53,8 +80,36 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 		target = name;
 	}
 
+	private static String requireCharacterColumn(String column) {
+		String normalized = column.toLowerCase(Locale.ROOT);
+		if (!SAFE_CHARACTER_COLUMNS.contains(normalized)) {
+			throw new IllegalArgumentException("Unsupported characters column: " + column);
+		}
+		return normalized;
+	}
+
+	private static String requireEquipColumn(String column) {
+		String normalized = column.toLowerCase(Locale.ROOT);
+		if (!SAFE_EQUIP_COLUMNS.contains(normalized)) {
+			throw new IllegalArgumentException("Unsupported inventoryequipment column: " + column);
+		}
+		return normalized;
+	}
+
+	private static String inventorySlotColumn(Inventory.InventoryType type) {
+		return switch (type) {
+			case EQUIP -> "equipslots";
+			case USE -> "useslots";
+			case SETUP -> "setupslots";
+			case ETC -> "etcslots";
+			case CASH_SHOP -> "cashslots";
+			default -> throw new IllegalArgumentException("Unsupported inventory type for slot lookup: " + type);
+		};
+	}
+
 	private void setValueInCharactersTable(String column, short value) throws SQLException {
-		ps = con.prepareStatement("UPDATE `characters` SET `" + column + "` = ? WHERE `name` = ?");
+		String safeColumn = requireCharacterColumn(column);
+		ps = con.prepareStatement("UPDATE `characters` SET `" + safeColumn + "` = ? WHERE `name` = ?");
 		ps.setShort(1, value);
 		ps.setString(2, target);
 		ps.executeUpdate();
@@ -62,7 +117,8 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 	}
 
 	private void addValueInCharactersTable(String column, short value, short max) throws SQLException {
-		ps = con.prepareStatement("UPDATE `characters` SET `" + column + "` = LEAST(CAST(`" + column + "` AS UNSIGNED) + ?, ?) WHERE `name` = ?");
+		String safeColumn = requireCharacterColumn(column);
+		ps = con.prepareStatement("UPDATE `characters` SET `" + safeColumn + "` = LEAST(CAST(`" + safeColumn + "` AS UNSIGNED) + ?, ?) WHERE `name` = ?");
 		ps.setShort(1, value);
 		ps.setShort(2, max);
 		ps.setString(3, target);
@@ -71,7 +127,8 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 	}
 
 	private void setValueInCharactersTable(String column, int value) throws SQLException {
-		ps = con.prepareStatement("UPDATE `characters` SET `" + column + "` = ? WHERE `name` = ?");
+		String safeColumn = requireCharacterColumn(column);
+		ps = con.prepareStatement("UPDATE `characters` SET `" + safeColumn + "` = ? WHERE `name` = ?");
 		ps.setInt(1, value);
 		ps.setString(2, target);
 		ps.executeUpdate();
@@ -79,7 +136,8 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 	}
 
 	private void addValueInCharactersTable(String column, int value, int max) throws SQLException {
-		ps = con.prepareStatement("UPDATE `characters` SET `" + column + "` = LEAST(CAST(`" + column + "` AS UNSIGNED) + ?, ?) WHERE `name` = ?");
+		String safeColumn = requireCharacterColumn(column);
+		ps = con.prepareStatement("UPDATE `characters` SET `" + safeColumn + "` = LEAST(CAST(`" + safeColumn + "` AS UNSIGNED) + ?, ?) WHERE `name` = ?");
 		ps.setInt(1, value);
 		ps.setInt(2, max);
 		ps.setString(3, target);
@@ -90,7 +148,8 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 	private byte getByteValueInCharactersTable(String column) throws SQLException {
 		byte val;
 
-		ps = con.prepareStatement("SELECT `" + column + "` FROM `characters` WHERE `name` = ?");
+		String safeColumn = requireCharacterColumn(column);
+		ps = con.prepareStatement("SELECT `" + safeColumn + "` FROM `characters` WHERE `name` = ?");
 		ps.setString(1, target);
 		rs = ps.executeQuery();
 		rs.next(); //assert this is true
@@ -104,7 +163,8 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 	private int getIntValueInCharactersTable(String column) throws SQLException {
 		int val;
 
-		ps = con.prepareStatement("SELECT `" + column + "` FROM `characters` WHERE `name` = ?");
+		String safeColumn = requireCharacterColumn(column);
+		ps = con.prepareStatement("SELECT `" + safeColumn + "` FROM `characters` WHERE `name` = ?");
 		ps.setString(1, target);
 		rs = ps.executeQuery();
 		rs.next(); //assert this is true
@@ -118,7 +178,8 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 	private short getShortValueInCharactersTable(String column) throws SQLException {
 		short val;
 
-		ps = con.prepareStatement("SELECT `" + column + "` FROM `characters` WHERE `name` = ?");
+		String safeColumn = requireCharacterColumn(column);
+		ps = con.prepareStatement("SELECT `" + safeColumn + "` FROM `characters` WHERE `name` = ?");
 		ps.setString(1, target);
 		rs = ps.executeQuery();
 		rs.next(); //assert this is true
@@ -131,8 +192,9 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 
 	private short getTotalEquipBonus(String column) throws SQLException {
 		short val;
+		String safeColumn = requireEquipColumn(column);
 
-		ps = con.prepareStatement("SELECT LEAST(SUM(`e`.`" + column + "`), " + Short.MAX_VALUE + ") FROM `inventoryequipment` `e` "
+		ps = con.prepareStatement("SELECT LEAST(SUM(`e`.`" + safeColumn + "`), " + Short.MAX_VALUE + ") FROM `inventoryequipment` `e` "
 				+ "LEFT JOIN `inventoryitems` `i` ON `i`.`inventoryitemid` = `e`.`inventoryitemid` "
 				+ "LEFT JOIN `characters` `c` ON `i`.`characterid` = `c`.`id` "
 				+ "WHERE `c`.`name` = ? AND `i`.`inventorytype` = " + Inventory.InventoryType.EQUIPPED.byteValue());
@@ -343,8 +405,9 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 						ItemValue value = (ItemValue) update.getValue();
 						Inventory.InventoryType type = InventoryTools.getCategory(value.itemId);
 						Pet[] pets = new Pet[3];
+						String slotColumn = inventorySlotColumn(type);
 
-						ps = con.prepareStatement("SELECT `accountid`,`id`,`" + type.toString().toLowerCase(Locale.ROOT) + "slots` FROM `characters` WHERE `name` = ?");
+						ps = con.prepareStatement("SELECT `accountid`,`id`,`" + slotColumn + "` FROM `characters` WHERE `name` = ?");
 						ps.setString(1, target);
 						rs = ps.executeQuery();
 						rs.next(); //assert this is true
@@ -459,8 +522,9 @@ public class OfflineCharacterCommandTarget implements CommandTarget {
 					case CLEAR_INVENTORY_SLOTS: {
 						InventorySlotRangeValue value = (InventorySlotRangeValue) update.getValue();
 						Pet[] pets = new Pet[3];
+						String slotColumn = inventorySlotColumn(value.type);
 
-						ps = con.prepareStatement("SELECT `accountid`,`id`,`" + value.type.toString().toLowerCase(Locale.ROOT) + "slots` FROM `characters` WHERE `name` = ?");
+						ps = con.prepareStatement("SELECT `accountid`,`id`,`" + slotColumn + "` FROM `characters` WHERE `name` = ?");
 						ps.setString(1, target);
 						rs = ps.executeQuery();
 						rs.next(); //assert this is true

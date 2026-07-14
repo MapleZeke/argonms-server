@@ -40,12 +40,14 @@ public class RemoteServerListener implements SessionCreator {
 	private static final Logger LOG = Logger.getLogger(RemoteServerListener.class.getName());
 	private final ExecutorService bossThreadPool;
 	private final ExecutorService workerThreadPool;
+	private final boolean useVirtualThreads;
 	private final String interServerPassword;
 	private ServerSocketChannel listener;
 	private final AtomicBoolean closeEventsTriggered;
 
 	public RemoteServerListener(String password, boolean useNio) {
 		closeEventsTriggered = new AtomicBoolean(false);
+		useVirtualThreads = Boolean.parseBoolean(System.getProperty("argonms.virtualThreads", "true"));
 		bossThreadPool = Executors.newSingleThreadExecutor(new ThreadFactory() {
 			private final ThreadGroup group;
 
@@ -65,7 +67,7 @@ public class RemoteServerListener implements SessionCreator {
 				return t;
 			}
 		});
-		workerThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2, new ThreadFactory() {
+		workerThreadPool = useVirtualThreads ? Executors.newVirtualThreadPerTaskExecutor() : Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2, new ThreadFactory() {
 			private final ThreadGroup group;
 			private final AtomicInteger threadNumber = new AtomicInteger(1);
 
@@ -87,6 +89,7 @@ public class RemoteServerListener implements SessionCreator {
 		});
 
 		this.interServerPassword = password;
+		LOG.log(Level.INFO, "Remote server listener using {0}", useVirtualThreads ? "virtual-thread worker executor" : "platform-thread worker pool");
 	}
 
 	public boolean bind(int port) {

@@ -18,15 +18,7 @@
 
 package argonms.common.character;
 
-public class KeyBinding {
-	private final byte type;
-	private final int action;
-
-	public KeyBinding(byte type, int action) {
-		this.type = type;
-		this.action = action;
-	}
-
+public record KeyBinding(byte type, int action) {
 	public byte getType() {
 		return type;
 	}

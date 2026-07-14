@@ -40,6 +40,7 @@ public class TelnetListener implements SessionCreator {
 	private static final Logger LOG = Logger.getLogger(TelnetListener.class.getName());
 	private final ExecutorService bossThreadPool;
 	private final ExecutorService workerThreadPool;
+	private final boolean useVirtualThreads;
 	private final TelnetCommandProcessor packetProc;
 	private final TelnetSession.CommandReceivedDelegate packetDelegate;
 	private ServerSocketChannel listener;
@@ -47,6 +48,7 @@ public class TelnetListener implements SessionCreator {
 
 	public TelnetListener(boolean useNio) {
 		closeEventsTriggered = new AtomicBoolean(false);
+		useVirtualThreads = Boolean.parseBoolean(System.getProperty("argonms.virtualThreads", "true"));
 		bossThreadPool = Executors.newSingleThreadExecutor(new ThreadFactory() {
 			private final ThreadGroup group;
 
@@ -66,7 +68,7 @@ public class TelnetListener implements SessionCreator {
 				return t;
 			}
 		});
-		workerThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2, new ThreadFactory() {
+		workerThreadPool = useVirtualThreads ? Executors.newVirtualThreadPerTaskExecutor() : Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2, new ThreadFactory() {
 			private final ThreadGroup group;
 			private final AtomicInteger threadNumber = new AtomicInteger(1);
 
@@ -90,6 +92,7 @@ public class TelnetListener implements SessionCreator {
 		this.packetProc = new TelnetCommandProcessor();
 		this.packetDelegate = (message, client) ->
 			packetProc.process(message, client);
+		LOG.log(Level.INFO, "Telnet listener using {0}", useVirtualThreads ? "virtual-thread worker executor" : "platform-thread worker pool");
 	}
 
 	public boolean bind(int port) {

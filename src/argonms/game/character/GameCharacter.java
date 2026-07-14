@@ -1081,43 +1081,43 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 		do {
 			switch (PlayerJob.getJobPath(job)) {
 				case PlayerJob.CLASS_BEGINNER:
-					hpInc += generator.nextInt(16 - 12 + 1) + 12;
-					mpInc += generator.nextInt(12 - 10 + 1) + 10 + intMpBonus;
+					hpInc = (short) (hpInc + generator.nextInt(16 - 12 + 1) + 12);
+					mpInc = (short) (mpInc + generator.nextInt(12 - 10 + 1) + 10 + intMpBonus);
 					break;
 				case PlayerJob.CLASS_WARRIOR:
-					hpInc += generator.nextInt(28 - 24 + 1) + 24;
-					mpInc += generator.nextInt(6 - 4 + 1) + 4 + intMpBonus;
-					spInc += 3;
+					hpInc = (short) (hpInc + generator.nextInt(28 - 24 + 1) + 24);
+					mpInc = (short) (mpInc + generator.nextInt(6 - 4 + 1) + 4 + intMpBonus);
+					spInc = (short) (spInc + 3);
 					break;
 				case PlayerJob.CLASS_MAGICIAN:
-					hpInc += generator.nextInt(14 - 10 + 1) + 10;
-					mpInc += generator.nextInt(24 - 22 + 1) + 22 + intMpBonus;
-					spInc += 3;
+					hpInc = (short) (hpInc + generator.nextInt(14 - 10 + 1) + 10);
+					mpInc = (short) (mpInc + generator.nextInt(24 - 22 + 1) + 22 + intMpBonus);
+					spInc = (short) (spInc + 3);
 					break;
 				case PlayerJob.CLASS_BOWMAN:
 				case PlayerJob.CLASS_THIEF:
 				case PlayerJob.CLASS_GAMEMASTER:
-					hpInc += generator.nextInt(24 - 20 + 1) + 20;
-					mpInc += generator.nextInt(16 - 14 + 1) + 14 + intMpBonus;
-					spInc += 3;
+					hpInc = (short) (hpInc + generator.nextInt(24 - 20 + 1) + 20);
+					mpInc = (short) (mpInc + generator.nextInt(16 - 14 + 1) + 14 + intMpBonus);
+					spInc = (short) (spInc + 3);
 					break;
 				case PlayerJob.CLASS_PIRATE:
-					hpInc += generator.nextInt(28 - 22 + 1) + 22;
-					mpInc += generator.nextInt(23 - 18 + 1) + 18 + intMpBonus;
-					spInc += 3;
+					hpInc = (short) (hpInc + generator.nextInt(28 - 22 + 1) + 22);
+					mpInc = (short) (mpInc + generator.nextInt(23 - 18 + 1) + 18 + intMpBonus);
+					spInc = (short) (spInc + 3);
 					break;
 			}
 			byte skillLevel;
 			if ((skillLevel = getSkillLevel(Skills.IMPROVED_MAXHP_INCREASE)) != 0) {
-				hpInc += SkillDataLoader.getInstance().getSkill(Skills.IMPROVED_MAXHP_INCREASE).getLevel(skillLevel).getX();
+				hpInc = (short) (hpInc + SkillDataLoader.getInstance().getSkill(Skills.IMPROVED_MAXHP_INCREASE).getLevel(skillLevel).getX());
 			}
 			if ((skillLevel = getSkillLevel(Skills.IMPROVE_MAXHP)) != 0) {
-				hpInc += SkillDataLoader.getInstance().getSkill(Skills.IMPROVE_MAXHP).getLevel(skillLevel).getX();
+				hpInc = (short) (hpInc + SkillDataLoader.getInstance().getSkill(Skills.IMPROVE_MAXHP).getLevel(skillLevel).getX());
 			}
 			if ((skillLevel = getSkillLevel(Skills.IMPROVED_MAXMP_INCREASE)) != 0) {
-				mpInc += SkillDataLoader.getInstance().getSkill(Skills.IMPROVED_MAXMP_INCREASE).getLevel(skillLevel).getX();
+				mpInc = (short) (mpInc + SkillDataLoader.getInstance().getSkill(Skills.IMPROVED_MAXMP_INCREASE).getLevel(skillLevel).getX());
 			}
-			apInc += 5;
+			apInc = (short) (apInc + 5);
 			exp -= ExpTables.getExpForPlayerLevel(level++);
 			if (singleLevelOnly && exp >= ExpTables.getExpForPlayerLevel(level)) {
 				exp = ExpTables.getExpForPlayerLevel(level) - 1;
