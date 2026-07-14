@@ -57,68 +57,61 @@ public final class BuddyListHandler {
 	public static final byte CAPACITY_CHANGE = 0x15;
 
 	private static boolean accountLoggedIn(int playerId) {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT `a`.`connected` "
-					+ "FROM `accounts` `a` LEFT JOIN `characters` `c` ON `c`.`accountid` = `a`.`id` "
-					+ "WHERE `c`.`id` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("SELECT `a`.`connected` "
+						+ "FROM `accounts` `a` LEFT JOIN `characters` `c` ON `c`.`accountid` = `a`.`id` "
+						+ "WHERE `c`.`id` = ?")) {
 			ps.setInt(1, playerId);
-			rs = ps.executeQuery();
-			if (!rs.next()) {
-				return false;
+			try (ResultSet rs = ps.executeQuery()) {
+				if (!rs.next()) {
+					return false;
+				}
+				//if logged into login or shop, treat as if offline since they don't
+				//overwrite the buddyentries SQL table
+				return rs.getByte(1) == RemoteClient.STATUS_INGAME;
 			}
-			//if logged into login or shop, treat as if offline since they don't
-			//overwrite the buddyentries SQL table
-			return rs.getByte(1) == RemoteClient.STATUS_INGAME;
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Error checking if character " + playerId + " is online", e);
 			return false;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 	}
 
 	private static byte inviteOfflinePlayer(Connection con, int invitee, int inviter, String inviterName) throws SQLException {
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			ps = con.prepareStatement("SELECT "
-					+ "(`c`.`buddyslots` <= (SELECT COUNT(*) FROM `buddyentries` WHERE `owner` = `c`.`id`  AND `status` <> " + BuddyListEntry.STATUS_INVITED + ")) AS `full`,"
-					+ "EXISTS (SELECT * FROM `buddyentries` WHERE `owner` = `c`.`id` AND `buddy` = ?) AS `readd` "
-					+ "FROM `characters` `c` WHERE `id` = ?");
+		boolean reAdd;
+		try (PreparedStatement ps = con.prepareStatement("SELECT "
+				+ "(`c`.`buddyslots` <= (SELECT COUNT(*) FROM `buddyentries` WHERE `owner` = `c`.`id`  AND `status` <> " + BuddyListEntry.STATUS_INVITED + ")) AS `full`,"
+				+ "EXISTS (SELECT * FROM `buddyentries` WHERE `owner` = `c`.`id` AND `buddy` = ?) AS `readd` "
+				+ "FROM `characters` `c` WHERE `id` = ?")) {
 			ps.setInt(1, inviter);
 			ps.setInt(2, invitee);
-			rs = ps.executeQuery();
-			if (!rs.next()) {
-				return -1;
+			try (ResultSet rs = ps.executeQuery()) {
+				if (!rs.next()) {
+					return -1;
+				}
+				if (rs.getBoolean(1)) {
+					return THEIR_LIST_FULL;
+				}
+				//assert row retrieved in subquery for `readd` had `status` == STATUS_HALF_OPEN
+				reAdd = rs.getBoolean(2);
 			}
-			if (rs.getBoolean(1)) {
-				return THEIR_LIST_FULL;
-			}
-			//assert row retrieved in subquery for `readd` had `status` == STATUS_HALF_OPEN
-			boolean reAdd = rs.getBoolean(2);
-			ps.close();
+		}
 
-			if (!reAdd) {
-				ps = con.prepareStatement("INSERT INTO `buddyentries` "
-						+ "(`owner`,`buddy`,`buddyname`,`status`) VALUES (?,?,?," + BuddyListEntry.STATUS_INVITED + ")");
+		if (!reAdd) {
+			try (PreparedStatement ps = con.prepareStatement("INSERT INTO `buddyentries` "
+					+ "(`owner`,`buddy`,`buddyname`,`status`) VALUES (?,?,?," + BuddyListEntry.STATUS_INVITED + ")")) {
 				ps.setInt(1, invitee);
 				ps.setInt(2, inviter);
 				ps.setString(3, inviterName);
 				ps.executeUpdate();
 				return Byte.MAX_VALUE;
-			} else {
-				ps = con.prepareStatement("UPDATE `buddyentries` SET `status` = " + BuddyListEntry.STATUS_MUTUAL + " WHERE `owner` = ? AND `buddy` = ?");
+			}
+		} else {
+			try (PreparedStatement ps = con.prepareStatement("UPDATE `buddyentries` SET `status` = " + BuddyListEntry.STATUS_MUTUAL + " WHERE `owner` = ? AND `buddy` = ?")) {
 				ps.setInt(1, invitee);
 				ps.setInt(2, inviter);
 				ps.executeUpdate();
 				return Byte.MIN_VALUE;
 			}
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, null);
 		}
 	}
 
@@ -129,69 +122,64 @@ public final class BuddyListHandler {
 			client.getSession().send(GamePackets.writeSimpleBuddyListMessage(YOUR_LIST_FULL));
 			return;
 		}
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT `a`.`connected`,`c`.`world`,`c`.`id`,`c`.`name`,`a`.`gm` "
-					+ "FROM `characters` `c` LEFT JOIN `accounts` `a` ON `c`.`accountid` = `a`.`id` "
-					+ "WHERE `c`.`name` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("SELECT `a`.`connected`,`c`.`world`,`c`.`id`,`c`.`name`,`a`.`gm` "
+						+ "FROM `characters` `c` LEFT JOIN `accounts` `a` ON `c`.`accountid` = `a`.`id` "
+						+ "WHERE `c`.`name` = ?")) {
 			ps.setString(1, invitee);
-			rs = ps.executeQuery();
-			if (!rs.next() || rs.getByte(2) != client.getWorld()) {
-				client.getSession().send(GamePackets.writeSimpleBuddyListMessage(NONEXISTENT));
-				return;
-			}
-			if (rs.getByte(5) > p.getPrivilegeLevel()) {
-				client.getSession().send(GamePackets.writeSimpleBuddyListMessage(NO_GM_INVITES));
-				return;
-			}
-			int inviteeId = rs.getInt(3);
-			if (bList.getBuddy(inviteeId) != null || bList.isInInvites(inviteeId)) {
-				client.getSession().send(GamePackets.writeSimpleBuddyListMessage(ALREADY_ON_LIST));
-				return;
-			}
-			switch (rs.getByte(1)) {
-				case RemoteClient.STATUS_INGAME: {
-					Pair<Byte, Byte> channelAndResult = GameServer.getChannel(client.getChannel()).getCrossServerInterface().sendBuddyInvite(p, inviteeId);
-					byte result = channelAndResult.right.byteValue();
-					if (result == Byte.MAX_VALUE) {
-						bList.addBuddy(new BuddyListEntry(inviteeId, rs.getString(4), BuddyListEntry.STATUS_HALF_OPEN));
-						client.getSession().send(GamePackets.writeBuddyList(ADD, bList));
-						break;
-					} else if (result == Byte.MIN_VALUE) {
-						bList.addBuddy(new BuddyListEntry(inviteeId, rs.getString(4), BuddyListEntry.STATUS_MUTUAL, channelAndResult.left.byteValue()));
-						client.getSession().send(GamePackets.writeBuddyList(ADD, bList));
-						break;
-					} else if (result != -1) {
-						client.getSession().send(GamePackets.writeSimpleBuddyListMessage(result));
-						break;
-					}
-					//apparently they are offline...
-					//intentional fallthrough to inviteOfflinePlayer
+			try (ResultSet rs = ps.executeQuery()) {
+				if (!rs.next() || rs.getByte(2) != client.getWorld()) {
+					client.getSession().send(GamePackets.writeSimpleBuddyListMessage(NONEXISTENT));
+					return;
 				}
-				default: {
-					byte result = inviteOfflinePlayer(con, inviteeId, p.getId(), p.getName());
-					if (result == Byte.MAX_VALUE) {
-						bList.addBuddy(new BuddyListEntry(inviteeId, rs.getString(4), BuddyListEntry.STATUS_HALF_OPEN));
-						client.getSession().send(GamePackets.writeBuddyList(ADD, bList));
-					} else if (result == Byte.MIN_VALUE) {
-						bList.addBuddy(new BuddyListEntry(inviteeId, rs.getString(4), BuddyListEntry.STATUS_MUTUAL));
-						client.getSession().send(GamePackets.writeBuddyList(ADD, bList));
-					} else if (result != -1) {
-						client.getSession().send(GamePackets.writeSimpleBuddyListMessage(result));
+				if (rs.getByte(5) > p.getPrivilegeLevel()) {
+					client.getSession().send(GamePackets.writeSimpleBuddyListMessage(NO_GM_INVITES));
+					return;
+				}
+				int inviteeId = rs.getInt(3);
+				if (bList.getBuddy(inviteeId) != null || bList.isInInvites(inviteeId)) {
+					client.getSession().send(GamePackets.writeSimpleBuddyListMessage(ALREADY_ON_LIST));
+					return;
+				}
+				switch (rs.getByte(1)) {
+					case RemoteClient.STATUS_INGAME: {
+						Pair<Byte, Byte> channelAndResult = GameServer.getChannel(client.getChannel()).getCrossServerInterface().sendBuddyInvite(p, inviteeId);
+						byte result = channelAndResult.right.byteValue();
+						if (result == Byte.MAX_VALUE) {
+							bList.addBuddy(new BuddyListEntry(inviteeId, rs.getString(4), BuddyListEntry.STATUS_HALF_OPEN));
+							client.getSession().send(GamePackets.writeBuddyList(ADD, bList));
+							break;
+						} else if (result == Byte.MIN_VALUE) {
+							bList.addBuddy(new BuddyListEntry(inviteeId, rs.getString(4), BuddyListEntry.STATUS_MUTUAL, channelAndResult.left.byteValue()));
+							client.getSession().send(GamePackets.writeBuddyList(ADD, bList));
+							break;
+						} else if (result != -1) {
+							client.getSession().send(GamePackets.writeSimpleBuddyListMessage(result));
+							break;
+						}
+						//apparently they are offline...
+						//intentional fallthrough to inviteOfflinePlayer
 					}
-					//uhh, if result == -1, then I guess the player we're trying
-					//to add just deleted himself while we were handling this
-					//player's request...
-					break;
+					default: {
+						byte result = inviteOfflinePlayer(con, inviteeId, p.getId(), p.getName());
+						if (result == Byte.MAX_VALUE) {
+							bList.addBuddy(new BuddyListEntry(inviteeId, rs.getString(4), BuddyListEntry.STATUS_HALF_OPEN));
+							client.getSession().send(GamePackets.writeBuddyList(ADD, bList));
+						} else if (result == Byte.MIN_VALUE) {
+							bList.addBuddy(new BuddyListEntry(inviteeId, rs.getString(4), BuddyListEntry.STATUS_MUTUAL));
+							client.getSession().send(GamePackets.writeBuddyList(ADD, bList));
+						} else if (result != -1) {
+							client.getSession().send(GamePackets.writeSimpleBuddyListMessage(result));
+						}
+						//uhh, if result == -1, then I guess the player we're trying
+						//to add just deleted himself while we were handling this
+						//player's request...
+						break;
+					}
 				}
 			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Error inviting " + invitee + " to buddy list of " + client.getPlayer().getName(), e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 	}
 
@@ -218,19 +206,14 @@ public final class BuddyListHandler {
 		//if we conclude he is offline, update his entry directly on the database
 		if (!accountLoggedIn(inviterId) || !GameServer.getChannel(client.getChannel()).getCrossServerInterface().sendBuddyInviteAccepted(p, inviterId)) {
 			//if inviter is concluded to be offline, attempt to make his entry MUTUAL on database
-			Connection con = null;
-			PreparedStatement ps = null;
-			try {
-				con = DatabaseManager.getConnection(DatabaseType.STATE);
-				ps = con.prepareStatement("UPDATE `buddyentries` SET `status` = " + BuddyListEntry.STATUS_MUTUAL
-						+ " WHERE `owner` = ? AND `buddy` = ?");
+			try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+					PreparedStatement ps = con.prepareStatement("UPDATE `buddyentries` SET `status` = " + BuddyListEntry.STATUS_MUTUAL
+							+ " WHERE `owner` = ? AND `buddy` = ?")) {
 				ps.setInt(1, inviterId);
 				ps.setInt(2, p.getId());
 				ps.executeUpdate();
 			} catch (SQLException e) {
 				LOG.log(Level.WARNING, "Could not accept buddy invite", e);
-			} finally {
-				DatabaseManager.cleanup(DatabaseType.STATE, null, ps, con);
 			}
 		}
 	}
@@ -270,25 +253,18 @@ public final class BuddyListHandler {
 		} else if (!tryRetractInvite || !GameServer.getChannel(client.getChannel()).getCrossServerInterface().sendBuddyInviteRetracted(p, deletedId)) {
 			//if buddy is concluded to be offline, attempt to remove invite to him on database (no effect if tryRetractInvite is true and is the second case) or make his entry HALF_OPEN
 			assert !accountLoggedIn(deletedId) || GameServer.getChannel(client.getChannel()).getCrossServerInterface().scanChannelOfPlayer(removed.getName(), false) <= ChannelSynchronizationOps.CHANNEL_CASH_SHOP;
-			Connection con = null;
-			PreparedStatement ps = null;
-			try {
-				con = DatabaseManager.getConnection(DatabaseType.STATE);
-				if (!tryRetractInvite) {
-					ps = con.prepareStatement("UPDATE `buddyentries` SET `status` = " + BuddyListEntry.STATUS_HALF_OPEN
-						+ " WHERE `owner` = ? AND `buddy` = ?");
-				} else {
-					ps = con.prepareStatement("DELETE FROM `buddyentries`"
-						+ " WHERE `owner` = ? AND `buddy` = ?");
-				}
+			try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+				String query = !tryRetractInvite
+						? "UPDATE `buddyentries` SET `status` = " + BuddyListEntry.STATUS_HALF_OPEN + " WHERE `owner` = ? AND `buddy` = ?"
+						: "DELETE FROM `buddyentries` WHERE `owner` = ? AND `buddy` = ?";
+				try (PreparedStatement ps = con.prepareStatement(query)) {
 					//assert no rows deleted or deleted row had `status` == STATUS_INVITED.
-				ps.setInt(1, deletedId);
-				ps.setInt(2, p.getId());
-				ps.executeUpdate();
+					ps.setInt(1, deletedId);
+					ps.setInt(2, p.getId());
+					ps.executeUpdate();
+				}
 			} catch (SQLException e) {
 				LOG.log(Level.WARNING, "Could not delete buddy entry", e);
-			} finally {
-				DatabaseManager.cleanup(DatabaseType.STATE, null, ps, con);
 			}
 		}
 	}

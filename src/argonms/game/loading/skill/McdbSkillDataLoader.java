@@ -38,82 +38,66 @@ public class McdbSkillDataLoader extends SkillDataLoader {
 
 	@Override
 	protected void loadPlayerSkill(int skillid) {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		SkillStats stats = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.WZ);
-			ps = con.prepareStatement("SELECT * FROM `skilldata` WHERE `skillid` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.WZ);
+				PreparedStatement ps = con.prepareStatement("SELECT * FROM `skilldata` WHERE `skillid` = ?")) {
 			ps.setInt(1, skillid);
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				stats = new SkillStats();
-				doWork(rs, skillid, stats);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					stats = new SkillStats();
+					doWork(rs, skillid, stats);
+				}
 			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not read MCDB data for skill " + skillid, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
 		}
 		skillStats.put(Integer.valueOf(skillid), stats);
 	}
 
 	@Override
 	protected void loadMobSkill(short skillid) {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		MobSkillStats stats = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.WZ);
-			ps = con.prepareStatement("SELECT * FROM `mobskills` WHERE `skillid` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.WZ);
+				PreparedStatement ps = con.prepareStatement("SELECT * FROM `mobskills` WHERE `skillid` = ?")) {
 			ps.setInt(1, skillid);
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				stats = new MobSkillStats();
-				doMobWork(rs, skillid, stats, con);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					stats = new MobSkillStats();
+					doMobWork(rs, skillid, stats, con);
+				}
 			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not read MCDB data for mob skill " + skillid, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
 		}
 		mobSkillStats.put(Short.valueOf(skillid), stats);
 	}
 
 	@Override
 	public boolean loadAll() {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.WZ);
-			ps = con.prepareStatement("SELECT * FROM `skilldata` ORDER BY `skillid`");
-			rs = ps.executeQuery();
-			boolean more = false;
-			while (more || rs.next()) {
-				int skillid = rs.getInt(1);
-				SkillStats stats = new SkillStats();
-				more = doWork(rs, skillid, stats);
-				skillStats.put(Integer.valueOf(skillid), stats);
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.WZ)) {
+			try (PreparedStatement ps = con.prepareStatement("SELECT * FROM `skilldata` ORDER BY `skillid`");
+					ResultSet rs = ps.executeQuery()) {
+				boolean more = false;
+				while (more || rs.next()) {
+					int skillid = rs.getInt(1);
+					SkillStats stats = new SkillStats();
+					more = doWork(rs, skillid, stats);
+					skillStats.put(Integer.valueOf(skillid), stats);
+				}
 			}
-			rs.close();
-			ps.close();
-			ps = con.prepareStatement("SELECT * FROM `mobskills` ORDER BY `skillid`");
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				short skillid = rs.getShort(1);
-				MobSkillStats stats = new MobSkillStats();
-				more = doMobWork(rs, skillid, stats, con);
-				mobSkillStats.put(Short.valueOf(skillid), stats);
+			try (PreparedStatement ps = con.prepareStatement("SELECT * FROM `mobskills` ORDER BY `skillid`");
+					ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					short skillid = rs.getShort(1);
+					MobSkillStats stats = new MobSkillStats();
+					doMobWork(rs, skillid, stats, con);
+					mobSkillStats.put(Short.valueOf(skillid), stats);
+				}
 			}
 			return true;
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load all skill data from MCDB.", ex);
 			return false;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
 		}
 	}
 
@@ -122,22 +106,17 @@ public class McdbSkillDataLoader extends SkillDataLoader {
 		if (skillStats.containsKey(Integer.valueOf(skillid))) {
 			return true;
 		}
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		boolean exists = false;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.WZ);
-			ps = con.prepareStatement("SELECT * FROM `skilldata` WHERE `skillid` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.WZ);
+				PreparedStatement ps = con.prepareStatement("SELECT * FROM `skilldata` WHERE `skillid` = ?")) {
 			ps.setInt(1, skillid);
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				exists = true;
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					exists = true;
+				}
 			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not use MCDB to determine whether skill " + skillid + " is valid.", e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
 		}
 		return exists;
 	}
@@ -147,22 +126,17 @@ public class McdbSkillDataLoader extends SkillDataLoader {
 		if (mobSkillStats.containsKey(Short.valueOf(skillid))) {
 			return true;
 		}
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		boolean exists = false;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.WZ);
-			ps = con.prepareStatement("SELECT * FROM `mobskills` WHERE `skillid` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.WZ);
+				PreparedStatement ps = con.prepareStatement("SELECT * FROM `mobskills` WHERE `skillid` = ?")) {
 			ps.setInt(1, skillid);
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				exists = true;
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					exists = true;
+				}
 			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not use MCDB to determine whether mob skill " + skillid + " is valid.", e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
 		}
 		return exists;
 	}
@@ -267,19 +241,15 @@ public class McdbSkillDataLoader extends SkillDataLoader {
 			effect.setCooltime(rs.getShort(9));
 			effect.setMaxHpPercent(rs.getShort(14));
 			if (skillid == MobSkills.SUMMON) {
-				PreparedStatement summonsPs = null;
-				ResultSet summons = null;
-				try {
-					summonsPs = con.prepareStatement("SELECT `mobindex`,`mobid` FROM `mobskillsummons` WHERE `level` = ? ORDER BY `mobindex`");
+				try (PreparedStatement summonsPs = con.prepareStatement("SELECT `mobindex`,`mobid` FROM `mobskillsummons` WHERE `level` = ? ORDER BY `mobindex`")) {
 					summonsPs.setInt(1, level);
-					summons = summonsPs.executeQuery();
-					while (summons.next()) {
-						effect.addSummon(summons.getByte(1), summons.getInt(2));
+					try (ResultSet summons = summonsPs.executeQuery()) {
+						while (summons.next()) {
+							effect.addSummon(summons.getByte(1), summons.getInt(2));
+						}
 					}
 				} catch (SQLException e) {
 					throw new SQLException("Failed to load summon data of mob skill " + skillid + " (level " + level + ")", e);
-				} finally {
-					DatabaseManager.cleanup(DatabaseType.WZ, summons, summonsPs, null);
 				}
 			}
 			effect.setLimit(rs.getShort(15));

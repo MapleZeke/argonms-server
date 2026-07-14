@@ -169,25 +169,20 @@ public abstract class CheatTracker {
 	private void load() {
 		totalPoints = 0;
 
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			//only get infractions that haven't expired and aren't pardoned yet
-			ps = con.prepareStatement("SELECT `severity` FROM `infractions` "
-					+ "WHERE `accountid` = ? AND `pardoned` = 0 AND `expiredate` > (UNIX_TIMESTAMP() * 1000)");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				//only get infractions that haven't expired and aren't pardoned yet
+				PreparedStatement ps = con.prepareStatement("SELECT `severity` FROM `infractions` "
+						+ "WHERE `accountid` = ? AND `pardoned` = 0 AND `expiredate` > (UNIX_TIMESTAMP() * 1000)")) {
 			ps.setInt(1, getAccountId());
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				totalPoints += rs.getShort(1);
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					totalPoints += rs.getShort(1);
+				}
 			}
 			infractionsLoaded = true;
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load cheatlog for account "
 					+ getAccountId(), ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 	}
 
@@ -209,32 +204,30 @@ public abstract class CheatTracker {
 			return;
 		}
 
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			ps = con.prepareStatement("INSERT INTO `bans` (`accountid`,`ip`) VALUES (?,?)", Statement.RETURN_GENERATED_KEYS);
+		int entryId;
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `bans` (`accountid`,`ip`) VALUES (?,?)", Statement.RETURN_GENERATED_KEYS)) {
 			ps.setInt(1, getAccountId());
 			ps.setLong(2, ipBytesToLong(getIpAddress()));
 			ps.executeUpdate();
-			rs = ps.getGeneratedKeys();
-			int entryId = rs.next() ? rs.getInt(1) : -1;
-			rs.close();
-			ps.close();
+			try (ResultSet rs = ps.getGeneratedKeys()) {
+				entryId = rs.next() ? rs.getInt(1) : -1;
+			}
+		}
 
-			//storing macs in binary saves us 2 bytes per address compared
-			//to if we used a more readable 8-byte/64-bit signed integer
-			ps = con.prepareStatement("SELECT `recentmacs` FROM `accounts` WHERE `id` = ?");
+		//storing macs in binary saves us 2 bytes per address compared
+		//to if we used a more readable 8-byte/64-bit signed integer
+		byte[] macListCombined;
+		try (PreparedStatement ps = con.prepareStatement("SELECT `recentmacs` FROM `accounts` WHERE `id` = ?")) {
 			ps.setInt(1, getAccountId());
-			rs = ps.executeQuery();
-			byte[] macListCombined = rs.next() ? rs.getBytes(1) : null;
+			try (ResultSet rs = ps.executeQuery()) {
+				macListCombined = rs.next() ? rs.getBytes(1) : null;
+			}
+		}
 
-			if (macListCombined != null) {
-				rs.close();
-				ps.close();
-
-				int macCount = macListCombined.length / 6;
-				byte[] macAddress = new byte[6];
-				ps = con.prepareStatement("INSERT INTO `macbans` (`banid`,`mac`) VALUES (?,?)");
+		if (macListCombined != null) {
+			int macCount = macListCombined.length / 6;
+			byte[] macAddress = new byte[6];
+			try (PreparedStatement ps = con.prepareStatement("INSERT INTO `macbans` (`banid`,`mac`) VALUES (?,?)")) {
 				ps.setInt(1, entryId);
 				for (int i = 0; i < macCount; i++) {
 					System.arraycopy(macListCombined, i * 6, macAddress, 0, 6);
@@ -245,8 +238,6 @@ public abstract class CheatTracker {
 				}
 				ps.executeBatch();
 			}
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, null);
 		}
 	}
 
@@ -270,11 +261,8 @@ public abstract class CheatTracker {
 			loadLock.unlock();
 		}
 		totalPoints += points;
-		Connection con = null;
-		PreparedStatement ps = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("INSERT INTO `infractions` (`accountid`,`characterid`,`receivedate`,`expiredate`,`assignertype`,`assignername`,`assignercomment`,`reason`,`severity`) VALUES (?,?,?,?,?,?,?,?,?)");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("INSERT INTO `infractions` (`accountid`,`characterid`,`receivedate`,`expiredate`,`assignertype`,`assignername`,`assignercomment`,`reason`,`severity`) VALUES (?,?,?,?,?,?,?,?,?)")) {
 			ps.setInt(1, getAccountId());
 			int cid = getCharacterId();
 			if (cid != -1) {
@@ -299,8 +287,6 @@ public abstract class CheatTracker {
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load cheatlog for account "
 					+ getAccountId(), ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, con);
 		}
 	}
 
@@ -428,26 +414,21 @@ public abstract class CheatTracker {
 	}
 
 	public static CheatTracker get(String characterName) {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			//only get infractions that haven't expired and aren't pardoned yet
-			ps = con.prepareStatement("SELECT `a`.`id`,`c`.`id`,`a`.`recentip` FROM `characters` `c` LEFT JOIN `accounts` `a` ON `c`.`accountid` = `a`.`id` WHERE `c`.`name` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				//only get infractions that haven't expired and aren't pardoned yet
+				PreparedStatement ps = con.prepareStatement("SELECT `a`.`id`,`c`.`id`,`a`.`recentip` FROM `characters` `c` LEFT JOIN `accounts` `a` ON `c`.`accountid` = `a`.`id` WHERE `c`.`name` = ?")) {
 			ps.setString(1, characterName);
-			rs = ps.executeQuery();
-			if (!rs.next()) {
-				return null;
-			}
+			try (ResultSet rs = ps.executeQuery()) {
+				if (!rs.next()) {
+					return null;
+				}
 
-			return new OfflineCheatTracker(rs.getInt(1), rs.getInt(2), rs.getLong(3));
+				return new OfflineCheatTracker(rs.getInt(1), rs.getInt(2), rs.getLong(3));
+			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load cheatlog for offline character "
 					+ characterName, ex);
 			return null;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 	}
 

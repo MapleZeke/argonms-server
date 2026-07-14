@@ -34,17 +34,15 @@ public class DefaultNpcShopDataLoader extends NpcShopDataLoader {
 
 	@Override
 	protected void load(int npcid) {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
 			List<NpcShop.ShopSlot> items = new ArrayList<>();
-			ps = con.prepareStatement("SELECT `itemid`,`price` FROM `shopitems` WHERE `npcid` = ? ORDER BY `position` ASC");
-			ps.setInt(1, npcid);
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				items.add(new NpcShop.ShopSlot(rs.getInt(1), (short) 1, rs.getInt(2)));
+			try (PreparedStatement ps = con.prepareStatement("SELECT `itemid`,`price` FROM `shopitems` WHERE `npcid` = ? ORDER BY `position` ASC")) {
+				ps.setInt(1, npcid);
+				try (ResultSet rs = ps.executeQuery()) {
+					while (rs.next()) {
+						items.add(new NpcShop.ShopSlot(rs.getInt(1), (short) 1, rs.getInt(2)));
+					}
+				}
 			}
 
 			if (!items.isEmpty()) {
@@ -55,21 +53,15 @@ public class DefaultNpcShopDataLoader extends NpcShopDataLoader {
 			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not read data from default table for shop of NPC " + npcid, ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 	}
 
 	@Override
 	public boolean loadAll() {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		List<NpcShop.ShopSlot> items;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT `npcid`,`itemid`,`price` FROM `shopitems` ORDER BY `npcid`,`position` ASC");
-			rs = ps.executeQuery();
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("SELECT `npcid`,`itemid`,`price` FROM `shopitems` ORDER BY `npcid`,`position` ASC");
+				ResultSet rs = ps.executeQuery()) {
 			boolean more = false;
 			while (more || rs.next()) {
 				int npcId = rs.getInt(1);
@@ -83,8 +75,6 @@ public class DefaultNpcShopDataLoader extends NpcShopDataLoader {
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load all shop data.", ex);
 			return false;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 		return false;
 	}

@@ -114,18 +114,13 @@ public abstract class RemoteClient implements SessionDataModel, MapleClientConte
 	}
 
 	public void updateState(byte currentState) {
-		Connection con = null;
-		PreparedStatement ps = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("UPDATE `accounts` SET `connected` = ? WHERE `id` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+			 PreparedStatement ps = con.prepareStatement("UPDATE `accounts` SET `connected` = ? WHERE `id` = ?")) {
 			ps.setByte(1, currentState);
 			ps.setInt(2, id);
 			ps.executeUpdate();
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not change connected status of account " + id, ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, con);
 		}
 	}
 

@@ -39,21 +39,16 @@ public class ShopClient extends RemoteClient {
 	private ShopCharacter player;
 
 	public byte getOnlineState() {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		byte ret;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT `connected` FROM `accounts` WHERE `id` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("SELECT `connected` FROM `accounts` WHERE `id` = ?")) {
 			ps.setInt(1, getAccountId());
-			rs = ps.executeQuery();
-			ret = rs.next() ? rs.getByte(1) : -1;
+			try (ResultSet rs = ps.executeQuery()) {
+				ret = rs.next() ? rs.getByte(1) : -1;
+			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not get connected status of account " + getAccountId(), ex);
 			ret = -1;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 		return ret;
 	}

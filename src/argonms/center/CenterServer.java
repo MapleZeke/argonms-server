@@ -117,23 +117,17 @@ public final class CenterServer {
 			System.exit(3);
 			return;
 		}
-		Connection con;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			try (PreparedStatement ps = con.prepareStatement("UPDATE `accounts` SET `connected` = ?")) {
+				ps.setInt(1, RemoteClient.STATUS_NOTLOGGEDIN);
+				ps.executeUpdate();
+			} catch (SQLException ex) {
+				LOG.log(Level.WARNING, "Could not reset logged in status of all accounts.", ex);
+			}
 		} catch (SQLException e) {
 			LOG.log(Level.SEVERE, "Could not connect to database!", e);
 			System.exit(3);
 			return;
-		}
-		PreparedStatement ps = null;
-		try {
-			ps = con.prepareStatement("UPDATE `accounts` SET `connected` = ?");
-			ps.setInt(1, RemoteClient.STATUS_NOTLOGGEDIN);
-			ps.executeUpdate();
-		} catch (SQLException ex) {
-			LOG.log(Level.WARNING, "Could not reset logged in status of all accounts.", ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, con);
 		}
 
 		Scanner scan = null;

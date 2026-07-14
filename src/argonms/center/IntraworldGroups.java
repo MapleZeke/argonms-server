@@ -39,21 +39,16 @@ public class IntraworldGroups {
 	//or reuse old partyids (cf. InventorySlot)
 	private static int getStartingPartyId(byte world) {
 		int partyId = -1;
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT MAX(`partyid`) FROM `parties` WHERE `world` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("SELECT MAX(`partyid`) FROM `parties` WHERE `world` = ?")) {
 			ps.setByte(1, world);
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				partyId = rs.getInt(1);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					partyId = rs.getInt(1);
+				}
 			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not get starting party id for world " + world, ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 		return partyId;
 	}
@@ -113,22 +108,17 @@ public class IntraworldGroups {
 			return true;
 		}
 
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT EXISTS(SELECT 1 FROM `guilds` WHERE `name` = ? AND `world` = ? LIMIT 1)");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("SELECT EXISTS(SELECT 1 FROM `guilds` WHERE `name` = ? AND `world` = ? LIMIT 1)")) {
 			ps.setString(1, name);
 			ps.setByte(2, world);
-			rs = ps.executeQuery();
-			rs.next();
-			return rs.getBoolean(1);
+			try (ResultSet rs = ps.executeQuery()) {
+				rs.next();
+				return rs.getBoolean(1);
+			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not determine whether guild " + name + " exists", ex);
 			return false;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 	}
 
@@ -139,25 +129,20 @@ public class IntraworldGroups {
 		}
 
 		int guildId;
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("INSERT INTO `guilds` (`world`,`name`) VALUES (?,?)", PreparedStatement.RETURN_GENERATED_KEYS);
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("INSERT INTO `guilds` (`world`,`name`) VALUES (?,?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
 			ps.setByte(1, world);
 			ps.setString(2, name);
 			ps.executeUpdate();
-			rs = ps.getGeneratedKeys();
-			if (!rs.next()) {
-				return -1;
+			try (ResultSet rs = ps.getGeneratedKeys()) {
+				if (!rs.next()) {
+					return -1;
+				}
+				guildId = rs.getInt(1);
 			}
-			guildId = rs.getInt(1);
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not create guild " + name, ex);
 			return -1;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 
 		loadedGuildNames.add(name);

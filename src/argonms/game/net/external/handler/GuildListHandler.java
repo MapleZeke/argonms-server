@@ -264,71 +264,55 @@ public class GuildListHandler {
 		int icon = rs.getInt(6);
 
 		List<BbsReply> replies = new ArrayList<>();
-		PreparedStatement ps = null;
-		ResultSet rrs = null;
-		try {
-			ps = con.prepareStatement("SELECT `replyid`,`poster`,`posttime`,`content` FROM `guildbbsreplies` WHERE `topicsid` = ?");
+		try (PreparedStatement ps = con.prepareStatement("SELECT `replyid`,`poster`,`posttime`,`content` FROM `guildbbsreplies` WHERE `topicsid` = ?")) {
 			ps.setInt(1, topicsId);
-			rrs = ps.executeQuery();
-			while (rrs.next()) {
-				replies.add(new BbsReply(rrs.getInt(1), rrs.getInt(2), rrs.getLong(3), rrs.getString(4)));
+			try (ResultSet rrs = ps.executeQuery()) {
+				while (rrs.next()) {
+					replies.add(new BbsReply(rrs.getInt(1), rrs.getInt(2), rrs.getLong(3), rrs.getString(4)));
+				}
 			}
-		} finally {
-			DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, rrs, ps, null);
 		}
 		return new BbsTopic(topicId, poster, postTime, subject, content, icon, Collections.unmodifiableList(replies));
 	}
 
 	private static BbsTopic loadTopic(Connection con, int guildId, int topicId) throws SQLException {
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			ps = con.prepareStatement("SELECT `topicsid`,`poster`,`posttime`,`subject`,`content`,`icon` FROM `guildbbstopics` WHERE `guildid` = ? AND `topicid` = ?");
+		try (PreparedStatement ps = con.prepareStatement("SELECT `topicsid`,`poster`,`posttime`,`subject`,`content`,`icon` FROM `guildbbstopics` WHERE `guildid` = ? AND `topicid` = ?")) {
 			ps.setInt(1, guildId);
 			ps.setInt(2, topicId);
-			rs = ps.executeQuery();
-			if (!rs.next()) {
-				return null;
-			}
+			try (ResultSet rs = ps.executeQuery()) {
+				if (!rs.next()) {
+					return null;
+				}
 
-			return loadTopic(con, rs, guildId, topicId);
-		} finally {
-			DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, rs, ps, null);
+				return loadTopic(con, rs, guildId, topicId);
+			}
 		}
 	}
 
 	private static List<BbsTopic> loadTopics(Connection con, int guildId, int page) throws SQLException {
 		List<BbsTopic> topics = new ArrayList<>();
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			ps = con.prepareStatement("SELECT `topicsid`,`poster`,`posttime`,`subject`,`content`,`icon`,`topicid` FROM `guildbbstopics` WHERE `guildid` = ? AND `topicid` <> 0 ORDER BY `topicid` DESC LIMIT ?,10");
+		try (PreparedStatement ps = con.prepareStatement("SELECT `topicsid`,`poster`,`posttime`,`subject`,`content`,`icon`,`topicid` FROM `guildbbstopics` WHERE `guildid` = ? AND `topicid` <> 0 ORDER BY `topicid` DESC LIMIT ?,10")) {
 			ps.setInt(1, guildId);
 			ps.setInt(2, page * 10);
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				topics.add(loadTopic(con, rs, guildId, rs.getInt(7)));
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					topics.add(loadTopic(con, rs, guildId, rs.getInt(7)));
+				}
 			}
-		} finally {
-			DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, rs, ps, null);
 		}
 		return Collections.unmodifiableList(topics);
 	}
 
 	private static List<BbsReply> loadReplies(Connection con, int guildId, int topicId) throws SQLException {
 		List<BbsReply> replies = new ArrayList<>();
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			ps = con.prepareStatement("SELECT `replyid`,`r`.`poster`,`r`.`posttime`,`r`.`content` FROM `guildbbsreplies` `r` LEFT JOIN `guildbbstopics` `t` ON `r`.`topicsid` = `t`.`topicsid` WHERE `guildid` = ? AND `topicid` = ?");
+		try (PreparedStatement ps = con.prepareStatement("SELECT `replyid`,`r`.`poster`,`r`.`posttime`,`r`.`content` FROM `guildbbsreplies` `r` LEFT JOIN `guildbbstopics` `t` ON `r`.`topicsid` = `t`.`topicsid` WHERE `guildid` = ? AND `topicid` = ?")) {
 			ps.setInt(1, guildId);
 			ps.setInt(2, topicId);
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				replies.add(new BbsReply(rs.getInt(1), rs.getInt(2), rs.getLong(3), rs.getString(4)));
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					replies.add(new BbsReply(rs.getInt(1), rs.getInt(2), rs.getLong(3), rs.getString(4)));
+				}
 			}
-		} finally {
-			DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, rs, ps, null);
 		}
 		return Collections.unmodifiableList(replies);
 	}
@@ -353,32 +337,31 @@ public class GuildListHandler {
 
 		int prevTransactionIsolation = Connection.TRANSACTION_REPEATABLE_READ;
 		boolean prevAutoCommit = true;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		try {
 			prevTransactionIsolation = con.getTransactionIsolation();
 			prevAutoCommit = con.getAutoCommit();
 			con.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 			con.setAutoCommit(false);
-			ps = con.prepareStatement("SELECT `" + safeField + "` FROM `" + safeTable + "` " + whereClause + " FOR UPDATE");
-			ps.setInt(1, keyValue1);
-			if (safeTableKey2 != null) {
-				ps.setInt(2, keyValue2);
-			}
-			rs = ps.executeQuery();
-			if (!rs.next()) {
-				return value;
-			}
+			try (PreparedStatement ps = con.prepareStatement("SELECT `" + safeField + "` FROM `" + safeTable + "` " + whereClause + " FOR UPDATE")) {
+				ps.setInt(1, keyValue1);
+				if (safeTableKey2 != null) {
+					ps.setInt(2, keyValue2);
+				}
+				try (ResultSet rs = ps.executeQuery()) {
+					if (!rs.next()) {
+						return value;
+					}
 
-			value = rs.getInt(1);
-			rs.close();
-			ps.close();
-			ps = con.prepareStatement("UPDATE `" + safeTable + "` SET `" + safeField + "` = `" + safeField + "` + 1 " + whereClause);
-			ps.setInt(1, keyValue1);
-			if (safeTableKey2 != null) {
-				ps.setInt(2, keyValue2);
+					value = rs.getInt(1);
+				}
 			}
-			ps.executeUpdate();
+			try (PreparedStatement ps = con.prepareStatement("UPDATE `" + safeTable + "` SET `" + safeField + "` = `" + safeField + "` + 1 " + whereClause)) {
+				ps.setInt(1, keyValue1);
+				if (safeTableKey2 != null) {
+					ps.setInt(2, keyValue2);
+				}
+				ps.executeUpdate();
+			}
 			con.commit();
 			return value;
 		} catch (Throwable ex) {
@@ -400,7 +383,6 @@ public class GuildListHandler {
 					LOG.log(Level.WARNING, "Could not reset Connection config after getting new " + description + " for guild BBS", ex);
 				}
 			}
-			DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, rs, ps, null);
 		}
 	}
 
@@ -436,19 +418,16 @@ public class GuildListHandler {
 						return;
 					}
 
-					long now = System.currentTimeMillis();
-					Connection con = null;
-					PreparedStatement ps = null;
-					try {
-						con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
-						if (topicId == -1 || topicId == 0) {
-							String query = "INSERT INTO `guildbbstopics` (`guildid`,`topicid`,`poster`,`posttime`,`subject`,`content`,`icon`) VALUES (?,?,?,?,?,?,?)";
-							if (topicId == -1) {
-								topicId = getAndIncrement(con, "guilds", "nextbbstopicid", "id", null, guild.getId(), -1, "topic ID");
-							} else if (topicId == 0) {
-								query += " ON DUPLICATE KEY UPDATE `posttime` = ?, `subject` = ?, `content` = ?, `icon` = ?";
-							}
-							ps = con.prepareStatement(query);
+				long now = System.currentTimeMillis();
+				try (Connection con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE)) {
+					if (topicId == -1 || topicId == 0) {
+						String query = "INSERT INTO `guildbbstopics` (`guildid`,`topicid`,`poster`,`posttime`,`subject`,`content`,`icon`) VALUES (?,?,?,?,?,?,?)";
+						if (topicId == -1) {
+							topicId = getAndIncrement(con, "guilds", "nextbbstopicid", "id", null, guild.getId(), -1, "topic ID");
+						} else if (topicId == 0) {
+							query += " ON DUPLICATE KEY UPDATE `posttime` = ?, `subject` = ?, `content` = ?, `icon` = ?";
+						}
+						try (PreparedStatement ps = con.prepareStatement(query)) {
 							ps.setInt(1, guild.getId());
 							ps.setInt(2, topicId);
 							ps.setInt(3, p.getId());
@@ -469,8 +448,9 @@ public class GuildListHandler {
 							} else {
 								topic = new BbsTopic(topicId, p.getId(), now, subject, content, icon, loadReplies(con, guild.getId(), topicId));
 							}
-						} else {
-							ps = con.prepareStatement("UPDATE `guildbbstopics` SET `posttime` = ?, `subject` = ?, `content` = ?, `icon` = ? WHERE `guildid` = ? AND `topicid` = ? AND (`poster` = ? OR ?)");
+						}
+					} else {
+						try (PreparedStatement ps = con.prepareStatement("UPDATE `guildbbstopics` SET `posttime` = ?, `subject` = ?, `content` = ?, `icon` = ? WHERE `guildid` = ? AND `topicid` = ? AND (`poster` = ? OR ?)")) {
 							ps.setLong(1, now);
 							ps.setString(2, subject);
 							ps.setString(3, content);
@@ -489,13 +469,12 @@ public class GuildListHandler {
 							}
 							topic = new BbsTopic(topicId, p.getId(), now, subject, content, icon, loadReplies(con, guild.getId(), topicId));
 						}
-					} catch (SQLException ex) {
-						LOG.log(Level.WARNING, "Could not edit guild BBS topic starter", ex);
-						return;
-					} finally {
-						DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, ps, con);
 					}
-				} finally {
+				} catch (SQLException ex) {
+					LOG.log(Level.WARNING, "Could not edit guild BBS topic starter", ex);
+					return;
+				}
+			} finally {
 					guild.unlockBbsWrite();
 				}
 
@@ -507,11 +486,8 @@ public class GuildListHandler {
 				try {
 					int topicId = packet.readInt();
 
-					Connection con = null;
-					PreparedStatement ps = null;
-					try {
-						con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
-						ps = con.prepareStatement("DELETE FROM `guildbbstopics` WHERE `guildid` = ? AND `topicid` = ? AND (`poster` = ? OR ?)");
+					try (Connection con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
+							PreparedStatement ps = con.prepareStatement("DELETE FROM `guildbbstopics` WHERE `guildid` = ? AND `topicid` = ? AND (`poster` = ? OR ?)")) {
 						ps.setInt(1, guild.getId());
 						ps.setInt(2, topicId);
 						ps.setInt(3, p.getId());
@@ -525,8 +501,6 @@ public class GuildListHandler {
 						}
 					} catch (SQLException ex) {
 						LOG.log(Level.WARNING, "Could not delete guild BBS topic", ex);
-					} finally {
-						DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, ps, con);
 					}
 				} finally {
 					guild.unlockBbsWrite();
@@ -541,23 +515,19 @@ public class GuildListHandler {
 				try {
 					int page = packet.readInt();
 
-					Connection con = null;
-					PreparedStatement ps = null;
-					ResultSet rs = null;
-					try {
-						con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
+					try (Connection con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE)) {
 						notice = loadTopic(con, guild.getId(), 0);
 						topics = loadTopics(con, guild.getId(), page);
-						ps = con.prepareStatement("SELECT COUNT(*) FROM `guildbbstopics` WHERE `guildid` = ? AND `topicid` <> 0");
-						ps.setInt(1, guild.getId());
-						rs = ps.executeQuery();
-						rs.next();
-						totalTopics = rs.getInt(1);
+						try (PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM `guildbbstopics` WHERE `guildid` = ? AND `topicid` <> 0")) {
+							ps.setInt(1, guild.getId());
+							try (ResultSet rs = ps.executeQuery()) {
+								rs.next();
+								totalTopics = rs.getInt(1);
+							}
+						}
 					} catch (SQLException ex) {
 						LOG.log(Level.WARNING, "Could not list guild BBS topics", ex);
 						return;
-					} finally {
-						DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, rs, ps, con);
 					}
 				} finally {
 					guild.unlockBbsRead();
@@ -570,9 +540,7 @@ public class GuildListHandler {
 				int topicId = packet.readInt();
 
 				BbsTopic topic;
-				Connection con = null;
-				try {
-					con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
+				try (Connection con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE)) {
 					topic = loadTopic(con, guild.getId(), topicId);
 					if (topic == null) {
 						return;
@@ -580,8 +548,6 @@ public class GuildListHandler {
 				} catch (SQLException ex) {
 					LOG.log(Level.WARNING, "Could not load guild BBS topic", ex);
 					return;
-				} finally {
-					DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, null, con);
 				}
 
 				gc.getSession().send(writeBbsTopic(topic));
@@ -594,26 +560,22 @@ public class GuildListHandler {
 					int topicId = packet.readInt();
 					String content = truncateTo(packet.readLengthPrefixedString(), 25);
 
-					Connection con = null;
-					PreparedStatement ps = null;
-					try {
-						con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
+					try (Connection con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE)) {
 						int replyId = getAndIncrement(con, "guildbbstopics", "nextreplyid", "guildid", "topicid", guild.getId(), topicId, "reply ID");
-						ps = con.prepareStatement("INSERT INTO `guildbbsreplies` (`topicsid`,`replyid`,`poster`,`posttime`,`content`) SELECT `topicsid`,?,?,?,? FROM `guildbbstopics` WHERE `guildid` = ? AND `topicid` = ?");
-						ps.setInt(1, replyId);
-						ps.setInt(2, p.getId());
-						ps.setLong(3, System.currentTimeMillis());
-						ps.setString(4, content);
-						ps.setInt(5, guild.getId());
-						ps.setInt(6, topicId);
-						ps.executeUpdate();
+						try (PreparedStatement ps = con.prepareStatement("INSERT INTO `guildbbsreplies` (`topicsid`,`replyid`,`poster`,`posttime`,`content`) SELECT `topicsid`,?,?,?,? FROM `guildbbstopics` WHERE `guildid` = ? AND `topicid` = ?")) {
+							ps.setInt(1, replyId);
+							ps.setInt(2, p.getId());
+							ps.setLong(3, System.currentTimeMillis());
+							ps.setString(4, content);
+							ps.setInt(5, guild.getId());
+							ps.setInt(6, topicId);
+							ps.executeUpdate();
+						}
 
 						topic = loadTopic(con, guild.getId(), topicId);
 					} catch (SQLException ex) {
 						LOG.log(Level.WARNING, "Could not create guild BBS topic reply", ex);
 						return;
-					} finally {
-						DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, ps, con);
 					}
 				} finally {
 					guild.unlockBbsWrite();
@@ -629,11 +591,8 @@ public class GuildListHandler {
 					int topicId = packet.readInt();
 					int replyId = packet.readInt();
 
-					Connection con = null;
-					PreparedStatement ps = null;
-					try {
-						con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
-						ps = con.prepareStatement("DELETE `r` FROM `guildbbsreplies` `r` LEFT JOIN `guildbbstopics` `t` ON `r`.`topicsid` = `t`.`topicsid` WHERE `guildid` = ? AND `topicid` = ? AND `replyid` = ? AND (`r`.`poster` = ? OR ?)");
+					try (Connection con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
+							PreparedStatement ps = con.prepareStatement("DELETE `r` FROM `guildbbsreplies` `r` LEFT JOIN `guildbbstopics` `t` ON `r`.`topicsid` = `t`.`topicsid` WHERE `guildid` = ? AND `topicid` = ? AND `replyid` = ? AND (`r`.`poster` = ? OR ?)")) {
 						ps.setInt(1, guild.getId());
 						ps.setInt(2, topicId);
 						ps.setInt(3, replyId);
@@ -652,8 +611,6 @@ public class GuildListHandler {
 					} catch (SQLException ex) {
 						LOG.log(Level.WARNING, "Could not delete guild BBS reply", ex);
 						return;
-					} finally {
-						DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, null, ps, con);
 					}
 				} finally {
 					guild.unlockBbsWrite();

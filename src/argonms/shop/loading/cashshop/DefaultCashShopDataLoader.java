@@ -38,52 +38,46 @@ public class DefaultCashShopDataLoader extends CashShopDataLoader {
 
 	@Override
 	public boolean loadAll() {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT `sn`,`itemid`,`quantity`,`price`,`period`,`gender`,`onsale` FROM `commodities`");
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				commodities.put(Integer.valueOf(rs.getInt(1)), new Commodity(rs.getInt(2), rs.getShort(3), rs.getInt(4), rs.getByte(5), rs.getByte(6), rs.getBoolean(7)));
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			try (PreparedStatement ps = con.prepareStatement("SELECT `sn`,`itemid`,`quantity`,`price`,`period`,`gender`,`onsale` FROM `commodities`");
+					ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					commodities.put(Integer.valueOf(rs.getInt(1)), new Commodity(rs.getInt(2), rs.getShort(3), rs.getInt(4), rs.getByte(5), rs.getByte(6), rs.getBoolean(7)));
+				}
 			}
-			rs.close();
-			ps.close();
 
 			//`package` doesn't have to be in order, but make sure everything in
 			//the same package is adjacent to one another
-			ps = con.prepareStatement("SELECT `package`,`sn` FROM `cashpackages` ORDER BY `package`");
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				int currentPackageId = rs.getInt(1);
-				List<Integer> currentPackage = new ArrayList<>();
-				currentPackage.add(Integer.valueOf(rs.getInt(2)));
-				while (rs.next()) {
-					int packageId = rs.getInt(1);
-					if (currentPackageId != packageId) {
-						int[] array = new int[currentPackage.size()];
-						for (int i = 0; i < array.length; i++) {
-							array[i] = currentPackage.get(i).intValue();
-						}
-						packages.put(Integer.valueOf(currentPackageId), array);
-						currentPackageId = packageId;
-						currentPackage.clear();
-					}
+			try (PreparedStatement ps = con.prepareStatement("SELECT `package`,`sn` FROM `cashpackages` ORDER BY `package`");
+					ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					int currentPackageId = rs.getInt(1);
+					List<Integer> currentPackage = new ArrayList<>();
 					currentPackage.add(Integer.valueOf(rs.getInt(2)));
+					while (rs.next()) {
+						int packageId = rs.getInt(1);
+						if (currentPackageId != packageId) {
+							int[] array = new int[currentPackage.size()];
+							for (int i = 0; i < array.length; i++) {
+								array[i] = currentPackage.get(i).intValue();
+							}
+							packages.put(Integer.valueOf(currentPackageId), array);
+							currentPackageId = packageId;
+							currentPackage.clear();
+						}
+						currentPackage.add(Integer.valueOf(rs.getInt(2)));
+					}
+					int[] array = new int[currentPackage.size()];
+					for (int i = 0; i < array.length; i++) {
+						array[i] = currentPackage.get(i).intValue();
+					}
+					packages.put(Integer.valueOf(currentPackageId), array);
 				}
-				int[] array = new int[currentPackage.size()];
-				for (int i = 0; i < array.length; i++) {
-					array[i] = currentPackage.get(i).intValue();
-				}
-				packages.put(Integer.valueOf(currentPackageId), array);
 			}
 			return true;
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Error loading commodities and cash packages.", e);
 			return false;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 	}
 }

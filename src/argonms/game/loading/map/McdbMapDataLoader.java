@@ -37,36 +37,27 @@ public class McdbMapDataLoader extends MapDataLoader {
 
 	@Override
 	protected void load(int mapid) {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		MapStats stats = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.WZ);
-			ps = con.prepareStatement("SELECT * FROM `mapdata` WHERE `mapid` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.WZ);
+				PreparedStatement ps = con.prepareStatement("SELECT * FROM `mapdata` WHERE `mapid` = ?")) {
 			ps.setInt(1, mapid);
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				stats = new MapStats(mapid);
-				doWork(rs, mapid, stats, con);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					stats = new MapStats(mapid);
+					doWork(rs, mapid, stats, con);
+				}
 			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not read MCDB data for map " + mapid, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
 		}
 		mapStats.put(Integer.valueOf(mapid), stats);
 	}
 
 	@Override
 	public boolean loadAll() {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.WZ);
-			ps = con.prepareStatement("SELECT * FROM `mapdata`");
-			rs = ps.executeQuery();
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.WZ);
+				PreparedStatement ps = con.prepareStatement("SELECT * FROM `mapdata`");
+				ResultSet rs = ps.executeQuery()) {
 			while (rs.next()) {
 				int mapid = rs.getInt(1);
 				MapStats stats = new MapStats(mapid);
@@ -77,8 +68,6 @@ public class McdbMapDataLoader extends MapDataLoader {
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load all map data from MCDB.", ex);
 			return false;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
 		}
 	}
 
@@ -87,22 +76,17 @@ public class McdbMapDataLoader extends MapDataLoader {
 		if (mapStats.containsKey(mapid)) {
 			return true;
 		}
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		boolean exists = false;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.WZ);
-			ps = con.prepareStatement("SELECT * FROM `mapdata` WHERE `mapid` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.WZ);
+				PreparedStatement ps = con.prepareStatement("SELECT * FROM `mapdata` WHERE `mapid` = ?")) {
 			ps.setInt(1, mapid);
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				exists = true;
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					exists = true;
+				}
 			}
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Could not use MCDB to determine whether map " + mapid + " is valid.", e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
 		}
 		return exists;
 	}
@@ -162,117 +146,101 @@ public class McdbMapDataLoader extends MapDataLoader {
 	}
 
 	private void loadLife(int mapid, MapStats stats, Connection con) throws SQLException {
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			ps = con.prepareStatement("SELECT * FROM `maplifedata` where `mapid` = ?");
+		try (PreparedStatement ps = con.prepareStatement("SELECT * FROM `maplifedata` where `mapid` = ?")) {
 			ps.setInt(1, mapid);
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				int id = rs.getInt(2);
-				SpawnData l = new SpawnData();
-				l.setType(rs.getInt(3) == 0 ? 'm' : 'n');
-				l.setDataId(rs.getInt(4));
-				l.setX(rs.getShort(5));
-				l.setY(rs.getShort(6));
-				l.setCy(rs.getShort(6));
-				l.setFoothold(rs.getShort(7));
-				l.setRx0(rs.getShort(8));
-				l.setRx1(rs.getShort(9));
-				l.setMobTime(rs.getInt(10));
-				stats.addLife(id, l);
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					int id = rs.getInt(2);
+					SpawnData l = new SpawnData();
+					l.setType(rs.getInt(3) == 0 ? 'm' : 'n');
+					l.setDataId(rs.getInt(4));
+					l.setX(rs.getShort(5));
+					l.setY(rs.getShort(6));
+					l.setCy(rs.getShort(6));
+					l.setFoothold(rs.getShort(7));
+					l.setRx0(rs.getShort(8));
+					l.setRx1(rs.getShort(9));
+					l.setMobTime(rs.getInt(10));
+					stats.addLife(id, l);
+				}
 			}
 		} catch (SQLException e) {
 			throw new SQLException("Failed to load spawns of map " + mapid, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, null);
 		}
 	}
 
 	private void loadReactors(int mapid, MapStats stats, Connection con) throws SQLException {
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			ps = con.prepareStatement("SELECT * FROM `mapreactordata` where `mapid` = ?");
+		try (PreparedStatement ps = con.prepareStatement("SELECT * FROM `mapreactordata` where `mapid` = ?")) {
 			ps.setInt(1, mapid);
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				int id = rs.getInt(2);
-				ReactorData rt = new ReactorData();
-				rt.setDataId(rs.getInt(3));
-				rt.setX(rs.getShort(4));
-				rt.setY(rs.getShort(5));
-				rt.setReactorTime(rs.getInt(6));
-				rt.setName("");
-				stats.addReactor(id, rt);
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					int id = rs.getInt(2);
+					ReactorData rt = new ReactorData();
+					rt.setDataId(rs.getInt(3));
+					rt.setX(rs.getShort(4));
+					rt.setY(rs.getShort(5));
+					rt.setReactorTime(rs.getInt(6));
+					rt.setName("");
+					stats.addReactor(id, rt);
+				}
 			}
 		} catch (SQLException e) {
 			throw new SQLException("Failed to load reactors of map " + mapid, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, null);
 		}
 	}
 
 	private void loadFootholds(int mapid, MapStats stats, Connection con) throws SQLException {
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			ps = con.prepareStatement("SELECT * FROM `mapfootholddata` where `mapid` = ?");
+		try (PreparedStatement ps = con.prepareStatement("SELECT * FROM `mapfootholddata` where `mapid` = ?")) {
 			ps.setInt(1, mapid);
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				Foothold fh = new Foothold(rs.getShort(2));
-				fh.setX1(rs.getShort(3));
-				fh.setY1(rs.getShort(4));
-				fh.setX2(rs.getShort(5));
-				fh.setY2(rs.getShort(6));
-				fh.setPrev(rs.getShort(7));
-				fh.setNext(rs.getShort(8));
-				stats.addFoothold(fh);
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					Foothold fh = new Foothold(rs.getShort(2));
+					fh.setX1(rs.getShort(3));
+					fh.setY1(rs.getShort(4));
+					fh.setX2(rs.getShort(5));
+					fh.setY2(rs.getShort(6));
+					fh.setPrev(rs.getShort(7));
+					fh.setNext(rs.getShort(8));
+					stats.addFoothold(fh);
+				}
 			}
 		} catch (SQLException e) {
 			throw new SQLException("Failed to load footholds of map " + mapid, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, null);
 		}
 	}
 
 	private void loadPortals(int mapid, MapStats stats, Connection con) throws SQLException {
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			ps = con.prepareStatement("SELECT * FROM `mapportaldata` where `mapid` = ?");
+		try (PreparedStatement ps = con.prepareStatement("SELECT * FROM `mapportaldata` where `mapid` = ?")) {
 			ps.setInt(1, mapid);
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				int id = rs.getInt(2);
-				PortalData p = new PortalData();
-				String name = rs.getString(3);
-				p.setPortalName(name);
-				p.setPosition(rs.getShort(4), rs.getShort(5));
-				int to = rs.getInt(6);
-				byte type = 0;
-				String script = rs.getString(8);
-				if (to != GlobalConstants.NULL_MAP) { //warp portal
-					type = 2; //7 or 8?
-				} //1 or 2?
-				else if ("sp".equals(name)) { //spawnpoint
-					type = 0;
-				} else if ("tp".equals(name)) { //mystic doors
-					type = 6;
-				} else if (script != null && !script.isEmpty()) { //scripted portal
-					type = 7;
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					int id = rs.getInt(2);
+					PortalData p = new PortalData();
+					String name = rs.getString(3);
+					p.setPortalName(name);
+					p.setPosition(rs.getShort(4), rs.getShort(5));
+					int to = rs.getInt(6);
+					byte type = 0;
+					String script = rs.getString(8);
+					if (to != GlobalConstants.NULL_MAP) { //warp portal
+						type = 2; //7 or 8?
+					} //1 or 2?
+					else if ("sp".equals(name)) { //spawnpoint
+						type = 0;
+					} else if ("tp".equals(name)) { //mystic doors
+						type = 6;
+					} else if (script != null && !script.isEmpty()) { //scripted portal
+						type = 7;
+					}
+					p.setPortalType(type);
+					p.setTargetMapId(to);
+					p.setTargetName(rs.getString(7));
+					p.setScript(script);
+					stats.addPortal(id, p);
 				}
-				p.setPortalType(type);
-				p.setTargetMapId(to);
-				p.setTargetName(rs.getString(7));
-				p.setScript(script);
-				stats.addPortal(id, p);
 			}
 		} catch (SQLException e) {
 			throw new SQLException("Failed to load portals of map " + mapid, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, null);
 		}
 	}
 }

@@ -264,36 +264,34 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 				} catch (SQLException ex) {
 					LOG.log(Level.WARNING, "Could not reset Connection config after saving character " + getDataId(), ex);
 				}
+				try {
+					con.close();
+				} catch (SQLException ex) {
+					LOG.log(Level.WARNING, "Could not close Connection after saving character " + getDataId(), ex);
+				}
 			}
-			DatabaseManager.cleanup(DatabaseType.STATE, null, null, con);
 		}
 	}
 
 	private void updateDbAccount(Connection con) throws SQLException {
-		PreparedStatement ps = null;
-		try {
-			ps = con.prepareStatement("UPDATE `accounts` SET `storageslots` = ?, `storagemesos` = ? WHERE `id` = ?");
+		try (PreparedStatement ps = con.prepareStatement("UPDATE `accounts` SET `storageslots` = ?, `storagemesos` = ? WHERE `id` = ?")) {
 			ps.setShort(1, storage.getMaxSlots());
 			ps.setInt(2, storage.getMesos());
 			ps.setInt(3, client.getAccountId());
 			ps.executeUpdate();
 		} catch (SQLException e) {
 			throw new SQLException("Failed to save account-info of character " + name, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, null);
 		}
 	}
 
 	private void updateDbStats(Connection con) throws SQLException {
-		PreparedStatement ps = null;
-		try {
-			ps = con.prepareStatement("UPDATE `characters` SET "
-					+ "`accountid` = ?, `world` = ?, `name` = ?, `gender` = ?, `skin` = ?, `eyes` = ?, `hair` = ?, "
-					+ "`level` = ?, `job` = ?, `str` = ?, `dex` = ?, `int` = ?, `luk` = ?, "
-					+ "`hp` = ?, `maxhp` = ?, `mp` = ?, `maxmp` = ?, `ap` = ?, `sp` = ?, `exp` = ?, `fame` = ?, "
-					+ "`spouse` = ?, `map` = ?, `spawnpoint` = ?, `mesos` = ?, "
-					+ "`equipslots` = ?, `useslots` = ?, `setupslots` = ?, `etcslots` = ?, `cashslots` = ?, "
-					+ "`buddyslots` = ?, `gm` = ? WHERE `id` = ?");
+		try (PreparedStatement ps = con.prepareStatement("UPDATE `characters` SET "
+				+ "`accountid` = ?, `world` = ?, `name` = ?, `gender` = ?, `skin` = ?, `eyes` = ?, `hair` = ?, "
+				+ "`level` = ?, `job` = ?, `str` = ?, `dex` = ?, `int` = ?, `luk` = ?, "
+				+ "`hp` = ?, `maxhp` = ?, `mp` = ?, `maxmp` = ?, `ap` = ?, `sp` = ?, `exp` = ?, `fame` = ?, "
+				+ "`spouse` = ?, `map` = ?, `spawnpoint` = ?, `mesos` = ?, "
+				+ "`equipslots` = ?, `useslots` = ?, `setupslots` = ?, `etcslots` = ?, `cashslots` = ?, "
+				+ "`buddyslots` = ?, `gm` = ? WHERE `id` = ?")) {
 			ps.setInt(1, client.getAccountId());
 			ps.setByte(2, client.getWorld());
 			ps.setString(3, name);
@@ -334,21 +332,16 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 			}
 		} catch (SQLException e) {
 			throw new SQLException("Failed to save stats of character " + name, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, null);
 		}
 	}
 
 	private void updateDbMapMemory(Connection con) throws SQLException {
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			ps = con.prepareStatement("DELETE FROM `mapmemory` WHERE `characterid` = ?");
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `mapmemory` WHERE `characterid` = ?")) {
 			ps.setInt(1, getDataId());
 			ps.executeUpdate();
-			ps.close();
+		}
 
-			ps = con.prepareStatement("INSERT INTO `mapmemory` (`characterid`,`key`,`value`,`spawnpoint`) VALUES (?,?,?,?)");
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `mapmemory` (`characterid`,`key`,`value`,`spawnpoint`) VALUES (?,?,?,?)")) {
 			ps.setInt(1, getDataId());
 			for (Entry<MapMemoryVariable, Pair<Integer, Byte>> entry : rememberedMaps.entrySet()) {
 				ps.setString(2, entry.getKey().toString());
@@ -357,8 +350,6 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 				ps.addBatch();
 			}
 			ps.executeBatch();
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, null);
 		}
 	}
 
@@ -366,22 +357,18 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 		String invUpdate = "DELETE FROM `inventoryitems` WHERE "
 				+ "`characterid` = ? AND `inventorytype` <= " + InventoryType.CASH.byteValue()
 				+ " OR `accountid` = ? AND `inventorytype` = " + InventoryType.STORAGE.byteValue();
-		PreparedStatement ps = null;
-		PreparedStatement ips = null;
-		ResultSet rs = null;
-		try {
-			ps = con.prepareStatement(invUpdate);
+		try (PreparedStatement ps = con.prepareStatement(invUpdate)) {
 			ps.setInt(1, getDataId());
 			ps.setInt(2, client.getAccountId());
 			ps.executeUpdate();
-			ps.close();
+		}
 
-			EnumMap<InventoryType, IInventory> union = new EnumMap<>(getInventories());
-			union.put(InventoryType.STORAGE, storage);
-			commitInventory(con, union);
+		EnumMap<InventoryType, IInventory> union = new EnumMap<>(getInventories());
+		union.put(InventoryType.STORAGE, storage);
+		commitInventory(con, union);
 
-			Inventory cashInv = getInventories().get(InventoryType.CASH);
-			ps = con.prepareStatement("INSERT INTO `petignoreitems` (`petinventoryitemid`,`ignoreitem`) SELECT `inventoryitemid`,? FROM `cashshoppurchases` WHERE `uniqueid` = ?");
+		Inventory cashInv = getInventories().get(InventoryType.CASH);
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `petignoreitems` (`petinventoryitemid`,`ignoreitem`) SELECT `inventoryitemid`,? FROM `cashshoppurchases` WHERE `uniqueid` = ?")) {
 			for (Map.Entry<Long, int[]> entry : petIgnoreItems.entrySet()) {
 				long uniqueId = entry.getKey().longValue();
 				boolean inInventory = false;
@@ -404,21 +391,16 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 			ps.executeBatch();
 		} catch (SQLException e) {
 			throw new SQLException("Failed to save inventory of character " + name, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ips, null);
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, null);
 		}
 	}
 
 	private void updateDbSkills(Connection con) throws SQLException {
-		PreparedStatement ps = null;
-		try {
-			ps = con.prepareStatement("DELETE FROM `skills` WHERE `characterid` = ?");
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `skills` WHERE `characterid` = ?")) {
 			ps.setInt(1, getDataId());
 			ps.executeUpdate();
-			ps.close();
+		}
 
-			ps = con.prepareStatement("INSERT INTO `skills` (`characterid`,`skillid`,`level`,`mastery`) VALUES (?,?,?,?)");
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `skills` (`characterid`,`skillid`,`level`,`mastery`) VALUES (?,?,?,?)")) {
 			ps.setInt(1, getDataId());
 			for (Entry<Integer, SkillEntry> skill : skillEntries.entrySet()) {
 				SkillEntry skillLevel = skill.getValue();
@@ -430,20 +412,16 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 			ps.executeBatch();
 		} catch (SQLException e) {
 			throw new SQLException("Failed to save skill levels of character " + name, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, null);
 		}
 	}
 
 	private void updateDbCooldowns(Connection con) throws SQLException {
-		PreparedStatement ps = null;
-		try {
-			ps = con.prepareStatement("DELETE FROM `cooldowns` WHERE `characterid` = ?");
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `cooldowns` WHERE `characterid` = ?")) {
 			ps.setInt(1, getDataId());
 			ps.executeUpdate();
-			ps.close();
+		}
 
-			ps = con.prepareStatement("INSERT INTO `cooldowns` (`characterid`,`skillid`,`remaining`) VALUES (?,?,?)");
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `cooldowns` (`characterid`,`skillid`,`remaining`) VALUES (?,?,?)")) {
 			ps.setInt(1, getDataId());
 			for (Entry<Integer, Cooldown> cooling : cooldowns.entrySet()) {
 				ps.setInt(2, cooling.getKey().intValue());
@@ -453,20 +431,16 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 			ps.executeBatch();
 		} catch (SQLException e) {
 			throw new SQLException("Failed to save cooldowns of character " + name, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, null);
 		}
 	}
 
 	private void updateDbBindings(Connection con) throws SQLException {
-		PreparedStatement ps = null;
-		try {
-			ps = con.prepareStatement("DELETE FROM `keymaps` WHERE `characterid` = ?");
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `keymaps` WHERE `characterid` = ?")) {
 			ps.setInt(1, getDataId());
 			ps.executeUpdate();
-			ps.close();
+		}
 
-			ps = con.prepareStatement("INSERT INTO `keymaps` (`characterid`,`key`,`type`,`action`) VALUES (?,?,?,?)");
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `keymaps` (`characterid`,`key`,`type`,`action`) VALUES (?,?,?,?)")) {
 			ps.setInt(1, getDataId());
 			for (Entry<Byte, KeyBinding> entry : bindings.entrySet()) {
 				KeyBinding binding = entry.getValue();
@@ -476,16 +450,16 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 				ps.addBatch();
 			}
 			ps.executeBatch();
-			ps.close();
+		}
 
-			ps = con.prepareStatement("DELETE FROM `skillmacros` WHERE `characterid` = ?");
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `skillmacros` WHERE `characterid` = ?")) {
 			ps.setInt(1, getDataId());
 			ps.executeUpdate();
-			ps.close();
+		}
 
-			ps = con.prepareStatement("INSERT INTO `skillmacros` "
-					+ "(`characterid`,`position`,`name`,`silent`,`skill1`,`skill2`,`skill3`) "
-					+ "VALUES (?,?,?,?,?,?,?)");
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `skillmacros` "
+				+ "(`characterid`,`position`,`name`,`silent`,`skill1`,`skill2`,`skill3`) "
+				+ "VALUES (?,?,?,?,?,?,?)")) {
 			ps.setInt(1, getDataId());
 			for (byte pos = 0; pos < skillMacros.length; pos++) {
 				SkillMacro macro = skillMacros[pos];
@@ -504,21 +478,17 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 			ps.executeBatch();
 		} catch (SQLException e) {
 			throw new SQLException("Failed to save keymap/macros of character " + name, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, null);
 		}
 	}
 
 	private void updateDbBuddies(Connection con) throws SQLException {
-		PreparedStatement ps = null;
-		try {
-			ps = con.prepareStatement("DELETE FROM `buddyentries` WHERE `owner` = ?");
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `buddyentries` WHERE `owner` = ?")) {
 			ps.setInt(1, getDataId());
 			ps.executeUpdate();
-			ps.close();
+		}
 
-			ps = con.prepareStatement("INSERT INTO `buddyentries` "
-					+ "(`owner`,`buddy`,`buddyname`,`status`) VALUES (?,?,?,?)");
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `buddyentries` "
+				+ "(`owner`,`buddy`,`buddyname`,`status`) VALUES (?,?,?,?)")) {
 			ps.setInt(1, getDataId());
 			for (BuddyListEntry buddy : buddies.getBuddies()) {
 				ps.setInt(2, buddy.getId());
@@ -533,44 +503,36 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 				ps.addBatch();
 			}
 			ps.executeBatch();
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, null);
 		}
 	}
 
 	private void updateDbParty(Connection con) throws SQLException {
-		PreparedStatement ps = null;
-		try {
-			ps = con.prepareStatement("DELETE FROM `parties` WHERE `characterid` = ?");
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `parties` WHERE `characterid` = ?")) {
 			ps.setInt(1, getDataId());
 			ps.executeUpdate();
+		}
 
-			if (party != null) {
-				ps.close();
-				ps = con.prepareStatement("INSERT INTO `parties` "
-						+ "(`world`,`partyid`,`characterid`,`leader`) VALUES (?,?,?,?)");
+		if (party != null) {
+			try (PreparedStatement ps = con.prepareStatement("INSERT INTO `parties` "
+					+ "(`world`,`partyid`,`characterid`,`leader`) VALUES (?,?,?,?)")) {
 				ps.setByte(1, getClient().getWorld());
 				ps.setInt(2, party.getId());
 				ps.setInt(3, getDataId());
 				ps.setBoolean(4, party.getLeader() == getDataId());
 				ps.executeUpdate();
 			}
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, null);
 		}
 	}
 
 	private void updateDbGuilds(Connection con) throws SQLException {
-		PreparedStatement ps = null;
-		try {
-			ps = con.prepareStatement("DELETE FROM `guildmembers` WHERE `characterid` = ?");
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `guildmembers` WHERE `characterid` = ?")) {
 			ps.setInt(1, getDataId());
 			ps.executeUpdate();
+		}
 
-			if (guild != null) {
-				ps.close();
-				ps = con.prepareStatement("INSERT INTO `guildmembers` "
-						+ "(`guildid`,`characterid`,`rank`,`signature`,`alliancerank`) VALUES (?,?,?,?,?)");
+		if (guild != null) {
+			try (PreparedStatement ps = con.prepareStatement("INSERT INTO `guildmembers` "
+					+ "(`guildid`,`characterid`,`rank`,`signature`,`alliancerank`) VALUES (?,?,?,?,?)")) {
 				ps.setInt(1, guild.getId());
 				ps.setInt(2, getDataId());
 				GuildList.Member member = guild.getMember(getId());
@@ -579,27 +541,21 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 				ps.setByte(5, member.getAllianceRank());
 				ps.executeUpdate();
 			}
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, null);
 		}
 	}
 
 	private void updateDbQuests(Connection con) throws SQLException {
-		PreparedStatement ps = null;
-		PreparedStatement mps = null;
-		ResultSet rs = null;
-		try {
-			ps = con.prepareStatement("DELETE FROM `queststatuses` WHERE `characterid` = ?");
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `queststatuses` WHERE `characterid` = ?")) {
 			ps.setInt(1, getDataId());
 			ps.executeUpdate();
-			ps.close();
+		}
 
-			ps = con.prepareStatement("INSERT INTO `queststatuses` "
-					+ "(`characterid`,`questid`,`state`,`completed`) VALUES (?,?,?,?)",
-					Statement.RETURN_GENERATED_KEYS);
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `queststatuses` "
+				+ "(`characterid`,`questid`,`state`,`completed`) VALUES (?,?,?,?)",
+				Statement.RETURN_GENERATED_KEYS);
+				PreparedStatement mps = con.prepareStatement("INSERT INTO `questmobprogress` "
+				+ "(`queststatusid`,`mobid`,`count`) VALUES (?,?,?)")) {
 			ps.setInt(1, getDataId());
-			mps = con.prepareStatement("INSERT INTO `questmobprogress` "
-					+ "(`queststatusid`,`mobid`,`count`) VALUES (?,?,?)");
 			for (Entry<Short, QuestEntry> entry : questStatuses.entrySet()) {
 				QuestEntry status = entry.getValue();
 				ps.setShort(2, entry.getKey().shortValue());
@@ -607,9 +563,10 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 				ps.setLong(4, status.getCompletionTime());
 				if (status.getState() == QuestEntry.STATE_STARTED) {
 					ps.executeUpdate();
-					rs = ps.getGeneratedKeys();
-					int questEntryId = rs.next() ? rs.getInt(1) : -1;
-					rs.close();
+					int questEntryId;
+					try (ResultSet rs = ps.getGeneratedKeys()) {
+						questEntryId = rs.next() ? rs.getInt(1) : -1;
+					}
 
 					mps.setInt(1, questEntryId);
 					for (Entry<Integer, ? extends Number> mobProgress : status.getAllMobCounts().entrySet()) {
@@ -625,23 +582,18 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 			mps.executeBatch();
 		} catch (SQLException e) {
 			throw new SQLException("Failed to save quest states of character " + name, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, mps, null);
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, null);
 		}
 	}
 
 	private void updateDbMinigameStats(Connection con) throws SQLException {
-		PreparedStatement ps = null;
-		try {
-			ps = con.prepareStatement("DELETE FROM `minigamescores` WHERE `characterid` = ?");
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `minigamescores` WHERE `characterid` = ?")) {
 			ps.setInt(1, getDataId());
 			ps.executeUpdate();
-			ps.close();
+		}
 
-			ps = con.prepareStatement("INSERT INTO `minigamescores` "
-					+ "(`characterid`,`gametype`,`wins`,`ties`,`losses`) "
-					+ "VALUES (?, ?, ?, ?, ?)");
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `minigamescores` "
+				+ "(`characterid`,`gametype`,`wins`,`ties`,`losses`) "
+				+ "VALUES (?, ?, ?, ?, ?)")) {
 			ps.setInt(1, getDataId());
 			synchronized(minigameStats) {
 				for (Entry<MiniroomType, Map<MinigameResult, AtomicInteger>> stats : minigameStats.entrySet()) {
@@ -655,20 +607,16 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 			ps.executeBatch();
 		} catch (SQLException e) {
 			throw new SQLException("Failed to save minigame stats of character " + name, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, null);
 		}
 	}
 
 	private void updateDbFameLog(Connection con) throws SQLException {
-		PreparedStatement ps = null;
-		try {
-			ps = con.prepareStatement("DELETE FROM `famelog` WHERE `from` = ?");
+		try (PreparedStatement ps = con.prepareStatement("DELETE FROM `famelog` WHERE `from` = ?")) {
 			ps.setInt(1, getDataId());
 			ps.executeUpdate();
-			ps.close();
+		}
 
-			ps = con.prepareStatement("INSERT INTO `famelog` (`from`,`to`,`millis`) VALUES (?,?,?)");
+		try (PreparedStatement ps = con.prepareStatement("INSERT INTO `famelog` (`from`,`to`,`millis`) VALUES (?,?,?)")) {
 			ps.setInt(1, getDataId());
 			long threshold = System.currentTimeMillis() - 1000L * 60 * 60 * 24 * 30;
 			synchronized(famesThisMonth) {
@@ -685,109 +633,102 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 			ps.executeBatch();
 		} catch (SQLException e) {
 			throw new SQLException("Failed to save fame log of character " + name, e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, null);
 		}
 	}
 
 	public static GameCharacter loadPlayer(GameClient c, int id) {
-		Connection con = null;
-		PreparedStatement ps = null;
-		PreparedStatement ips = null;
-		ResultSet rs = null;
-		ResultSet irs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT `c`.*,`a`.`name`,`a`.`storageslots`,`a`.`storagemesos` "
-				+ "FROM `characters` `c` LEFT JOIN `accounts` `a` ON `c`.`accountid` = `a`.`id` "
-				+ "WHERE `c`.`id` = ?");
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			if (!rs.next()) {
-				LOG.log(Level.WARNING, "Client requested to load a nonexistent character w/ id {0} (account {1}).",
-					new Object[]{id, c.getAccountId()});
-				return null;
-			}
-			int accountid = rs.getInt(1);
-			c.setAccountId(accountid); //we aren't aware of our accountid yet
-			byte world = rs.getByte(2);
-			if (world != c.getWorld()) { //we are aware of our world
-				LOG.log(Level.WARNING, "Client account {0} is trying to load character {1} on world {2} but exists on world {3}",
-					new Object[]{accountid, id, c.getWorld(), world});
-				return null;
-			}
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			int accountid;
 			GameCharacter p = new GameCharacter();
-			p.client = c;
-			p.loadPlayerStats(rs, id);
-			p.map = GameServer.getChannel(c.getChannel()).getMapFactory().getMap(p.savedMapId);
-			int forcedReturn = p.map.getForcedReturnMap();
-			if (forcedReturn != GlobalConstants.NULL_MAP) {
-				p.map = GameServer.getChannel(p.getClient().getChannel()).getMapFactory().getMap(forcedReturn);
-				p.savedSpawnPoint = 0;
+			try (PreparedStatement ps = con.prepareStatement("SELECT `c`.*,`a`.`name`,`a`.`storageslots`,`a`.`storagemesos` "
+					+ "FROM `characters` `c` LEFT JOIN `accounts` `a` ON `c`.`accountid` = `a`.`id` "
+					+ "WHERE `c`.`id` = ?")) {
+				ps.setInt(1, id);
+				try (ResultSet rs = ps.executeQuery()) {
+					if (!rs.next()) {
+						LOG.log(Level.WARNING, "Client requested to load a nonexistent character w/ id {0} (account {1}).",
+								new Object[]{id, c.getAccountId()});
+						return null;
+					}
+					accountid = rs.getInt(1);
+					c.setAccountId(accountid); //we aren't aware of our accountid yet
+					byte world = rs.getByte(2);
+					if (world != c.getWorld()) { //we are aware of our world
+						LOG.log(Level.WARNING, "Client account {0} is trying to load character {1} on world {2} but exists on world {3}",
+								new Object[]{accountid, id, c.getWorld(), world});
+						return null;
+					}
+					p.client = c;
+					p.loadPlayerStats(rs, id);
+					p.map = GameServer.getChannel(c.getChannel()).getMapFactory().getMap(p.savedMapId);
+					int forcedReturn = p.map.getForcedReturnMap();
+					if (forcedReturn != GlobalConstants.NULL_MAP) {
+						p.map = GameServer.getChannel(p.getClient().getChannel()).getMapFactory().getMap(forcedReturn);
+						p.savedSpawnPoint = 0;
+					}
+					p.setPosition(p.map.getPortalPosition(p.savedSpawnPoint));
+
+					p.maxHp = p.baseMaxHp;
+					p.maxMp = p.baseMaxMp;
+
+					p.mesos = rs.getInt(26);
+					p.buddies = new BuddyList(rs.getShort(32));
+					c.setAccountName(rs.getString(42));
+					p.storage = new StorageInventory(rs.getShort(43), rs.getInt(44));
+				}
 			}
-			p.setPosition(p.map.getPortalPosition(p.savedSpawnPoint));
 
-			p.maxHp = p.baseMaxHp;
-			p.maxMp = p.baseMaxMp;
-
-			p.mesos = rs.getInt(26);
-			p.buddies = new BuddyList(rs.getShort(32));
-			c.setAccountName(rs.getString(42));
-			p.storage = new StorageInventory(rs.getShort(43), rs.getInt(44));
-			rs.close();
-			ps.close();
-
-			ps = con.prepareStatement("SELECT `key`,`value`,`spawnpoint` FROM `mapmemory` WHERE `characterid` = ?");
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				p.rememberedMaps.put(MapMemoryVariable.valueOf(rs.getString(1)), new Pair<Integer, Byte>(Integer.valueOf(rs.getInt(2)), Byte.valueOf(rs.getByte(3))));
+			try (PreparedStatement ps = con.prepareStatement("SELECT `key`,`value`,`spawnpoint` FROM `mapmemory` WHERE `characterid` = ?")) {
+				ps.setInt(1, id);
+				try (ResultSet rs = ps.executeQuery()) {
+					while (rs.next()) {
+						p.rememberedMaps.put(MapMemoryVariable.valueOf(rs.getString(1)), new Pair<Integer, Byte>(Integer.valueOf(rs.getInt(2)), Byte.valueOf(rs.getByte(3))));
+					}
+				}
 			}
-			rs.close();
-			ps.close();
 
 			EnumMap<InventoryType, IInventory> invUnion = new EnumMap<>(p.getInventories());
 			invUnion.put(InventoryType.STORAGE, p.storage);
-			ps = con.prepareStatement("SELECT * FROM `inventoryitems` WHERE "
-				+ "`characterid` = ? AND `inventorytype` <= " + InventoryType.CASH.byteValue()
-				+ " OR `accountid` = ? AND `inventorytype` = " + InventoryType.STORAGE.byteValue());
-			ps.setInt(1, id);
-			ps.setInt(2, accountid);
-			rs = ps.executeQuery();
-			p.loadInventory(con, rs, invUnion);
-			rs.close();
-			ps.close();
-			ps = con.prepareStatement("SELECT `c`.`uniqueid`,`p`.`ignoreitem` FROM `petignoreitems` `p` "
-				+ "LEFT JOIN `inventoryitems` `i` ON `p`.`petinventoryitemid` = `i`.`inventoryitemid` "
-				+ "LEFT JOIN `cashshoppurchases` `c` ON `i`.`inventoryitemid` = `c`.`inventoryitemid` "
-				+ "WHERE `i`.`characterid` = ? ORDER BY `c`.`uniqueid`");
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				long currentUniqueId = rs.getLong(1);
-				List<Integer> currentItemsForPet = new ArrayList<>();
-				currentItemsForPet.add(Integer.valueOf(rs.getInt(2)));
-				while (rs.next()) {
-					long uniqueId = rs.getLong(1);
-					if (currentUniqueId != uniqueId) {
+			try (PreparedStatement ps = con.prepareStatement("SELECT * FROM `inventoryitems` WHERE "
+					+ "`characterid` = ? AND `inventorytype` <= " + InventoryType.CASH.byteValue()
+					+ " OR `accountid` = ? AND `inventorytype` = " + InventoryType.STORAGE.byteValue())) {
+				ps.setInt(1, id);
+				ps.setInt(2, accountid);
+				try (ResultSet rs = ps.executeQuery()) {
+					p.loadInventory(con, rs, invUnion);
+				}
+			}
+			try (PreparedStatement ps = con.prepareStatement("SELECT `c`.`uniqueid`,`p`.`ignoreitem` FROM `petignoreitems` `p` "
+					+ "LEFT JOIN `inventoryitems` `i` ON `p`.`petinventoryitemid` = `i`.`inventoryitemid` "
+					+ "LEFT JOIN `cashshoppurchases` `c` ON `i`.`inventoryitemid` = `c`.`inventoryitemid` "
+					+ "WHERE `i`.`characterid` = ? ORDER BY `c`.`uniqueid`")) {
+				ps.setInt(1, id);
+				try (ResultSet rs = ps.executeQuery()) {
+					if (rs.next()) {
+						long currentUniqueId = rs.getLong(1);
+						List<Integer> currentItemsForPet = new ArrayList<>();
+						currentItemsForPet.add(Integer.valueOf(rs.getInt(2)));
+						while (rs.next()) {
+							long uniqueId = rs.getLong(1);
+							if (currentUniqueId != uniqueId) {
+								int[] array = new int[currentItemsForPet.size()];
+								for (int i = 0; i < array.length; i++) {
+									array[i] = currentItemsForPet.get(i).intValue();
+								}
+								p.petIgnoreItems.put(Long.valueOf(currentUniqueId), array);
+								currentUniqueId = uniqueId;
+								currentItemsForPet.clear();
+							}
+							currentItemsForPet.add(Integer.valueOf(rs.getInt(2)));
+						}
 						int[] array = new int[currentItemsForPet.size()];
 						for (int i = 0; i < array.length; i++) {
 							array[i] = currentItemsForPet.get(i).intValue();
 						}
 						p.petIgnoreItems.put(Long.valueOf(currentUniqueId), array);
-						currentUniqueId = uniqueId;
-						currentItemsForPet.clear();
 					}
-					currentItemsForPet.add(Integer.valueOf(rs.getInt(2)));
 				}
-				int[] array = new int[currentItemsForPet.size()];
-				for (int i = 0; i < array.length; i++) {
-					array[i] = currentItemsForPet.get(i).intValue();
-				}
-				p.petIgnoreItems.put(Long.valueOf(currentUniqueId), array);
 			}
-			rs.close();
-			ps.close();
 			Pet[] pets = p.getPets();
 			for (byte i = 0; i < 3 && pets[i] != null; i++) {
 				p.createPetFullnessSchedule(pets[i], i);
@@ -800,195 +741,184 @@ public final class GameCharacter extends LoggedInPlayer implements MapEntity {
 			p.remHp = (short) Math.min(p.remHp, p.maxHp);
 			p.remMp = (short) Math.min(p.remMp, p.maxMp);
 
-			ps = con.prepareStatement("SELECT `skillid`,`level`,`mastery` "
-				+ "FROM `skills` WHERE `characterid` = ?");
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				p.skillEntries.put(Integer.valueOf(rs.getInt(1)), new SkillEntry(rs.getByte(2), rs.getByte(3)));
-			}
-			rs.close();
-			ps.close();
-
-			ps = con.prepareStatement("SELECT `skillid`,`remaining` "
-				+ "FROM `cooldowns` WHERE `characterid` = ?");
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				p.addCooldown(rs.getInt(1), rs.getShort(2));
-			}
-			rs.close();
-			ps.close();
-
-			ps = con.prepareStatement("SELECT `key`,`type`,`action` "
-				+ "FROM `keymaps` WHERE `characterid` = ?");
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				byte key = rs.getByte(1);
-				byte type = rs.getByte(2);
-				int action = rs.getInt(3);
-				p.bindings.put(Byte.valueOf(key), new KeyBinding(type, action));
-			}
-			rs.close();
-			ps.close();
-
-			ps = con.prepareStatement("SELECT `position`,`name`,`silent`,`skill1`,`skill2`,`skill3` "
-				+ "FROM `skillmacros` WHERE `characterid` = ? ORDER BY `position` DESC");
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			byte macroPos = 0;
-			for (boolean first = true; rs.next(); first = false) {
-				macroPos = rs.getByte(1);
-				if (first) {
-					p.skillMacros = new SkillMacro[macroPos + 1];
-				}
-				p.skillMacros[macroPos] = new SkillMacro(rs.getString(2),
-					rs.getBoolean(3), rs.getInt(4), rs.getInt(5),
-					rs.getInt(6));
-			}
-			if (p.skillMacros == null) {
-				p.skillMacros = new SkillMacro[0]; //no macros
-			}
-			for (macroPos--; macroPos >= 0; macroPos--) {
-				p.skillMacros[macroPos] = new SkillMacro("", false, 0, 0, 0); //placeholder macro
-			}
-			rs.close();
-			ps.close();
-
-			ps = con.prepareStatement("SELECT `e`.`buddy` AS `id`,"
-				+ "IF(ISNULL(`c`.`name`),`e`.`buddyname`,`c`.`name`) AS `name`,`e`.`status` "
-				+ "FROM `buddyentries` `e` LEFT JOIN `characters` `c` ON `c`.`id` = `e`.`buddy` "
-				+ "WHERE `owner` = ?");
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				byte status = rs.getByte(3);
-				if (status != BuddyListEntry.STATUS_INVITED) {
-					p.buddies.addBuddy(new BuddyListEntry(rs.getInt(1), rs.getString(2), status));
-				} else {
-					p.buddies.addInvite(rs.getInt(1), rs.getString(2));
+			try (PreparedStatement ps = con.prepareStatement("SELECT `skillid`,`level`,`mastery` "
+					+ "FROM `skills` WHERE `characterid` = ?")) {
+				ps.setInt(1, id);
+				try (ResultSet rs = ps.executeQuery()) {
+					while (rs.next()) {
+						p.skillEntries.put(Integer.valueOf(rs.getInt(1)), new SkillEntry(rs.getByte(2), rs.getByte(3)));
+					}
 				}
 			}
-			rs.close();
-			ps.close();
 
-			ps = con.prepareStatement("SELECT `partyid` FROM `parties` WHERE `characterid` = ?");
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				p.party = GameServer.getChannel(c.getChannel()).getCrossServerInterface().sendFetchPartyList(rs.getInt(1));
+			try (PreparedStatement ps = con.prepareStatement("SELECT `skillid`,`remaining` "
+					+ "FROM `cooldowns` WHERE `characterid` = ?")) {
+				ps.setInt(1, id);
+				try (ResultSet rs = ps.executeQuery()) {
+					while (rs.next()) {
+						p.addCooldown(rs.getInt(1), rs.getShort(2));
+					}
+				}
 			}
-			rs.close();
-			ps.close();
 
-			ps = con.prepareStatement("SELECT `g`.`id` FROM `guilds` `g` LEFT JOIN `guildmembers` `m` ON `g`.`id` = `m`.`guildid` WHERE `m`.`characterid` = ?");
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				p.guild = GameServer.getChannel(c.getChannel()).getCrossServerInterface().sendFetchGuildList(rs.getInt(1));
+			try (PreparedStatement ps = con.prepareStatement("SELECT `key`,`type`,`action` "
+					+ "FROM `keymaps` WHERE `characterid` = ?")) {
+				ps.setInt(1, id);
+				try (ResultSet rs = ps.executeQuery()) {
+					while (rs.next()) {
+						byte key = rs.getByte(1);
+						byte type = rs.getByte(2);
+						int action = rs.getInt(3);
+						p.bindings.put(Byte.valueOf(key), new KeyBinding(type, action));
+					}
+				}
 			}
-			rs.close();
-			ps.close();
 
-			ps = con.prepareStatement("SELECT `id`,`questid`,`state`,`completed` "
-				+ "FROM `queststatuses` WHERE `characterid` = ?");
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			PreparedStatement mps = null;
-			ResultSet mrs;
-			try {
-				mps = con.prepareStatement("SELECT `mobid`,`count` "
-					+ "FROM `questmobprogress` WHERE `queststatusid` = ?");
-				while (rs.next()) {
-					int questEntryId = rs.getInt(1);
-					short questId = rs.getShort(2);
-					byte state = rs.getByte(3);
-					Map<Integer, AtomicInteger> mobProgress = new LinkedHashMap<>();
-					if (state == QuestEntry.STATE_STARTED) {
-						mps.setInt(1, questEntryId);
-						mrs = null;
-						try {
-							mrs = mps.executeQuery();
-							while (mrs.next()) {
-								mobProgress.put(Integer.valueOf(mrs.getInt(1)), new AtomicInteger(mrs.getShort(2)));
-							}
-						} finally {
-							DatabaseManager.cleanup(DatabaseType.STATE, mrs, null, null);
+			try (PreparedStatement ps = con.prepareStatement("SELECT `position`,`name`,`silent`,`skill1`,`skill2`,`skill3` "
+					+ "FROM `skillmacros` WHERE `characterid` = ? ORDER BY `position` DESC")) {
+				ps.setInt(1, id);
+				try (ResultSet rs = ps.executeQuery()) {
+					byte macroPos = 0;
+					for (boolean first = true; rs.next(); first = false) {
+						macroPos = rs.getByte(1);
+						if (first) {
+							p.skillMacros = new SkillMacro[macroPos + 1];
+						}
+						p.skillMacros[macroPos] = new SkillMacro(rs.getString(2),
+								rs.getBoolean(3), rs.getInt(4), rs.getInt(5),
+								rs.getInt(6));
+					}
+					if (p.skillMacros == null) {
+						p.skillMacros = new SkillMacro[0]; //no macros
+					}
+					for (macroPos--; macroPos >= 0; macroPos--) {
+						p.skillMacros[macroPos] = new SkillMacro("", false, 0, 0, 0); //placeholder macro
+					}
+				}
+			}
+
+			try (PreparedStatement ps = con.prepareStatement("SELECT `e`.`buddy` AS `id`,"
+					+ "IF(ISNULL(`c`.`name`),`e`.`buddyname`,`c`.`name`) AS `name`,`e`.`status` "
+					+ "FROM `buddyentries` `e` LEFT JOIN `characters` `c` ON `c`.`id` = `e`.`buddy` "
+					+ "WHERE `owner` = ?")) {
+				ps.setInt(1, id);
+				try (ResultSet rs = ps.executeQuery()) {
+					while (rs.next()) {
+						byte status = rs.getByte(3);
+						if (status != BuddyListEntry.STATUS_INVITED) {
+							p.buddies.addBuddy(new BuddyListEntry(rs.getInt(1), rs.getString(2), status));
+						} else {
+							p.buddies.addInvite(rs.getInt(1), rs.getString(2));
 						}
 					}
-					QuestEntry status = new QuestEntry(state, mobProgress);
-					status.setCompletionTime(rs.getLong(4));
-					p.questStatuses.put(Short.valueOf(questId), status);
-					if (status.getState() == QuestEntry.STATE_STARTED) {
-						QuestChecks qc = QuestDataLoader.getInstance().getCompleteReqs(questId);
-						if (qc != null) {
-							for (Entry<Integer, Short> mob : qc.getReqMobCounts().entrySet())
-								//mob progress cannot be undone, so it's safe to do this
-								if (status.getMobCount(mob.getKey().intValue()) < mob.getValue().shortValue()) {
-									p.addToWatchedList(questId, QuestRequirementType.MOB, mob.getKey());
+				}
+			}
+
+			try (PreparedStatement ps = con.prepareStatement("SELECT `partyid` FROM `parties` WHERE `characterid` = ?")) {
+				ps.setInt(1, id);
+				try (ResultSet rs = ps.executeQuery()) {
+					if (rs.next()) {
+						p.party = GameServer.getChannel(c.getChannel()).getCrossServerInterface().sendFetchPartyList(rs.getInt(1));
+					}
+				}
+			}
+
+			try (PreparedStatement ps = con.prepareStatement("SELECT `g`.`id` FROM `guilds` `g` LEFT JOIN `guildmembers` `m` ON `g`.`id` = `m`.`guildid` WHERE `m`.`characterid` = ?")) {
+				ps.setInt(1, id);
+				try (ResultSet rs = ps.executeQuery()) {
+					if (rs.next()) {
+						p.guild = GameServer.getChannel(c.getChannel()).getCrossServerInterface().sendFetchGuildList(rs.getInt(1));
+					}
+				}
+			}
+
+			try (PreparedStatement ps = con.prepareStatement("SELECT `id`,`questid`,`state`,`completed` "
+					+ "FROM `queststatuses` WHERE `characterid` = ?")) {
+				ps.setInt(1, id);
+				try (ResultSet rs = ps.executeQuery();
+						PreparedStatement mps = con.prepareStatement("SELECT `mobid`,`count` "
+						+ "FROM `questmobprogress` WHERE `queststatusid` = ?")) {
+					while (rs.next()) {
+						int questEntryId = rs.getInt(1);
+						short questId = rs.getShort(2);
+						byte state = rs.getByte(3);
+						Map<Integer, AtomicInteger> mobProgress = new LinkedHashMap<>();
+						if (state == QuestEntry.STATE_STARTED) {
+							mps.setInt(1, questEntryId);
+							try (ResultSet mrs = mps.executeQuery()) {
+								while (mrs.next()) {
+									mobProgress.put(Integer.valueOf(mrs.getInt(1)), new AtomicInteger(mrs.getShort(2)));
 								}
-							for (QuestItemStats item : qc.getReqItems())
-								p.addToWatchedList(questId, QuestRequirementType.ITEM, item.getItemId());
-							for (Integer petId : qc.getReqPets())
-								p.addToWatchedList(questId, QuestRequirementType.PET, petId);
-							for (Short reqQuestId : qc.getReqQuests().keySet())
-								p.addToWatchedList(questId, QuestRequirementType.QUEST, reqQuestId);
-							if (qc.requiresMesos()) {
-								p.addToWatchedList(questId, QuestRequirementType.MESOS);
+							}
+						}
+						QuestEntry status = new QuestEntry(state, mobProgress);
+						status.setCompletionTime(rs.getLong(4));
+						p.questStatuses.put(Short.valueOf(questId), status);
+						if (status.getState() == QuestEntry.STATE_STARTED) {
+							QuestChecks qc = QuestDataLoader.getInstance().getCompleteReqs(questId);
+							if (qc != null) {
+								for (Entry<Integer, Short> mob : qc.getReqMobCounts().entrySet())
+									//mob progress cannot be undone, so it's safe to do this
+									if (status.getMobCount(mob.getKey().intValue()) < mob.getValue().shortValue()) {
+										p.addToWatchedList(questId, QuestRequirementType.MOB, mob.getKey());
+									}
+								for (QuestItemStats item : qc.getReqItems())
+									p.addToWatchedList(questId, QuestRequirementType.ITEM, item.getItemId());
+								for (Integer petId : qc.getReqPets())
+									p.addToWatchedList(questId, QuestRequirementType.PET, petId);
+								for (Short reqQuestId : qc.getReqQuests().keySet())
+									p.addToWatchedList(questId, QuestRequirementType.QUEST, reqQuestId);
+								if (qc.requiresMesos()) {
+									p.addToWatchedList(questId, QuestRequirementType.MESOS);
+								}
 							}
 						}
 					}
 				}
-			} finally {
-				DatabaseManager.cleanup(DatabaseType.STATE, null, mps, null);
 			}
-			rs.close();
-			ps.close();
 
-			ps = con.prepareStatement("SELECT * FROM `minigamescores` WHERE `characterid` = ?");
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				Map<MinigameResult, AtomicInteger> stats = new EnumMap<>(MinigameResult.class);
-				stats.put(MinigameResult.WIN, new AtomicInteger(rs.getInt(4)));
-				stats.put(MinigameResult.TIE, new AtomicInteger(rs.getInt(5)));
-				stats.put(MinigameResult.LOSS, new AtomicInteger(rs.getInt(6)));
-				p.minigameStats.put(MiniroomType.valueOf(rs.getByte(3)), Collections.unmodifiableMap(stats));
-			}
-			rs.close();
-			ps.close();
-
-			ps = con.prepareStatement("SELECT * FROM `famelog` WHERE `from` = ?");
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			long threshold = System.currentTimeMillis() - 1000L * 60 * 60 * 24 * 30;
-			while (rs.next()) {
-				long time = rs.getLong(4);
-				//given time >= now - 30 days
-				if (time >= threshold) {
-					p.famesThisMonth.put(Integer.valueOf(rs.getInt(3)), Long.valueOf(time));
-					if (time > p.lastFameGiven) {
-						p.lastFameGiven = time;
+			try (PreparedStatement ps = con.prepareStatement("SELECT * FROM `minigamescores` WHERE `characterid` = ?")) {
+				ps.setInt(1, id);
+				try (ResultSet rs = ps.executeQuery()) {
+					while (rs.next()) {
+						Map<MinigameResult, AtomicInteger> stats = new EnumMap<>(MinigameResult.class);
+						stats.put(MinigameResult.WIN, new AtomicInteger(rs.getInt(4)));
+						stats.put(MinigameResult.TIE, new AtomicInteger(rs.getInt(5)));
+						stats.put(MinigameResult.LOSS, new AtomicInteger(rs.getInt(6)));
+						p.minigameStats.put(MiniroomType.valueOf(rs.getByte(3)), Collections.unmodifiableMap(stats));
 					}
 				}
 			}
-			rs.close();
-			ps.close();
 
-			ps = con.prepareStatement("SELECT `sn` FROM `wishlists` WHERE `characterid` = ?");
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				p.wishList.add(Integer.valueOf(rs.getInt(1)));
+			try (PreparedStatement ps = con.prepareStatement("SELECT * FROM `famelog` WHERE `from` = ?")) {
+				ps.setInt(1, id);
+				try (ResultSet rs = ps.executeQuery()) {
+					long threshold = System.currentTimeMillis() - 1000L * 60 * 60 * 24 * 30;
+					while (rs.next()) {
+						long time = rs.getLong(4);
+						//given time >= now - 30 days
+						if (time >= threshold) {
+							p.famesThisMonth.put(Integer.valueOf(rs.getInt(3)), Long.valueOf(time));
+							if (time > p.lastFameGiven) {
+								p.lastFameGiven = time;
+							}
+						}
+					}
+				}
+			}
+
+			try (PreparedStatement ps = con.prepareStatement("SELECT `sn` FROM `wishlists` WHERE `characterid` = ?")) {
+				ps.setInt(1, id);
+				try (ResultSet rs = ps.executeQuery()) {
+					while (rs.next()) {
+						p.wishList.add(Integer.valueOf(rs.getInt(1)));
+					}
+				}
 			}
 			return p;
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load character " + id + " from database", ex);
 			return null;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, irs, ips, null);
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 	}
 

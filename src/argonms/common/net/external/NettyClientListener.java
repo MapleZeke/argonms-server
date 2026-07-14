@@ -43,6 +43,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class NettyClientListener<T extends RemoteClient> implements SessionCreator {
+	/**
+	 * Factory for creating new client instances when a connection is accepted.
+	 */
+	public interface ClientFactory<T extends RemoteClient> {
+		T newInstance();
+	}
+
 	static final AttributeKey<ClientSession<?>> SESSION_KEY = AttributeKey.valueOf("argonms.external.session");
 	static final AttributeKey<byte[]> RECV_IV_KEY = AttributeKey.valueOf("argonms.external.recvIv");
 	static final AttributeKey<byte[]> SEND_IV_KEY = AttributeKey.valueOf("argonms.external.sendIv");
@@ -51,14 +58,14 @@ public final class NettyClientListener<T extends RemoteClient> implements Sessio
 	private static final String VIRTUAL_THREADS_PROPERTY = "argonms.virtualThreads";
 
 	private final ClientPacketProcessor<T> packetProcessor;
-	private final ClientListener.ClientFactory<T> clientFactory;
+	private final NettyClientListener.ClientFactory<T> clientFactory;
 	private final ExecutorService workerThreadPool;
 	private final AtomicBoolean closeEventsTriggered;
 	private EventLoopGroup bossGroup;
 	private EventLoopGroup workerGroup;
 	private Channel listener;
 
-	public NettyClientListener(ClientPacketProcessor<T> packetProcessor, ClientListener.ClientFactory<T> clientFactory) {
+	public NettyClientListener(ClientPacketProcessor<T> packetProcessor, NettyClientListener.ClientFactory<T> clientFactory) {
 		this.packetProcessor = packetProcessor;
 		this.clientFactory = clientFactory;
 		this.closeEventsTriggered = new AtomicBoolean(false);

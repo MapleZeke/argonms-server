@@ -40,14 +40,11 @@ public class RankingWorker implements Runnable {
 
 	@Override
 	public void run() {
-		Connection con = null;
-		CallableStatement ps = null;
 		long start;
 		long end;
 		start = System.nanoTime();
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareCall("{call updateranks(?,?)}");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				CallableStatement ps = con.prepareCall("{call updateranks(?,?)}")) {
 			ps.setString(1, "overall");
 			ps.setNull(2, Types.TINYINT);
 			ps.executeUpdate();
@@ -68,8 +65,6 @@ public class RankingWorker implements Runnable {
 			LOG.log(Level.FINE, "Sucessfully updated rankings in {0} milliseconds.", (end - start) / 1000000.0);
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Error updating the rankings.", ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, con);
 		}
 	}
 }

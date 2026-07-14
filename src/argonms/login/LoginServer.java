@@ -180,30 +180,26 @@ public final class LoginServer implements LocalServer {
 			return;
 		}
 		try {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, null, DatabaseManager.getConnection(DatabaseType.STATE));
+			try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			}
 			if (mcdb) {
-				Connection con = null;
-				PreparedStatement ps = null;
-				ResultSet rs = null;
-				try {
-					con = DatabaseManager.getConnection(DatabaseType.WZ);
-					ps = con.prepareStatement("SELECT `version`,`subversion`,`maple_version` FROM `mcdb_info`");
-					rs = ps.executeQuery();
-					if (rs.next()) {
-						int realVersion = rs.getInt(1);
-						int realSubversion = rs.getInt(2);
-						int realGameVersion = rs.getInt(3);
-						if (realVersion != GlobalConstants.MCDB_VERSION || realSubversion != GlobalConstants.MCDB_SUBVERSION) {
-							LOG.log(Level.SEVERE, "MCDB version imcompatible. Expected: {0}.{1} Have: {2}.{3}", new Object[]{GlobalConstants.MCDB_VERSION, GlobalConstants.MCDB_SUBVERSION, realVersion, realSubversion});
-							System.exit(3);
-							return;
-						}
-						if (realGameVersion != GlobalConstants.MAPLE_VERSION) { //carry on despite the warning...
-							LOG.log(Level.WARNING, "Your copy of MCDB is based on an incongruent version of the WZ files. ArgonMS: {0} MCDB: {1}", new Object[]{GlobalConstants.MAPLE_VERSION, realGameVersion});
+				try (Connection con = DatabaseManager.getConnection(DatabaseType.WZ);
+						PreparedStatement ps = con.prepareStatement("SELECT `version`,`subversion`,`maple_version` FROM `mcdb_info`")) {
+					try (ResultSet rs = ps.executeQuery()) {
+						if (rs.next()) {
+							int realVersion = rs.getInt(1);
+							int realSubversion = rs.getInt(2);
+							int realGameVersion = rs.getInt(3);
+							if (realVersion != GlobalConstants.MCDB_VERSION || realSubversion != GlobalConstants.MCDB_SUBVERSION) {
+								LOG.log(Level.SEVERE, "MCDB version imcompatible. Expected: {0}.{1} Have: {2}.{3}", new Object[]{GlobalConstants.MCDB_VERSION, GlobalConstants.MCDB_SUBVERSION, realVersion, realSubversion});
+								System.exit(3);
+								return;
+							}
+							if (realGameVersion != GlobalConstants.MAPLE_VERSION) { //carry on despite the warning...
+								LOG.log(Level.WARNING, "Your copy of MCDB is based on an incongruent version of the WZ files. ArgonMS: {0} MCDB: {1}", new Object[]{GlobalConstants.MAPLE_VERSION, realGameVersion});
+							}
 						}
 					}
-				} finally {
-					DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
 				}
 			}
 		} catch (SQLException e) {

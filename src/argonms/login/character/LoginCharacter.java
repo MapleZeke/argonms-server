@@ -118,97 +118,88 @@ public final class LoginCharacter extends Player {
 	}
 
 	public static LoginCharacter loadPlayer(LoginClient c, int id) {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			ps = con.prepareStatement("SELECT * FROM `characters` WHERE `id` = ?");
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			if (!rs.next()) {
-				LOG.log(Level.WARNING, "Client requested to load a nonexistent character w/ id {0} (account {1}).",
-						new Object[]{id, c.getAccountId()});
-				return null;
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			LoginCharacter p;
+			try (PreparedStatement ps = con.prepareStatement("SELECT * FROM `characters` WHERE `id` = ?")) {
+				ps.setInt(1, id);
+				try (ResultSet rs = ps.executeQuery()) {
+					if (!rs.next()) {
+						LOG.log(Level.WARNING, "Client requested to load a nonexistent character w/ id {0} (account {1}).",
+								new Object[]{id, c.getAccountId()});
+						return null;
+					}
+					int accountid = rs.getInt(1);
+					if (accountid != c.getAccountId()) { //we are aware of our accountid
+						LOG.log(Level.WARNING, "Client account {0} is trying to load character {1} which belongs to account {2}",
+								new Object[]{c.getAccountId(), id, accountid});
+						return null;
+					}
+					byte world = rs.getByte(2);
+					if (world != c.getWorld()) { //we are aware of our world
+						LOG.log(Level.WARNING, "Client account {0} is trying to load character {1} on world {2} but exists on world {3}",
+								new Object[]{accountid, id, c.getWorld(), world});
+						return null;
+					}
+					p = new LoginCharacter();
+					p.client = c;
+					p.loadPlayerStats(rs, id);
+					p.worldRanking = rs.getInt(36);
+					p.worldRankingChange = rs.getInt(37) - p.worldRanking;
+					p.jobRanking = rs.getInt(38);
+					p.jobRankingChange = rs.getInt(39) - p.jobRanking;
+				}
 			}
-			int accountid = rs.getInt(1);
-			if (accountid != c.getAccountId()) { //we are aware of our accountid
-				LOG.log(Level.WARNING, "Client account {0} is trying to load character {1} which belongs to account {2}",
-						new Object[]{c.getAccountId(), id, accountid});
-				return null;
-			}
-			byte world = rs.getByte(2);
-			if (world != c.getWorld()) { //we are aware of our world
-				LOG.log(Level.WARNING, "Client account {0} is trying to load character {1} on world {2} but exists on world {3}",
-						new Object[]{accountid, id, c.getWorld(), world});
-				return null;
-			}
-			LoginCharacter p = new LoginCharacter();
-			p.client = c;
-			p.loadPlayerStats(rs, id);
-			p.worldRanking = rs.getInt(36);
-			p.worldRankingChange = rs.getInt(37) - p.worldRanking;
-			p.jobRanking = rs.getInt(38);
-			p.jobRankingChange = rs.getInt(39) - p.jobRanking;
-			rs.close();
-			ps.close();
 
-			ps = con.prepareStatement("SELECT * FROM `inventoryitems` "
-					+ "WHERE `characterid` = ? AND `inventorytype` <= " + InventoryType.CASH.byteValue());
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			p.loadInventory(con, rs, p.getInventories());
+			try (PreparedStatement ps = con.prepareStatement("SELECT * FROM `inventoryitems` "
+					+ "WHERE `characterid` = ? AND `inventorytype` <= " + InventoryType.CASH.byteValue())) {
+				ps.setInt(1, id);
+				try (ResultSet rs = ps.executeQuery()) {
+					p.loadInventory(con, rs, p.getInventories());
+				}
+			}
 			return p;
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load character " + id + " from database", ex);
 			return null;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
 		}
 	}
 
 	private void updateDbInventory(Connection con) throws SQLException {
 		String invUpdate = "DELETE FROM `inventoryitems` "
 				+ "WHERE `characterid` = ? AND `inventorytype` <= " + InventoryType.CASH.byteValue();
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		try {
-			ps = con.prepareStatement(invUpdate);
-			ps.setInt(1, getDataId());
-			ps.executeUpdate();
-			ps.close();
+			try (PreparedStatement ps = con.prepareStatement(invUpdate)) {
+				ps.setInt(1, getDataId());
+				ps.executeUpdate();
+			}
 
 			commitInventory(con, getInventories());
 		} catch (SQLException e) {
 			throw new SQLException("Failed to save inventory of character " + getName(), e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, null);
 		}
 	}
 
 	private void updateDbBindings(Connection con) throws SQLException {
-		PreparedStatement ps = null;
 		try {
-			ps = con.prepareStatement("DELETE FROM `keymaps` WHERE `characterid` = ?");
-			ps.setInt(1, getDataId());
-			ps.executeUpdate();
-			ps.close();
-
-			ps = con.prepareStatement("INSERT INTO `keymaps` "
-					+ "(`characterid`,`key`,`type`,`action`) VALUES (?,?,?,?)");
-			ps.setInt(1, getDataId());
-			for (Entry<Byte, KeyBinding> entry : bindings.entrySet()) {
-				KeyBinding binding = entry.getValue();
-				ps.setByte(2, entry.getKey().byteValue());
-				ps.setByte(3, binding.getType());
-				ps.setInt(4, binding.getAction());
-				ps.addBatch();
+			try (PreparedStatement ps = con.prepareStatement("DELETE FROM `keymaps` WHERE `characterid` = ?")) {
+				ps.setInt(1, getDataId());
+				ps.executeUpdate();
 			}
-			ps.executeBatch();
+
+			try (PreparedStatement ps = con.prepareStatement("INSERT INTO `keymaps` "
+					+ "(`characterid`,`key`,`type`,`action`) VALUES (?,?,?,?)")) {
+				ps.setInt(1, getDataId());
+				for (Entry<Byte, KeyBinding> entry : bindings.entrySet()) {
+					KeyBinding binding = entry.getValue();
+					ps.setByte(2, entry.getKey().byteValue());
+					ps.setByte(3, binding.getType());
+					ps.setInt(4, binding.getAction());
+					ps.addBatch();
+				}
+				ps.executeBatch();
+			}
 		} catch (SQLException e) {
 			throw new SQLException("Failed to save keymap of character " + getName(), e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.STATE, null, ps, null);
 		}
 	}
 
@@ -256,54 +247,48 @@ public final class LoginCharacter extends Player {
 
 		int prevTransactionIsolation = Connection.TRANSACTION_REPEATABLE_READ;
 		boolean prevAutoCommit = true;
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			prevTransactionIsolation = con.getTransactionIsolation();
-			prevAutoCommit = con.getAutoCommit();
-			con.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
-			con.setAutoCommit(false);
-			ps = con.prepareStatement("INSERT INTO `characters` "
-					+ "(`accountid`,`world`,`name`,`gender`,`skin`,`eyes`,`hair`,`str`,`dex`,`int`,`luk`,`gm`) "
-					+ "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-					Statement.RETURN_GENERATED_KEYS);
-			ps.setInt(1, account.getAccountId());
-			ps.setByte(2, account.getWorld());
-			ps.setString(3, name);
-			ps.setByte(4, gender);
-			ps.setInt(5, skin);
-			ps.setInt(6, eyes);
-			ps.setInt(7, hair);
-			ps.setShort(8, str);
-			ps.setShort(9, dex);
-			ps.setShort(10, _int);
-			ps.setShort(11, luk);
-			ps.setByte(12, account.getGm());
-			ps.executeUpdate();
-			rs = ps.getGeneratedKeys();
-			if (rs.next()) {
-				p.setId(rs.getInt(1));
-			}
-			rs.close();
-			ps.close();
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
+			try {
+				prevTransactionIsolation = con.getTransactionIsolation();
+				prevAutoCommit = con.getAutoCommit();
+				con.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
+				con.setAutoCommit(false);
+				try (PreparedStatement ps = con.prepareStatement("INSERT INTO `characters` "
+						+ "(`accountid`,`world`,`name`,`gender`,`skin`,`eyes`,`hair`,`str`,`dex`,`int`,`luk`,`gm`) "
+						+ "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+						Statement.RETURN_GENERATED_KEYS)) {
+					ps.setInt(1, account.getAccountId());
+					ps.setByte(2, account.getWorld());
+					ps.setString(3, name);
+					ps.setByte(4, gender);
+					ps.setInt(5, skin);
+					ps.setInt(6, eyes);
+					ps.setInt(7, hair);
+					ps.setShort(8, str);
+					ps.setShort(9, dex);
+					ps.setShort(10, _int);
+					ps.setShort(11, luk);
+					ps.setByte(12, account.getGm());
+					ps.executeUpdate();
+					try (ResultSet rs = ps.getGeneratedKeys()) {
+						if (rs.next()) {
+							p.setId(rs.getInt(1));
+						}
+					}
+				}
 
-			p.updateDbInventory(con);
-			p.updateDbBindings(con);
-			con.commit();
-		} catch (Throwable ex) {
-			LOG.log(Level.WARNING, "Could not create new character " + name
-					+ " on account" + account.getAccountId() + ". Rolling back all changes...", ex);
-			if (con != null) {
+				p.updateDbInventory(con);
+				p.updateDbBindings(con);
+				con.commit();
+			} catch (Throwable ex) {
+				LOG.log(Level.WARNING, "Could not create new character " + name
+						+ " on account" + account.getAccountId() + ". Rolling back all changes...", ex);
 				try {
 					con.rollback();
 				} catch (SQLException ex2) {
 					LOG.log(Level.WARNING, "Error rolling back character.", ex2);
 				}
-			}
-		} finally {
-			if (con != null) {
+			} finally {
 				try {
 					con.setAutoCommit(prevAutoCommit);
 					con.setTransactionIsolation(prevTransactionIsolation);
@@ -311,7 +296,9 @@ public final class LoginCharacter extends Player {
 					LOG.log(Level.WARNING, "Could not reset Connection config after creating character " + p.getDataId(), ex);
 				}
 			}
-			DatabaseManager.cleanup(DatabaseType.STATE, rs, ps, con);
+		} catch (SQLException ex) {
+			LOG.log(Level.WARNING, "Could not create new character " + name
+					+ " on account" + account.getAccountId() + ". Rolling back all changes...", ex);
 		}
 
 		return p;

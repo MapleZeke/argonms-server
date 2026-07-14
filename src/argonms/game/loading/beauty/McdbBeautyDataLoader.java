@@ -31,30 +31,24 @@ public class McdbBeautyDataLoader extends BeautyDataLoader {
 	private static final Logger LOG = Logger.getLogger(McdbStringDataLoader.class.getName());
 
 	@Override
-	public boolean loadAll() {Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.WZ);
-			ps = con.prepareStatement("SELECT `faceid` FROM `facedata`");
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				eyeStyles.add(Short.valueOf(rs.getShort(1)));
+	public boolean loadAll() {
+		try (Connection con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.WZ)) {
+			try (PreparedStatement ps = con.prepareStatement("SELECT `faceid` FROM `facedata`");
+					ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					eyeStyles.add(Short.valueOf(rs.getShort(1)));
+				}
 			}
-			rs.close();
-			ps.close();
-
-			ps = con.prepareStatement("SELECT `hairid` FROM `hairdata`");
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				hairStyles.add(Short.valueOf(rs.getShort(1)));
+			try (PreparedStatement ps = con.prepareStatement("SELECT `hairid` FROM `hairdata`");
+					ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					hairStyles.add(Short.valueOf(rs.getShort(1)));
+				}
 			}
 			return true;
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Error loading beauty data from the MCDB.", e);
 			return false;
-		} finally {
-			DatabaseManager.cleanup(DatabaseManager.DatabaseType.WZ, rs, ps, con);
 		}
 	}
 }

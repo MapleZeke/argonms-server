@@ -188,19 +188,14 @@ public final class InventoryTools {
 	}
 
 	private static long generateCashPurchase() throws Exception {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
-			ps = con.prepareStatement("INSERT INTO `cashshoppurchases` VALUES ()", Statement.RETURN_GENERATED_KEYS);
+		try (Connection con = DatabaseManager.getConnection(DatabaseManager.DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("INSERT INTO `cashshoppurchases` VALUES ()", Statement.RETURN_GENERATED_KEYS)) {
 			ps.executeUpdate();
-			rs = ps.getGeneratedKeys();
-			return rs.next() ? rs.getLong(1) : -1;
+			try (ResultSet rs = ps.getGeneratedKeys()) {
+				return rs.next() ? rs.getLong(1) : -1;
+			}
 		} catch (SQLException e) {
 			throw new Exception("Database access error while acquiring next unique id.", e);
-		} finally {
-			DatabaseManager.cleanup(DatabaseManager.DatabaseType.STATE, rs, ps, con);
 		}
 	}
 

@@ -55,112 +55,92 @@ public class McdbNpcShopDataLoader extends NpcShopDataLoader {
 
 	@Override
 	protected void load(int npcid) {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.WZ);
-			ps = con.prepareStatement("SELECT `shopid`,`rechargetier` FROM `shopdata` WHERE `npcid` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.WZ);
+				PreparedStatement ps = con.prepareStatement("SELECT `shopid`,`rechargetier` FROM `shopdata` WHERE `npcid` = ?")) {
 			ps.setInt(1, npcid);
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				Map<Integer, Double> rechargeables;
-				int rechargeTier = rs.getInt(2);
-				if (rechargeTier == 0) {
-					rechargeables = Collections.emptyMap();
-				} else {
-					if (!rechargeTiers.containsKey(Integer.valueOf(rechargeTier))) {
-						PreparedStatement rps = null;
-						ResultSet rrs = null;
-						try {
-							rps = con.prepareStatement("SELECT `itemid`,`price` FROM `rechargedata` WHERE `id` = ?");
-							rps.setInt(1, rechargeTier);
-							rrs = rps.executeQuery();
-							if (rrs.next()) {
-								loadRechargeTier(rechargeTier, rrs);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					Map<Integer, Double> rechargeables;
+					int rechargeTier = rs.getInt(2);
+					if (rechargeTier == 0) {
+						rechargeables = Collections.emptyMap();
+					} else {
+						if (!rechargeTiers.containsKey(Integer.valueOf(rechargeTier))) {
+							try (PreparedStatement rps = con.prepareStatement("SELECT `itemid`,`price` FROM `rechargedata` WHERE `id` = ?")) {
+								rps.setInt(1, rechargeTier);
+								try (ResultSet rrs = rps.executeQuery()) {
+									if (rrs.next()) {
+										loadRechargeTier(rechargeTier, rrs);
+									}
+								}
 							}
-						} finally {
-							DatabaseManager.cleanup(DatabaseType.WZ, rrs, rps, null);
+						}
+						rechargeables = rechargeTiers.get(Integer.valueOf(rechargeTier));
+					}
+
+					List<NpcShop.ShopSlot> items = new ArrayList<>();
+					try (PreparedStatement ips = con.prepareStatement("SELECT `itemid`,`quantity`,`price` FROM `shopitemdata` WHERE `shopid` = ? ORDER BY `sort` DESC")) {
+						ips.setInt(1, rs.getInt(1));
+						try (ResultSet irs = ips.executeQuery()) {
+							while (irs.next()) {
+								items.add(new NpcShop.ShopSlot(irs.getInt(1), irs.getShort(2), irs.getInt(3)));
+							}
 						}
 					}
-					rechargeables = rechargeTiers.get(Integer.valueOf(rechargeTier));
-				}
 
-				List<NpcShop.ShopSlot> items = new ArrayList<>();
-				PreparedStatement ips = null;
-				ResultSet irs = null;
-				try {
-					ips = con.prepareStatement("SELECT `itemid`,`quantity`,`price` FROM `shopitemdata` WHERE `shopid` = ? ORDER BY `sort` DESC");
-					ips.setInt(1, rs.getInt(1));
-					irs = ips.executeQuery();
-					while (irs.next()) {
-						items.add(new NpcShop.ShopSlot(irs.getInt(1), irs.getShort(2), irs.getInt(3)));
-					}
-				} finally {
-					DatabaseManager.cleanup(DatabaseType.WZ, irs, ips, null);
+					//saves a bit of memory - shops that use the same recharge tier
+					//just use aliases of the same immutable map
+					NpcShop shop = new NpcShop.McdbNpcShopStock(rechargeables, items);
+					loadedShops.put(Integer.valueOf(npcid), shop);
+				} else {
+					loadedShops.put(Integer.valueOf(npcid), null);
 				}
-
-				//saves a bit of memory - shops that use the same recharge tier
-				//just use aliases of the same immutable map
-				NpcShop shop = new NpcShop.McdbNpcShopStock(rechargeables, items);
-				loadedShops.put(Integer.valueOf(npcid), shop);
-			} else {
-				loadedShops.put(Integer.valueOf(npcid), null);
 			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not read MCDB data for shop of NPC " + npcid, ex);
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
 		}
 	}
 
 	@Override
 	public boolean loadAll() {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 		List<NpcShop.ShopSlot> items;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.WZ);
-			ps = con.prepareStatement("SELECT `id`,`itemid`,`price` FROM `rechargedata` ORDER BY `id` ASC");
-			rs = ps.executeQuery();
-			boolean more = false;
-			while (more || rs.next()) {
-				more = loadRechargeTier(rs.getInt(1), rs);
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.WZ)) {
+			try (PreparedStatement ps = con.prepareStatement("SELECT `id`,`itemid`,`price` FROM `rechargedata` ORDER BY `id` ASC");
+					ResultSet rs = ps.executeQuery()) {
+				boolean more = false;
+				while (more || rs.next()) {
+					more = loadRechargeTier(rs.getInt(1), rs);
+				}
 			}
-			rs.close();
-			ps.close();
 
 			Map<Integer, List<NpcShop.ShopSlot>> shopItems = new HashMap<>();
-			ps = con.prepareStatement("SELECT `shopid`,`itemid`,`quantity`,`price` FROM `shopitemdata` ORDER BY `shopid`,`sort` DESC");
-			rs = ps.executeQuery();
-			more = false;
-			while (more || rs.next()) {
-				int shopId = rs.getInt(1);
-				items = new ArrayList<>();
-				do {
-					items.add(new NpcShop.ShopSlot(rs.getInt(2), rs.getShort(3), rs.getInt(4)));
+			try (PreparedStatement ps = con.prepareStatement("SELECT `shopid`,`itemid`,`quantity`,`price` FROM `shopitemdata` ORDER BY `shopid`,`sort` DESC");
+					ResultSet rs = ps.executeQuery()) {
+				boolean more = false;
+				while (more || rs.next()) {
+					int shopId = rs.getInt(1);
+					items = new ArrayList<>();
+					do {
+						items.add(new NpcShop.ShopSlot(rs.getInt(2), rs.getShort(3), rs.getInt(4)));
+					}
+					while ((more = rs.next()) && rs.getInt(1) == shopId);
+					shopItems.put(Integer.valueOf(shopId), items);
 				}
-				while ((more = rs.next()) && rs.getInt(1) == shopId);
-				shopItems.put(Integer.valueOf(shopId), items);
 			}
-			rs.close();
-			ps.close();
 
-			ps = con.prepareStatement("SELECT `shopid`,`npcid`,`rechargetier` FROM `shopdata`");
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				int shopId = rs.getInt(1);
-				int npcId = rs.getInt(2);
-				int rechargeTier = rs.getInt(3);
-				Map<Integer, Double> rechargeables = rechargeTier != 0 ? rechargeTiers.get(Integer.valueOf(rechargeTier)) : Collections.emptyMap();
-				loadedShops.put(Integer.valueOf(npcId), new NpcShop.McdbNpcShopStock(rechargeables != null ? rechargeables : Collections.emptyMap(), shopItems.get(Integer.valueOf(shopId))));
+			try (PreparedStatement ps = con.prepareStatement("SELECT `shopid`,`npcid`,`rechargetier` FROM `shopdata`");
+					ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					int shopId = rs.getInt(1);
+					int npcId = rs.getInt(2);
+					int rechargeTier = rs.getInt(3);
+					Map<Integer, Double> rechargeables = rechargeTier != 0 ? rechargeTiers.get(Integer.valueOf(rechargeTier)) : Collections.emptyMap();
+					loadedShops.put(Integer.valueOf(npcId), new NpcShop.McdbNpcShopStock(rechargeables != null ? rechargeables : Collections.emptyMap(), shopItems.get(Integer.valueOf(shopId))));
+				}
 			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not load all shop data from MCDB.", ex);
 			return false;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
 		}
 		return false;
 	}
@@ -174,23 +154,18 @@ public class McdbNpcShopDataLoader extends NpcShopDataLoader {
 		if (loadedShops.containsKey(Integer.valueOf(npcid))) {
 			return false;
 		}
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.WZ);
-			ps = con.prepareStatement("SELECT * FROM `shopdata` WHERE `npcid` = ?");
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.WZ);
+				PreparedStatement ps = con.prepareStatement("SELECT * FROM `shopdata` WHERE `npcid` = ?")) {
 			ps.setInt(1, npcid);
-			rs = ps.executeQuery();
-			if (rs.next()) {
-				return true;
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					return true;
+				}
+				return false;
 			}
-			return false;
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not use MCDB to determine whether npc " + npcid + " has a shop.", ex);
 			return false;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
 		}
 	}
 }

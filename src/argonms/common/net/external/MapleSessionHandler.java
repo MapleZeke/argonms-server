@@ -76,14 +76,14 @@ public final class MapleSessionHandler<T extends RemoteClient> extends ChannelIn
 	public static final AttributeKey<SessionMetrics> METRICS_KEY = AttributeKey.valueOf("ArgonSessionMetrics");
 
 	private final ClientPacketProcessor<T> packetProcessor;
-	private final ClientListener.ClientFactory<T> clientFactory;
+	private final NettyClientListener.ClientFactory<T> clientFactory;
 	private final ExecutorService packetExecutor;
 
-	public MapleSessionHandler(ClientPacketProcessor<T> packetProcessor, ClientListener.ClientFactory<T> clientFactory) {
+	public MapleSessionHandler(ClientPacketProcessor<T> packetProcessor, NettyClientListener.ClientFactory<T> clientFactory) {
 		this(packetProcessor, clientFactory, Executors.newVirtualThreadPerTaskExecutor());
 	}
 
-	public MapleSessionHandler(ClientPacketProcessor<T> packetProcessor, ClientListener.ClientFactory<T> clientFactory, ExecutorService packetExecutor) {
+	public MapleSessionHandler(ClientPacketProcessor<T> packetProcessor, NettyClientListener.ClientFactory<T> clientFactory, ExecutorService packetExecutor) {
 		this.packetProcessor = Objects.requireNonNull(packetProcessor, "packetProcessor");
 		this.clientFactory = Objects.requireNonNull(clientFactory, "clientFactory");
 		this.packetExecutor = Objects.requireNonNull(packetExecutor, "packetExecutor");

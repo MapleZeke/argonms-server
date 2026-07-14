@@ -18,68 +18,60 @@
 
 package argonms.common.util;
 
-import argonms.common.util.collections.LockableList;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 
-
-//TODO: abstract singleton class?
 /**
- * Provides a central location to store database connections used for pooling,
- * and common operations when accessing the database (such as the finalizing of
- * PreparedStatements, ResultSets). Depending on the value of the "nio" argument
- * passed to setProps, this class may either use a ThreadLocal model or a
- * CachedConnectionPool model.
+ * Provides centralized database connection management via HikariCP.
  *
- * Improved from OdinMS' DatabaseConnection class by adding a check for stale
- * connections before returning it to the caller of getConnection().
+ * <p>Connections obtained from {@link #getConnection(DatabaseType)} are pooled
+ * and <strong>must</strong> be closed by the caller (ideally via
+ * try-with-resources) to return them to the pool.
  *
- * Support for connections to MCDB or other kinds of databases that store WZ
- * data have also been integrated into this class.
- *
- * @version 2.0
+ * <p>The legacy {@link #cleanup} method is retained for backward compatibility
+ * during migration but callers should prefer try-with-resources.
  */
 public final class DatabaseManager {
 	public enum DatabaseType { STATE, WZ }
 
+	/**
+	 * Functional interface for code that executes within a single database
+	 * transaction.
+	 */
+	@FunctionalInterface
+	public interface TransactionalWork {
+		void execute(Connection con) throws SQLException;
+	}
+
 	private static final Logger LOG = Logger.getLogger(DatabaseManager.class.getName());
 
-	private static final Map<DatabaseType, ConnectionPool> connections;
-	private static String driver;
+	private static final Map<DatabaseType, HikariDataSource> dataSources = new EnumMap<>(DatabaseType.class);
 
-	static {
-		connections = new EnumMap<>(DatabaseType.class);
-	}
-
-	private static String getNonFullyQualifiedClassName(String fullyQualified) {
-		return fullyQualified.substring(Math.max(fullyQualified.indexOf('.'), fullyQualified.indexOf('$')) + 1);
-	}
-
+	/**
+	 * Returns a connection from the pool for the given database type.
+	 * The caller <strong>must</strong> close the returned connection when done.
+	 */
 	public static Connection getConnection(DatabaseType type) throws SQLException {
-		ConnectionPool pool = connections.get(type);
-		try {
-			return pool.getConnection();
-		} finally {
-			LOG.log(Level.FINEST, "Database pool: {0}, Taken connections: {1}, All connections: {2}, Impl: {3}, Caller: {4}",
-					new Object[]{type, pool.connectionsInUse(), pool.totalConnections(), getNonFullyQualifiedClassName(pool.getClass().getName()), Thread.currentThread().getStackTrace()[2]});
+		HikariDataSource ds = dataSources.get(type);
+		if (ds == null) {
+			throw new SQLException("No data source configured for " + type);
 		}
+		return ds.getConnection();
 	}
 
+	/**
+	 * Legacy cleanup helper retained for backward compatibility.
+	 * New code should use try-with-resources instead.
+	 */
 	public static void cleanup(DatabaseType type, ResultSet rs, PreparedStatement ps, Connection con) {
 		if (rs != null) {
 			try {
@@ -94,198 +86,90 @@ public final class DatabaseManager {
 			}
 		}
 		if (con != null) {
-			connections.get(type).returnConnection(con);
+			try {
+				con.close();
+			} catch (SQLException ignored) {
+			}
 		}
 	}
 
-	public static void setProps(PropertiesConfiguration props, boolean useMcdb, boolean nio) throws SQLException {
-		driver = props.getString("driver");
-		try {
-			Class.forName(driver); //load the jdbc driver
-		} catch (ClassNotFoundException e) {
-			throw new SQLException("Unable to find JDBC library. Do you have MySQL Connector/J (if using default JDBC driver)?"/*, e*/);
+	/**
+	 * Executes the given work inside a single database transaction.
+	 * The transaction is committed if the work completes normally, or
+	 * rolled back if it throws an exception.
+	 */
+	public static void inTransaction(DatabaseType type, TransactionalWork work) throws SQLException {
+		try (Connection con = getConnection(type)) {
+			con.setAutoCommit(false);
+			try {
+				work.execute(con);
+				con.commit();
+			} catch (SQLException | RuntimeException ex) {
+				try {
+					con.rollback();
+				} catch (SQLException rollbackEx) {
+					ex.addSuppressed(rollbackEx);
+				}
+				throw ex;
+			} finally {
+				con.setAutoCommit(true);
+			}
 		}
+	}
+
+	/**
+	 * Initializes connection pools from the given properties.
+	 *
+	 * @param props    database properties (driver, url, user, password, mcdb)
+	 * @param useMcdb  whether to initialize the WZ database pool
+	 * @param nio      ignored (retained for API compatibility during migration)
+	 */
+	public static void setProps(PropertiesConfiguration props, boolean useMcdb, boolean nio) throws SQLException {
+		String driver = props.getString("driver");
 		String url = props.getString("url");
 		String user = props.getString("user");
 		String password = props.getString("password");
-		connections.put(DatabaseType.STATE, nio ? new ThreadLocalConnections(url, user, password) : new CachedConnectionPool(url, user, password));
+
+		dataSources.put(DatabaseType.STATE, createDataSource("argonms-state", driver, url, user, password));
+		LOG.log(Level.INFO, "Initialized HikariCP pool for STATE database");
+
 		if (useMcdb) {
 			String wz = props.getString("mcdb");
-			connections.put(DatabaseType.WZ, nio ? new ThreadLocalConnections(wz, user, password) : new CachedConnectionPool(wz, user, password));
+			dataSources.put(DatabaseType.WZ, createDataSource("argonms-wz", driver, wz, user, password));
+			LOG.log(Level.INFO, "Initialized HikariCP pool for WZ database");
 		}
 	}
 
+	/**
+	 * Shuts down all connection pools gracefully.
+	 */
 	public static Map<DatabaseType, Map<Connection, SQLException>> closeAll() {
 		Map<DatabaseType, Map<Connection, SQLException>> exceptions = new EnumMap<>(DatabaseType.class);
-		for (Entry<DatabaseType, ConnectionPool> pool : connections.entrySet()) {
-			DatabaseType poolType = pool.getKey();
-			LockableList<Connection> allConnections = pool.getValue().allConnections();
-			allConnections.lockWrite();
+		for (Map.Entry<DatabaseType, HikariDataSource> entry : dataSources.entrySet()) {
 			try {
-				for (Iterator<Connection> iter = allConnections.iterator(); iter.hasNext(); ) {
-					Connection con = iter.next();
-					try {
-						con.close();
-						iter.remove();
-					} catch (SQLException e) {
-						Map<Connection, SQLException> subExceptions = exceptions.get(poolType);
-						if (subExceptions == null) {
-							subExceptions = new HashMap<>();
-							exceptions.put(poolType, subExceptions);
-						}
-						subExceptions.put(con, e);
-					}
-				}
-			} finally {
-				allConnections.unlockWrite();
+				entry.getValue().close();
+			} catch (RuntimeException ex) {
+				LOG.log(Level.WARNING, "Error closing pool for " + entry.getKey(), ex);
 			}
 		}
+		dataSources.clear();
 		return exceptions;
 	}
 
-	private static interface ConnectionPool {
-		public Connection getConnection() throws SQLException;
-		public void returnConnection(Connection con);
-		public LockableList<Connection> allConnections();
-		public int connectionsInUse();
-		public int totalConnections();
-	}
-
-	private static class ThreadLocalConnections extends ThreadLocal<Connection> implements ConnectionPool {
-		private final LockableList<Connection> allConnections;
-		private final AtomicInteger taken;
-		private final ThreadLocal<SQLException> exceptions;
-		private final String url;
-		private final String user;
-		private final String password;
-
-		protected ThreadLocalConnections(String url, String user, String password) {
-			allConnections = new LockableList<>(new LinkedList<Connection>());
-			taken = new AtomicInteger(0);
-			exceptions = new ThreadLocal<>();
-			this.url = url;
-			this.user = user;
-			this.password = password;
-		}
-
-		@Override
-		protected Connection initialValue() {
-			try {
-				Connection con = DriverManager.getConnection(url, user, password);
-				allConnections.addWhenSafe(con);
-				return con;
-			} catch (SQLException e) {
-				exceptions.set(/*new SQLException("Could not connect to database.", */e/*)*/);
-				return null;
-			}
-		}
-
-		private Connection tryGetConnection() throws SQLException {
-			Connection con = get();
-			if (con == null) {
-				remove();
-				SQLException ex = exceptions.get();
-				exceptions.remove();
-				throw ex;
-			}
-			return con;
-		}
-
-		@Override
-		public Connection getConnection() throws SQLException {
-			Connection con = tryGetConnection();
-			if (!con.isValid(0)) {
-				try {
-					con.close();
-					allConnections.removeWhenSafe(con);
-				} catch (SQLException e) {
-					throw new SQLException("Could not remove invalid connection to database.", e);
-				}
-				remove();
-				con = tryGetConnection();
-			}
-			taken.incrementAndGet();
-			return con;
-		}
-
-		@Override
-		public void returnConnection(Connection con) {
-			taken.decrementAndGet();
-		}
-
-		@Override
-		public LockableList<Connection> allConnections() {
-			return allConnections;
-		}
-
-		@Override
-		public int connectionsInUse() {
-			return taken.get();
-		}
-
-		@Override
-		public int totalConnections() {
-			return allConnections.size();
-		}
-	}
-
-	private static class CachedConnectionPool implements ConnectionPool {
-		private final LockableList<Connection> allConnections;
-		private final Queue<Connection> available;
-		private final AtomicInteger taken;
-		private final String url;
-		private final String user;
-		private final String password;
-
-		protected CachedConnectionPool(String url, String user, String password) {
-			allConnections = new LockableList<>(new LinkedList<Connection>());
-			available = new ConcurrentLinkedQueue<>();
-			taken = new AtomicInteger(0);
-			this.url = url;
-			this.user = user;
-			this.password = password;
-		}
-
-		@Override
-		public Connection getConnection() throws SQLException {
-			Connection next = available.poll();
-			while (next != null && !next.isValid(0)) {
-				try {
-					next.close();
-					allConnections.removeWhenSafe(next);
-				} catch (SQLException e) {
-					throw new SQLException("Could not remove invalid connection to database.", e);
-				}
-				next = available.poll();
-			}
-			if (next == null) {
-				next = DriverManager.getConnection(url, user, password);
-				allConnections.addWhenSafe(next);
-			}
-			taken.incrementAndGet();
-			return next;
-		}
-
-		@Override
-		public void returnConnection(Connection con) {
-			available.offer(con);
-			taken.decrementAndGet();
-		}
-
-		@Override
-		public LockableList<Connection> allConnections() {
-			return allConnections;
-		}
-
-		@Override
-		public int connectionsInUse() {
-			return taken.get(); //should = available.size()
-		}
-
-		@Override
-		public int totalConnections() {
-			return allConnections.getSizeWhenSafe();
-		}
+	private static HikariDataSource createDataSource(String poolName, String driver, String url, String user, String password) {
+		HikariConfig config = new HikariConfig();
+		config.setPoolName(poolName);
+		config.setDriverClassName(driver);
+		config.setJdbcUrl(url);
+		config.setUsername(user);
+		config.setPassword(password);
+		config.setMaximumPoolSize(Integer.getInteger("argonms.db.maxPoolSize", 10));
+		config.setMinimumIdle(Integer.getInteger("argonms.db.minIdle", 2));
+		config.setIdleTimeout(Long.getLong("argonms.db.idleTimeout", 300_000L));
+		config.setMaxLifetime(Long.getLong("argonms.db.maxLifetime", 600_000L));
+		config.setConnectionTimeout(Long.getLong("argonms.db.connectionTimeout", 30_000L));
+		config.setAutoCommit(true);
+		return new HikariDataSource(config);
 	}
 
 	private DatabaseManager() {

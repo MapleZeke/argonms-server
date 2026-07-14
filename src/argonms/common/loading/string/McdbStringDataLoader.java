@@ -36,38 +36,33 @@ public class McdbStringDataLoader extends StringDataLoader {
 
 	@Override
 	public boolean loadAll() {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			con = DatabaseManager.getConnection(DatabaseType.WZ);
-			ps = con.prepareStatement("SELECT `type`,`objectid`,`name` FROM `stringdata` WHERE `type` != 6");
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				switch (rs.getShort(1)) {
-					case 1:
-						itemNames.put(Integer.valueOf(rs.getInt(2)), rs.getString(3));
-						break;
-					case 2:
-						skillNames.put(Integer.valueOf(rs.getInt(2)), rs.getString(3));
-						break;
-					case 3:
-						mapNames.put(Integer.valueOf(rs.getInt(2)), rs.getString(3));
-						break;
-					case 4:
-						mobNames.put(Integer.valueOf(rs.getInt(2)), rs.getString(3));
-						break;
-					case 5:
-						npcNames.put(Integer.valueOf(rs.getInt(2)), rs.getString(3));
-						break;
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.WZ);
+				PreparedStatement ps = con.prepareStatement("SELECT `type`,`objectid`,`name` FROM `stringdata` WHERE `type` != 6")) {
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					switch (rs.getShort(1)) {
+						case 1:
+							itemNames.put(Integer.valueOf(rs.getInt(2)), rs.getString(3));
+							break;
+						case 2:
+							skillNames.put(Integer.valueOf(rs.getInt(2)), rs.getString(3));
+							break;
+						case 3:
+							mapNames.put(Integer.valueOf(rs.getInt(2)), rs.getString(3));
+							break;
+						case 4:
+							mobNames.put(Integer.valueOf(rs.getInt(2)), rs.getString(3));
+							break;
+						case 5:
+							npcNames.put(Integer.valueOf(rs.getInt(2)), rs.getString(3));
+							break;
+					}
 				}
 			}
 			return true;
 		} catch (SQLException e) {
 			LOG.log(Level.WARNING, "Error loading string data from the MCDB.", e);
 			return false;
-		} finally {
-			DatabaseManager.cleanup(DatabaseType.WZ, rs, ps, con);
 		}
 	}
 }
