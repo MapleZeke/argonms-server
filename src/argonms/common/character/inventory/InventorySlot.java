@@ -35,19 +35,15 @@ public abstract class InventorySlot implements Comparable<InventorySlot>, Clonea
 	//database storage space.
 	public enum ItemType { EQUIP, ITEM, PET, RING, MOUNT }
 
-	public static final byte
-		EQUIP = 1,
-		ITEM = 2,
-		PET = 3
-	;
+	public static final byte EQUIP = 1;
+	public static final byte ITEM = 2;
+	public static final byte PET = 3;
 
-	public static final byte
-		FLAG_LOCK = 0x01,
-		FLAG_SPIKES = 0x02,
-		FLAG_COLD_PROTECTION = 0x04,
-		FLAG_TRADE_UNAVAILABLE = 0x08,
-		FLAG_KARMA_SCISSORS = 0x10
-	;
+	public static final byte FLAG_LOCK = 0x01;
+	public static final byte FLAG_SPIKES = 0x02;
+	public static final byte FLAG_COLD_PROTECTION = 0x04;
+	public static final byte FLAG_TRADE_UNAVAILABLE = 0x08;
+	public static final byte FLAG_KARMA_SCISSORS = 0x10;
 
 	private int id;
 	private long expire;

@@ -56,23 +56,21 @@ public class Equip extends InventorySlot implements Cloneable {
 	private byte tuc;
 	private byte level;
 
-	private short
-		str,
-		dex,
-		_int,
-		luk,
-		hp,
-		mp,
-		watk,
-		matk,
-		wdef,
-		mdef,
-		acc,
-		avoid,
-		hands,
-		speed,
-		jump
-	;
+	private short str;
+	private short dex;
+	private short _int;
+	private short luk;
+	private short hp;
+	private short mp;
+	private short watk;
+	private short matk;
+	private short wdef;
+	private short mdef;
+	private short acc;
+	private short avoid;
+	private short hands;
+	private short speed;
+	private short jump;
 
 	public Equip(int itemid) {
 		super(itemid);

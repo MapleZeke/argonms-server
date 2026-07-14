@@ -135,7 +135,7 @@ public final class HexTool {
 		char[] ret = new char[bytes.length];
 		for (int x = 0; x < bytes.length; x++) {
 			byte b = bytes[x];
-			ret[x] = ((b >= 0x20 && b <= 0x7E) ? ((char) (b & 0xFF)) : '.');
+			ret[x] = b >= 0x20 && b <= 0x7E ? ((char) (b & 0xFF)) : '.';
 		}
 		return String.valueOf(ret);
 	}

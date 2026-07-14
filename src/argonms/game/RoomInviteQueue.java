@@ -42,8 +42,8 @@ public final class RoomInviteQueue {
 	private final Map<Integer, String> queuedChats;
 
 	private RoomInviteQueue() {
-		queuedTrades = new ConcurrentHashMap<Integer, Integer>();
-		queuedChats = new ConcurrentHashMap<Integer, String>();
+		queuedTrades = new ConcurrentHashMap<>();
+		queuedChats = new ConcurrentHashMap<>();
 	}
 
 	public void queueTradeInvite(GameCharacter sender, int recipient) {

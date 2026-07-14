@@ -49,7 +49,7 @@ public class Inventory implements IInventory {
 
 		//initialize reverse lookup
 		static {
-			lookup = new HashMap<Byte, InventoryType>(values().length);
+			lookup = new HashMap<>(values().length);
 			for (InventoryType type : values())
 				lookup.put(Byte.valueOf(type.byteValue()), type);
 		}
@@ -102,7 +102,7 @@ public class Inventory implements IInventory {
 	public Map<Short, Integer> getItemIds() {
 		Map<Short, Integer> ids;
 		synchronized(slots) {
-			ids = new LinkedHashMap<Short, Integer>(slots.size());
+			ids = new LinkedHashMap<>(slots.size());
 			for (Entry<Short, InventorySlot> entry : slots.entrySet())
 				ids.put(entry.getKey(), Integer.valueOf(entry.getValue().getDataId()));
 		}
@@ -122,7 +122,7 @@ public class Inventory implements IInventory {
 	 */
 	public Set<Short> getItemSlots(int itemid) {
 		//keep them sorted in ascending order!
-		Set<Short> positions = new TreeSet<Short>();
+		Set<Short> positions = new TreeSet<>();
 		synchronized(slots) {
 			for (Entry<Short, InventorySlot> entry : slots.entrySet())
 				if (entry.getValue().getDataId() == itemid)
@@ -144,7 +144,7 @@ public class Inventory implements IInventory {
 	public List<Short> getFreeSlots(int needed) {
 		//keep it in ascending order! (insertion order should work when
 		//iterationg over SortedMaps)
-		List<Short> empty = new LinkedList<Short>();
+		List<Short> empty = new LinkedList<>();
 		for (short i = 1; i <= maxSlots.get() && empty.size() < needed; i++) {
 			Short slot = Short.valueOf(i);
 			if (!slots.containsKey(slot))

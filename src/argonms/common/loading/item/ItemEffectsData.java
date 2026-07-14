@@ -27,24 +27,25 @@ import java.util.List;
  * @author GoldenKevin
  */
 public class ItemEffectsData extends BuffsData {
-	private static final byte
-		POISON = (1 << 0),
-		SEAL = (1 << 1),
-		DARKNESS = (1 << 2),
-		WEAKNESS = (1 << 3),
-		CURSE = (1 << 4),
-		CONSUME_ON_PICKUP = (1 << 5)
-	;
+	private static final byte POISON = 1 << 0;
+	private static final byte SEAL = 1 << 1;
+	private static final byte DARKNESS = 1 << 2;
+	private static final byte WEAKNESS = 1 << 3;
+	private static final byte CURSE = 1 << 4;
+	private static final byte CONSUME_ON_PICKUP = 1 << 5;
 
 	private final List<Integer> petConsumableBy;
 	//use a bitfield on boolean fields to save memory...
 	private byte flags;
-	private short hp, mp, hpR, mpR;
+	private short hp;
+	private short mp;
+	private short hpR;
+	private short mpR;
 	private int moveTo;
 
 	protected ItemEffectsData(int itemid) {
 		super(itemid);
-		petConsumableBy = new ArrayList<Integer>();
+		petConsumableBy = new ArrayList<>();
 	}
 
 	@Override

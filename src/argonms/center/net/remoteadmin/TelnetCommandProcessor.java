@@ -28,9 +28,11 @@ public class TelnetCommandProcessor {
 			client.getSession().close("User typed '" + message + "'");
 			return;
 		} else if (message.equals("help")) {
-			client.getSession().send("EXIT\t\tCloses the current telnet session.\r\n"
-					+ "HELP\t\tDisplays this message.\r\n"
-					+ "\r\n");
+			client.getSession().send("""
+					EXIT		Closes the current telnet session.
+					HELP		Displays this message.
+					
+					""");
 		} else if (!message.trim().isEmpty()) {
 			client.getSession().send('\'' + message.trim().split(" ")[0] + "\' is not recognized as a command. Type 'HELP' for a list of accepted commands.\r\n\r\n");
 		}

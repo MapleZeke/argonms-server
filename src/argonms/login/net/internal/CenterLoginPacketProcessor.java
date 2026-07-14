@@ -77,7 +77,7 @@ public class CenterLoginPacketProcessor extends CenterRemotePacketProcessor {
 		byte world = packet.readByte();
 		String host = packet.readLengthPrefixedString();
 		byte size = packet.readByte();
-		Map<Byte, Integer> ports = new HashMap<Byte, Integer>(size);
+		Map<Byte, Integer> ports = new HashMap<>(size);
 		for (int i = 0; i < size; i++)
 			ports.put(Byte.valueOf(packet.readByte()), Integer.valueOf(packet.readInt()));
 		local.gameConnected(serverId, world, host, ports);

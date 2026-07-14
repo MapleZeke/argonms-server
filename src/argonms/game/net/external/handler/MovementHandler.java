@@ -58,26 +58,24 @@ import java.util.List;
  * @author GoldenKevin
  */
 public final class MovementHandler {
-	public static final byte
-		NORMAL_MOVE = 0,
-		JUMP = 1,
-		JUMP_AND_KNOCKBACK = 2,
-		UNK_SKILL = 3,
-		TELEPORT = 4,
-		NORMAL_MOVE_2 = 5,
-		FLASH_JUMP = 6,
-		ASSAULTER = 7,
-		ASSASSINATE = 8,
-		RUSH = 9,
-		EQUIP = 10,
-		CHAIR = 11,
-		HORNTAIL_KNOCKBACK = 12,
-		RECOIL_SHOT = 13,
-		UNK = 14,
-		JUMP_DOWN = 15,
-		WINGS = 16,
-		WINGS_FALL = 17
-	;
+	public static final byte NORMAL_MOVE = 0;
+	public static final byte JUMP = 1;
+	public static final byte JUMP_AND_KNOCKBACK = 2;
+	public static final byte UNK_SKILL = 3;
+	public static final byte TELEPORT = 4;
+	public static final byte NORMAL_MOVE_2 = 5;
+	public static final byte FLASH_JUMP = 6;
+	public static final byte ASSAULTER = 7;
+	public static final byte ASSASSINATE = 8;
+	public static final byte RUSH = 9;
+	public static final byte EQUIP = 10;
+	public static final byte CHAIR = 11;
+	public static final byte HORNTAIL_KNOCKBACK = 12;
+	public static final byte RECOIL_SHOT = 13;
+	public static final byte UNK = 14;
+	public static final byte JUMP_DOWN = 15;
+	public static final byte WINGS = 16;
+	public static final byte WINGS_FALL = 17;
 
 	/**
 	 * Finds the ceiling of (x / y)
@@ -298,7 +296,7 @@ public final class MovementHandler {
 	}
 
 	private static List<LifeMovementFragment> parseMovement(LittleEndianReader packet) {
-		List<LifeMovementFragment> res = new ArrayList<LifeMovementFragment>();
+		List<LifeMovementFragment> res = new ArrayList<>();
 		int numCommands = packet.readByte();
 		for (int i = 0; i < numCommands; i++) {
 			byte command = packet.readByte();

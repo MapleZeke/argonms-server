@@ -91,17 +91,18 @@ public class ShopServer implements LocalServer {
 	private final Map<Integer, ShopPlayerContinuation> enterServerData;
 	private final ShopCrossServerSynchronization worldComm;
 	private String ticker;
-	private String commodityOverridePath, limitedCommodityPath;
+	private String commodityOverridePath;
+	private String limitedCommodityPath;
 	private final Set<Integer> blockedSerials;
 
 	private ShopServer() {
-		channelChangeData = new ConcurrentHashMap<Integer, ShopPlayerContinuation>();
-		queuedChannelChanges = new ConcurrentHashMap<Integer, Pair<Byte, ScheduledFuture<?>>>();
-		onlineWorlds = new HashMap<Byte, ShopWorld>();
-		storage = new PlayerLog<ShopCharacter>();
-		enterServerData = new ConcurrentHashMap<Integer, ShopPlayerContinuation>();
+		channelChangeData = new ConcurrentHashMap<>();
+		queuedChannelChanges = new ConcurrentHashMap<>();
+		onlineWorlds = new HashMap<>();
+		storage = new PlayerLog<>();
+		enterServerData = new ConcurrentHashMap<>();
 		worldComm = new ShopCrossServerSynchronization();
-		blockedSerials = new HashSet<Integer>();
+		blockedSerials = new HashSet<>();
 	}
 
 	private void setBlockedSerials(Scanner scan) {
@@ -156,14 +157,14 @@ public class ShopServer implements LocalServer {
 		}
 		wzPath = System.getProperty("argonms.data.dir");
 
-		handler = new ClientListener<ShopClient>(new ClientShopPacketProcessor(), new ClientFactory<ShopClient>() {
+		handler = new ClientListener<>(new ClientShopPacketProcessor(), new ClientFactory<ShopClient>() {
 			@Override
 			public ShopClient newInstance() {
 				return new ShopClient();
 			}
 		});
 
-		boolean mcdb = (wzType == DataFileType.MCDB);
+		boolean mcdb = wzType == DataFileType.MCDB;
 		prop = new PropertiesConfiguration();
 		try {
 			FileReader fr = new FileReader(System.getProperty("argonms.db.config.file", "db.properties"));
@@ -244,7 +245,8 @@ public class ShopServer implements LocalServer {
 		CommodityOverrideDataLoader.setInstance(wzType, wzPath);
 		LimitedCommodityDataLoader.setInstance(wzType, wzPath);
 		ItemDataLoader.setInstance(wzType, wzPath);
-		long start, end;
+		long start;
+		long end;
 		start = System.nanoTime();
 		System.out.print("Loading String data...");
 		StringDataLoader.getInstance().loadAll();

@@ -52,10 +52,10 @@ public class ScriptReactor extends PlayerScriptInteraction {
 		int multiplier = GameServer.getVariables().getMesoRate();
 		//TODO: should we multiply mesoChance by drop rate?
 		if (mesoChance == 0 || generator.nextInt(1000000) >= mesoChance) {
-			drops = new ArrayList<ItemDrop>(itemsAndChances.length / 2);
+			drops = new ArrayList<>(itemsAndChances.length / 2);
 		} else {
-			drops = new ArrayList<ItemDrop>(1 + itemsAndChances.length / 2);
-			int mesos = (generator.nextInt(mesosMax - mesosMin + 1) + mesosMin);
+			drops = new ArrayList<>(1 + itemsAndChances.length / 2);
+			int mesos = generator.nextInt(mesosMax - mesosMin + 1) + mesosMin;
 			drops.add(new ItemDrop((int) Math.min((long) mesos * multiplier, Integer.MAX_VALUE)));
 		}
 		multiplier = GameServer.getVariables().getDropRate();

@@ -237,7 +237,7 @@ public class RemoteCenterSession<T extends RemoteCenterInterface> implements Ses
 		private final AtomicReference<ScheduledFuture<?>> future;
 
 		public KeepAliveTask() {
-			future = new AtomicReference<ScheduledFuture<?>>(null);
+			future = new AtomicReference<>(null);
 		}
 
 		public void sendPing() {
@@ -275,9 +275,7 @@ public class RemoteCenterSession<T extends RemoteCenterInterface> implements Ses
 			private final ThreadGroup group;
 
 			{
-				SecurityManager s = System.getSecurityManager();
-				group = (s != null)? s.getThreadGroup() :
-									 Thread.currentThread().getThreadGroup();
+				group = Thread.currentThread().getThreadGroup();
 			}
 
 			@Override
@@ -296,7 +294,7 @@ public class RemoteCenterSession<T extends RemoteCenterInterface> implements Ses
 			center.socket().setTcpNoDelay(false);
 			center.configureBlocking(true);
 			center.connect(new InetSocketAddress(ip, port));
-			final RemoteCenterSession<T> session = new RemoteCenterSession<T>(center, serverState, authKey, workerThreadPool);
+			final RemoteCenterSession<T> session = new RemoteCenterSession<>(center, serverState, authKey, workerThreadPool);
 			serverState.setSession(session);
 			LOG.log(Level.FINE, "Connected to Center server at {0}", session.getAddress());
 			workerThreadPool.submit(new Runnable() {

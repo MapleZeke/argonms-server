@@ -127,7 +127,7 @@ public abstract class ChannelOrShopSynchronization extends CrossProcessSynchroni
 	protected void receivedReturnedBuddyLogInNotifications(LittleEndianReader packet) {
 		int recipient = packet.readInt();
 		byte count = packet.readByte();
-		List<Integer> senders = new ArrayList<Integer>(count);
+		List<Integer> senders = new ArrayList<>(count);
 		for (int i = 0; i < count; i++)
 			senders.add(Integer.valueOf(packet.readInt()));
 		boolean bubble = packet.readBool();

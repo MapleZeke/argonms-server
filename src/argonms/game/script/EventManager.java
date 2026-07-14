@@ -46,7 +46,7 @@ public class EventManager {
 	public EventManager(String scriptPath, byte channel, String[] activateNow) {
 		eventPath = scriptPath + "events" + GlobalConstants.DIR_DELIMIT;
 		this.channel = channel;
-		activatedEvents = new ConcurrentHashMap<String, Pair<ScriptEvent, EventManipulator>>();
+		activatedEvents = new ConcurrentHashMap<>();
 		for (String script : activateNow)
 			runScript(script, true, null);
 	}

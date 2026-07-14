@@ -43,27 +43,23 @@ public class TelnetClient implements SessionDataModel {
 
 	private enum TelnetOptions { ECHO }
 
-	public static final byte
-		IAC = (byte) 0xFF,
-		DONT = (byte) 0xFE,
-		DO = (byte) 0xFD,
-		WONT = (byte) 0xFC,
-		WILL = (byte) 0xFB,
-		SB = (byte) 0xFA,
-		SE = (byte) 0xF0
-	;
+	public static final byte IAC = (byte) 0xFF;
+	public static final byte DONT = (byte) 0xFE;
+	public static final byte DO = (byte) 0xFD;
+	public static final byte WONT = (byte) 0xFC;
+	public static final byte WILL = (byte) 0xFB;
+	public static final byte SB = (byte) 0xFA;
+	public static final byte SE = (byte) 0xF0;
 
-	public static final byte
-		BINARY = 0,
-		ECHO = 1,
-		SUPPRESS_GO_AHEAD = 3,
-		TERMINAL_TYPE = 24,
-		NAWS = 31,
-		TERMINAL_SPEED = 32,
-		LINEMODE = 34,
-		AUTHENTICATION = 37,
-		NEW_ENVIRON = 39
-	;
+	public static final byte BINARY = 0;
+	public static final byte ECHO = 1;
+	public static final byte SUPPRESS_GO_AHEAD = 3;
+	public static final byte TERMINAL_TYPE = 24;
+	public static final byte NAWS = 31;
+	public static final byte TERMINAL_SPEED = 32;
+	public static final byte LINEMODE = 34;
+	public static final byte AUTHENTICATION = 37;
+	public static final byte NEW_ENVIRON = 39;
 
 	private final Set<TelnetOptions> flags;
 	private TelnetSession session;
@@ -216,7 +212,9 @@ public class TelnetClient implements SessionDataModel {
 				byte[] salt = rs.getBytes(3);
 				byte gm = rs.getByte(4);
 
-				boolean correct, hashUpdate, hasSalt = (salt != null && salt.length != 0);
+				boolean correct;
+				boolean hashUpdate;
+				boolean hasSalt = salt != null && salt.length != 0;
 				switch (passhash.length) {
 					case 20: //sha-1 (160 bits = 20 bytes)
 						correct = hasSalt && HashFunctions.checkSaltedSha1Hash(passhash, pwd, salt) || !hasSalt && HashFunctions.checkSha1Hash(passhash, pwd);

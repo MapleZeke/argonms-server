@@ -29,6 +29,7 @@ import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
@@ -47,7 +48,7 @@ public class TelnetSession implements Session {
 	private static final Logger LOG = Logger.getLogger(TelnetSession.class.getName());
 	private static final int BUFFER_SIZE = 1024;
 
-	private static final Charset ascii = Charset.forName("US-ASCII");
+	private static final Charset ascii = StandardCharsets.US_ASCII;
 	private static final String newLine = "\r\n";
 	private static final Pattern newLineRegex = Pattern.compile(newLine);
 	private static final int newLineLength = newLine.length();

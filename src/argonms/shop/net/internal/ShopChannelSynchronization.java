@@ -37,7 +37,8 @@ import java.util.Map;
  * @author GoldenKevin
  */
 public class ShopChannelSynchronization extends CrossProcessSynchronization {
-	private final byte targetWorld, targetCh;
+	private final byte targetWorld;
+	private final byte targetCh;
 	private final byte[] ipAddress;
 	private int port;
 
@@ -205,7 +206,7 @@ public class ShopChannelSynchronization extends CrossProcessSynchronization {
 		for (int i = 0; i < receiversCount; i++)
 			receivers[i] = packet.readInt();
 
-		List<Integer> localRecipients = new ArrayList<Integer>();
+		List<Integer> localRecipients = new ArrayList<>();
 		for (int recipient : receivers)
 			if (ShopServer.getInstance().getPlayerById(recipient) != null)
 				localRecipients.add(Integer.valueOf(recipient));

@@ -53,7 +53,7 @@ public class PlayerContinuation extends AbstractPlayerContinuation {
 
 	public PlayerContinuation() {
 		super();
-		activeSummons = new HashMap<Integer, PlayerSkillSummon>();
+		activeSummons = new HashMap<>();
 	}
 
 	public Map<Integer, PlayerSkillSummon> getActiveSummons() {

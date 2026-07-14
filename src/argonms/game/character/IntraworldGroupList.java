@@ -204,12 +204,13 @@ public abstract class IntraworldGroupList<M extends IntraworldGroupList.Member,
 	protected final Map<Integer, L> localMembers;
 	//members on other channels
 	protected final Map<Byte, Map<Integer, R>> remoteMembers;
-	private final Lock readLock, writeLock;
+	private final Lock readLock;
+	private final Lock writeLock;
 
 	public IntraworldGroupList(int groupId) {
 		this.id = groupId;
-		this.localMembers = new HashMap<Integer, L>();
-		this.remoteMembers = new HashMap<Byte, Map<Integer, R>>();
+		this.localMembers = new HashMap<>();
+		this.remoteMembers = new HashMap<>();
 
 		ReadWriteLock locks = new ReentrantReadWriteLock();
 		readLock = locks.readLock();
@@ -255,7 +256,7 @@ public abstract class IntraworldGroupList<M extends IntraworldGroupList.Member,
 	 * @return 
 	 */
 	public List<GameCharacter> getLocalMembersInMap(int mapId) {
-		List<GameCharacter> filtered = new ArrayList<GameCharacter>();
+		List<GameCharacter> filtered = new ArrayList<>();
 		for (L m : localMembers.values())
 			if (m.getMapId() == mapId)
 				filtered.add(m.getPlayer());
@@ -320,7 +321,7 @@ public abstract class IntraworldGroupList<M extends IntraworldGroupList.Member,
 	protected void addPlayer(R member, boolean transition) {
 		Map<Integer, R> others = remoteMembers.get(Byte.valueOf(member.getChannel()));
 		if (others == null) {
-			others = new HashMap<Integer, R>();
+			others = new HashMap<>();
 			remoteMembers.put(Byte.valueOf(member.getChannel()), others);
 		}
 		others.put(Integer.valueOf(member.getPlayerId()), member);

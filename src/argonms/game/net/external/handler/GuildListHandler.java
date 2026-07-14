@@ -50,59 +50,51 @@ import java.util.logging.Logger;
 public class GuildListHandler {
 	private static final Logger LOG = Logger.getLogger(GuildListHandler.class.getName());
 
-	private static final byte //guild receive op codes
-		CREATE = 0x02,
-		INVITE = 0x05,
-		JOIN = 0x06,
-		LEAVE = 0x07,
-		EXPEL = 0x08,
-		CHANGE_RANK_STRING = 0x0D,
-		CHANGE_PLAYER_RANK = 0x0E,
-		CHANGE_EMBLEM = 0x0F,
-		CHANGE_NOTICE = 0x10,
-		GUILD_CONTRACT_RESPONSE = 0x1E
-	;
+	private static final byte CREATE = 0x02;
+	private static final byte INVITE = 0x05;
+	private static final byte JOIN = 0x06;
+	private static final byte LEAVE = 0x07;
+	private static final byte EXPEL = 0x08;
+	private static final byte CHANGE_RANK_STRING = 0x0D;
+	private static final byte CHANGE_PLAYER_RANK = 0x0E;
+	private static final byte CHANGE_EMBLEM = 0x0F;
+	private static final byte CHANGE_NOTICE = 0x10;
+	private static final byte GUILD_CONTRACT_RESPONSE = 0x1E;
 
-	private static final byte //guild BBS receive op codes
-		EDIT_TOPIC_STARTER = 0x00,
-		DELETE_TOPIC = 0x01,
-		LIST_TOPICS = 0x02,
-		LOAD_TOPIC = 0x03,
-		NEW_REPLY = 0x04,
-		DELETE_REPLY = 0x05
-	;
+	private static final byte EDIT_TOPIC_STARTER = 0x00;
+	private static final byte DELETE_TOPIC = 0x01;
+	private static final byte LIST_TOPICS = 0x02;
+	private static final byte LOAD_TOPIC = 0x03;
+	private static final byte NEW_REPLY = 0x04;
+	private static final byte DELETE_REPLY = 0x05;
 
-	public static final byte //guild send op codes
-		ASK_NAME = 0x01,
-		GENERAL_ERROR = 0x02,
-		GUILD_CONTRACT = 0x03,
-		INVITE_SENT = 0x05,
-		ASK_EMBLEM = 0x11,
-		LIST = 0x1A,
-		NAME_TAKEN = 0x1C,
-		LEVEL_TOO_LOW = 0x23,
-		JOINED_GUILD = 0x27,
-		ALREADY_IN_GUILD = 0x28,
-		CANNOT_FIND = 0x2A,
-		LEFT_GUILD = 0x2C,
-		EXPELLED_FROM_GUILD = 0x2F,
-		DISBANDED_GUILD = 0x32,
-		INVITE_DENIED = 0x37,
-		CAPACITY_CHANGED = 0x3A,
-		LEVEL_JOB_CHANGED = 0x3C,
-		CHANNEL_CHANGE = 0x3D,
-		RANK_TITLES_CHANGED = 0x3E,
-		RANK_CHANGED = 0x40,
-		EMBLEM_CHANGED = 0x42,
-		NOTICE_CHANGED = 0x44,
-		GUILD_GP_CHANGED = 0x48,
-		SHOW_GUILD_RANK_BOARD = 0x49
-	;
+	public static final byte ASK_NAME = 0x01;
+	public static final byte GENERAL_ERROR = 0x02;
+	public static final byte GUILD_CONTRACT = 0x03;
+	public static final byte INVITE_SENT = 0x05;
+	public static final byte ASK_EMBLEM = 0x11;
+	public static final byte LIST = 0x1A;
+	public static final byte NAME_TAKEN = 0x1C;
+	public static final byte LEVEL_TOO_LOW = 0x23;
+	public static final byte JOINED_GUILD = 0x27;
+	public static final byte ALREADY_IN_GUILD = 0x28;
+	public static final byte CANNOT_FIND = 0x2A;
+	public static final byte LEFT_GUILD = 0x2C;
+	public static final byte EXPELLED_FROM_GUILD = 0x2F;
+	public static final byte DISBANDED_GUILD = 0x32;
+	public static final byte INVITE_DENIED = 0x37;
+	public static final byte CAPACITY_CHANGED = 0x3A;
+	public static final byte LEVEL_JOB_CHANGED = 0x3C;
+	public static final byte CHANNEL_CHANGE = 0x3D;
+	public static final byte RANK_TITLES_CHANGED = 0x3E;
+	public static final byte RANK_CHANGED = 0x40;
+	public static final byte EMBLEM_CHANGED = 0x42;
+	public static final byte NOTICE_CHANGED = 0x44;
+	public static final byte GUILD_GP_CHANGED = 0x48;
+	public static final byte SHOW_GUILD_RANK_BOARD = 0x49;
 
-	private static final byte //guild BBS send op codes
-		TOPIC_LIST = 0x06,
-		REPLY_LIST = 0x07
-	;
+	private static final byte TOPIC_LIST = 0x06;
+	private static final byte REPLY_LIST = 0x07;
 
 	public static void handleListModification(LittleEndianReader packet, GameClient gc) {
 		GameCharacter p = gc.getPlayer();
@@ -284,7 +276,7 @@ public class GuildListHandler {
 		String content = rs.getString(5);
 		int icon = rs.getInt(6);
 
-		List<BbsReply> replies = new ArrayList<BbsReply>();
+		List<BbsReply> replies = new ArrayList<>();
 		PreparedStatement ps = null;
 		ResultSet rrs = null;
 		try {
@@ -317,7 +309,7 @@ public class GuildListHandler {
 	}
 
 	private static List<BbsTopic> loadTopics(Connection con, int guildId, int page) throws SQLException {
-		List<BbsTopic> topics = new ArrayList<BbsTopic>();
+		List<BbsTopic> topics = new ArrayList<>();
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
@@ -334,7 +326,7 @@ public class GuildListHandler {
 	}
 
 	private static List<BbsReply> loadReplies(Connection con, int guildId, int topicId) throws SQLException {
-		List<BbsReply> replies = new ArrayList<BbsReply>();
+		List<BbsReply> replies = new ArrayList<>();
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {

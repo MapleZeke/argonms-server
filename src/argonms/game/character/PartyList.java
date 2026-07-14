@@ -195,7 +195,7 @@ public class PartyList extends IntraworldGroupList<
 	protected RemoteMember addToOffline(IntraworldGroupList.Member member) {
 		Map<Integer, RemoteMember> others = remoteMembers.get(Byte.valueOf(OFFLINE_CH));
 		if (others == null) {
-			others = new HashMap<Integer, RemoteMember>();
+			others = new HashMap<>();
 			remoteMembers.put(Byte.valueOf(OFFLINE_CH), others);
 		}
 		RemoteMember offlineMember = createRemoteMember(member, OFFLINE_CH);

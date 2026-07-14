@@ -64,7 +64,7 @@ public final class DatabaseManager {
 	private static String driver;
 
 	static {
-		connections = new EnumMap<DatabaseType, ConnectionPool>(DatabaseType.class);
+		connections = new EnumMap<>(DatabaseType.class);
 	}
 
 	private static String getNonFullyQualifiedClassName(String fullyQualified) {
@@ -85,13 +85,13 @@ public final class DatabaseManager {
 		if (rs != null) {
 			try {
 				rs.close();
-			} catch (SQLException ex) {
+			} catch (SQLException ignored) {
 			}
 		}
 		if (ps != null) {
 			try {
 				ps.close();
-			} catch (SQLException ex) {
+			} catch (SQLException ignored) {
 			}
 		}
 		if (con != null) {
@@ -117,7 +117,7 @@ public final class DatabaseManager {
 	}
 
 	public static Map<DatabaseType, Map<Connection, SQLException>> closeAll() {
-		Map<DatabaseType, Map<Connection, SQLException>> exceptions = new EnumMap<DatabaseType, Map<Connection, SQLException>>(DatabaseType.class);
+		Map<DatabaseType, Map<Connection, SQLException>> exceptions = new EnumMap<>(DatabaseType.class);
 		for (Entry<DatabaseType, ConnectionPool> pool : connections.entrySet()) {
 			DatabaseType poolType = pool.getKey();
 			LockableList<Connection> allConnections = pool.getValue().allConnections();
@@ -131,7 +131,7 @@ public final class DatabaseManager {
 					} catch (SQLException e) {
 						Map<Connection, SQLException> subExceptions = exceptions.get(poolType);
 						if (subExceptions == null) {
-							subExceptions = new HashMap<Connection, SQLException>();
+							subExceptions = new HashMap<>();
 							exceptions.put(poolType, subExceptions);
 						}
 						subExceptions.put(con, e);
@@ -156,12 +156,14 @@ public final class DatabaseManager {
 		private final LockableList<Connection> allConnections;
 		private final AtomicInteger taken;
 		private final ThreadLocal<SQLException> exceptions;
-		private final String url, user, password;
+		private final String url;
+		private final String user;
+		private final String password;
 
 		protected ThreadLocalConnections(String url, String user, String password) {
-			allConnections = new LockableList<Connection>(new LinkedList<Connection>());
+			allConnections = new LockableList<>(new LinkedList<Connection>());
 			taken = new AtomicInteger(0);
-			exceptions = new ThreadLocal<SQLException>();
+			exceptions = new ThreadLocal<>();
 			this.url = url;
 			this.user = user;
 			this.password = password;
@@ -232,11 +234,13 @@ public final class DatabaseManager {
 		private final LockableList<Connection> allConnections;
 		private final Queue<Connection> available;
 		private final AtomicInteger taken;
-		private final String url, user, password;
+		private final String url;
+		private final String user;
+		private final String password;
 
 		protected CachedConnectionPool(String url, String user, String password) {
-			allConnections = new LockableList<Connection>(new LinkedList<Connection>());
-			available = new ConcurrentLinkedQueue<Connection>();
+			allConnections = new LockableList<>(new LinkedList<Connection>());
+			available = new ConcurrentLinkedQueue<>();
 			taken = new AtomicInteger(0);
 			this.url = url;
 			this.user = user;

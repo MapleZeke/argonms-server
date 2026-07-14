@@ -108,12 +108,13 @@ public class Chatroom {
 
 	private final Avatar[] occupants;
 	private final Set<Byte> channels;
-	private final Lock readLock, writeLock;
+	private final Lock readLock;
+	private final Lock writeLock;
 	private int count;
 
 	public Chatroom(Avatar creator) {
 		occupants = new Avatar[3];
-		channels = new HashSet<Byte>(3);
+		channels = new HashSet<>(3);
 		ReadWriteLock locks = new ReentrantReadWriteLock();
 		readLock = locks.readLock();
 		writeLock = locks.writeLock();

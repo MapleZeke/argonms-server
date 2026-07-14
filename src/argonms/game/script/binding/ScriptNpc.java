@@ -74,20 +74,18 @@ public class ScriptNpc extends PlayerScriptInteraction {
 		this.terminated = new AtomicBoolean(false);
 	}
 
-	private static final byte
-		SAY = 0x00,
-		ASK_YES_NO = 0x01,
-		ASK_TEXT = 0x02,
-		ASK_NUMBER = 0x03,
-		ASK_MENU = 0x04,
-		ASK_QUESTION = 0x05,
-		ASK_QUIZ = 0x06,
-		ASK_AVATAR = 0x07,
-		ASK_PET = 0x09,
-		ASK_ACCEPT = 0x0C,
-		ASK_ACCEPT_NO_ESC = 0x0D,
-		ASK_BOX_TEXT = 0x0E
-	;
+	private static final byte SAY = 0x00;
+	private static final byte ASK_YES_NO = 0x01;
+	private static final byte ASK_TEXT = 0x02;
+	private static final byte ASK_NUMBER = 0x03;
+	private static final byte ASK_MENU = 0x04;
+	private static final byte ASK_QUESTION = 0x05;
+	private static final byte ASK_QUIZ = 0x06;
+	private static final byte ASK_AVATAR = 0x07;
+	private static final byte ASK_PET = 0x09;
+	private static final byte ASK_ACCEPT = 0x0C;
+	private static final byte ASK_ACCEPT_NO_ESC = 0x0D;
+	private static final byte ASK_BOX_TEXT = 0x0E;
 
 	public void setContinuation(Object continuation) {
 		this.continuation = continuation;
@@ -269,7 +267,7 @@ public class ScriptNpc extends PlayerScriptInteraction {
 			throw new ScriptInterruptedException(npcId, getClient().getPlayer().getName());
 		clearBackButton(); //cannot go backwards
 
-		List<Long> expiredPets = new ArrayList<Long>();
+		List<Long> expiredPets = new ArrayList<>();
 		for (InventorySlot item : getClient().getPlayer().getInventory(Inventory.InventoryType.CASH).getAll().values())
 			if (InventoryTools.isPet(item.getDataId()) && item.getExpiration() < System.currentTimeMillis())
 				expiredPets.add(Long.valueOf(item.getUniqueId()));
@@ -531,7 +529,7 @@ public class ScriptNpc extends PlayerScriptInteraction {
 		//of the color digit. Needs to be LinkedHashSet so iteration order is
 		//insertion order, which is natural order because faces is a SortedSet's
 		//head/tail set.
-		Set<Short> styles = new LinkedHashSet<Short>();
+		Set<Short> styles = new LinkedHashSet<>();
 		for (Short s : faces) {
 			short style = (short) (s.shortValue() - s.shortValue() % 1000 + s.shortValue() % 100);
 			Short eyes = Short.valueOf((short) (style + color));
@@ -563,7 +561,7 @@ public class ScriptNpc extends PlayerScriptInteraction {
 
 		short currentEyes = getClient().getPlayer().getEyes();
 		short style = (short) (currentEyes - currentEyes % 1000 + currentEyes % 100);
-		List<Short> colors = new ArrayList<Short>();
+		List<Short> colors = new ArrayList<>();
 		for (short i = 0; i < 10; i++) {
 			Short eyes = Short.valueOf((short) (style + i * 100));
 			//some eyes don't allow certain colors, and will crash the client if
@@ -590,7 +588,7 @@ public class ScriptNpc extends PlayerScriptInteraction {
 		//of the color digit. Needs to be LinkedHashSet so iteration order is
 		//insertion order, which is natural order because hairs is a SortedSet's
 		//head/tail set.
-		Set<Short> styles = new LinkedHashSet<Short>();
+		Set<Short> styles = new LinkedHashSet<>();
 		for (Short s : hairs) {
 			short style = (short) (s.shortValue() - s.shortValue() % 10);
 			Short hair = Short.valueOf((short) (style + color));
@@ -622,7 +620,7 @@ public class ScriptNpc extends PlayerScriptInteraction {
 
 		short currentHair = getClient().getPlayer().getHair();
 		short style = (short) (currentHair - currentHair % 10);
-		List<Short> colors = new ArrayList<Short>();
+		List<Short> colors = new ArrayList<>();
 		for (short i = 0; i < 10; i++) {
 			Short hair = Short.valueOf((short) (style + i));
 			//some hairs don't allow certain colors, and will crash the client
@@ -776,7 +774,7 @@ public class ScriptNpc extends PlayerScriptInteraction {
 		}
 
 		public boolean isEmpty() {
-			return (cursor == null);
+			return cursor == null;
 		}
 
 		public String goBackwardAndGet() {

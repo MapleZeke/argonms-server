@@ -49,7 +49,10 @@ public abstract class ItemDataLoader {
 	protected final Map<Integer, List<int[]>> summons;
 	protected final Map<Integer, Integer> success;
 	protected final Map<Integer, Integer> cursed;
-	protected final Set<Integer> recover, randStat, preventSlip, warmSupport;
+	protected final Set<Integer> recover;
+	protected final Set<Integer> randStat;
+	protected final Set<Integer> preventSlip;
+	protected final Set<Integer> warmSupport;
 	protected final List<Integer> cash; //I don't think this is really needed...
 	protected final Map<Integer, List<byte[]>> operatingHours;
 	protected final List<Integer> useOnPickup;
@@ -71,39 +74,39 @@ public abstract class ItemDataLoader {
 	protected final Map<Integer, Byte> tamingMobIds;
 
 	protected ItemDataLoader() {
-		loaded = new HashSet<Integer>();
-		wholePrice = new HashMap<Integer, Integer>();
-		slotMax = new HashMap<Integer, Short>();
-		tradeBlocked = new ArrayList<Integer>();
-		onlyOne = new ArrayList<Integer>();
-		questItem = new ArrayList<Integer>();
-		bonusStats = new HashMap<Integer, short[]>();
-		summons = new HashMap<Integer, List<int[]>>();
-		success = new HashMap<Integer, Integer>();
-		cursed = new HashMap<Integer, Integer>();
-		recover = new HashSet<Integer>();
-		randStat = new HashSet<Integer>();
-		preventSlip = new HashSet<Integer>();
-		warmSupport = new HashSet<Integer>();
-		cash = new ArrayList<Integer>();
-		operatingHours = new HashMap<Integer, List<byte[]>>();
-		useOnPickup = new ArrayList<Integer>();
-		skills = new HashMap<Integer, List<Integer>>();
-		unitPrice = new HashMap<Integer, Double>();
-		reqStats = new HashMap<Integer, short[]>();
-		scrollReqs = new HashMap<Integer, List<Integer>>();
-		statEffects = new HashMap<Integer, ItemEffectsData>();
-		triggerItem = new HashMap<Integer, Integer>();
-		tuc = new HashMap<Integer, Byte>();
-		mesoValue = new HashMap<Integer, Integer>();
+		loaded = new HashSet<>();
+		wholePrice = new HashMap<>();
+		slotMax = new HashMap<>();
+		tradeBlocked = new ArrayList<>();
+		onlyOne = new ArrayList<>();
+		questItem = new ArrayList<>();
+		bonusStats = new HashMap<>();
+		summons = new HashMap<>();
+		success = new HashMap<>();
+		cursed = new HashMap<>();
+		recover = new HashSet<>();
+		randStat = new HashSet<>();
+		preventSlip = new HashSet<>();
+		warmSupport = new HashSet<>();
+		cash = new ArrayList<>();
+		operatingHours = new HashMap<>();
+		useOnPickup = new ArrayList<>();
+		skills = new HashMap<>();
+		unitPrice = new HashMap<>();
+		reqStats = new HashMap<>();
+		scrollReqs = new HashMap<>();
+		statEffects = new HashMap<>();
+		triggerItem = new HashMap<>();
+		tuc = new HashMap<>();
+		mesoValue = new HashMap<>();
 
-		petCommands = new HashMap<Integer, Map<Byte, int[]>>();
-		petHunger = new HashMap<Integer, Integer>();
-		petPeriod = new HashMap<Integer, Byte>();
-		petFullnessRecover = new HashMap<Integer, Byte>();
-		evolveChoices = new HashMap<Integer, List<int[]>>();
+		petCommands = new HashMap<>();
+		petHunger = new HashMap<>();
+		petPeriod = new HashMap<>();
+		petFullnessRecover = new HashMap<>();
+		evolveChoices = new HashMap<>();
 
-		tamingMobIds = new HashMap<Integer, Byte>();
+		tamingMobIds = new HashMap<>();
 	}
 
 	protected abstract void load(int itemid);

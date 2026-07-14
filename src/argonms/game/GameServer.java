@@ -84,7 +84,8 @@ public class GameServer implements LocalServer {
 	private String address;
 	private boolean preloadAll;
 	private DataFileType wzType;
-	private String wzPath, scriptsPath;
+	private String wzPath;
+	private String scriptsPath;
 	private String[] initialEvents;
 	private boolean useNio;
 	private boolean centerConnected;
@@ -95,7 +96,7 @@ public class GameServer implements LocalServer {
 	private GameServer(byte serverid) {
 		this.serverId = serverid;
 		this.registry = new GameRegistry();
-		this.remoteGameChannelMapping = new HashMap<Byte, Set<Byte>>();
+		this.remoteGameChannelMapping = new HashMap<>();
 	}
 
 	public byte getServerId() {
@@ -155,20 +156,20 @@ public class GameServer implements LocalServer {
 		wzPath = System.getProperty("argonms.data.dir");
 		scriptsPath = System.getProperty("argonms.scripts.dir");
 
-		channels = new HashMap<Byte, WorldChannel>(chList.length);
+		channels = new HashMap<>(chList.length);
 		for (int i = 0; i < chList.length; i++) {
 			byte chNum = Byte.parseByte(chList[i]);
 			WorldChannel ch = new WorldChannel(world, chNum, prop.getInt("argonms.game." + serverId + ".channel." + chNum + ".port"));
 			ch.createWorldComm();
 			channels.put(Byte.valueOf(chNum), ch);
 		}
-		Map<Byte, CrossServerSynchronization> initializedCss = new HashMap<Byte, CrossServerSynchronization>();
+		Map<Byte, CrossServerSynchronization> initializedCss = new HashMap<>();
 		for (Entry<Byte, WorldChannel> entry : channels.entrySet()) {
 			entry.getValue().getCrossServerInterface().initializeLocalChannels(initializedCss);
 			initializedCss.put(entry.getKey(), entry.getValue().getCrossServerInterface());
 		}
 
-		boolean mcdb = (wzType == DataFileType.MCDB);
+		boolean mcdb = wzType == DataFileType.MCDB;
 		prop = new PropertiesConfiguration();
 		try {
 			FileReader fr = new FileReader(System.getProperty("argonms.db.config.file", "db.properties"));
@@ -254,7 +255,8 @@ public class GameServer implements LocalServer {
 		NpcScriptManager.setInstance(scriptsPath);
 		PortalScriptManager.setInstance(scriptsPath);
 		ReactorScriptManager.setInstance(scriptsPath);
-		long start, end;
+		long start;
+		long end;
 		start = System.nanoTime();
 		System.out.print("Loading String data...");
 		StringDataLoader.getInstance().loadAll();
@@ -373,7 +375,7 @@ public class GameServer implements LocalServer {
 	}
 
 	public Map<Byte, Integer> getClientPorts() {
-		Map<Byte, Integer> ports = new HashMap<Byte, Integer>(channels.size());
+		Map<Byte, Integer> ports = new HashMap<>(channels.size());
 		for (Entry<Byte, WorldChannel> entry : channels.entrySet())
 			ports.put(entry.getKey(), Integer.valueOf(entry.getValue().getPort()));
 		return ports;
@@ -410,7 +412,7 @@ public class GameServer implements LocalServer {
 
 	private void terminate(boolean halt) {
 		terminated = true;
-		List<GameCharacter> toSave = new ArrayList<GameCharacter>();
+		List<GameCharacter> toSave = new ArrayList<>();
 		for (WorldChannel chn : channels.values()) {
 			chn.shutdown();
 			for (GameCharacter p : chn.getConnectedPlayers()) {

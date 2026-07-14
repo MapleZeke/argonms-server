@@ -40,15 +40,11 @@ import java.lang.ref.WeakReference;
 public class MysticDoor extends AbstractEntity {
 	public static final byte OUT_OF_TOWN_PORTAL_ID = (byte) 0x80;
 
-	public static final byte
-		SPAWN_ANIMATION_FALL = 0,
-		SPAWN_ANIMATION_NONE = 1
-	;
+	public static final byte SPAWN_ANIMATION_FALL = 0;
+	public static final byte SPAWN_ANIMATION_NONE = 1;
 
-	private static final byte
-		DESTROY_ANIMATION_FADE = 0,
-		DESTROY_ANIMATION_NONE = 1
-	;
+	private static final byte DESTROY_ANIMATION_FADE = 0;
+	private static final byte DESTROY_ANIMATION_NONE = 1;
 
 	private final WeakReference<GameCharacter> owner;
 	private final GameMap map;
@@ -58,7 +54,7 @@ public class MysticDoor extends AbstractEntity {
 
 	private MysticDoor(GameCharacter owner, GameMap map, Point position, byte townPortalId) {
 		setPosition(position);
-		this.owner = new WeakReference<GameCharacter>(owner);
+		this.owner = new WeakReference<>(owner);
 		this.map = map;
 		this.townPortalId = townPortalId;
 		this.mod = DESTROY_ANIMATION_NONE;

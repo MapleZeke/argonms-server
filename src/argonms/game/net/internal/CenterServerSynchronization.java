@@ -60,9 +60,9 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 	private final ConcurrentMap<Integer, Chatroom> localChatRooms;
 
 	public CenterServerSynchronization(CrossServerSynchronization handler, WorldChannel self) {
-		this.activeLocalParties = new ConcurrentHashMap<Integer, PartyList>();
-		this.activeLocalGuilds = new ConcurrentHashMap<Integer, GuildList>();
-		this.localChatRooms = new ConcurrentHashMap<Integer, Chatroom>();
+		this.activeLocalParties = new ConcurrentHashMap<>();
+		this.activeLocalGuilds = new ConcurrentHashMap<>();
+		this.localChatRooms = new ConcurrentHashMap<>();
 		this.handler = handler;
 		this.self = self;
 	}
@@ -638,7 +638,8 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 			leavingPlayer.setParty(null);
 			leavingPlayer.getClient().getSession().send(GamePackets.writePartyMemberLeft(party, leaverId, leaverName, leaverExpelled));
 
-			boolean removeParty, saveCharacter;
+			boolean removeParty;
+			boolean saveCharacter;
 			party.lockRead();
 			try {
 				removeParty = party.getMembersInLocalChannel().isEmpty();
@@ -1498,7 +1499,7 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 						continue;
 
 					int avatarPlayerId = packet.readInt();
-					Map<Short, Integer> equips = new HashMap<Short, Integer>();
+					Map<Short, Integer> equips = new HashMap<>();
 					for (byte i = packet.readByte(); i > 0; i--) {
 						short slot = packet.readShort();
 						int itemId = packet.readInt();
@@ -1628,7 +1629,7 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 		if (playerId != 0) {
 			//TODO: send response message (already closed) if chatroom is empty
 			byte channel = packet.readByte();
-			Map<Short, Integer> equips = new HashMap<Short, Integer>();
+			Map<Short, Integer> equips = new HashMap<>();
 			for (byte i = packet.readByte(); i > 0; i--) {
 				short slot = packet.readShort();
 				int itemId = packet.readInt();
@@ -1645,7 +1646,7 @@ public class CenterServerSynchronization extends CrossProcessSynchronization {
 			room.lockWrite();
 			try {
 				Chatroom.Avatar a = room.getAvatar(position);
-				boolean firstTime = (a == null);
+				boolean firstTime = a == null;
 				assert firstTime || a.getPlayerId() == playerId;
 				a = new Chatroom.Avatar(playerId, gender, skin, eyes, hair, equips, name, channel);
 				message = GamePackets.writeChatroomAvatar(firstTime ? Chatroom.ACT_OPEN : Chatroom.ACT_REFRESH_AVATAR, position, a, firstTime);

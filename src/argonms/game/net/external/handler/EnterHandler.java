@@ -58,7 +58,7 @@ public final class EnterHandler {
 		//TODO: check every game server of this world to see if we are logged in
 		//(since a character of a particular world cannot be logged in on any
 		//other world). Remember to check local process and remote processes.
-		allowLogin = (state == RemoteClient.STATUS_MIGRATION);
+		allowLogin = state == RemoteClient.STATUS_MIGRATION;
 		if (!allowLogin) {
 			gc.getSession().close("Player " + player.getName() + " tried to double login on world " + gc.getWorld());
 			return;

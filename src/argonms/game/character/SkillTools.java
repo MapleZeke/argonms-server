@@ -48,7 +48,7 @@ public final class SkillTools {
 	private static Map<ClientUpdateKey, Number> skillCastCosts(GameCharacter p, PlayerSkillEffectsData e) {
 		//might as well save ourself some bandwidth and don't send an individual
 		//packet for each changed stat
-		Map<ClientUpdateKey, Number> ret = new EnumMap<ClientUpdateKey, Number>(ClientUpdateKey.class);
+		Map<ClientUpdateKey, Number> ret = new EnumMap<>(ClientUpdateKey.class);
 		if (e.getMpConsume() > 0) {
 			p.setLocalMp((short) (p.getMp() - e.getMpConsume()));
 			ret.put(ClientUpdateKey.MP, Short.valueOf(p.getMp()));
@@ -131,7 +131,7 @@ public final class SkillTools {
 			//as there is enough of one particular type of ammo (no matter
 			//how many slots it is spread across), then the client allows
 			//the skill. so we have to do some fancy stuff.
-			Map<Integer, Short> canUse = new HashMap<Integer, Short>();
+			Map<Integer, Short> canUse = new HashMap<>();
 			int removeItemId = 0;
 			Inventory inv = p.getInventory(InventoryType.USE);
 			synchronized(inv.getAll()) {

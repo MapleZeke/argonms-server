@@ -31,47 +31,39 @@ import java.util.logging.Logger;
  * @author GoldenKevin
  */
 public class KvjQuestDataLoader extends QuestDataLoader {
-	private static final byte //main
-		QUEST_ACTION = 1,
-		QUEST_CHECK = 2,
-		QUEST_INFO = 3
-	;
+	private static final byte QUEST_ACTION = 1;
+	private static final byte QUEST_CHECK = 2;
+	private static final byte QUEST_INFO = 3;
 
-	private static final byte //quest info
-		END_QUEST_INFO = 0,
-		AUTO_START = 1,
-		AUTO_PRE_COMPLETE = 2
-	;
+	private static final byte END_QUEST_INFO = 0;
+	private static final byte AUTO_START = 1;
+	private static final byte AUTO_PRE_COMPLETE = 2;
 
-	private static final byte //actions, checks
-		END_BEHAVIOR = 0,
-		MIN_LEVEL = 1,
-		MAX_LEVEL = 2,
-		FAME = 3,
-		QUEST_END_DATE = 4,
-		START_SCRIPT = 5,
-		END_SCRIPT = 6,
-		REPEAT_INTERVAL = 7,
-		REQ_PET_TAMENESS = 8,
-		REQ_MOUNT_TAMENESS = 9,
-		REQ_MESOS = 10,
-		MIN_POPULATION = 11,
-		MAX_POPULATION = 12,
-	
-		ITEM_PROP = 13,
-		ITEM_GENDER = 14,
-		ITEM_JOB = 15,
-		ITEM_DATE_EXPIRE = 16,
-		ITEM_PERIOD = 17,
-		END_ITEM = 18,
-	
-		REWARD_EXP_GAIN = 19,
-		REWARD_NEXT_QUEST = 20,
-		REWARD_MESOS = 21,
-		REWARD_BUFF = 22,
-		REWARD_PET_TAMENESS = 23,
-		REWARD_PET_SKILL = 24
-	;
+	private static final byte END_BEHAVIOR = 0;
+	private static final byte MIN_LEVEL = 1;
+	private static final byte MAX_LEVEL = 2;
+	private static final byte FAME = 3;
+	private static final byte QUEST_END_DATE = 4;
+	private static final byte START_SCRIPT = 5;
+	private static final byte END_SCRIPT = 6;
+	private static final byte REPEAT_INTERVAL = 7;
+	private static final byte REQ_PET_TAMENESS = 8;
+	private static final byte REQ_MOUNT_TAMENESS = 9;
+	private static final byte REQ_MESOS = 10;
+	private static final byte MIN_POPULATION = 11;
+	private static final byte MAX_POPULATION = 12;
+	private static final byte ITEM_PROP = 13;
+	private static final byte ITEM_GENDER = 14;
+	private static final byte ITEM_JOB = 15;
+	private static final byte ITEM_DATE_EXPIRE = 16;
+	private static final byte ITEM_PERIOD = 17;
+	private static final byte END_ITEM = 18;
+	private static final byte REWARD_EXP_GAIN = 19;
+	private static final byte REWARD_NEXT_QUEST = 20;
+	private static final byte REWARD_MESOS = 21;
+	private static final byte REWARD_BUFF = 22;
+	private static final byte REWARD_PET_TAMENESS = 23;
+	private static final byte REWARD_PET_SKILL = 24;
 
 	private static final Logger LOG = Logger.getLogger(KvjQuestDataLoader.class.getName());
 

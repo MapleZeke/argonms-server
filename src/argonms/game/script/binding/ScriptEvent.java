@@ -48,8 +48,8 @@ public class ScriptEvent {
 		this.name = scriptName;
 		this.channel = channel;
 		this.hooks = hooks;
-		variables = new ConcurrentHashMap<String, Object>();
-		timers = new ConcurrentHashMap<String, ScheduledFuture<?>>();
+		variables = new ConcurrentHashMap<>();
+		timers = new ConcurrentHashMap<>();
 	}
 
 	protected EventManipulator getScriptInterface() {

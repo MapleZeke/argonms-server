@@ -256,7 +256,8 @@ public final class GamePackets {
 	}
 
 	private static void writeRings(LittleEndianWriter lew, Map<Short, InventorySlot> equippedInv) {
-		Ring coupleRing = null, friendshipRing = null, weddingRing = null;
+		Ring coupleRing = null;
+		Ring friendshipRing = null;
 		synchronized(equippedInv) {
 			for (InventorySlot item : equippedInv.values())
 				if (item.getType() == ItemType.RING)
@@ -264,8 +265,7 @@ public final class GamePackets {
 						coupleRing = (Ring) item;
 					else if (InventoryTools.isFriendshipRing(item.getDataId()))
 						friendshipRing = (Ring) item;
-					else if (InventoryTools.isWeddingRing(item.getDataId()))
-						weddingRing = (Ring) item;
+					else if (InventoryTools.isWeddingRing(item.getDataId())){}
 		}
 		if (coupleRing != null) {
 			lew.writeByte((byte) 1);
@@ -559,7 +559,7 @@ public final class GamePackets {
 	}
 
 	public static byte[] writeShowExpGain(int gain, boolean white, boolean fromQuest) {
-		LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(!fromQuest ? 20 : 21);
+		LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(fromQuest ? 21 : 20);
 
 		lew.writeShort(ClientSendOps.SHOW_STATUS_INFO);
 		lew.writeByte(PacketSubHeaders.STATUS_INFO_EXP);
@@ -742,8 +742,6 @@ public final class GamePackets {
 	private static void writeMapEntryStatusEffectValue(LittleEndianWriter lew, PlayerStatusEffect key, PlayerStatusEffectValues v) {
 		//perhaps it would be more concise if we didn't use a switch-case, and just use some conditionals if there are patterns.
 		switch (key) {
-			default: //give no value at all
-				break;
 			case SPEED:
 				if (v.getSourceType() == StatusEffectsData.EffectSource.PLAYER_SKILL &&
 						(v.getSource() == Skills.SIN_HASTE || v.getSource() == Skills.DIT_HASTE || v.getSource() == Skills.GM_HASTE || v.getSource() == Skills.SUPER_GM_HASTE))
@@ -781,6 +779,7 @@ public final class GamePackets {
 				lew.writeShort((short) v.getSource());
 				lew.writeShort(v.getLevelWhenCast());
 				break;
+			default:
 		}
 	}
 
@@ -1300,7 +1299,7 @@ public final class GamePackets {
 		lew.writeInt(1);
 
 		long updateMask = 0;
-		Map<PlayerStatusEffect, PlayerStatusEffectValues> statusEffects = new TreeMap<PlayerStatusEffect, PlayerStatusEffectValues>(new Comparator<PlayerStatusEffect>() {
+		Map<PlayerStatusEffect, PlayerStatusEffectValues> statusEffects = new TreeMap<>(new Comparator<PlayerStatusEffect>() {
 			//sort by value order (i.e. 5,6,7,8,1,2,3,4), then by mask (i.e. enum order)
 			@Override
 			public int compare(PlayerStatusEffect k1, PlayerStatusEffect k2) {

@@ -56,7 +56,8 @@ public class PlayerSkillEffectsData extends BuffsData implements MonsterStatusEf
 	private short moneyCon;
 	private final Set<MonsterStatusEffect> monsterDiseases;
 	private boolean isFreeze;
-	private short hp, mp;
+	private short hp;
+	private short mp;
 
 	protected PlayerSkillEffectsData(int skillid, byte level) {
 		super(skillid);
@@ -457,7 +458,10 @@ public class PlayerSkillEffectsData extends BuffsData implements MonsterStatusEf
 
 	@Override
 	public Rectangle getBoundingBox(Point posFrom, boolean facingLeft) {
-		int ltx, lty, rbx, rby;
+		int ltx;
+		int lty;
+		int rbx;
+		int rby;
 		if (facingLeft) {
 			ltx = lt.x + posFrom.x;
 			rbx = rb.x + posFrom.x;

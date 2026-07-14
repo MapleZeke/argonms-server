@@ -30,7 +30,7 @@ public class MobSkillStats {
 	private int animationTime;
 
 	protected MobSkillStats() {
-		levels = new HashMap<Byte, MobSkillEffectsData>();
+		levels = new HashMap<>();
 	}
 
 	protected void addLevel(byte level, MobSkillEffectsData effect) {

@@ -63,11 +63,9 @@ import java.util.logging.Logger;
 public class CrossServerSynchronization {
 	private static final Logger LOG = Logger.getLogger(CrossServerSynchronization.class.getName());
 
-	private static final byte
-		PRIVATE_CHAT_TYPE_BUDDY = 0,
-		PRIVATE_CHAT_TYPE_PARTY = 1,
-		PRIVATE_CHAT_TYPE_GUILD = 2
-	;
+	private static final byte PRIVATE_CHAT_TYPE_BUDDY = 0;
+	private static final byte PRIVATE_CHAT_TYPE_PARTY = 1;
+	private static final byte PRIVATE_CHAT_TYPE_GUILD = 2;
 
 	/* package-private */ static final int BLOCKING_CALL_TIMEOUT = 2000; //in milliseconds
 
@@ -83,8 +81,8 @@ public class CrossServerSynchronization {
 		//so current channel and same process channels should be first to be iterated.
 		//since initializeLocalChannels is called before addRemoteChannels, this should be
 		//true as long as otherChannelsInWorld is in insertion order, so use a LinkedHashMap
-		allChannelsInWorld = new LockableMap<Byte, CrossChannelSynchronization>(new LinkedHashMap<Byte, CrossChannelSynchronization>());
-		remoteChannelsInWorld = new LockableMap<Byte, CrossProcessCrossChannelSynchronization>(new HashMap<Byte, CrossProcessCrossChannelSynchronization>());
+		allChannelsInWorld = new LockableMap<>(new LinkedHashMap<Byte, CrossChannelSynchronization>());
+		remoteChannelsInWorld = new LockableMap<>(new HashMap<Byte, CrossProcessCrossChannelSynchronization>());
 		locks = new ReentrantReadWriteLock();
 		self = channel;
 	}
@@ -131,7 +129,7 @@ public class CrossServerSynchronization {
 	public Set<Byte> localChannels() {
 		lockRead();
 		try {
-			Set<Byte> local = new HashSet<Byte>(allChannelsInWorld.keySet());
+			Set<Byte> local = new HashSet<>(allChannelsInWorld.keySet());
 			local.removeAll(remoteChannelsInWorld.keySet());
 			return local;
 		} finally {
@@ -142,7 +140,7 @@ public class CrossServerSynchronization {
 	public Set<Byte> remoteChannels() {
 		lockRead();
 		try {
-			return new HashSet<Byte>(remoteChannelsInWorld.keySet());
+			return new HashSet<>(remoteChannelsInWorld.keySet());
 		} finally {
 			unlockRead();
 		}
@@ -150,7 +148,7 @@ public class CrossServerSynchronization {
 
 	public Pair<byte[], Integer> getChannelHost(byte ch) throws UnknownHostException {
 		CrossChannelSynchronization css = allChannelsInWorld.getWhenSafe(Byte.valueOf(ch));
-		return new Pair<byte[], Integer>(css.getIpAddress(), Integer.valueOf(css.getPort()));
+		return new Pair<>(css.getIpAddress(), Integer.valueOf(css.getPort()));
 	}
 
 	public void addRemoteChannels(byte serverId, byte[] host, Map<Byte, Integer> ports) {
@@ -192,7 +190,7 @@ public class CrossServerSynchronization {
 	public Pair<byte[], Integer> getShopHost() throws UnknownHostException {
 		lockRead();
 		try {
-			return new Pair<byte[], Integer>(shopServer.getIpAddress(), Integer.valueOf(shopServer.getPort()));
+			return new Pair<>(shopServer.getIpAddress(), Integer.valueOf(shopServer.getPort()));
 		} finally {
 			unlockRead();
 		}
@@ -263,7 +261,7 @@ public class CrossServerSynchronization {
 	}
 
 	public byte scanChannelOfPlayer(String name, boolean ignoreHidden) {
-		BlockingQueue<Pair<Byte, Object>> queue = new LinkedBlockingQueue<Pair<Byte, Object>>();
+		BlockingQueue<Pair<Byte, Object>> queue = new LinkedBlockingQueue<>();
 		lockRead();
 		try {
 			int remaining = 0;
@@ -326,14 +324,14 @@ public class CrossServerSynchronization {
 
 		switch (type) {
 			case PRIVATE_CHAT_TYPE_BUDDY: {
-				peerChannels = new HashMap<Byte, List<Integer>>();
+				peerChannels = new HashMap<>();
 				BuddyList bList = p.getBuddyList();
 				for (int buddy : recipients) {
 					BuddyListEntry entry = bList.getBuddy(buddy);
 					Byte ch = Byte.valueOf(entry != null ? entry.getChannel() : BuddyListEntry.OFFLINE_CHANNEL);
 					List<Integer> peersOnChannel = peerChannels.get(ch);
 					if (peersOnChannel == null) {
-						peersOnChannel = new ArrayList<Integer>();
+						peersOnChannel = new ArrayList<>();
 						peerChannels.put(ch, peersOnChannel);
 					}
 					peersOnChannel.add(Integer.valueOf(buddy));
@@ -344,12 +342,12 @@ public class CrossServerSynchronization {
 				if (p.getParty() == null)
 					return;
 
-				peerChannels = new HashMap<Byte, List<Integer>>();
+				peerChannels = new HashMap<>();
 				for (int member : recipients) {
 					Byte ch = Byte.valueOf((byte) 0);
 					List<Integer> peersOnChannel = peerChannels.get(ch);
 					if (peersOnChannel == null) {
-						peersOnChannel = new ArrayList<Integer>();
+						peersOnChannel = new ArrayList<>();
 						peerChannels.put(ch, peersOnChannel);
 					}
 					peersOnChannel.add(Integer.valueOf(member));
@@ -360,12 +358,12 @@ public class CrossServerSynchronization {
 				if (p.getGuild() == null)
 					return;
 
-				peerChannels = new HashMap<Byte, List<Integer>>();
+				peerChannels = new HashMap<>();
 				for (int member : recipients) {
 					Byte ch = Byte.valueOf((byte) 0);
 					List<Integer> peersOnChannel = peerChannels.get(ch);
 					if (peersOnChannel == null) {
-						peersOnChannel = new ArrayList<Integer>();
+						peersOnChannel = new ArrayList<>();
 						peerChannels.put(ch, peersOnChannel);
 					}
 					peersOnChannel.add(Integer.valueOf(member));
@@ -407,7 +405,7 @@ public class CrossServerSynchronization {
 	}
 
 	public boolean sendWhisper(String recipient, GameCharacter sender, String message) {
-		BlockingQueue<Pair<Byte, Object>> queue = new LinkedBlockingQueue<Pair<Byte, Object>>();
+		BlockingQueue<Pair<Byte, Object>> queue = new LinkedBlockingQueue<>();
 		lockRead();
 		try {
 			int remaining = 0;
@@ -482,7 +480,7 @@ public class CrossServerSynchronization {
 	}
 
 	public Pair<Byte, Byte> sendBuddyInvite(GameCharacter sender, int recipientId) {
-		BlockingQueue<Pair<Byte, Object>> queue = new LinkedBlockingQueue<Pair<Byte, Object>>();
+		BlockingQueue<Pair<Byte, Object>> queue = new LinkedBlockingQueue<>();
 		lockRead();
 		try {
 			int remaining = 0;
@@ -493,7 +491,7 @@ public class CrossServerSynchronization {
 				//address any results that have since responded, for a possibility of early out
 				while ((result = queue.poll()) != null)
 					if (((inviteResult = (Byte) result.right).byteValue()) != -1)
-						return new Pair<Byte, Byte>(result.left, inviteResult);
+						return new Pair<>(result.left, inviteResult);
 					else
 						remaining--;
 				remaining++;
@@ -504,19 +502,19 @@ public class CrossServerSynchronization {
 				Pair<Byte, Object> result = queue.poll(limit - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
 				if (result == null) {
 					LOG.log(Level.FINE, "Cross process buddy invite timeout after " + BLOCKING_CALL_TIMEOUT + " milliseconds");
-					return new Pair<Byte, Byte>(Byte.valueOf((byte) -1), Byte.valueOf((byte) -1));
+					return new Pair<>(Byte.valueOf((byte) -1), Byte.valueOf((byte) -1));
 				}
 				if (((inviteResult = (Byte) result.right).byteValue()) != -1)
-					return new Pair<Byte, Byte>(result.left, inviteResult);
+					return new Pair<>(result.left, inviteResult);
 				else
 					remaining--;
 			}
-			return new Pair<Byte, Byte>(Byte.valueOf((byte) -1), Byte.valueOf((byte) -1));
+			return new Pair<>(Byte.valueOf((byte) -1), Byte.valueOf((byte) -1));
 		} catch (InterruptedException e) {
 			//propagate the interrupted status further up to our worker
 			//executor service and see if they care - we don't care about it
 			Thread.currentThread().interrupt();
-			return new Pair<Byte, Byte>(Byte.valueOf((byte) -1), Byte.valueOf((byte) -1));
+			return new Pair<>(Byte.valueOf((byte) -1), Byte.valueOf((byte) -1));
 		} finally {
 			unlockRead();
 		}
@@ -594,7 +592,8 @@ public class CrossServerSynchronization {
 		if (buddies.isEmpty())
 			return;
 		int[] recipients = new int[buddies.size()];
-		int i = 0, remaining = buddies.size();
+		int i = 0;
+		int remaining = buddies.size();
 		for (BuddyListEntry buddy : buddies)
 			if (buddy.getStatus() == BuddyListEntry.STATUS_MUTUAL)
 				recipients[i++] = buddy.getId();
@@ -618,7 +617,7 @@ public class CrossServerSynchronization {
 	}
 
 	/* package-private */ int receivedSentBuddyLogInNotifications(int sender, int[] recipients, byte srcCh) {
-		List<Integer> localRecipients = new ArrayList<Integer>();
+		List<Integer> localRecipients = new ArrayList<>();
 		for (int recipient : recipients) {
 			GameCharacter p = self.getPlayerById(recipient);
 			if (p == null)
@@ -677,7 +676,7 @@ public class CrossServerSynchronization {
 		Collection<BuddyListEntry> buddies = p.getBuddyList().getBuddies();
 		if (buddies.isEmpty())
 			return;
-		Map<Byte, List<Integer>> buddyChannels = new HashMap<Byte, List<Integer>>();
+		Map<Byte, List<Integer>> buddyChannels = new HashMap<>();
 		for (BuddyListEntry buddy : buddies) {
 			if (buddy.getChannel() == BuddyListEntry.OFFLINE_CHANNEL)
 				continue;
@@ -685,7 +684,7 @@ public class CrossServerSynchronization {
 			Byte ch = Byte.valueOf(buddy.getChannel());
 			List<Integer> buddiesOnChannel = buddyChannels.get(ch);
 			if (buddiesOnChannel == null) {
-				buddiesOnChannel = new ArrayList<Integer>();
+				buddiesOnChannel = new ArrayList<>();
 				buddyChannels.put(ch, buddiesOnChannel);
 			}
 			buddiesOnChannel.add(Integer.valueOf(buddy.getId()));
@@ -763,7 +762,7 @@ public class CrossServerSynchronization {
 	}
 
 	/* package-private */ void fillPartyList(PartyList party) {
-		BlockingQueue<Pair<Byte, Object>> queue = new LinkedBlockingQueue<Pair<Byte, Object>>();
+		BlockingQueue<Pair<Byte, Object>> queue = new LinkedBlockingQueue<>();
 		intraworldGroups.sendFillPartyList(queue, party);
 
 		long limit = System.currentTimeMillis() + BLOCKING_CALL_TIMEOUT;
@@ -781,10 +780,10 @@ public class CrossServerSynchronization {
 				return;
 			}
 			for (PartyList.Member mem : (PartyList.Member[]) result.right)
-				if (mem instanceof PartyList.LocalMember)
-					party.addPlayer((PartyList.LocalMember) mem);
-				else if (mem instanceof PartyList.RemoteMember)
-					party.addPlayer((PartyList.RemoteMember) mem);
+				if (mem instanceof PartyList.LocalMember member)
+					party.addPlayer(member);
+				else if (mem instanceof PartyList.RemoteMember member)
+					party.addPlayer(member);
 		} catch (InterruptedException e) {
 			//propagate the interrupted status further up to our worker
 			//executor service and see if they care - we don't care about it
@@ -813,7 +812,7 @@ public class CrossServerSynchronization {
 	}
 
 	/* package-private */ void fillGuildList(GuildList guild) {
-		BlockingQueue<Pair<Byte, Object>> queue = new LinkedBlockingQueue<Pair<Byte, Object>>();
+		BlockingQueue<Pair<Byte, Object>> queue = new LinkedBlockingQueue<>();
 		intraworldGroups.sendFillGuildList(queue, guild);
 
 		long limit = System.currentTimeMillis() + BLOCKING_CALL_TIMEOUT;
@@ -838,10 +837,10 @@ public class CrossServerSynchronization {
 				return;
 			}
 			for (GuildList.Member mem : (GuildList.Member[]) result.right)
-				if (mem instanceof GuildList.LocalMember)
-					guild.addPlayer((GuildList.LocalMember) mem);
-				else if (mem instanceof GuildList.RemoteMember)
-					guild.addPlayer((GuildList.RemoteMember) mem);
+				if (mem instanceof GuildList.LocalMember member)
+					guild.addPlayer(member);
+				else if (mem instanceof GuildList.RemoteMember member)
+					guild.addPlayer(member);
 		} catch (InterruptedException e) {
 			//propagate the interrupted status further up to our worker
 			//executor service and see if they care - we don't care about it
@@ -918,7 +917,7 @@ public class CrossServerSynchronization {
 	}
 
 	public boolean sendChatroomInvite(String inviter, int roomId, String invitee) {
-		BlockingQueue<Pair<Byte, Object>> queue = new LinkedBlockingQueue<Pair<Byte, Object>>();
+		BlockingQueue<Pair<Byte, Object>> queue = new LinkedBlockingQueue<>();
 		lockRead();
 		try {
 			int remaining = 0;
@@ -1038,7 +1037,7 @@ public class CrossServerSynchronization {
 	}
 
 	public Object sendCrossChannelCommandCharacterAccess(byte destCh, String target, CommandTarget.CharacterProperty key) {
-		BlockingQueue<Pair<Byte, Object>> queue = new LinkedBlockingQueue<Pair<Byte, Object>>();
+		BlockingQueue<Pair<Byte, Object>> queue = new LinkedBlockingQueue<>();
 		allChannelsInWorld.getWhenSafe(Byte.valueOf(destCh)).callCrossChannelCommandCharacterAccess(queue, target, key);
 		long limit = System.currentTimeMillis() + BLOCKING_CALL_TIMEOUT;
 		try {
@@ -1065,7 +1064,7 @@ public class CrossServerSynchronization {
 
 	public void sendWorldWideNotice(byte style, String message) {
 		allChannelsInWorld.getWhenSafe(Byte.valueOf(self.getChannelId())).sendWorldWideNotice(style, message);
-		Set<Byte> triedGameServers = new HashSet<Byte>();
+		Set<Byte> triedGameServers = new HashSet<>();
 		lockRead();
 		try {
 			for (CrossProcessCrossChannelSynchronization ccs : remoteChannelsInWorld.values()) {
@@ -1091,7 +1090,7 @@ public class CrossServerSynchronization {
 
 	public void sendServerShutdown(boolean halt, boolean restart, boolean cancel, int seconds, String message) {
 		allChannelsInWorld.getWhenSafe(Byte.valueOf(self.getChannelId())).sendServerShutdown(halt, restart, cancel, seconds, message);
-		Set<Byte> triedGameServers = new HashSet<Byte>();
+		Set<Byte> triedGameServers = new HashSet<>();
 		lockRead();
 		try {
 			for (CrossProcessCrossChannelSynchronization ccs : remoteChannelsInWorld.values()) {
@@ -1113,7 +1112,7 @@ public class CrossServerSynchronization {
 			reason = "halt";
 		else
 			reason = "maintenance";
-		String formattedTime = ((seconds == 0) ? "NOW" : ("in " + seconds + " seconds"));
+		String formattedTime = seconds == 0 ? "NOW" : ("in " + seconds + " seconds");
 
 		if (!cancel) {
 			String notice = "The server is going down for " + reason + " " + formattedTime + "!\r\n" + message;
@@ -1130,7 +1129,7 @@ public class CrossServerSynchronization {
 
 	public void sendServerRateChange(byte type, short newRate) {
 		allChannelsInWorld.getWhenSafe(Byte.valueOf(self.getChannelId())).sendServerRateChange(type, newRate);
-		Set<Byte> triedGameServers = new HashSet<Byte>();
+		Set<Byte> triedGameServers = new HashSet<>();
 		lockRead();
 		try {
 			for (CrossProcessCrossChannelSynchronization ccs : remoteChannelsInWorld.values()) {
@@ -1164,7 +1163,7 @@ public class CrossServerSynchronization {
 	}
 
 	public String retrieveConnectedPlayersList(byte privilegeLevelLimit) {
-		BlockingQueue<Pair<Byte, Object>> queue = new LinkedBlockingQueue<Pair<Byte, Object>>();
+		BlockingQueue<Pair<Byte, Object>> queue = new LinkedBlockingQueue<>();
 		StringBuilder sb = new StringBuilder();
 		lockRead();
 		try {

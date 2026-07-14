@@ -44,13 +44,13 @@ public abstract class QuestDataLoader {
 	protected final Map<Short, QuestChecks> completeReqs;
 
 	protected QuestDataLoader() {
-		questNames = new HashMap<Short, String>();
-		autoStart = new ArrayList<Short>();
-		autoPreComplete = new ArrayList<Short>();
-		startReqs = new HashMap<Short, QuestChecks>();
-		completeReqs = new HashMap<Short, QuestChecks>();
-		startRewards = new HashMap<Short, QuestRewards>();
-		completeRewards = new HashMap<Short, QuestRewards>();
+		questNames = new HashMap<>();
+		autoStart = new ArrayList<>();
+		autoPreComplete = new ArrayList<>();
+		startReqs = new HashMap<>();
+		completeReqs = new HashMap<>();
+		startRewards = new HashMap<>();
+		completeRewards = new HashMap<>();
 	}
 
 	public abstract boolean loadAll();
@@ -66,7 +66,7 @@ public abstract class QuestDataLoader {
 	}
 
 	public List<String> getSimilarNamedQuests(String reference) {
-		List<String> retSkills = new ArrayList<String>();
+		List<String> retSkills = new ArrayList<>();
 		for (Entry<Short, String> name : questNames.entrySet())
 			if (name.getValue().toLowerCase().contains(reference.toLowerCase()))
 				retSkills.add(name.getKey() + " - " + name.getValue());

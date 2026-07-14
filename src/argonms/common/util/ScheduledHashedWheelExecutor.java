@@ -65,17 +65,16 @@ public class ScheduledHashedWheelExecutor implements ScheduledExecutorService {
 	private volatile boolean shuttingDown;
 	private volatile boolean shutdownImmediately;
 	private volatile boolean terminated;
-	private final Lock readLock, writeLock;
+	private final Lock readLock;
+	private final Lock writeLock;
 	private int wheelCursor;
 	private long lastExecuted;
 
 	private abstract class HashedWheelFuture<V> implements ScheduledFuture<V> {
-		protected static final int
-			STATE_CANCELED = -1,
-			STATE_SCHEDULED = 0,
-			STATE_RUNNING = 1,
-			STATE_EXECUTED = 2
-		;
+		protected static final int STATE_CANCELED = -1;
+		protected static final int STATE_SCHEDULED = 0;
+		protected static final int STATE_RUNNING = 1;
+		protected static final int STATE_EXECUTED = 2;
 
 		protected final AtomicInteger state;
 		private final long startTime;
@@ -202,7 +201,7 @@ public class ScheduledHashedWheelExecutor implements ScheduledExecutorService {
 			long now;
 			boolean timedOut = false;
 			synchronized(this) {
-				while (!isDone() && !(timedOut = ((now = System.currentTimeMillis()) >= deadline)))
+				while (!isDone() && !(timedOut = (now = System.currentTimeMillis()) >= deadline))
 					wait(deadline - now);
 			}
 			return timedOut;
@@ -507,7 +506,7 @@ public class ScheduledHashedWheelExecutor implements ScheduledExecutorService {
 		if (isShutdown())
 			throw new RejectedExecutionException("shutdown");
 
-		HashedWheelFuture<V> future = new HashedWheelFutureImpl<V>(callable, submitTime, unit.toMillis(delay), -1);
+		HashedWheelFuture<V> future = new HashedWheelFutureImpl<>(callable, submitTime, unit.toMillis(delay), -1);
 		schedule(future);
 		queuedTaskCount.incrementAndGet();
 		return future;
@@ -545,7 +544,7 @@ public class ScheduledHashedWheelExecutor implements ScheduledExecutorService {
 	@Override
 	public List<Runnable> shutdownNow() {
 		shutdownImmediately = true;
-		List<Runnable> notRun = new ArrayList<Runnable>(queuedTaskCount.get());
+		List<Runnable> notRun = new ArrayList<>(queuedTaskCount.get());
 		Runnable r;
 		writeLock.lock();
 		try {
@@ -585,7 +584,7 @@ public class ScheduledHashedWheelExecutor implements ScheduledExecutorService {
 		long submitTime = System.currentTimeMillis();
 		if (isShutdown())
 			throw new RejectedExecutionException("shutdown");
-		HashedWheelFuture<T> future = new HashedWheelFutureImpl<T>(task, submitTime, 0, -1);
+		HashedWheelFuture<T> future = new HashedWheelFutureImpl<>(task, submitTime, 0, -1);
 		schedule(future);
 		queuedTaskCount.incrementAndGet();
 		return future;
@@ -596,7 +595,7 @@ public class ScheduledHashedWheelExecutor implements ScheduledExecutorService {
 		long submitTime = System.currentTimeMillis();
 		if (isShutdown())
 			throw new RejectedExecutionException("shutdown");
-		HashedWheelFuture<T> future = new HashedWheelFutureKnownResult<T>(task, result, submitTime, 0, -1);
+		HashedWheelFuture<T> future = new HashedWheelFutureKnownResult<>(task, result, submitTime, 0, -1);
 		schedule(future);
 		queuedTaskCount.incrementAndGet();
 		return future;
@@ -618,9 +617,9 @@ public class ScheduledHashedWheelExecutor implements ScheduledExecutorService {
 		long submitTime = System.currentTimeMillis();
 		if (isShutdown())
 			throw new RejectedExecutionException("shutdown");
-		List<HashedWheelFuture<T>> futures = new ArrayList<HashedWheelFuture<T>>(tasks.size());
+		List<HashedWheelFuture<T>> futures = new ArrayList<>(tasks.size());
 		for (Callable<T> task : tasks) {
-			HashedWheelFuture<T> future = new HashedWheelFutureImpl<T>(task, submitTime, 0, -1);
+			HashedWheelFuture<T> future = new HashedWheelFutureImpl<>(task, submitTime, 0, -1);
 			schedule(future);
 			queuedTaskCount.incrementAndGet();
 			futures.add(future);
@@ -640,7 +639,7 @@ public class ScheduledHashedWheelExecutor implements ScheduledExecutorService {
 			if (interrupted)
 				future.cancel(false);
 		}
-		return new ArrayList<Future<T>>(futures);
+		return new ArrayList<>(futures);
 	}
 
 	@Override
@@ -649,14 +648,15 @@ public class ScheduledHashedWheelExecutor implements ScheduledExecutorService {
 		if (isShutdown())
 			throw new RejectedExecutionException("shutdown");
 		long deadline = submitTime + unit.toMillis(timeout);
-		List<HashedWheelFuture<T>> futures = new ArrayList<HashedWheelFuture<T>>(tasks.size());
+		List<HashedWheelFuture<T>> futures = new ArrayList<>(tasks.size());
 		for (Callable<T> task : tasks) {
-			HashedWheelFuture<T> future = new HashedWheelFutureImpl<T>(task, submitTime, 0, -1);
+			HashedWheelFuture<T> future = new HashedWheelFutureImpl<>(task, submitTime, 0, -1);
 			schedule(future);
 			queuedTaskCount.incrementAndGet();
 			futures.add(future);
 		}
-		boolean interrupted = false, timedOut = false;
+		boolean interrupted = false;
+		boolean timedOut = false;
 		for (HashedWheelFuture<T> future : futures) {
 			if (future.isDone())
 				continue;
@@ -671,7 +671,7 @@ public class ScheduledHashedWheelExecutor implements ScheduledExecutorService {
 			if (interrupted || timedOut)
 				future.cancel(false);
 		}
-		return new ArrayList<Future<T>>(futures);
+		return new ArrayList<>(futures);
 	}
 
 	@Override
@@ -681,16 +681,18 @@ public class ScheduledHashedWheelExecutor implements ScheduledExecutorService {
 			throw new RejectedExecutionException("shutdown");
 		if (tasks.isEmpty())
 			throw new IllegalArgumentException("tasks is empty");
-		List<HashedWheelFutureImpl<T>> futures = new ArrayList<HashedWheelFutureImpl<T>>(tasks.size());
+		List<HashedWheelFutureImpl<T>> futures = new ArrayList<>(tasks.size());
 		for (Callable<T> task : tasks) {
 			submitTime = System.currentTimeMillis();
-			HashedWheelFutureImpl<T> future = new HashedWheelFutureImpl<T>(task, submitTime, 0, -1);
+			HashedWheelFutureImpl<T> future = new HashedWheelFutureImpl<>(task, submitTime, 0, -1);
 			schedule(future);
 			queuedTaskCount.incrementAndGet();
 			futures.add(future);
 		}
 		T result = null;
-		boolean allDone = false, interrupted = false, gotResult = false;
+		boolean allDone = false;
+		boolean interrupted = false;
+		boolean gotResult = false;
 		//spin lock until we get first result.
 		//TODO: eliminate spin loop. register event handlers in
 		//HashedWheelFuture.executed instead and just wait on some object until
@@ -735,16 +737,19 @@ public class ScheduledHashedWheelExecutor implements ScheduledExecutorService {
 		long timeoutTime = submitTime + unit.toMillis(timeout);
 		if (tasks.isEmpty())
 			throw new IllegalArgumentException("tasks is empty");
-		List<HashedWheelFutureImpl<T>> futures = new ArrayList<HashedWheelFutureImpl<T>>(tasks.size());
+		List<HashedWheelFutureImpl<T>> futures = new ArrayList<>(tasks.size());
 		for (Callable<T> task : tasks) {
 			submitTime = System.currentTimeMillis();
-			HashedWheelFutureImpl<T> future = new HashedWheelFutureImpl<T>(task, submitTime, 0, -1);
+			HashedWheelFutureImpl<T> future = new HashedWheelFutureImpl<>(task, submitTime, 0, -1);
 			schedule(future);
 			queuedTaskCount.incrementAndGet();
 			futures.add(future);
 		}
 		T result = null;
-		boolean allDone = false, interrupted = false, gotResult = false, timedOut = false;
+		boolean allDone = false;
+		boolean interrupted = false;
+		boolean gotResult = false;
+		boolean timedOut = false;
 		//spin lock until we get first result or timed out.
 		//TODO: eliminate spin loop. register event handlers in
 		//HashedWheelFuture.executed instead and just wait on some object (with

@@ -122,8 +122,8 @@ public final class CommonPackets {
 		lew.writeBool(!messenger);
 		lew.writeInt(hair); // hair
 
-		Map<Byte, Integer> visEquip = new LinkedHashMap<Byte, Integer>();
-		Map<Byte, Integer> maskedEquip = new LinkedHashMap<Byte, Integer>();
+		Map<Byte, Integer> visEquip = new LinkedHashMap<>();
+		Map<Byte, Integer> maskedEquip = new LinkedHashMap<>();
 		int cashWeapon = 0;
 		for (Entry<Short, Integer> ent : equips.entrySet()) {
 			//assume that all items in equipped have negative positions
@@ -443,11 +443,11 @@ public final class CommonPackets {
 		lew.writeByte((byte) p.getInventory(InventoryType.CASH).getMaxSlots()); // cash slots
 
 		Map<Short, InventorySlot> iv = p.getInventory(InventoryType.EQUIPPED).getAll();
-		Map<Short, InventorySlot> visible = new TreeMap<Short, InventorySlot>();
-		Map<Short, InventorySlot> masked = new TreeMap<Short, InventorySlot>();
-		List<Ring> coupleRings = new ArrayList<Ring>();
-		List<Ring> friendshipRings = new ArrayList<Ring>();
-		List<Ring> weddingRings = new ArrayList<Ring>();
+		Map<Short, InventorySlot> visible = new TreeMap<>();
+		Map<Short, InventorySlot> masked = new TreeMap<>();
+		List<Ring> coupleRings = new ArrayList<>();
+		List<Ring> friendshipRings = new ArrayList<>();
+		List<Ring> weddingRings = new ArrayList<>();
 		synchronized(iv) {
 			for (Entry<Short, InventorySlot> entry : iv.entrySet()) {
 				InventorySlot item = entry.getValue();
@@ -513,8 +513,8 @@ public final class CommonPackets {
 			lew.writeShort(cooling.getValue().getSecondsRemaining());
 		}
 
-		Map<Short, QuestEntry> started = new HashMap<Short, QuestEntry>();
-		Map<Short, QuestEntry> completed = new HashMap<Short, QuestEntry>();
+		Map<Short, QuestEntry> started = new HashMap<>();
+		Map<Short, QuestEntry> completed = new HashMap<>();
 		p.readLockQuests();
 		try {
 			for (Entry<Short, QuestEntry> entry : p.getAllQuests().entrySet()) {

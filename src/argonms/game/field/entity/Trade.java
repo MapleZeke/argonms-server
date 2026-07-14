@@ -89,7 +89,7 @@ public class Trade extends Miniroom {
 				p.getClient().getSession().send(GamePackets.writeShowInventoryFull());
 				return false;
 			}
-			itemQtys = new HashMap<Integer, Short>();
+			itemQtys = new HashMap<>();
 			for (InventorySlot item : items[traderPos]) {
 				if (item != null) {
 					Integer oId = Integer.valueOf(item.getDataId());
@@ -98,7 +98,7 @@ public class Trade extends Miniroom {
 				}
 			}
 
-			Map<InventoryType, Integer> netEmptySlotRemovals = new EnumMap<InventoryType, Integer>(InventoryType.class);
+			Map<InventoryType, Integer> netEmptySlotRemovals = new EnumMap<>(InventoryType.class);
 			netEmptySlotRemovals.put(InventoryType.EQUIP, Integer.valueOf(0));
 			netEmptySlotRemovals.put(InventoryType.USE, Integer.valueOf(0));
 			netEmptySlotRemovals.put(InventoryType.SETUP, Integer.valueOf(0));
@@ -217,7 +217,7 @@ public class Trade extends Miniroom {
 
 	public void addMesos(GameCharacter p, int gain) {
 		byte pos = positionOf(p);
-		int newMesos = (mesos[pos] += gain);
+		int newMesos = mesos[pos] += gain;
 		p.getClient().getSession().send(writeMesoSet((byte) 0, newMesos));
 		pos = (byte) ((pos + 1) % 2);
 		getPlayerByPosition(pos).getClient().getSession().send(writeMesoSet((byte) 1, newMesos));

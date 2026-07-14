@@ -80,9 +80,7 @@ public class Scheduler {
 				private final AtomicInteger threadNumber = new AtomicInteger(1);
 
 				{
-					SecurityManager s = System.getSecurityManager();
-					group = (s != null)? s.getThreadGroup() :
-										 Thread.currentThread().getThreadGroup();
+					group = Thread.currentThread().getThreadGroup();
 				}
 
 				@Override

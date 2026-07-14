@@ -33,7 +33,7 @@ public abstract class NpcShopDataLoader {
 	protected final Map<Integer, NpcShop> loadedShops;
 
 	protected NpcShopDataLoader() {
-		loadedShops = new HashMap<Integer, NpcShop>();
+		loadedShops = new HashMap<>();
 	}
 
 	protected abstract void load(int npcid);

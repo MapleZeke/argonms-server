@@ -105,7 +105,7 @@ public abstract class GameOrShopPacketProcessor extends RemoteCenterPacketProces
 			Set<Byte> partyChannels = party.allChannels();
 			if (loggingOff && partyChannels.size() == 1 && partyChannels.contains(Byte.valueOf(Party.OFFLINE_CH)))
 				CenterServer.getInstance().getGroupsDb(world).flushParty(partyId);
-			partyChannels = new HashSet<Byte>(partyChannels);
+			partyChannels = new HashSet<>(partyChannels);
 			partyChannels.add(Byte.valueOf(lastCh));
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(world, ServerType.UNDEFINED)) {
 				for (Byte channel : partyChannels) {
@@ -183,7 +183,7 @@ public abstract class GameOrShopPacketProcessor extends RemoteCenterPacketProces
 			Set<Byte> guildChannels = guild.allChannels();
 			if (loggingOff && guildChannels.size() == 1 && guildChannels.contains(Byte.valueOf(Guild.OFFLINE_CH)))
 				CenterServer.getInstance().getGroupsDb(world).flushGuild(guildId);
-			guildChannels = new HashSet<Byte>(guildChannels);
+			guildChannels = new HashSet<>(guildChannels);
 			guildChannels.add(Byte.valueOf(lastCh));
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(world, ServerType.UNDEFINED)) {
 				for (Byte channel : guildChannels) {

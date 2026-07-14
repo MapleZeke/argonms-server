@@ -35,7 +35,8 @@ import java.util.Set;
  * @author GoldenKevin
  */
 public class CrossChannelCommandTarget implements CommandTarget {
-	private final byte localChannel, targetChannel;
+	private final byte localChannel;
+	private final byte targetChannel;
 	private final String targetName;
 
 	public CrossChannelCommandTarget(byte localChannel, byte targetChannel, String targetName) {
@@ -170,7 +171,7 @@ public class CrossChannelCommandTarget implements CommandTarget {
 
 	public static List<CharacterManipulation> deserialize(LittleEndianReader packet) {
 		short count = packet.readShort();
-		List<CharacterManipulation> updates = new ArrayList<CharacterManipulation>(count);
+		List<CharacterManipulation> updates = new ArrayList<>(count);
 		for (int i = 0; i < count; i++) {
 			CharacterManipulationKey key = CharacterManipulationKey.valueOf(packet.readByte());
 			Object value = null;

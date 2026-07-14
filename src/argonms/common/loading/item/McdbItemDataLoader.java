@@ -196,7 +196,7 @@ public class McdbItemDataLoader extends ItemDataLoader {
 				incStats[StatEffect.Speed] = rs.getShort("ispeed");
 				incStats[StatEffect.Jump] = rs.getShort("ijump");
 
-				ArrayList<int[]> mobsToSpawn = new ArrayList<int[]>();
+				ArrayList<int[]> mobsToSpawn = new ArrayList<>();
 				PreparedStatement ps = null;
 				ResultSet urs = null;
 				try {
@@ -228,7 +228,7 @@ public class McdbItemDataLoader extends ItemDataLoader {
 				if (itemid == 2041058) //TODO: hackish
 					warmSupport.add(oId);
 
-				List<Integer> skillIds = new ArrayList<Integer>();
+				List<Integer> skillIds = new ArrayList<>();
 				try {
 					ps = con.prepareStatement("SELECT `skillid` FROM `itemskilldata` WHERE `itemid` = ?");
 					ps.setInt(1, itemid);

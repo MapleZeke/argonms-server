@@ -23,45 +23,43 @@ package argonms.game.field;
  * @author GoldenKevin
  */
 public final class MobSkills {
-	public static final short
-		WATK_UP = 100,
-		MATK_UP = 101,
-		WDEF_UP = 102,
-		MDEF_UP = 103,
-		WATK_UP_AOE = 110,
-		MATK_UP_AOE = 111,
-		WDEF_UP_AOE = 112,
-		MDEF_UP_AOE = 113,
-		HEAL_AOE = 114,
-		SPEED_UP_AOE = 115,
-		SEAL = 120,
-		DARKEN = 121,
-		WEAKEN = 122,
-		STUN = 123,
-		CURSE = 124,
-		POISON = 125,
-		SLOW = 126,
-		DISPEL = 127,
-		SEDUCE = 128,
-		BANISH = 129,
-		MIST = 131,
-		CRAZY_SKULL = 132, //Ariant Coliseum
-		PHYSICAL_IMMUNITY = 140,
-		MAGIC_IMMUNITY = 141,
-		ARMOR = 142,
-		PHYSICAL_REFLECT = 143,
-		MAGIC_REFLECT = 144, 
-		ALL_REFLECT = 145,
-		MONSTER_CARNIVAL_WATK_UP = 150,
-		MONSTER_CARNIVAL_MATK_UP = 151,
-		MONSTER_CARNIVAL_WDEF_UP = 152,
-		MONSTER_CARNIVAL_MDEF_UP = 153,
-		MONSTER_CARNIVAL_ACC_UP = 154,
-		MONSTER_CARNIVAL_EVA_UP = 155,
-		MONSTER_CARNIVAL_SPEED_UP = 156,
-		MONSTER_CARNIVAL_SEAL = 157,
-		SUMMON = 200
-	;
+	public static final short WATK_UP = 100;
+	public static final short MATK_UP = 101;
+	public static final short WDEF_UP = 102;
+	public static final short MDEF_UP = 103;
+	public static final short WATK_UP_AOE = 110;
+	public static final short MATK_UP_AOE = 111;
+	public static final short WDEF_UP_AOE = 112;
+	public static final short MDEF_UP_AOE = 113;
+	public static final short HEAL_AOE = 114;
+	public static final short SPEED_UP_AOE = 115;
+	public static final short SEAL = 120;
+	public static final short DARKEN = 121;
+	public static final short WEAKEN = 122;
+	public static final short STUN = 123;
+	public static final short CURSE = 124;
+	public static final short POISON = 125;
+	public static final short SLOW = 126;
+	public static final short DISPEL = 127;
+	public static final short SEDUCE = 128;
+	public static final short BANISH = 129;
+	public static final short MIST = 131;
+	public static final short CRAZY_SKULL = 132;
+	public static final short PHYSICAL_IMMUNITY = 140;
+	public static final short MAGIC_IMMUNITY = 141;
+	public static final short ARMOR = 142;
+	public static final short PHYSICAL_REFLECT = 143;
+	public static final short MAGIC_REFLECT = 144;
+	public static final short ALL_REFLECT = 145;
+	public static final short MONSTER_CARNIVAL_WATK_UP = 150;
+	public static final short MONSTER_CARNIVAL_MATK_UP = 151;
+	public static final short MONSTER_CARNIVAL_WDEF_UP = 152;
+	public static final short MONSTER_CARNIVAL_MDEF_UP = 153;
+	public static final short MONSTER_CARNIVAL_ACC_UP = 154;
+	public static final short MONSTER_CARNIVAL_EVA_UP = 155;
+	public static final short MONSTER_CARNIVAL_SPEED_UP = 156;
+	public static final short MONSTER_CARNIVAL_SEAL = 157;
+	public static final short SUMMON = 200;
 
 	private MobSkills() {
 		//uninstantiable...

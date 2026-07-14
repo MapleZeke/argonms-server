@@ -34,18 +34,17 @@ import java.util.logging.Logger;
  */
 public abstract class RemoteClient implements SessionDataModel {
 	private static final Logger LOG = Logger.getLogger(RemoteClient.class.getName());
-	public static final byte
-		STATUS_NOTLOGGEDIN = 0,
-		STATUS_MIGRATION = 1,
-		STATUS_INLOGIN = 2,
-		STATUS_INGAME = 3,
-		STATUS_INSHOP = 4
-	;
+	public static final byte STATUS_NOTLOGGEDIN = 0;
+	public static final byte STATUS_MIGRATION = 1;
+	public static final byte STATUS_INLOGIN = 2;
+	public static final byte STATUS_INGAME = 3;
+	public static final byte STATUS_INSHOP = 4;
 
 	private ClientSession<?> session;
 	private int id;
 	private String name;
-	private byte world, channel;
+	private byte world;
+	private byte channel;
 	private boolean serverTransition;
 
 	public int getAccountId() {

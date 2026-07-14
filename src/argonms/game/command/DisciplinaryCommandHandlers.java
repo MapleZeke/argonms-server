@@ -33,7 +33,7 @@ import java.util.Map;
 public class DisciplinaryCommandHandlers implements CommandCollection<CommandCaller> {
 	@Override
 	public Map<String, AbstractCommandDefinition<CommandCaller>> getDefinitions() {
-		Map<String, AbstractCommandDefinition<CommandCaller>> commands = new HashMap<String, AbstractCommandDefinition<CommandCaller>>();
+		Map<String, AbstractCommandDefinition<CommandCaller>> commands = new HashMap<>();
 		commands.put("!jail", new CommandDefinition<CommandCaller>(new CommandDefinition.CommandAction<CommandCaller>() {
 			@Override
 			public String getUsage() {

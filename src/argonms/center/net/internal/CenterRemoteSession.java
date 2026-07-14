@@ -178,12 +178,10 @@ public class CenterRemoteSession implements Session {
 			return -1;
 		try {
 			do {
-				int success = 0;
 				Iterator<ByteBuffer> iter = sendQueue.pop().iterator();
 				while (iter.hasNext()) {
 					ByteBuffer buf = iter.next();
 					if (buf.remaining() == commChn.write(buf)) {
-						success++;
 					} else {
 						sendQueue.insert(buf);
 						while (iter.hasNext())
@@ -203,7 +201,8 @@ public class CenterRemoteSession implements Session {
 	}
 
 	private void recvInitPacket(LittleEndianReader packet) {
-		String response, localError = null;
+		String response;
+		String localError = null;
 
 		if (packet.available() >= 4 && packet.readByte() == RemoteCenterOps.AUTH) {
 			byte serverId = packet.readByte();
@@ -218,7 +217,7 @@ public class CenterRemoteSession implements Session {
 						for (int i = 0; i < channels.length; i++)
 							channels[i] = packet.readByte();
 						List<CenterGameInterface> servers = CenterServer.getInstance().getAllServersOfWorld(world, serverId);
-						List<Byte> conflicts = new ArrayList<Byte>();
+						List<Byte> conflicts = new ArrayList<>();
 						for (CenterGameInterface server : servers) {
 							if (server.isShuttingDown())
 								continue;
@@ -329,7 +328,7 @@ public class CenterRemoteSession implements Session {
 		private final AtomicReference<ScheduledFuture<?>> future;
 
 		public KeepAliveTask() {
-			future = new AtomicReference<ScheduledFuture<?>>(null);
+			future = new AtomicReference<>(null);
 		}
 
 		public void sendPing() {

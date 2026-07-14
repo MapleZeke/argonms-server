@@ -52,7 +52,7 @@ public final class EnterShopHandler {
 		sc.setPlayer(player);
 		boolean allowLogin;
 		byte state = sc.getOnlineState();
-		allowLogin = (state == RemoteClient.STATUS_MIGRATION);
+		allowLogin = state == RemoteClient.STATUS_MIGRATION;
 		if (!allowLogin) {
 			sc.getSession().close(player.getName() + " tried to double login on shop");
 			return;

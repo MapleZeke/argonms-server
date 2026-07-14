@@ -25,7 +25,8 @@ import argonms.game.net.external.GameClient.NpcMiniroom;
  * @author GoldenKevin
  */
 public class NpcStorageKeeper implements NpcMiniroom {
-	private final int putCost, getCost;
+	private final int putCost;
+	private final int getCost;
 
 	public NpcStorageKeeper(int trunkPut, int trunkGet) {
 		this.putCost = trunkPut;

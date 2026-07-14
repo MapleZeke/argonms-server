@@ -64,7 +64,7 @@ public final class GoToHandler {
 			p.setStance((byte) 0);
 			p.changeMap(p.getMap().getReturnMap());
 
-			Set<StatusEffectsData> sources = new HashSet<StatusEffectsData>();
+			Set<StatusEffectsData> sources = new HashSet<>();
 			//TODO: race condition for p.getAllEffects() if skill expires while
 			//this loop is running
 			for (Map.Entry<PlayerStatusEffect, PlayerStatusEffectValues> effect : p.getAllEffects().entrySet()) {

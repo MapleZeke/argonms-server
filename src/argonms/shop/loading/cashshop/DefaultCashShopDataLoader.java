@@ -60,7 +60,7 @@ public class DefaultCashShopDataLoader extends CashShopDataLoader {
 			rs = ps.executeQuery();
 			if (rs.next()) {
 				int currentPackageId = rs.getInt(1);
-				List<Integer> currentPackage = new ArrayList<Integer>();
+				List<Integer> currentPackage = new ArrayList<>();
 				currentPackage.add(Integer.valueOf(rs.getInt(2)));
 				while (rs.next()) {
 					int packageId = rs.getInt(1);

@@ -38,8 +38,8 @@ public class BuddyList implements ReadableBuddyList {
 
 	public BuddyList(short capacity) {
 		this.capacity = capacity;
-		this.buddies = new LinkedHashMap<Integer, BuddyListEntry>();
-		this.pendingInvites = new LinkedHashMap<Integer, String>();
+		this.buddies = new LinkedHashMap<>();
+		this.pendingInvites = new LinkedHashMap<>();
 	}
 
 	public BuddyListEntry getBuddy(int id) {

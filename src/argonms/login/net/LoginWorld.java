@@ -41,10 +41,10 @@ public class LoginWorld {
 
 	public LoginWorld(String name, byte flag, String message) {
 		this.name = name;
-		this.hosts = new HashMap<Byte, byte[]>();
-		this.channelPorts = new HashMap<Byte, Integer>();
-		this.loads = new TreeMap<Byte, Load>();
-		this.gameToChannelMapping = new HashMap<Byte, Set<Byte>>();
+		this.hosts = new HashMap<>();
+		this.channelPorts = new HashMap<>();
+		this.loads = new TreeMap<>();
+		this.gameToChannelMapping = new HashMap<>();
 		this.flag = flag;
 		this.eventMessage = message;
 	}

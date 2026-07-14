@@ -48,7 +48,7 @@ public class PortalScriptManager {
 
 	private PortalScriptManager(String scriptPath) {
 		portalPath = scriptPath + "portals" + GlobalConstants.DIR_DELIMIT;
-		playersBeingFulfilled = new ConcurrentHashMap<Integer, Boolean>();
+		playersBeingFulfilled = new ConcurrentHashMap<>();
 	}
 
 	public boolean runScript(String scriptName, byte portalId, GameCharacter p) {

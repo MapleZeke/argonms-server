@@ -60,7 +60,7 @@ public final class InventoryTools {
 
 		//initialize reverse lookup
 		static {
-			lookup = new HashMap<Byte, WeaponClass>(values().length);
+			lookup = new HashMap<>(values().length);
 			for (WeaponClass type : values())
 				lookup.put(Byte.valueOf(type.byteValue()), type);
 		}
@@ -114,7 +114,7 @@ public final class InventoryTools {
 	private static Map<Integer, Equip> equipCache;
 
 	static {
-		equipCache = new HashMap<Integer, Equip>();
+		equipCache = new HashMap<>();
 	}
 
 	/**
@@ -148,7 +148,7 @@ public final class InventoryTools {
 		for (Short s : inv.getItemSlots(itemid)) {
 			InventorySlot slot = inv.get(s.shortValue());
 			if (slot.getQuantity() < slotMax)
-				remQty -= (slotMax - slot.getQuantity());
+				remQty -= slotMax - slot.getQuantity();
 			if (remQty <= 0)
 				break;
 		}
@@ -242,8 +242,8 @@ public final class InventoryTools {
 	 * @return
 	 */
 	public static UpdatedSlots addToInventory(Inventory inv, InventorySlot item, int quantity, boolean breakRechargeableStack) {
-		List<Short> modifiedSlots = new ArrayList<Short>();
-		List<Short> insertedSlots = new ArrayList<Short>();
+		List<Short> modifiedSlots = new ArrayList<>();
+		List<Short> insertedSlots = new ArrayList<>();
 
 		int itemid = item.getDataId();
 		boolean rechargeable = isRechargeable(itemid);
@@ -460,8 +460,8 @@ public final class InventoryTools {
 
 	public static UpdatedSlots removeFromInventory(Inventory inv, int itemId, int quantity, boolean removeEmptyRechargeableStacks) {
 		boolean rechargeable = isRechargeable(itemId);
-		List<Short> changed = new ArrayList<Short>();
-		List<Short> removed = new ArrayList<Short>();
+		List<Short> changed = new ArrayList<>();
+		List<Short> removed = new ArrayList<>();
 		int delta;
 		for (Short slot : inv.getItemSlots(itemId)) {
 			InventorySlot item = inv.get(slot.shortValue());
@@ -767,11 +767,11 @@ public final class InventoryTools {
 	public static boolean isCashItem(int itemId) {
 		if (isEquip(itemId))
 			return ItemDataLoader.getInstance().isCashEquip(itemId);
-		return (itemId >= 5000000 && itemId < 6000000);
+		return itemId >= 5000000 && itemId < 6000000;
 	}
 
 	public static boolean isEquip(int itemId) {
-		return (itemId >= 1000000 && itemId < 2000000);
+		return itemId >= 1000000 && itemId < 2000000;
 	}
 
 	public static boolean isTwoHanded(int itemId) {
@@ -802,16 +802,16 @@ public final class InventoryTools {
 	}
 
 	public static boolean isThrowingStar(int itemId) {
-		return (itemId >= 2070000 && itemId < 2080000);
+		return itemId >= 2070000 && itemId < 2080000;
 	}
 
 	public static boolean isBullet(int itemId) {
-		return (itemId >= 2330000 && itemId < 2340000);
+		return itemId >= 2330000 && itemId < 2340000;
 	}
 
 	public static boolean isRechargeable(int itemId) {
 		int cat = itemId / 10000;
-		return (cat == 233 || cat == 207);
+		return cat == 233 || cat == 207;
 	}
 
 	public static boolean isOverall(int itemId) {
@@ -819,31 +819,31 @@ public final class InventoryTools {
 	}
 
 	public static boolean isPet(int itemId) {
-		return (itemId >= 5000000 && itemId <= 5000100);
+		return itemId >= 5000000 && itemId <= 5000100;
 	}
 
 	public static boolean isRing(int itemId) {
-		return (itemId >= 1112000 && itemId < 1113000);
+		return itemId >= 1112000 && itemId < 1113000;
 	}
 
 	public static boolean isCoupleRing(int itemId) {
-		return (itemId >= 1112001 && itemId <= 1112006);
+		return itemId >= 1112001 && itemId <= 1112006;
 	}
 
 	public static boolean isFriendshipRing(int itemId) {
-		return (itemId >= 1112800 && itemId <= 1112802);
+		return itemId >= 1112800 && itemId <= 1112802;
 	}
 
 	public static boolean isWeddingRing(int itemId) {
-		return (itemId >= 1112803 && itemId <= 1112807 || itemId == 1112809);
+		return itemId >= 1112803 && itemId <= 1112807 || itemId == 1112809;
 	}
 
 	public static boolean isPartnerRing(int itemId) {
-		return (isCoupleRing(itemId) || isFriendshipRing(itemId) || isWeddingRing(itemId));
+		return isCoupleRing(itemId) || isFriendshipRing(itemId) || isWeddingRing(itemId);
 	}
 
 	public static boolean isMount(int itemId) {
-		return (itemId >= 1900000 && itemId < 1940000);
+		return itemId >= 1900000 && itemId < 1940000;
 	}
 
 	public static boolean isArrowForCrossBow(int itemId) {

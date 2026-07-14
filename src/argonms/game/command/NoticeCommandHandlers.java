@@ -104,7 +104,7 @@ public class NoticeCommandHandlers implements CommandCollection<CommandCaller> {
 
 	@Override
 	public Map<String, AbstractCommandDefinition<CommandCaller>> getDefinitions() {
-		Map<String, AbstractCommandDefinition<CommandCaller>> definitions = new HashMap<String, AbstractCommandDefinition<CommandCaller>>();
+		Map<String, AbstractCommandDefinition<CommandCaller>> definitions = new HashMap<>();
 		definitions.put("!notice", new NoticeCommandHandler());
 		definitions.put("!ticker", new TickerCommandHandler());
 		return Collections.unmodifiableMap(definitions);

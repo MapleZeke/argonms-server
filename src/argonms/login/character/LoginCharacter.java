@@ -50,7 +50,7 @@ public class LoginCharacter extends Player {
 	private static final Map<Byte, KeyBinding> defaultBindings;
 
 	static {
-		Map<Byte, KeyBinding> bindings = new HashMap<Byte, KeyBinding>();
+		Map<Byte, KeyBinding> bindings = new HashMap<>();
 		bindings.put(Byte.valueOf((byte) 2), new KeyBinding((byte) 4, 10));
 		bindings.put(Byte.valueOf((byte) 3), new KeyBinding((byte) 4, 12));
 		bindings.put(Byte.valueOf((byte) 4), new KeyBinding((byte) 4, 13));
@@ -91,8 +91,10 @@ public class LoginCharacter extends Player {
 
 	private Map<Byte, KeyBinding> bindings;
 
-	private int worldRanking, worldRankingChange;
-	private int jobRanking, jobRankingChange;
+	private int worldRanking;
+	private int worldRankingChange;
+	private int jobRanking;
+	private int jobRankingChange;
 
 	private LoginCharacter() {
 		super();
@@ -232,7 +234,7 @@ public class LoginCharacter extends Player {
 		p.setJob(PlayerJob.JOB_BEGINNER);
 		p.setGm(account.getGm());
 
-		Map<InventoryType, Inventory> inventories = new EnumMap<InventoryType, Inventory>(InventoryType.class);
+		Map<InventoryType, Inventory> inventories = new EnumMap<>(InventoryType.class);
 		Inventory equipment = new Inventory((short) 24);
 		Inventory equipped = new Inventory((short) 0);
 		Inventory etc = new Inventory((short) 24);

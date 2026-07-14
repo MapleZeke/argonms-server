@@ -43,7 +43,7 @@ public class DefaultNpcShopDataLoader extends NpcShopDataLoader {
 		ResultSet rs = null;
 		try {
 			con = DatabaseManager.getConnection(DatabaseType.STATE);
-			List<NpcShop.ShopSlot> items = new ArrayList<NpcShop.ShopSlot>();
+			List<NpcShop.ShopSlot> items = new ArrayList<>();
 			ps = con.prepareStatement("SELECT `itemid`,`price` FROM `shopitems` WHERE `npcid` = ? ORDER BY `position` ASC");
 			ps.setInt(1, npcid);
 			rs = ps.executeQuery();
@@ -76,7 +76,7 @@ public class DefaultNpcShopDataLoader extends NpcShopDataLoader {
 			boolean more = false;
 			while (more || rs.next()) {
 				int npcId = rs.getInt(1);
-				items = new ArrayList<NpcShop.ShopSlot>();
+				items = new ArrayList<>();
 				do
 					items.add(new NpcShop.ShopSlot(rs.getInt(2), (short) 1, rs.getInt(3)));
 				while ((more = rs.next()) && rs.getInt(1) == npcId);

@@ -52,7 +52,7 @@ public class TimeTool {
 	 * @return FILETIME
 	 */
 	public static long unixToWindowsTime(long unixTime) {
-		return ((unixTime + TIME_ZONE_OFFSET) * 10000 + EPOCH_BIAS);
+		return (unixTime + TIME_ZONE_OFFSET) * 10000 + EPOCH_BIAS;
 	}
 
 	public static Calendar intDateToCalendar(int idate) {

@@ -25,7 +25,9 @@ package argonms.game.character;
 public class SkillMacro {
 	private final String name;
 	private final boolean silent;
-	private final int skill1, skill2, skill3;
+	private final int skill1;
+	private final int skill2;
+	private final int skill3;
 
 	public SkillMacro(String name, boolean silent, int skill1, int skill2, int skill3) {
 		this.name = name;

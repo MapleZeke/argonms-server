@@ -89,7 +89,7 @@ public class Reactor extends AbstractEntity {
 		State s = getState();
 		if (s == null || s.getType() != TYPE_ITEM_TRIGGERED)
 			return null;
-		return new Pair<Integer, Short>(Integer.valueOf(s.getItemId()), Short.valueOf(s.getItemQuantity()));
+		return new Pair<>(Integer.valueOf(s.getItemId()), Short.valueOf(s.getItemQuantity()));
 	}
 
 	//precondition: getItemTrigger() does not return null.
@@ -132,7 +132,7 @@ public class Reactor extends AbstractEntity {
 
 	public void hit(GameCharacter p, short stance) {
 		State s = getState();
-		boolean itemTrigger = (s.getType() == TYPE_ITEM_TRIGGERED);
+		boolean itemTrigger = s.getType() == TYPE_ITEM_TRIGGERED;
 		state = s.getNextState();
 		triggered(p, itemTrigger);
 	}

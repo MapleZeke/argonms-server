@@ -33,8 +33,8 @@ public abstract class CashShopDataLoader {
 	protected final Map<Integer, int[]> packages;
 
 	protected CashShopDataLoader() {
-		commodities = new HashMap<Integer, Commodity>();
-		packages = new HashMap<Integer, int[]>();
+		commodities = new HashMap<>();
+		packages = new HashMap<>();
 	}
 
 	public abstract boolean loadAll();

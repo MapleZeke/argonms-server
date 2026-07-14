@@ -117,10 +117,24 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 
 	private GameClient client;
 
-	private volatile short maxHp, maxMp;
+	private volatile short maxHp;
+	private volatile short maxMp;
 	private volatile byte baseSpeed;
-	private volatile int addStr, addDex, addInt, addLuk, addMaxHp, addMaxMp,
-			addWatk, addWdef, addMatk, addMdef, addAcc, addAvo, addHands, addSpeed, addJump;
+	private volatile int addStr;
+	private volatile int addDex;
+	private volatile int addInt;
+	private volatile int addLuk;
+	private volatile int addMaxHp;
+	private volatile int addMaxMp;
+	private volatile int addWatk;
+	private volatile int addWdef;
+	private volatile int addMatk;
+	private volatile int addMdef;
+	private volatile int addAcc;
+	private volatile int addAvo;
+	private volatile int addHands;
+	private volatile int addSpeed;
+	private volatile int addJump;
 
 	private final LockableList<Mob> controllingMobs;
 	private GameMap map;
@@ -168,28 +182,28 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	private GameCharacter () {
 		nextTransientItemUniqueId = new AtomicLong(0); //first value is -1 because of decrementAndGet
 		petFullnessSchedules = new ScheduledFuture<?>[3];
-		petIgnoreItems = new ConcurrentHashMap<Long, int[]>();
+		petIgnoreItems = new ConcurrentHashMap<>();
 
-		bindings = new ConcurrentSkipListMap<Byte, KeyBinding>();
-		skillEntries = new ConcurrentHashMap<Integer, SkillEntry>();
-		cooldowns = new ConcurrentHashMap<Integer, Cooldown>();
-		activeEffects = new ConcurrentHashMap<PlayerStatusEffect, PlayerStatusEffectValues>();
-		skillFutures = new ConcurrentHashMap<Integer, Pair<SkillState, ScheduledFuture<?>>>();
-		itemEffectFutures = new ConcurrentHashMap<Integer, Pair<ItemState, ScheduledFuture<?>>>();
-		diseaseFutures = new ConcurrentHashMap<Short, Pair<MobSkillState, ScheduledFuture<?>>>();
-		summons = new ConcurrentHashMap<Integer, PlayerSkillSummon>();
-		controllingMobs = new LockableList<Mob>(new ArrayList<Mob>());
-		rememberedMaps = new ConcurrentHashMap<MapMemoryVariable, Pair<Integer, Byte>>();
+		bindings = new ConcurrentSkipListMap<>();
+		skillEntries = new ConcurrentHashMap<>();
+		cooldowns = new ConcurrentHashMap<>();
+		activeEffects = new ConcurrentHashMap<>();
+		skillFutures = new ConcurrentHashMap<>();
+		itemEffectFutures = new ConcurrentHashMap<>();
+		diseaseFutures = new ConcurrentHashMap<>();
+		summons = new ConcurrentHashMap<>();
+		controllingMobs = new LockableList<>(new ArrayList<Mob>());
+		rememberedMaps = new ConcurrentHashMap<>();
 
-		questStatuses = new HashMap<Short, QuestEntry>();
-		questSubscriptions = new EnumMap<QuestRequirementType, Map<Number, List<Short>>>(QuestRequirementType.class);
-		completableQuests = new HashSet<Short>();
+		questStatuses = new HashMap<>();
+		questSubscriptions = new EnumMap<>(QuestRequirementType.class);
+		completableQuests = new HashSet<>();
 
 		minigameStats = Collections.synchronizedMap(new EnumMap<MiniroomType, Map<MinigameResult, AtomicInteger>>(MiniroomType.class));
 		famesThisMonth = Collections.synchronizedMap(new HashMap<Integer, Long>());
 		//doesn't need to be synchronized because we only add/remove entries
 		//before we can possibly get them
-		wishList = new ArrayList<Integer>(10);
+		wishList = new ArrayList<>(10);
 
 		itemExpireTask = new ItemExpireTask() {
 			@Override
@@ -353,7 +367,8 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		String invUpdate = "DELETE FROM `inventoryitems` WHERE "
 				+ "`characterid` = ? AND `inventorytype` <= " + InventoryType.CASH.byteValue()
 				+ " OR `accountid` = ? AND `inventorytype` = " + InventoryType.STORAGE.byteValue();
-		PreparedStatement ps = null, ips = null;
+		PreparedStatement ps = null;
+		PreparedStatement ips = null;
 		ResultSet rs = null;
 		try {
 			ps = con.prepareStatement(invUpdate);
@@ -362,7 +377,7 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			ps.executeUpdate();
 			ps.close();
 
-			EnumMap<InventoryType, IInventory> union = new EnumMap<InventoryType, IInventory>(getInventories());
+			EnumMap<InventoryType, IInventory> union = new EnumMap<>(getInventories());
 			union.put(InventoryType.STORAGE, storage);
 			commitInventory(con, union);
 
@@ -569,7 +584,8 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	}
 
 	private void updateDbQuests(Connection con) throws SQLException {
-		PreparedStatement ps = null, mps = null;
+		PreparedStatement ps = null;
+		PreparedStatement mps = null;
 		ResultSet rs = null;
 		try {
 			ps = con.prepareStatement("DELETE FROM `queststatuses` WHERE `characterid` = ?");
@@ -675,8 +691,10 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 
 	public static GameCharacter loadPlayer(GameClient c, int id) {
 		Connection con = null;
-		PreparedStatement ps = null, ips = null;
-		ResultSet rs = null, irs = null;
+		PreparedStatement ps = null;
+		PreparedStatement ips = null;
+		ResultSet rs = null;
+		ResultSet irs = null;
 		try {
 			con = DatabaseManager.getConnection(DatabaseType.STATE);
 			ps = con.prepareStatement("SELECT `c`.*,`a`.`name`,`a`.`storageslots`,`a`.`storagemesos` "
@@ -726,7 +744,7 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			rs.close();
 			ps.close();
 
-			EnumMap<InventoryType, IInventory> invUnion = new EnumMap<InventoryType, IInventory>(p.getInventories());
+			EnumMap<InventoryType, IInventory> invUnion = new EnumMap<>(p.getInventories());
 			invUnion.put(InventoryType.STORAGE, p.storage);
 			ps = con.prepareStatement("SELECT * FROM `inventoryitems` WHERE "
 					+ "`characterid` = ? AND `inventorytype` <= " + InventoryType.CASH.byteValue()
@@ -745,7 +763,7 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			rs = ps.executeQuery();
 			if (rs.next()) {
 				long currentUniqueId = rs.getLong(1);
-				List<Integer> currentItemsForPet = new ArrayList<Integer>();
+				List<Integer> currentItemsForPet = new ArrayList<>();
 				currentItemsForPet.add(Integer.valueOf(rs.getInt(2)));
 				while (rs.next()) {
 					long uniqueId = rs.getLong(1);
@@ -873,7 +891,7 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 					int questEntryId = rs.getInt(1);
 					short questId = rs.getShort(2);
 					byte state = rs.getByte(3);
-					Map<Integer, AtomicInteger> mobProgress = new LinkedHashMap<Integer, AtomicInteger>();
+					Map<Integer, AtomicInteger> mobProgress = new LinkedHashMap<>();
 					if (state == QuestEntry.STATE_STARTED) {
 						mps.setInt(1, questEntryId);
 						mrs = null;
@@ -916,7 +934,7 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			ps.setInt(1, id);
 			rs = ps.executeQuery();
 			while (rs.next()) {
-				Map<MinigameResult, AtomicInteger> stats = new EnumMap<MinigameResult, AtomicInteger>(MinigameResult.class);
+				Map<MinigameResult, AtomicInteger> stats = new EnumMap<>(MinigameResult.class);
 				stats.put(MinigameResult.WIN, new AtomicInteger(rs.getInt(4)));
 				stats.put(MinigameResult.TIE, new AtomicInteger(rs.getInt(5)));
 				stats.put(MinigameResult.LOSS, new AtomicInteger(rs.getInt(6)));
@@ -1016,7 +1034,7 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		if (gain != 0 && level < GlobalConstants.MAX_LEVEL) {
 			getClient().getSession().send(GamePackets.writeShowExpGain(gain, isKiller, fromQuest));
 
-			Map<ClientUpdateKey, Number> updatedStats = new EnumMap<ClientUpdateKey, Number>(ClientUpdateKey.class);
+			Map<ClientUpdateKey, Number> updatedStats = new EnumMap<>(ClientUpdateKey.class);
 			long newExp = (long) exp + gain; //should solve many overflow errors
 			if (newExp >= ExpTables.getExpForPlayerLevel(level))
 				newExp = levelUp(newExp, updatedStats);
@@ -1032,7 +1050,10 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		int intMpBonus = baseInt / 10;
 		//local variables are faster and safer (concurrent access and overflow)
 		//than directly modifying the heap variables...
-		short hpInc = 0, mpInc = 0, apInc = 0, spInc = 0;
+		short hpInc = 0;
+		short mpInc = 0;
+		short apInc = 0;
+		short spInc = 0;
 		do {
 			switch (PlayerJob.getJobPath(job)) {
 				case PlayerJob.CLASS_BEGINNER:
@@ -1298,7 +1319,7 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 
 	private void recalculateMaxHp() {
 		PlayerStatusEffectValues hhb = getEffectValue(PlayerStatusEffect.HYPER_BODY_HP);
-		short mod = (hhb == null) ? 0 : hhb.getModifier();
+		short mod = hhb == null ? 0 : hhb.getModifier();
 		recalculateMaxHp(mod);
 	}
 
@@ -1366,7 +1387,7 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 
 	private void recalculateMaxMp() {
 		PlayerStatusEffectValues mhb = getEffectValue(PlayerStatusEffect.HYPER_BODY_MP);
-		short mod = (mhb == null) ? 0 : mhb.getModifier();
+		short mod = mhb == null ? 0 : mhb.getModifier();
 		recalculateMaxMp(mod);
 	}
 
@@ -1501,7 +1522,7 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 
 	@Override
 	public int getMapId() {
-		return (map != null ? map.getDataId() : super.getMapId());
+		return map != null ? map.getDataId() : super.getMapId();
 	}
 
 	public void rememberMap(MapMemoryVariable key, byte spawnPoint) {
@@ -1515,14 +1536,14 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	public Pair<Integer, Byte> getRememberedMap(MapMemoryVariable key) {
 		Pair<Integer, Byte> location = rememberedMaps.get(key);
 		if (location == null)
-			location = new Pair<Integer, Byte>(Integer.valueOf(GlobalConstants.NULL_MAP), Byte.valueOf((byte) -1));
+			location = new Pair<>(Integer.valueOf(GlobalConstants.NULL_MAP), Byte.valueOf((byte) -1));
 		return location;
 	}
 
 	public Pair<Integer, Byte> resetRememberedMap(MapMemoryVariable key) {
 		Pair<Integer, Byte> location = rememberedMaps.remove(key);
 		if (location == null)
-			location = new Pair<Integer, Byte>(Integer.valueOf(GlobalConstants.NULL_MAP), Byte.valueOf((byte) -1));
+			location = new Pair<>(Integer.valueOf(GlobalConstants.NULL_MAP), Byte.valueOf((byte) -1));
 		return location;
 	}
 
@@ -1897,21 +1918,21 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	}
 
 	public Map<Integer, SkillState> activeSkillsList() {
-		Map<Integer, SkillState> list = new HashMap<Integer, SkillState>();
+		Map<Integer, SkillState> list = new HashMap<>();
 		for (Entry<Integer, Pair<SkillState, ScheduledFuture<?>>> activeSkill : skillFutures.entrySet())
 			list.put(activeSkill.getKey(), activeSkill.getValue().left);
 		return list;
 	}
 
 	public Map<Integer, ItemState> activeItemsList() {
-		Map<Integer, ItemState> list = new HashMap<Integer, ItemState>();
+		Map<Integer, ItemState> list = new HashMap<>();
 		for (Entry<Integer, Pair<ItemState, ScheduledFuture<?>>> activeItem : itemEffectFutures.entrySet())
 			list.put(activeItem.getKey(), activeItem.getValue().left);
 		return list;
 	}
 
 	public Map<Short, MobSkillState> activeMobSkillsList() {
-		Map<Short, MobSkillState> list = new HashMap<Short, MobSkillState>();
+		Map<Short, MobSkillState> list = new HashMap<>();
 		for (Entry<Short, Pair<MobSkillState, ScheduledFuture<?>>> activeMobSkill : diseaseFutures.entrySet())
 			list.put(activeMobSkill.getKey(), activeMobSkill.getValue().left);
 		return list;
@@ -2653,7 +2674,7 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 			if (watchingQuests == null)
 				return;
 
-			List<Short> mobReqCompleteQuests = new ArrayList<Short>();
+			List<Short> mobReqCompleteQuests = new ArrayList<>();
 			for (Short questId : watchingQuests) {
 				QuestEntry status = questStatuses.get(questId);
 				short mobReq = QuestDataLoader.getInstance().getCompleteReqs(questId.shortValue()).getReqMobCounts().get(oId);
@@ -2684,7 +2705,7 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 	}
 
 	public MobDeathListener getMobDeathListener(final int mobId) {
-		final WeakReference<GameCharacter> futureSelf = new WeakReference<GameCharacter>(this);
+		final WeakReference<GameCharacter> futureSelf = new WeakReference<>(this);
 		final int mobMap = getMapId();
 		return new MobDeathListener() {
 			@Override
@@ -2771,7 +2792,7 @@ public class GameCharacter extends LoggedInPlayer implements MapEntity {
 		synchronized(minigameStats) {
 			stats = minigameStats.get(game);
 			if (stats == null) {
-				stats = new EnumMap<MinigameResult, AtomicInteger>(MinigameResult.class);
+				stats = new EnumMap<>(MinigameResult.class);
 				stats.put(MinigameResult.WIN, new AtomicInteger(0));
 				stats.put(MinigameResult.TIE, new AtomicInteger(0));
 				stats.put(MinigameResult.LOSS, new AtomicInteger(0));

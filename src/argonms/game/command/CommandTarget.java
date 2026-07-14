@@ -105,7 +105,8 @@ public interface CommandTarget {
 
 	public static class InventorySlotRangeValue {
 		public final Inventory.InventoryType type;
-		public final short startSlot, endSlot;
+		public final short startSlot;
+		public final short endSlot;
 
 		public InventorySlotRangeValue(Inventory.InventoryType type, short startSlot, short endSlot) {
 			this.type = type;
@@ -180,7 +181,7 @@ public interface CommandTarget {
 		private static final Map<Byte, CharacterManipulationKey> lookup;
 
 		static {
-			lookup = new HashMap<Byte, CharacterManipulationKey>();
+			lookup = new HashMap<>();
 			for (CharacterManipulationKey key : values())
 				lookup.put(Byte.valueOf(key.byteValue()), key);
 		}
@@ -209,7 +210,7 @@ public interface CommandTarget {
 		private static final Map<Byte, CharacterProperty> lookup;
 
 		static {
-			lookup = new HashMap<Byte, CharacterProperty>();
+			lookup = new HashMap<>();
 			for (CharacterProperty key : values())
 				lookup.put(Byte.valueOf(key.byteValue()), key);
 		}

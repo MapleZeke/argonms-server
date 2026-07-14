@@ -54,21 +54,19 @@ import java.util.logging.Logger;
 public class CashShopHandler {
 	private static final Logger LOG = Logger.getLogger(CashShopHandler.class.getName());
 
-	private static final byte //handleAction opcodes
-		BUY_SIMPLE_ITEM = 3,
-		GIFT_ITEM = 4,
-		UPDATE_WISH_LIST = 5,
-		BUY_INVENTORY_SLOTS = 6,
-		BUY_CASH_INVENTORY_SLOTS = 7,
-		BUY_CHARACTER_SLOTS = 8,
-		TAKE_FROM_STAGING = 12,
-		PLACE_INTO_STAGING = 13,
-		BUY_COUPLE_RING = 27,
-		BUY_PACKAGE = 28,
-		GIFT_PACKAGE = 29,
-		BUY_ITEM_WITH_MESOS = 30,
-		BUY_FRIENDSHIP_RING = 33
-	;
+	private static final byte BUY_SIMPLE_ITEM = 3;
+	private static final byte GIFT_ITEM = 4;
+	private static final byte UPDATE_WISH_LIST = 5;
+	private static final byte BUY_INVENTORY_SLOTS = 6;
+	private static final byte BUY_CASH_INVENTORY_SLOTS = 7;
+	private static final byte BUY_CHARACTER_SLOTS = 8;
+	private static final byte TAKE_FROM_STAGING = 12;
+	private static final byte PLACE_INTO_STAGING = 13;
+	private static final byte BUY_COUPLE_RING = 27;
+	private static final byte BUY_PACKAGE = 28;
+	private static final byte GIFT_PACKAGE = 29;
+	private static final byte BUY_ITEM_WITH_MESOS = 30;
+	private static final byte BUY_FRIENDSHIP_RING = 33;
 
 	public static void handleReturnToChannel(LittleEndianReader packet, ShopClient sc) {
 		if (packet.available() != 0) {
@@ -175,7 +173,7 @@ public class CashShopHandler {
 	}
 
 	private static void updateWishList(ShopCharacter p, LittleEndianReader packet) {
-		List<Integer> newList = new ArrayList<Integer>();
+		List<Integer> newList = new ArrayList<>();
 		CashShopDataLoader csdl = CashShopDataLoader.getInstance();
 		for (int i = 0; i < 10; i++) {
 			int sn = packet.readInt();

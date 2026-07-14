@@ -33,7 +33,7 @@ public abstract class MobDataLoader {
 	protected final Map<Integer, MobStats> mobStats;
 
 	protected MobDataLoader() {
-		mobStats = new HashMap<Integer, MobStats>();
+		mobStats = new HashMap<>();
 	}
 
 	protected abstract void load(int mobid);

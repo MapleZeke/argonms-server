@@ -35,26 +35,23 @@ package argonms.common.net.external;
  * @author GoldenKevin
  */
 public final class PacketSubHeaders {
-	public static final byte //byte constants
-		STATUS_INFO_INVENTORY = 0,
-		STATUS_INFO_QUEST = 1,
-		STATUS_INFO_EXPIRE = 2,
-		STATUS_INFO_EXP = 3,
-		STATUS_INFO_FAME = 4,
-		STATUS_INFO_MESOS = 5,
-		STATUS_INFO_GUILD_POINTS = 6,
-		INVENTORY_STAT_UPDATE = 0,
-		INVENTORY_QUANTITY_UPDATE = 1,
-		INVENTORY_CHANGE_POSITION = 2,
-		INVENTORY_CLEAR_SLOT = 3,
-		//got these from Vana, I'm really interested in how they work! ^.^
-		GM_BLOCK = 4,
-		GM_INVALID_CHAR_NAME = 6,
-		GM_SET_GET_VAR_RESULT = 9,
-		GM_HIDE = 16,
-		GM_HIRED_MERCHANT_PLACE = 19,
-		GM_WARNING = 29
-	;
+	public static final byte STATUS_INFO_INVENTORY = 0;
+	public static final byte STATUS_INFO_QUEST = 1;
+	public static final byte STATUS_INFO_EXPIRE = 2;
+	public static final byte STATUS_INFO_EXP = 3;
+	public static final byte STATUS_INFO_FAME = 4;
+	public static final byte STATUS_INFO_MESOS = 5;
+	public static final byte STATUS_INFO_GUILD_POINTS = 6;
+	public static final byte INVENTORY_STAT_UPDATE = 0;
+	public static final byte INVENTORY_QUANTITY_UPDATE = 1;
+	public static final byte INVENTORY_CHANGE_POSITION = 2;
+	public static final byte INVENTORY_CLEAR_SLOT = 3;
+	public static final byte GM_BLOCK = 4;
+	public static final byte GM_INVALID_CHAR_NAME = 6;
+	public static final byte GM_SET_GET_VAR_RESULT = 9;
+	public static final byte GM_HIDE = 16;
+	public static final byte GM_HIRED_MERCHANT_PLACE = 19;
+	public static final byte GM_WARNING = 29;
 
 	/*public static final int //int constants
 	;*/

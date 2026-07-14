@@ -34,8 +34,8 @@ public abstract class SkillDataLoader {
 	protected final Map<Short, MobSkillStats> mobSkillStats;
 
 	protected SkillDataLoader() {
-		skillStats = new HashMap<Integer, SkillStats>();
-		mobSkillStats = new HashMap<Short, MobSkillStats>();
+		skillStats = new HashMap<>();
+		mobSkillStats = new HashMap<>();
 	}
 
 	protected abstract void loadPlayerSkill(int skillid);

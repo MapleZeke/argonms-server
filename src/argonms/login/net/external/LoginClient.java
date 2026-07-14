@@ -44,21 +44,17 @@ import java.util.logging.Logger;
 public class LoginClient extends RemoteClient {
 	private static final Logger LOG = Logger.getLogger(LoginClient.class.getName());
 
-	public static final byte
-		GENDER_MALE = 0,
-		GENDER_FEMALE = 1,
-		GENDER_UNDEFINED = 0x0A
-	;
+	public static final byte GENDER_MALE = 0;
+	public static final byte GENDER_FEMALE = 1;
+	public static final byte GENDER_UNDEFINED = 0x0A;
 
-	private static final byte
-		DELETE_OKAY = 0,
-		DELETE_ERROR_SYSTEM = 6,
-		DELETE_ERROR_GENERAL = 9,
-		DELETE_ERROR_WRONG_BIRTHDAY = 18,
-		DELETE_ERROR_GUILD_MASTER = 22,
-		DELETE_ERROR_IMPENDING_WEDDING = 24,
-		DELETE_ERROR_IMPENDING_WORLD_TRANSFER = 26
-	;
+	private static final byte DELETE_OKAY = 0;
+	private static final byte DELETE_ERROR_SYSTEM = 6;
+	private static final byte DELETE_ERROR_GENERAL = 9;
+	private static final byte DELETE_ERROR_WRONG_BIRTHDAY = 18;
+	private static final byte DELETE_ERROR_GUILD_MASTER = 22;
+	private static final byte DELETE_ERROR_IMPENDING_WEDDING = 24;
+	private static final byte DELETE_ERROR_IMPENDING_WORLD_TRANSFER = 26;
 
 	private String pin;
 	private byte gender;
@@ -103,11 +99,12 @@ public class LoginClient extends RemoteClient {
 	}
 
 	private CheatTracker.Infraction loadBanStatusInternal(Connection con, ResultSet rs) throws SQLException {
-		EnumMap<CheatTracker.Infraction, Integer> infractionPoints = new EnumMap<CheatTracker.Infraction, Integer>(CheatTracker.Infraction.class);
+		EnumMap<CheatTracker.Infraction, Integer> infractionPoints = new EnumMap<>(CheatTracker.Infraction.class);
 		int highestPoints = 0;
 		CheatTracker.Infraction mainBanReason = null;
 
-		PreparedStatement ips = null, rbps = null;
+		PreparedStatement ips = null;
+		PreparedStatement rbps = null;
 		ResultSet irs;
 
 		try {
@@ -148,7 +145,7 @@ public class LoginClient extends RemoteClient {
 						//send the reason that is most responsible for the ban
 						//(i.e. the reason that has the highest sum of points)
 						Integer runningPoints = infractionPoints.get(infractionReason);
-						int updatedPoints = ((runningPoints != null ? runningPoints.intValue() : 0) + severity);
+						int updatedPoints = (runningPoints != null ? runningPoints.intValue() : 0) + severity;
 						infractionPoints.put(infractionReason, Integer.valueOf(updatedPoints));
 						if (updatedPoints > highestPoints) {
 							highestPoints = updatedPoints;
@@ -240,7 +237,9 @@ public class LoginClient extends RemoteClient {
 				gm = rs.getByte(9);
 				loadBanStatusFromIdAndIp(con);
 
-				boolean correct, hashUpdate, hasSalt = (salt != null);
+				boolean correct;
+				boolean hashUpdate;
+				boolean hasSalt = salt != null;
 				switch (passhash.length) {
 					case 20: //sha-1 (160 bits = 20 bytes)
 						correct = hasSalt && HashFunctions.checkSaltedSha1Hash(passhash, pwd, salt) || !hasSalt && HashFunctions.checkSha1Hash(passhash, pwd);
@@ -451,7 +450,7 @@ public class LoginClient extends RemoteClient {
 				ps.setBytes(i + 1, macListArray[i]);
 			rs = ps.executeQuery();
 			//don't load duplicate ban ids
-			Set<Integer> banIds = new HashSet<Integer>();
+			Set<Integer> banIds = new HashSet<>();
 			while (rs.next())
 				banIds.add(Integer.valueOf(rs.getInt(1)));
 			for (Integer banId : banIds) {

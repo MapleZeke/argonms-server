@@ -42,12 +42,13 @@ public class Coupon {
 	private int remainingUses;
 	private long expireDate;
 	private final Set<Integer> usedBy;
-	private boolean itemsDirty, usedByDirty;
+	private boolean itemsDirty;
+	private boolean usedByDirty;
 
 	public Coupon(String code) {
 		this.code = code;
-		this.items = new ArrayList<Integer>();
-		this.usedBy = new HashSet<Integer>();
+		this.items = new ArrayList<>();
+		this.usedBy = new HashSet<>();
 	}
 
 	public boolean exists() {
@@ -108,7 +109,7 @@ public class Coupon {
 	}
 
 	public List<Pair<InventorySlot, CashShopStaging.CashPurchaseProperties>> createItems(int accountId) {
-		List<Pair<InventorySlot, CashShopStaging.CashPurchaseProperties>> instances = new ArrayList<Pair<InventorySlot, CashShopStaging.CashPurchaseProperties>>();
+		List<Pair<InventorySlot, CashShopStaging.CashPurchaseProperties>> instances = new ArrayList<>();
 		CashShopDataLoader csdl = CashShopDataLoader.getInstance();
 		Commodity c;
 		for (Integer sn : items)

@@ -74,7 +74,8 @@ public class InventoryCommandHandlers implements CommandCollection<CommandCaller
 				return;
 			}
 
-			short startSlot = 1, endSlot = 0xFF;
+			short startSlot = 1;
+			short endSlot = 0xFF;
 			if (args.hasNext()) {
 				String[] range = args.restOfString().replaceAll("\\s", "").split("-");
 				switch (range.length) {
@@ -108,7 +109,8 @@ public class InventoryCommandHandlers implements CommandCollection<CommandCaller
 	}
 
 	private static abstract class ChangeItemQuantityCommandHandler extends AbstractCommandDefinition<CommandCaller> {
-		private final int defaultQuantity, factor;
+		private final int defaultQuantity;
+		private final int factor;
 
 		private ChangeItemQuantityCommandHandler(int defaultQuantity, int factor) {
 			this.defaultQuantity = defaultQuantity;
@@ -178,7 +180,7 @@ public class InventoryCommandHandlers implements CommandCollection<CommandCaller
 
 	@Override
 	public Map<String, AbstractCommandDefinition<CommandCaller>> getDefinitions() {
-		Map<String, AbstractCommandDefinition<CommandCaller>> definitions = new HashMap<String, AbstractCommandDefinition<CommandCaller>>();
+		Map<String, AbstractCommandDefinition<CommandCaller>> definitions = new HashMap<>();
 		definitions.put("!clearinv", new ClearInventoryCommandHandler());
 		definitions.put("!give", new ChangeItemQuantityCommandHandler(1, 1) {
 			@Override

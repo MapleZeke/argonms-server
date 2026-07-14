@@ -30,12 +30,10 @@ import argonms.login.net.external.LoginClient;
  * @author GoldenKevin
  */
 public final class AuthHandler {
-	private static final byte
-		PIN_ACCEPTED = 0x00,
-		PIN_REGISTER = 0x01,
-		PIN_REJECTED = 0x02,
-		PIN_REQUEST = 0x04
-	;
+	private static final byte PIN_ACCEPTED = 0x00;
+	private static final byte PIN_REGISTER = 0x01;
+	private static final byte PIN_REJECTED = 0x02;
+	private static final byte PIN_REQUEST = 0x04;
 
 	public static void handleLogin(LittleEndianReader packet, LoginClient lc) {
 		String login = packet.readLengthPrefixedString();

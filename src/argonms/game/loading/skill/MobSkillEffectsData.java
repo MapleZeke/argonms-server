@@ -56,7 +56,7 @@ public class MobSkillEffectsData implements MonsterStatusEffectsData {
 
 	protected MobSkillEffectsData(short skillid, byte level) {
 		this.maxHpPerc = 100;
-		this.summons = new TreeMap<Byte, Integer>();
+		this.summons = new TreeMap<>();
 		this.skillid = skillid;
 		this.level = level;
 		this.prop = 100;
@@ -182,7 +182,10 @@ public class MobSkillEffectsData implements MonsterStatusEffectsData {
 
 	@Override
 	public Rectangle getBoundingBox(Point posFrom, boolean facingLeft) {
-		int ltx, lty, rbx, rby;
+		int ltx;
+		int lty;
+		int rbx;
+		int rby;
 		if (facingLeft) {
 			ltx = lt.x + posFrom.x;
 			rbx = rb.x + posFrom.x;

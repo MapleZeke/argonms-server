@@ -44,9 +44,9 @@ public abstract class AbstractPlayerContinuation {
 	}
 
 	public AbstractPlayerContinuation() {
-		activeItems = new HashMap<Integer, BuffState.ItemState>();
-		activeSkills = new HashMap<Integer, BuffState.SkillState>();
-		activeDebuffs = new HashMap<Short, BuffState.MobSkillState>();
+		activeItems = new HashMap<>();
+		activeSkills = new HashMap<>();
+		activeDebuffs = new HashMap<>();
 	}
 
 	public Map<Integer, BuffState.ItemState> getActiveItems() {

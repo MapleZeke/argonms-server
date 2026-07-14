@@ -45,7 +45,7 @@ public class ScriptPlayer {
 	private WeakReference<GameCharacter> player;
 
 	public ScriptPlayer(GameCharacter player) {
-		this.player = new WeakReference<GameCharacter>(player);
+		this.player = new WeakReference<>(player);
 	}
 
 	protected GameCharacter getPlayer() {

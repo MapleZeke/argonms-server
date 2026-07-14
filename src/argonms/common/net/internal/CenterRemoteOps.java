@@ -24,20 +24,18 @@ package argonms.common.net.internal;
  * @author GoldenKevin
  */
 public final class CenterRemoteOps {
-	public static final byte
-		AUTH_RESPONSE = 0x00,
-		PING = 0x01,
-		PONG = 0x02,
-		GAME_CONNECTED = 0x03,
-		SHOP_CONNECTED = 0x04,
-		GAME_DISCONNECTED = 0x05,
-		SHOP_DISCONNECTED = 0x06,
-		CHANGE_POPULATION = 0x07,
-		CHANNEL_PORT_CHANGE = 0x08,
-		CROSS_CHANNEL_SYNCHRONIZATION = 0x09,
-		SHOP_CHANNEL_SHOP_SYNCHRONIZATION = 0x0A,
-		CENTER_SERVER_SYNCHRONIZATION = 0x0B
-	;
+	public static final byte AUTH_RESPONSE = 0x00;
+	public static final byte PING = 0x01;
+	public static final byte PONG = 0x02;
+	public static final byte GAME_CONNECTED = 0x03;
+	public static final byte SHOP_CONNECTED = 0x04;
+	public static final byte GAME_DISCONNECTED = 0x05;
+	public static final byte SHOP_DISCONNECTED = 0x06;
+	public static final byte CHANGE_POPULATION = 0x07;
+	public static final byte CHANNEL_PORT_CHANGE = 0x08;
+	public static final byte CROSS_CHANNEL_SYNCHRONIZATION = 0x09;
+	public static final byte SHOP_CHANNEL_SHOP_SYNCHRONIZATION = 0x0A;
+	public static final byte CENTER_SERVER_SYNCHRONIZATION = 0x0B;
 
 	private CenterRemoteOps() {
 		//uninstantiable...

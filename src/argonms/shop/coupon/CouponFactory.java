@@ -40,7 +40,7 @@ public class CouponFactory {
 	private ConcurrentMap<String, Coupon> loadedCoupons;
 
 	private CouponFactory() {
-		loadedCoupons = new ConcurrentHashMap<String, Coupon>();
+		loadedCoupons = new ConcurrentHashMap<>();
 	}
 
 	public Coupon getCoupon(String code) {

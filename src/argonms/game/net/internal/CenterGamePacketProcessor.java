@@ -88,7 +88,7 @@ public class CenterGamePacketProcessor extends CenterRemotePacketProcessor {
 		packet.readByte(); //world - we don't need it
 		String host = packet.readLengthPrefixedString();
 		byte size = packet.readByte();
-		Map<Byte, Integer> ports = new HashMap<Byte, Integer>(size);
+		Map<Byte, Integer> ports = new HashMap<>(size);
 		for (int i = 0; i < size; i++)
 			ports.put(Byte.valueOf(packet.readByte()), Integer.valueOf(packet.readInt()));
 		local.registerGame(serverId, host, ports);

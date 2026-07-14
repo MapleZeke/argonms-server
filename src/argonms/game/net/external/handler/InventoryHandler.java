@@ -167,7 +167,7 @@ public final class InventoryHandler {
 		/*int time = */packet.readInt();
 		short scrollSlot = packet.readShort();
 		short equipSlot = packet.readShort();
-		boolean useWhiteScroll = (packet.readShort() == 2);
+		boolean useWhiteScroll = packet.readShort() == 2;
 		boolean legendarySpirit = packet.readBool();
 
 		GameCharacter p = gc.getPlayer();
@@ -221,7 +221,7 @@ public final class InventoryHandler {
 				result = 0; //indicates general failure
 				cursed = true;
 
-				InventoryTools.takeFromInventory(p.getInventory(!legendarySpirit ? InventoryType.EQUIPPED : InventoryType.EQUIP), equipSlot, (short) 1);
+				InventoryTools.takeFromInventory(p.getInventory(legendarySpirit ? InventoryType.EQUIP : InventoryType.EQUIPPED), equipSlot, (short) 1);
 				equip = null; //leave equip off since we permanantly lost it
 			} else { //success (result == 1) or non-cursed fail (result == 0)
 				cursed = false;

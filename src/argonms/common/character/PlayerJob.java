@@ -24,62 +24,58 @@ package argonms.common.character;
  * @author GoldenKevin
  */
 public final class PlayerJob {
-	public static final int //job paths
-		CLASS_BEGINNER = 0,
-		CLASS_WARRIOR = 1,
-		CLASS_MAGICIAN = 2,
-		CLASS_BOWMAN = 3,
-		CLASS_THIEF = 4,
-		CLASS_PIRATE = 5,
-		CLASS_GAMEMASTER = 9
-	;
+	public static final int CLASS_BEGINNER = 0;
+	public static final int CLASS_WARRIOR = 1;
+	public static final int CLASS_MAGICIAN = 2;
+	public static final int CLASS_BOWMAN = 3;
+	public static final int CLASS_THIEF = 4;
+	public static final int CLASS_PIRATE = 5;
+	public static final int CLASS_GAMEMASTER = 9;
 
-	public static final short //adventurer jobs
-		JOB_BEGINNER = 0,
-		JOB_SWORDMAN = 100,
-		JOB_FIGHTER = 110,
-		JOB_CRUSADER = 111,
-		JOB_HERO = 112,
-		JOB_PAGE = 120,
-		JOB_WHITE_KNIGHT = 121,
-		JOB_PALADIN = 122,
-		JOB_SPEARMAN = 130,
-		JOB_DRAGON_KNIGHT = 131,
-		JOB_DARK_KNIGHT = 132,
-		JOB_MAGICIAN = 200,
-		JOB_FP_WIZARD = 210,
-		JOB_FP_MAGE = 211,
-		JOB_FP_ARCH_MAGE = 212,
-		JOB_IL_WIZARD = 220,
-		JOB_IL_MAGE = 221,
-		JOB_IL_ARCH_MAGE = 222,
-		JOB_CLERIC = 230,
-		JOB_PRIEST = 231,
-		JOB_BISHOP = 232,
-		JOB_ARCHER = 300,
-		JOB_HUNTER = 310,
-		JOB_RANGER = 311,
-		JOB_BOWMASTER = 312,
-		JOB_CROSSBOWMAN = 320,
-		JOB_SNIPER = 321,
-		JOB_MARKSMAN = 322,
-		JOB_ROUGE = 400,
-		JOB_ASSASSIN = 410,
-		JOB_HERMIT = 411,
-		JOB_NIGHT_LORD = 412,
-		JOB_BANDIT = 420,
-		JOB_CHIEF_BANDIT = 421,
-		JOB_SHADOWER = 422,
-		JOB_PIRATE = 500,
-		JOB_BRAWLER = 510,
-		JOB_MARAUDER = 511,
-		JOB_BUCCANEER = 512,
-		JOB_GUNSLINGER = 520,
-		JOB_OUTLAW = 521,
-		JOB_CORSAIR = 522,
-		JOB_GM = 900,
-		JOB_SUPER_GM = 910
-	;
+	public static final short JOB_BEGINNER = 0;
+	public static final short JOB_SWORDMAN = 100;
+	public static final short JOB_FIGHTER = 110;
+	public static final short JOB_CRUSADER = 111;
+	public static final short JOB_HERO = 112;
+	public static final short JOB_PAGE = 120;
+	public static final short JOB_WHITE_KNIGHT = 121;
+	public static final short JOB_PALADIN = 122;
+	public static final short JOB_SPEARMAN = 130;
+	public static final short JOB_DRAGON_KNIGHT = 131;
+	public static final short JOB_DARK_KNIGHT = 132;
+	public static final short JOB_MAGICIAN = 200;
+	public static final short JOB_FP_WIZARD = 210;
+	public static final short JOB_FP_MAGE = 211;
+	public static final short JOB_FP_ARCH_MAGE = 212;
+	public static final short JOB_IL_WIZARD = 220;
+	public static final short JOB_IL_MAGE = 221;
+	public static final short JOB_IL_ARCH_MAGE = 222;
+	public static final short JOB_CLERIC = 230;
+	public static final short JOB_PRIEST = 231;
+	public static final short JOB_BISHOP = 232;
+	public static final short JOB_ARCHER = 300;
+	public static final short JOB_HUNTER = 310;
+	public static final short JOB_RANGER = 311;
+	public static final short JOB_BOWMASTER = 312;
+	public static final short JOB_CROSSBOWMAN = 320;
+	public static final short JOB_SNIPER = 321;
+	public static final short JOB_MARKSMAN = 322;
+	public static final short JOB_ROUGE = 400;
+	public static final short JOB_ASSASSIN = 410;
+	public static final short JOB_HERMIT = 411;
+	public static final short JOB_NIGHT_LORD = 412;
+	public static final short JOB_BANDIT = 420;
+	public static final short JOB_CHIEF_BANDIT = 421;
+	public static final short JOB_SHADOWER = 422;
+	public static final short JOB_PIRATE = 500;
+	public static final short JOB_BRAWLER = 510;
+	public static final short JOB_MARAUDER = 511;
+	public static final short JOB_BUCCANEER = 512;
+	public static final short JOB_GUNSLINGER = 520;
+	public static final short JOB_OUTLAW = 521;
+	public static final short JOB_CORSAIR = 522;
+	public static final short JOB_GM = 900;
+	public static final short JOB_SUPER_GM = 910;
 
 	public static byte ALL_JOBS_BITSTRING = 0x3F; //1 + 2 + 4 + 8 + 16 + 32
 
@@ -107,35 +103,35 @@ public final class PlayerJob {
 	}
 
 	public static int getJobPath(short jobid) {
-		return (jobid / 100);
+		return jobid / 100;
 	}
 
 	public static boolean isBeginner(short jobid) {
-		return (getJobPath(jobid) == CLASS_BEGINNER);
+		return getJobPath(jobid) == CLASS_BEGINNER;
 	}
 
 	public static boolean isWarrior(short jobid) {
-		return (getJobPath(jobid) == CLASS_WARRIOR);
+		return getJobPath(jobid) == CLASS_WARRIOR;
 	}
 
 	public static boolean isMage(short jobid) {
-		return (getJobPath(jobid) == CLASS_MAGICIAN);
+		return getJobPath(jobid) == CLASS_MAGICIAN;
 	}
 
 	public static boolean isArcher(short jobid) {
-		return (getJobPath(jobid) == CLASS_BOWMAN);
+		return getJobPath(jobid) == CLASS_BOWMAN;
 	}
 
 	public static boolean isThief(short jobid) {
-		return (getJobPath(jobid) == CLASS_THIEF);
+		return getJobPath(jobid) == CLASS_THIEF;
 	}
 
 	public static boolean isPirate(short jobid) {
-		return (getJobPath(jobid) == CLASS_PIRATE);
+		return getJobPath(jobid) == CLASS_PIRATE;
 	}
 
 	public static boolean isGameMaster(short jobid) {
-		return (getJobPath(jobid) == CLASS_GAMEMASTER);
+		return getJobPath(jobid) == CLASS_GAMEMASTER;
 	}
 
 	private PlayerJob() {

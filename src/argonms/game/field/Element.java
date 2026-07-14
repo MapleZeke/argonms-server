@@ -25,12 +25,10 @@ package argonms.game.field;
 public enum Element {
 	NEUTRAL, FIRE, ICE, LIGHTING, POISON, HOLY, PHYSICAL;
 
-	public static final byte
-		EFFECTIVENESS_WEAK = 0,
-		EFFECTIVENESS_NORMAL = 1,
-		EFFECTIVENESS_STRONG = 2,
-		EFFECTIVENESS_IMMUNE = 3
-	;
+	public static final byte EFFECTIVENESS_WEAK = 0;
+	public static final byte EFFECTIVENESS_NORMAL = 1;
+	public static final byte EFFECTIVENESS_STRONG = 2;
+	public static final byte EFFECTIVENESS_IMMUNE = 3;
 
 	public static Element valueOf(char c) {
 		switch (Character.toUpperCase(c)) {

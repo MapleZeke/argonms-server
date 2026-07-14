@@ -41,7 +41,7 @@ public abstract class LimitedCommodityDataLoader {
 	protected final Map<Integer, LimitedCommodity> limitedCommodities;
 
 	protected LimitedCommodityDataLoader() {
-		limitedCommodities = new HashMap<Integer, LimitedCommodity>();
+		limitedCommodities = new HashMap<>();
 	}
 
 	protected int getUsed(int itemId) {

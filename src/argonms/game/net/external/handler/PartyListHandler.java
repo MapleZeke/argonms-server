@@ -32,34 +32,30 @@ import argonms.game.net.external.GamePackets;
  * @author GoldenKevin
  */
 public final class PartyListHandler {
-	public static final byte //party receive op codes
-		CREATE = 0x01,
-		LEAVE = 0x02,
-		JOIN = 0x03,
-		INVITE = 0x04,
-		EXPEL = 0x05,
-		CHANGE_LEADER = 0x06
-	;
+	public static final byte CREATE = 0x01;
+	public static final byte LEAVE = 0x02;
+	public static final byte JOIN = 0x03;
+	public static final byte INVITE = 0x04;
+	public static final byte EXPEL = 0x05;
+	public static final byte CHANGE_LEADER = 0x06;
 
-	public static final byte //party send op codes
-		INVITE_SENT = 0x04,
-		SILENT_LIST_UPDATE = 0x07,
-		PARTY_CREATED = 0x08,
-		IS_BEGINNER = 0x0A,
-		LEFT_PARTY = 0x0C,
-		NOT_IN_PARTY = 0x0D,
-		JOINED_PARTY = 0x0F,
-		ALREADY_IN_PARTY = 0x10,
-		PARTY_FULL = 0x11,
-		CANNOT_FIND = 0x13,
-		BUSY = 0x16,
-		INVITE_DENIED = 0x17,
-		LEADER_CHANGED = 0x1A,
-		NOT_IN_VICINITY = 0x1B,
-		NO_MEMBERS_IN_VICINITY = 0x1C,
-		NOT_IN_CHANNEL = 0x1D,
-		IS_GM = 0x1F
-	;
+	public static final byte INVITE_SENT = 0x04;
+	public static final byte SILENT_LIST_UPDATE = 0x07;
+	public static final byte PARTY_CREATED = 0x08;
+	public static final byte IS_BEGINNER = 0x0A;
+	public static final byte LEFT_PARTY = 0x0C;
+	public static final byte NOT_IN_PARTY = 0x0D;
+	public static final byte JOINED_PARTY = 0x0F;
+	public static final byte ALREADY_IN_PARTY = 0x10;
+	public static final byte PARTY_FULL = 0x11;
+	public static final byte CANNOT_FIND = 0x13;
+	public static final byte BUSY = 0x16;
+	public static final byte INVITE_DENIED = 0x17;
+	public static final byte LEADER_CHANGED = 0x1A;
+	public static final byte NOT_IN_VICINITY = 0x1B;
+	public static final byte NO_MEMBERS_IN_VICINITY = 0x1C;
+	public static final byte NOT_IN_CHANNEL = 0x1D;
+	public static final byte IS_GM = 0x1F;
 
 	public static void handleListModification(LittleEndianReader packet, GameClient gc) {
 		GameCharacter p = gc.getPlayer();

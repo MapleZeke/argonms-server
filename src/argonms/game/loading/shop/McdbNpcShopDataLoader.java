@@ -42,12 +42,12 @@ public class McdbNpcShopDataLoader extends NpcShopDataLoader {
 	private final Map<Integer, Map<Integer, Double>> rechargeTiers;
 
 	protected McdbNpcShopDataLoader() {
-		rechargeTiers = new HashMap<Integer, Map<Integer, Double>>();
+		rechargeTiers = new HashMap<>();
 	}
 
 	private boolean loadRechargeTier(int tier, ResultSet rs) throws SQLException {
 		boolean more;
-		Map<Integer, Double> tierData = new HashMap<Integer, Double>();
+		Map<Integer, Double> tierData = new HashMap<>();
 		do {
 			int itemId = rs.getInt(2);
 			double price = rs.getDouble(3);
@@ -89,7 +89,7 @@ public class McdbNpcShopDataLoader extends NpcShopDataLoader {
 					rechargeables = rechargeTiers.get(Integer.valueOf(rechargeTier));
 				}
 
-				List<NpcShop.ShopSlot> items = new ArrayList<NpcShop.ShopSlot>();
+				List<NpcShop.ShopSlot> items = new ArrayList<>();
 				PreparedStatement ips = null;
 				ResultSet irs = null;
 				try {
@@ -132,13 +132,13 @@ public class McdbNpcShopDataLoader extends NpcShopDataLoader {
 			rs.close();
 			ps.close();
 
-			Map<Integer, List<NpcShop.ShopSlot>> shopItems = new HashMap<Integer, List<NpcShop.ShopSlot>>();
+			Map<Integer, List<NpcShop.ShopSlot>> shopItems = new HashMap<>();
 			ps = con.prepareStatement("SELECT `shopid`,`itemid`,`quantity`,`price` FROM `shopitemdata` ORDER BY `shopid`,`sort` DESC");
 			rs = ps.executeQuery();
 			more = false;
 			while (more || rs.next()) {
 				int shopId = rs.getInt(1);
-				items = new ArrayList<NpcShop.ShopSlot>();
+				items = new ArrayList<>();
 				do
 					items.add(new NpcShop.ShopSlot(rs.getInt(2), rs.getShort(3), rs.getInt(4)));
 				while ((more = rs.next()) && rs.getInt(1) == shopId);

@@ -58,7 +58,7 @@ public class JsonCommodityOverrideDataLoader extends CommodityOverrideDataLoader
 			});
 			for (Map.Entry<Object, Object> commodity : ((NativeObject) json).entrySet()) {
 				Integer sn = (Integer) commodity.getKey();
-				Map<CommodityMod, Object> properties = new EnumMap<CommodityMod, Object>(CommodityMod.class);
+				Map<CommodityMod, Object> properties = new EnumMap<>(CommodityMod.class);
 				for (Map.Entry<Object, Object> property : ((NativeObject) commodity.getValue()).entrySet()) {
 					String propKey = (String) property.getKey();
 					if (propKey.equals("itemId")) {

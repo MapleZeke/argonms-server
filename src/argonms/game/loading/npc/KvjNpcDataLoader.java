@@ -32,11 +32,9 @@ import java.util.logging.Logger;
 public class KvjNpcDataLoader extends NpcDataLoader {
 	private static final Logger LOG = Logger.getLogger(KvjNpcDataLoader.class.getName());
 
-	private static final byte
-		SCRIPT_NAME = 1,
-		TRUNK_PUT = 2,
-		TRUNK_GET = 3
-	;
+	private static final byte SCRIPT_NAME = 1;
+	private static final byte TRUNK_PUT = 2;
+	private static final byte TRUNK_GET = 3;
 
 	private final String dataPath;
 
@@ -46,7 +44,7 @@ public class KvjNpcDataLoader extends NpcDataLoader {
 
 	@Override
 	protected void load(int npcId) {
-		String id = String.format("%07d", npcId);
+		String id = "%07d".formatted(npcId);
 
 		try {
 			File f = new File(new StringBuilder(dataPath).append("Npc.wz").append(File.separator).append(id).append(".img.kvj").toString());
@@ -78,7 +76,8 @@ public class KvjNpcDataLoader extends NpcDataLoader {
 	}
 
 	private void doWork(LittleEndianReader reader, int npcId) {
-		int withdrawCost = 0, depositCost = 0;
+		int withdrawCost = 0;
+		int depositCost = 0;
 		for (byte now = reader.readByte(); now != -1; now = reader.readByte()) {
 			switch (now) {
 				case SCRIPT_NAME:

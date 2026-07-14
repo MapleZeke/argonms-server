@@ -52,14 +52,12 @@ import java.util.logging.Logger;
 public final class WorldlistHandler {
 	private static final Logger LOG = Logger.getLogger(WorldlistHandler.class.getName());
 
-	private static final byte
-		SERVERSTATUS_OK = 0, //No warning
-		SERVERSTATUS_WARNING = 1, //"Since There Are Many Concurrent Users in This World, You May Encounter Some Difficulties During the Game Play."
-		SERVERSTATUS_MAX = 2 //"The Concurrent Users in This World Have Reached the Max. Please Try Again Later."
-	;
+	private static final byte SERVERSTATUS_OK = 0;
+	private static final byte SERVERSTATUS_WARNING = 1;
+	private static final byte SERVERSTATUS_MAX = 2;
 
 	private static void loadAndWriteCharacters(LittleEndianWriter lew, LoginClient c) {
-		ArrayList<LoginCharacter> players = new ArrayList<LoginCharacter>(c.getMaxCharacters());
+		ArrayList<LoginCharacter> players = new ArrayList<>(c.getMaxCharacters());
 		Connection con = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -125,7 +123,7 @@ public final class WorldlistHandler {
 
 	public static void handleViewAllChars(LittleEndianReader packet, LoginClient lc) {
 		LittleEndianByteArrayWriter lew;
-		Set<Byte> worlds = new TreeSet<Byte>();
+		Set<Byte> worlds = new TreeSet<>();
 		byte totalChars = 0;
 		Connection con = null;
 		PreparedStatement ps = null;

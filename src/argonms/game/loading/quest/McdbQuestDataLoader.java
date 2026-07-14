@@ -41,9 +41,7 @@ public class McdbQuestDataLoader extends QuestDataLoader {
 			return false;
 		if (!loadReq())
 			return false;
-		if (!loadAct())
-			return false;
-		return true;
+		return !(!loadAct());
 	}
 
 	@Override

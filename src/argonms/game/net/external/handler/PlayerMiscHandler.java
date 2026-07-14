@@ -36,11 +36,9 @@ import argonms.game.net.external.GamePackets;
  * @author GoldenKevin
  */
 public final class PlayerMiscHandler {
-	private static final int
-		BINDING_CHANGE_KEY_MAPPING = 0,
-		BINDING_CHANGE_AUTO_HP_POT = 1,
-		BINDING_CHANGE_AUTO_MP_POT = 2
-	;
+	private static final int BINDING_CHANGE_KEY_MAPPING = 0;
+	private static final int BINDING_CHANGE_AUTO_HP_POT = 1;
+	private static final int BINDING_CHANGE_AUTO_MP_POT = 2;
 
 	public static void handleChair(LittleEndianReader packet, GameClient gc) {
 		short chairId = packet.readShort();

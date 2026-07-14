@@ -50,7 +50,8 @@ public class ClientListener<T extends RemoteClient> implements SessionCreator {
 	}
 
 	private static final Logger LOG = Logger.getLogger(ClientListener.class.getName());
-	private final ExecutorService bossThreadPool, workerThreadPool;
+	private final ExecutorService bossThreadPool;
+	private final ExecutorService workerThreadPool;
 	private final ClientPacketProcessor<T> pp;
 	private final ClientFactory<T> clientCtor;
 	private ServerSocketChannel listener;
@@ -62,9 +63,7 @@ public class ClientListener<T extends RemoteClient> implements SessionCreator {
 			private final ThreadGroup group;
 
 			{
-				SecurityManager s = System.getSecurityManager();
-				group = (s != null)? s.getThreadGroup() :
-									 Thread.currentThread().getThreadGroup();
+				group = Thread.currentThread().getThreadGroup();
 			}
 
 			@Override
@@ -82,9 +81,7 @@ public class ClientListener<T extends RemoteClient> implements SessionCreator {
 			private final AtomicInteger threadNumber = new AtomicInteger(1);
 
 			{
-				SecurityManager s = System.getSecurityManager();
-				group = (s != null)? s.getThreadGroup() :
-									 Thread.currentThread().getThreadGroup();
+				group = Thread.currentThread().getThreadGroup();
 			}
 
 			@Override
@@ -114,7 +111,7 @@ public class ClientListener<T extends RemoteClient> implements SessionCreator {
 					try {
 						Selector selector = Selector.open();
 						SelectionKey acceptorKey = listener.register(selector, SelectionKey.OP_ACCEPT);
-						final Map<SelectionKey, ClientSession<T>> connected = new ConcurrentHashMap<SelectionKey, ClientSession<T>>();
+						final Map<SelectionKey, ClientSession<T>> connected = new ConcurrentHashMap<>();
 						while (selector.isOpen()) {
 							selector.select();
 							Set<SelectionKey> keys = selector.selectedKeys();
@@ -132,7 +129,7 @@ public class ClientListener<T extends RemoteClient> implements SessionCreator {
 											LOG.log(Level.FINE, "Client connected from {0}", client.socket().getRemoteSocketAddress());
 											final SelectionKey acceptedKey = client.register(selector, SelectionKey.OP_READ);
 											T clientState = clientCtor.newInstance();
-											ClientSession<T> session = new ClientSession<T>(client, acceptedKey, clientState, new CloseListener<T>() {
+											ClientSession<T> session = new ClientSession<>(client, acceptedKey, clientState, new CloseListener<T>() {
 												@Override
 												public void closed(ClientSession<T> session) {
 													connected.remove(acceptedKey);

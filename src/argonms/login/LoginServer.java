@@ -82,15 +82,17 @@ public class LoginServer implements LocalServer {
 	private boolean centerConnected;
 
 	private LoginServer() {
-		worldListMessages = new ArrayList<BalloonMessage>();
-		onlineWorlds = new HashMap<Byte, LoginWorld>();
-		worldFlags = new HashMap<Byte, Byte>();
-		worldMessages = new HashMap<Byte, String>();
+		worldListMessages = new ArrayList<>();
+		onlineWorlds = new HashMap<>();
+		worldFlags = new HashMap<>();
+		worldMessages = new HashMap<>();
 	}
 
 	private void parseBalloonMessages(String str) {
-		int x, y;
-		int startIndex, endIndex = 0;
+		int x;
+		int y;
+		int startIndex;
+		int endIndex = 0;
 		do {
 			startIndex = str.indexOf('(', endIndex) + 1;
 			endIndex = str.indexOf(',', startIndex);
@@ -159,14 +161,14 @@ public class LoginServer implements LocalServer {
 		}
 		wzPath = System.getProperty("argonms.data.dir");
 
-		handler = new ClientListener<LoginClient>(new ClientLoginPacketProcessor(), new ClientFactory<LoginClient>() {
+		handler = new ClientListener<>(new ClientLoginPacketProcessor(), new ClientFactory<LoginClient>() {
 			@Override
 			public LoginClient newInstance() {
 				return new LoginClient();
 			}
 		});
 
-		boolean mcdb = (wzType == DataFileType.MCDB);
+		boolean mcdb = wzType == DataFileType.MCDB;
 		prop = new PropertiesConfiguration();
 		try {
 			FileReader fr = new FileReader(System.getProperty("argonms.db.config.file", "db.properties"));
@@ -241,7 +243,8 @@ public class LoginServer implements LocalServer {
 	private void initializeData(boolean preloadAll, DataFileType wzType, String wzPath) {
 		ItemDataLoader.setInstance(wzType, wzPath);
 		if (preloadAll) {
-			long start, end;
+			long start;
+			long end;
 			start = System.nanoTime();
 			System.out.print("Loading Item data...");
 			ItemDataLoader.getInstance().loadAll();

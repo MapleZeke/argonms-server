@@ -49,9 +49,6 @@ public class ShopCenterServerSynchronization {
 	}
 
 	public void receivedCenterServerSynchronizationPacket(LittleEndianReader packet) {
-		switch (packet.readByte()) {
-			
-		}
 	}
 
 	public void sendPartyMemberOnline(ShopCharacter p) {

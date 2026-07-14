@@ -47,8 +47,8 @@ public abstract class FreeMarketShop extends Miniroom {
 
 	public FreeMarketShop(GameCharacter owner, String desc, byte type) {
 		super(owner, 4, desc, null, type);
-		items = new ArrayList<ShopItem>();
-		bannedPlayers = new ArrayList<String>();
+		items = new ArrayList<>();
+		bannedPlayers = new ArrayList<>();
 	}
 
 	public void banVisitor(String name) {

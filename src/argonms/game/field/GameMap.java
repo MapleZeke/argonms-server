@@ -101,12 +101,12 @@ public class GameMap {
 
 	protected GameMap(MapStats stats) {
 		this.stats = stats;
-		this.entPools = new EnumMap<EntityType, EntityPool>(EntityType.class);
+		this.entPools = new EnumMap<>(EntityType.class);
 		for (EntityType type : EntityType.values())
 			entPools.put(type, new EntityPool());
-		this.monsterSpawns = new LockableList<MonsterSpawn>(new LinkedList<MonsterSpawn>());
+		this.monsterSpawns = new LockableList<>(new LinkedList<MonsterSpawn>());
 		this.monsters = new AtomicInteger(0);
-		this.portalOverrides = new ConcurrentHashMap<String, String>();
+		this.portalOverrides = new ConcurrentHashMap<>();
 		this.occupiedChairs = Collections.newSetFromMap(new ConcurrentHashMap<Short, Boolean>());
 		for (SpawnData spawnData : stats.getLife().values()) {
 			switch (spawnData.getType()) {
@@ -133,15 +133,15 @@ public class GameMap {
 			spawnEntity(reactor);
 		}
 		if (stats.getTimeLimit() > 0 && stats.getForcedReturn() != GlobalConstants.NULL_MAP)
-			timeLimitTasks = new ConcurrentHashMap<GameCharacter, ScheduledFuture<?>>();
+			timeLimitTasks = new ConcurrentHashMap<>();
 		else
 			timeLimitTasks = null;
 		if (stats.getDecHp() > 0)
-			decHpTasks = new ConcurrentHashMap<GameCharacter, ScheduledFuture<?>>();
+			decHpTasks = new ConcurrentHashMap<>();
 		else
 			decHpTasks = null;
 
-		TreeSet<Byte> mysticDoorSpots = new TreeSet<Byte>();
+		TreeSet<Byte> mysticDoorSpots = new TreeSet<>();
 		for (Map.Entry<Byte, PortalData> portal : stats.getPortals().entrySet())
 			if (portal.getValue().getPortalType() == 6)
 				mysticDoorSpots.add(portal.getKey());
@@ -232,7 +232,7 @@ public class GameMap {
 		EntityPool pool = entPools.get(type);
 		pool.lockRead();
 		try {
-			return new ArrayList<MapEntity>(entPools.get(type).allEnts());
+			return new ArrayList<>(entPools.get(type).allEnts());
 		} finally {
 			pool.unlockRead();
 		}
@@ -251,7 +251,8 @@ public class GameMap {
 				return;
 			else
 				controller = null;
-		int minControlled = Integer.MAX_VALUE, count;
+		int minControlled = Integer.MAX_VALUE;
+		int count;
 		EntityPool players = entPools.get(EntityType.PLAYER);
 		players.lockRead();
 		try {
@@ -443,10 +444,12 @@ public class GameMap {
 	}
 
 	public void drop(List<ItemDrop> drops, MapEntity ent, byte pickupAllow, int owner) {
-		Point entPos = ent.getPosition(), dropPos = new Point(entPos);
+		Point entPos = ent.getPosition();
+		Point dropPos = new Point(entPos);
 		int entX = entPos.x;
 		int width = pickupAllow != ItemDrop.PICKUP_EXPLOSION ? 25 : 40;
-		int dropNum = 0, delta;
+		int dropNum = 0;
+		int delta;
 		for (ItemDrop drop : drops) {
 			dropNum++;
 			delta = width * (dropNum / 2);
@@ -454,7 +457,7 @@ public class GameMap {
 				dropPos.x = entX + delta;
 			else //drop odd numbered drops left
 				dropPos.x = entX - delta;
-			drop.init((ent instanceof Mob) ? ent.getId() : 0, owner, calcDropPos(dropPos, entPos), entPos, pickupAllow);
+			drop.init(ent instanceof Mob ? ent.getId() : 0, owner, calcDropPos(dropPos, entPos), entPos, pickupAllow);
 			drop(drop);
 		}
 	}
@@ -726,7 +729,7 @@ public class GameMap {
 
 	public boolean enterPortal(GameCharacter p, byte portalId) {
 		PortalData portal = stats.getPortals().get(Byte.valueOf(portalId));
-		return (portal != null ? enterPortal(p, portalId, portal) : false);
+		return portal != null ? enterPortal(p, portalId, portal) : false;
 	}
 
 	private boolean enterPortal(GameCharacter p, byte portalId, PortalData portal) {
@@ -830,7 +833,7 @@ public class GameMap {
 	}
 
 	public List<MapEntity> getMapEntitiesInRect(Rectangle box, Set<EntityType> types) {
-		List<MapEntity> ret = new LinkedList<MapEntity>();
+		List<MapEntity> ret = new LinkedList<>();
 		for (EntityType type : types) {
 			EntityPool pool = entPools.get(type);
 			pool.lockRead();
@@ -965,7 +968,7 @@ public class GameMap {
 		private int nextEntId;
 
 		public EntityPool() {
-			this.entities = new LockableMap<Integer, MapEntity>(new LinkedHashMap<Integer, MapEntity>());
+			this.entities = new LockableMap<>(new LinkedHashMap<Integer, MapEntity>());
 			this.nextEntId = 0;
 		}
 

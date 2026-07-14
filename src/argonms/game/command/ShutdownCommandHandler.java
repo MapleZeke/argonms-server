@@ -43,7 +43,9 @@ public class ShutdownCommandHandler extends AbstractCommandDefinition<CommandCal
 
 	@Override
 	public void execute(CommandCaller caller, CommandArguments args, CommandOutput resp) {
-		boolean halt = false, restart = false, cancel = false;;
+		boolean halt = false;
+		boolean restart = false;
+		boolean cancel = false;
 		boolean option;
 		String param;
 		do {

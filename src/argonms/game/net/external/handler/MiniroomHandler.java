@@ -142,7 +142,8 @@ public final class MiniroomHandler {
 	}
 
 	private static void createRoom(GameCharacter p, LittleEndianReader packet) {
-		String text, pwd;
+		String text;
+		String pwd;
 		Miniroom room = null;
 		switch (MiniroomType.valueOf(packet.readByte())) {
 			case OMOK: {
@@ -209,8 +210,8 @@ public final class MiniroomHandler {
 		}
 		p.setMiniRoom(room);
 		p.getMap().spawnEntity(room);
-		if (room instanceof Trade) //can't put it in the switch because room wouldn't be spawned in map yet
-			RoomInviteQueue.getInstance().processQueuedTradeInvites(p, (Trade) room);
+		if (room instanceof Trade trade) //can't put it in the switch because room wouldn't be spawned in map yet
+			RoomInviteQueue.getInstance().processQueuedTradeInvites(p, trade);
 	}
 
 	private static void inviteToRoom(GameCharacter p, LittleEndianReader packet) {
@@ -339,7 +340,7 @@ public final class MiniroomHandler {
 
 	private static void gameAskRedo(GameCharacter p) {
 		Minigame room = (Minigame) p.getMiniRoom();
-		GameCharacter opponent = (room.positionOf(p) == 0) ? room.getPlayerByPosition((byte) 1) : room.getPlayerByPosition((byte) 0);
+		GameCharacter opponent = room.positionOf(p) == 0 ? room.getPlayerByPosition((byte) 1) : room.getPlayerByPosition((byte) 0);
 		opponent.getClient().getSession().send(writeSimpleMessage(Miniroom.ACT_REQUEST_REDO));
 	}
 
@@ -356,7 +357,7 @@ public final class MiniroomHandler {
 
 	private static void gameAskTie(GameCharacter p) {
 		Minigame room = (Minigame) p.getMiniRoom();
-		GameCharacter opponent = (room.positionOf(p) == 0) ? room.getPlayerByPosition((byte) 1) : room.getPlayerByPosition((byte) 0);
+		GameCharacter opponent = room.positionOf(p) == 0 ? room.getPlayerByPosition((byte) 1) : room.getPlayerByPosition((byte) 0);
 		opponent.getClient().getSession().send(writeSimpleMessage(Miniroom.ACT_REQUEST_TIE));
 	}
 

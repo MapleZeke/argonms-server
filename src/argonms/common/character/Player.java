@@ -54,14 +54,23 @@ public abstract class Player {
 	private byte gm;
 
 	protected String name;
-	protected short eyes, hair;
+	protected short eyes;
+	protected short hair;
 	protected byte skin;
 	protected byte gender;
 
 	protected volatile short level;
 	protected volatile short job;
-	protected volatile short baseStr, baseDex, baseInt, baseLuk, baseMaxHp, baseMaxMp;
-	protected volatile short remHp, remMp, remAp, remSp;
+	protected volatile short baseStr;
+	protected volatile short baseDex;
+	protected volatile short baseInt;
+	protected volatile short baseLuk;
+	protected volatile short baseMaxHp;
+	protected volatile short baseMaxMp;
+	protected volatile short remHp;
+	protected volatile short remMp;
+	protected volatile short remAp;
+	protected volatile short remSp;
 	protected volatile int exp;
 	protected volatile short fame;
 
@@ -76,7 +85,7 @@ public abstract class Player {
 	protected Player() {
 		//doesn't need to be synchronized because we only add/remove entries
 		//before we can possibly get them
-		inventories = new EnumMap<InventoryType, Inventory>(InventoryType.class);
+		inventories = new EnumMap<>(InventoryType.class);
 		pets = new Pet[3];
 	}
 
@@ -314,7 +323,12 @@ public abstract class Player {
 	}
 
 	public static void commitInventory(int characterId, int accountId, Pet[] pets, Connection con, Map<InventoryType, ? extends IInventory> inventories) throws SQLException {
-		PreparedStatement ps = null, eps = null, rps = null, pps = null, mps = null, cps = null;
+		PreparedStatement ps = null;
+		PreparedStatement eps = null;
+		PreparedStatement rps = null;
+		PreparedStatement pps = null;
+		PreparedStatement mps = null;
+		PreparedStatement cps = null;
 		ResultSet rs = null;
 		try {
 			ps = con.prepareStatement("INSERT INTO `inventoryitems` "

@@ -33,7 +33,7 @@ public class ReactorStats {
 
 	protected ReactorStats(int reactorId) {
 		this.reactorId = reactorId;
-		states = new HashMap<Byte, State>();
+		states = new HashMap<>();
 	}
 
 	public int getReactorId() {

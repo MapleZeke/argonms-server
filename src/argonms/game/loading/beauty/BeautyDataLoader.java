@@ -35,8 +35,8 @@ public abstract class BeautyDataLoader {
 	protected final SortedSet<Short> hairStyles;
 
 	protected BeautyDataLoader() {
-		eyeStyles = new TreeSet<Short>();
-		hairStyles = new TreeSet<Short>();
+		eyeStyles = new TreeSet<>();
+		hairStyles = new TreeSet<>();
 	}
 
 	public abstract boolean loadAll();

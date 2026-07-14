@@ -68,7 +68,7 @@ public abstract class CheatTracker {
 	private static Pattern[] macBanBlacklist;
 
 	static {
-		recent = new LockableMap<RemoteClient, OnlineCheatTracker>(new WeakHashMap<RemoteClient, OnlineCheatTracker>());
+		recent = new LockableMap<>(new WeakHashMap<RemoteClient, OnlineCheatTracker>());
 	}
 
 	public enum Infraction {
@@ -79,7 +79,7 @@ public abstract class CheatTracker {
 
 		//initialize reverse lookup
 		static {
-			lookup = new HashMap<Byte, Infraction>(values().length);
+			lookup = new HashMap<>(values().length);
 			for (Infraction reason : values())
 				lookup.put(Byte.valueOf(reason.byteValue()), reason);
 		}
@@ -137,7 +137,7 @@ public abstract class CheatTracker {
 
 	private CheatTracker() {
 		this.loadLock = new ReentrantLock();
-		this.timeLog = new ConcurrentHashMap<String, Long>();
+		this.timeLog = new ConcurrentHashMap<>();
 		this.banned = new AtomicBoolean(false);
 		this.totalPoints = 0;
 		this.infractionsLoaded = false;
@@ -356,7 +356,7 @@ public abstract class CheatTracker {
 		@Override
 		protected int getCharacterId() {
 			Player p = client.getPlayer();
-			return (p != null ? p.getId() : -1);
+			return p != null ? p.getId() : -1;
 		}
 	}
 
@@ -441,7 +441,7 @@ public abstract class CheatTracker {
 	}
 
 	public static void setBlacklistedMacBans(Scanner scan) {
-		List<Pattern> blacklist = new ArrayList<Pattern>();
+		List<Pattern> blacklist = new ArrayList<>();
 		while (scan.hasNext()) {
 			String line = scan.nextLine();
 			int comment = line.indexOf('#');

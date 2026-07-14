@@ -33,7 +33,7 @@ public abstract class ReactorDataLoader {
 	protected final Map<Integer, ReactorStats> reactorStats;
 
 	protected ReactorDataLoader() {
-		reactorStats = new HashMap<Integer, ReactorStats>();
+		reactorStats = new HashMap<>();
 	}
 
 	protected abstract void load(int reactorid);

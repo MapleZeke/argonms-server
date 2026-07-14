@@ -71,16 +71,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author GoldenKevin
  */
 public class Mob extends AbstractEntity {
-	public static final byte
-		DESTROY_ANIMATION_NONE = 0,
-		DESTROY_ANIMATION_NORMAL = 1,
-		DESTROY_ANIMATION_EXPLODE = 2
-	;
+	public static final byte DESTROY_ANIMATION_NONE = 0;
+	public static final byte DESTROY_ANIMATION_NORMAL = 1;
+	public static final byte DESTROY_ANIMATION_EXPLODE = 2;
 
-	public static final byte
-		CONTROL_STATUS_NORMAL = 1,
-		CONTROL_STATUS_NONE = 5
-	;
+	public static final byte CONTROL_STATUS_NORMAL = 1;
+	public static final byte CONTROL_STATUS_NONE = 5;
 
 	private final MobStats stats;
 	private final GameMap map;
@@ -89,16 +85,19 @@ public class Mob extends AbstractEntity {
 	private final Queue<MobDeathListener> subscribers;
 	private final WeakHashMap<GameCharacter, PlayerAttacker> playerDamages;
 	private final WeakHashMap<PartyList, PartyAttacker> partyDamages;
-	private final Lock damagesReadLock, damagesWriteLock;
+	private final Lock damagesReadLock;
+	private final Lock damagesWriteLock;
 	private volatile GameCharacter controller;
-	private volatile boolean aggroAware, hasAggro;
+	private volatile boolean aggroAware;
+	private volatile boolean hasAggro;
 	private volatile ScheduledFuture<?> removeAfter;
 	private final ConcurrentMap<MonsterStatusEffect, MonsterStatusEffectValues> activeEffects;
 	private final ConcurrentMap<Short, ScheduledFuture<?>> skillFutures;
 	private final ConcurrentMap<Integer, ScheduledFuture<?>> diseaseFutures;
 	private final ConcurrentMap<Short, Long> skillsUsed;
 	private final AtomicInteger spawnedSummons;
-	private volatile byte spawnEffect, deathEffect;
+	private volatile byte spawnEffect;
+	private volatile byte deathEffect;
 	private volatile ScheduledFuture<?> poisonTask;
 	private final ConcurrentLinkedQueue<Long> venomExpires;
 	private volatile ScheduledFuture<?> venomDecrementTask;
@@ -109,19 +108,19 @@ public class Mob extends AbstractEntity {
 		this.map = map;
 		this.remHp = new AtomicInteger(stats.getMaxHp());
 		this.remMp = new AtomicInteger(stats.getMaxMp());
-		this.subscribers = new ConcurrentLinkedQueue<MobDeathListener>();
-		this.playerDamages = new WeakHashMap<GameCharacter, PlayerAttacker>();
-		this.partyDamages = new WeakHashMap<PartyList, PartyAttacker>();
+		this.subscribers = new ConcurrentLinkedQueue<>();
+		this.playerDamages = new WeakHashMap<>();
+		this.partyDamages = new WeakHashMap<>();
 		ReadWriteLock lock = new ReentrantReadWriteLock();
 		this.damagesReadLock = lock.readLock();
 		this.damagesWriteLock = lock.writeLock();
-		this.activeEffects = new ConcurrentSkipListMap<MonsterStatusEffect, MonsterStatusEffectValues>();
-		this.skillFutures = new ConcurrentHashMap<Short, ScheduledFuture<?>>();
-		this.diseaseFutures = new ConcurrentHashMap<Integer, ScheduledFuture<?>>();
-		this.skillsUsed = new ConcurrentHashMap<Short, Long>();
+		this.activeEffects = new ConcurrentSkipListMap<>();
+		this.skillFutures = new ConcurrentHashMap<>();
+		this.diseaseFutures = new ConcurrentHashMap<>();
+		this.skillsUsed = new ConcurrentHashMap<>();
 		this.spawnedSummons = new AtomicInteger(0);
 		this.deathEffect = stats.getDeathAnimation();
-		this.venomExpires = new ConcurrentLinkedQueue<Long>();
+		this.venomExpires = new ConcurrentLinkedQueue<>();
 		setStance(stance);
 	}
 
@@ -148,7 +147,7 @@ public class Mob extends AbstractEntity {
 
 	private List<ItemDrop> getDrops() {
 		List<InventorySlot> items = stats.getItemsToDrop();
-		List<ItemDrop> combined = new ArrayList<ItemDrop>(items.size() + 1);
+		List<ItemDrop> combined = new ArrayList<>(items.size() + 1);
 		for (InventorySlot item : items)
 			combined.add(new ItemDrop(item));
 		int dropMesos = stats.getMesosToDrop();
@@ -183,7 +182,7 @@ public class Mob extends AbstractEntity {
 
 		damagesReadLock.lock();
 		try {
-			List<Attacker> allDamages = new ArrayList<Attacker>(playerDamages.size() + partyDamages.size());
+			List<Attacker> allDamages = new ArrayList<>(playerDamages.size() + partyDamages.size());
 			allDamages.addAll(playerDamages.values());
 			allDamages.addAll(partyDamages.values());
 
@@ -205,11 +204,11 @@ public class Mob extends AbstractEntity {
 		} finally {
 			damagesReadLock.unlock();
 		}
-		return new Pair<Attacker, GameCharacter>(highestDamageAttacker, highestDamageIndividual);
+		return new Pair<>(highestDamageAttacker, highestDamageIndividual);
 	}
 
 	public void died(GameCharacter killer) {
-		Set<StatusEffectsData> sources = new HashSet<StatusEffectsData>();
+		Set<StatusEffectsData> sources = new HashSet<>();
 		//TODO: race condition for getAllEffects() if skill expires while
 		//this loop is running
 		for (Map.Entry<MonsterStatusEffect, MonsterStatusEffectValues> effect : getAllEffects().entrySet()) {
@@ -440,10 +439,7 @@ public class Mob extends AbstractEntity {
 			return false;
 
 		skillsUsed.put(Short.valueOf((short) effect.getDataId()), Long.valueOf(now));
-		if ((remHp.get() * 100 / stats.getMaxHp()) > effect.getMaxPercentHp())
-			return false;
-
-		return true;
+		return !((remHp.get() * 100 / stats.getMaxHp()) > effect.getMaxPercentHp());
 	}
 
 	public boolean hasSkill(short skillId, byte skillLevel) {
@@ -676,7 +672,7 @@ public class Mob extends AbstractEntity {
 		private long damage;
 
 		public PlayerAttacker(GameCharacter player) {
-			this.player = new WeakReference<GameCharacter>(player);
+			this.player = new WeakReference<>(player);
 		}
 
 		@Override
@@ -738,10 +734,10 @@ public class Mob extends AbstractEntity {
 		private WeakReference<GameCharacter> highestDamageAttacker;
 
 		public PartyAttacker(PartyList party) {
-			this.party = new WeakReference<PartyList>(party);
-			attackers = new WeakHashMap<GameCharacter, Long>();
+			this.party = new WeakReference<>(party);
+			attackers = new WeakHashMap<>();
 			lowestAttackerLevel = 0xFF;
-			highestDamageAttacker = new WeakReference<GameCharacter>(null);
+			highestDamageAttacker = new WeakReference<>(null);
 		}
 
 		@Override
@@ -762,7 +758,7 @@ public class Mob extends AbstractEntity {
 					return;
 				short totalLevel = 0;
 				int membersCount = 0;
-				List<GameCharacter> splitExpMembers = new ArrayList<GameCharacter>();
+				List<GameCharacter> splitExpMembers = new ArrayList<>();
 				int hsRate = 0;
 				attackerParty.lockRead();
 				try {
@@ -806,7 +802,7 @@ public class Mob extends AbstractEntity {
 				attackers.put(c, currentDamage);
 				GameCharacter currentHighestDamageAttacker = highestDamageAttacker.get();
 				if (currentHighestDamageAttacker == null || currentDamage.compareTo(attackers.get(currentHighestDamageAttacker)) > 0)
-					highestDamageAttacker = new WeakReference<GameCharacter>(c);
+					highestDamageAttacker = new WeakReference<>(c);
 				if (c.getLevel() < lowestAttackerLevel)
 					lowestAttackerLevel = c.getLevel();
 			}

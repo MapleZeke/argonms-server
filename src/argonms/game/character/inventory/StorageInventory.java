@@ -50,7 +50,7 @@ public class StorageInventory implements IInventory {
 	public StorageInventory(short capacity, int mesos) {
 		this.capacity = capacity;
 		this.startItems = new InventorySlot[4];
-		this.realItems = new EnumMap<InventoryType, List<InventorySlot>>(InventoryType.class);
+		this.realItems = new EnumMap<>(InventoryType.class);
 		this.alreadyTouched = EnumSet.noneOf(InventoryType.class);
 		this.mesos = mesos;
 		ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
@@ -77,7 +77,7 @@ public class StorageInventory implements IInventory {
 			InventoryType type = InventoryTools.getCategory(item.getDataId());
 			List<InventorySlot> inventorySpecificItems = realItems.get(type);
 			if (inventorySpecificItems == null) {
-				inventorySpecificItems = new ArrayList<InventorySlot>();
+				inventorySpecificItems = new ArrayList<>();
 				realItems.put(type, inventorySpecificItems);
 			}
 			inventorySpecificItems.add(item);
@@ -93,7 +93,7 @@ public class StorageInventory implements IInventory {
 		try {
 			List<InventorySlot> inventorySpecificItems = realItems.get(type);
 			if (inventorySpecificItems == null) {
-				inventorySpecificItems = new ArrayList<InventorySlot>();
+				inventorySpecificItems = new ArrayList<>();
 				realItems.put(type, inventorySpecificItems);
 			}
 			inventorySpecificItems.add(item);
@@ -133,7 +133,7 @@ public class StorageInventory implements IInventory {
 		InventorySlot item;
 		readLock.lock();
 		try {
-			Map<Short, InventorySlot> mapRep = new LinkedHashMap<Short, InventorySlot>(occupied);
+			Map<Short, InventorySlot> mapRep = new LinkedHashMap<>(occupied);
 			for (short i = 0; i < startItems.length; i++)
 				if ((item = startItems[i]) != null)
 					mapRep.put(Short.valueOf(i), item);
@@ -210,7 +210,7 @@ public class StorageInventory implements IInventory {
 		writeLock.lock();
 		try {
 			alreadyTouched.clear();
-			List<InventorySlot> allItems = new ArrayList<InventorySlot>(occupied);
+			List<InventorySlot> allItems = new ArrayList<>(occupied);
 			for (Iterator<List<InventorySlot>> iter = realItems.values().iterator(); iter.hasNext();) {
 				List<InventorySlot> inventorySpecificItems = iter.next();
 				if (!inventorySpecificItems.isEmpty())

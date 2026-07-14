@@ -44,25 +44,19 @@ import java.util.List;
  * @author GoldenKevin
  */
 public final class NpcMiniroomHandler {
-	private static final byte
-		//shop
-		ACT_BUY = 0,
-		ACT_SELL = 1,
-		ACT_RECHARGE = 2,
-		ACT_EXIT_SHOP = 3,
-		//storage
-		ACT_WITHDRAW_ITEM = 4,
-		ACT_DEPOSIT_ITEM = 5,
-		ACT_ARRANGE_ITEMS = 6,
-		ACT_MESOS_TRANSFER = 7,
-		ACT_EXIT_STORAGE = 8
-	;
+	private static final byte ACT_BUY = 0;
+	private static final byte ACT_SELL = 1;
+	private static final byte ACT_RECHARGE = 2;
+	private static final byte ACT_EXIT_SHOP = 3;
+	private static final byte ACT_WITHDRAW_ITEM = 4;
+	private static final byte ACT_DEPOSIT_ITEM = 5;
+	private static final byte ACT_ARRANGE_ITEMS = 6;
+	private static final byte ACT_MESOS_TRANSFER = 7;
+	private static final byte ACT_EXIT_STORAGE = 8;
 
-	private static final byte
-		TRANSACTION_ADD_ITEM = 0,
-		TRANSACTION_INVENTORY_FULL = 3,
-		TRANSACTION_CHANGE_ITEM = 8
-	;
+	private static final byte TRANSACTION_ADD_ITEM = 0;
+	private static final byte TRANSACTION_INVENTORY_FULL = 3;
+	private static final byte TRANSACTION_CHANGE_ITEM = 8;
 
 	public static void handleNpcShopAction(LittleEndianReader packet, GameClient gc) {
 		NpcShop shop = (NpcShop) gc.getNpcRoom();

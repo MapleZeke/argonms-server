@@ -34,7 +34,7 @@ public class UnorderedQueue {
 	private final AtomicBoolean writeInProgress;
 
 	public UnorderedQueue() {
-		queued = new ConcurrentLinkedQueue<ByteBuffer>();
+		queued = new ConcurrentLinkedQueue<>();
 		writeInProgress = new AtomicBoolean(false);
 	}
 
@@ -64,7 +64,7 @@ public class UnorderedQueue {
 	 * @return a list of all ByteBuffers queued as of this moment.
 	 */
 	public List<ByteBuffer> pop() {
-		List<ByteBuffer> consecutive = new ArrayList<ByteBuffer>();
+		List<ByteBuffer> consecutive = new ArrayList<>();
 		ByteBuffer last;
 		while ((last = queued.poll()) != null)
 			consecutive.add(last);

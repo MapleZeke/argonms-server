@@ -63,10 +63,10 @@ public class QuestRewards {
 	private long endDate;
 
 	protected QuestRewards() {
-		items = new ArrayList<QuestItemStats>();
-		questChanges = new HashMap<Short, Byte>();
-		jobs = new ArrayList<Short>();
-		skillChanges = new ArrayList<SkillReward>();
+		items = new ArrayList<>();
+		questChanges = new HashMap<>();
+		jobs = new ArrayList<>();
+		skillChanges = new ArrayList<>();
 	}
 
 	protected void addRewardItem(QuestItemStats item) {
@@ -195,14 +195,15 @@ public class QuestRewards {
 	}
 
 	private boolean awardItems(GameCharacter p, int selection) {
-		boolean findRandomItem = (sumItemProbs > 0);
+		boolean findRandomItem = sumItemProbs > 0;
 		int selectableItemIndex = 0;
-		int random = findRandomItem ? Rng.getGenerator().nextInt(sumItemProbs) : 0, runningProbs = 0;
+		int random = findRandomItem ? Rng.getGenerator().nextInt(sumItemProbs) : 0;
+		int runningProbs = 0;
 
-		List<Pair<Pair<Integer, Short>, Integer>> itemsToGain = new ArrayList<Pair<Pair<Integer, Short>, Integer>>();
-		List<Pair<Integer, Short>> itemsToLose = new ArrayList<Pair<Integer, Short>>();
+		List<Pair<Pair<Integer, Short>, Integer>> itemsToGain = new ArrayList<>();
+		List<Pair<Integer, Short>> itemsToLose = new ArrayList<>();
 		//fails if there are multiple rewards of the same itemid, but that never happens!
-		Map<InventoryType, Integer> netEmptySlotRemovals = new EnumMap<InventoryType, Integer>(InventoryType.class);
+		Map<InventoryType, Integer> netEmptySlotRemovals = new EnumMap<>(InventoryType.class);
 		netEmptySlotRemovals.put(InventoryType.EQUIP, Integer.valueOf(0));
 		netEmptySlotRemovals.put(InventoryType.USE, Integer.valueOf(0));
 		netEmptySlotRemovals.put(InventoryType.SETUP, Integer.valueOf(0));
@@ -231,7 +232,7 @@ public class QuestRewards {
 				short quantity = item.getCount();
 				InventoryType type = InventoryTools.getCategory(item.getItemId());
 
-				Pair<Integer, Short> idAndQty = new Pair<Integer, Short>(Integer.valueOf(item.getItemId()), Short.valueOf(quantity));
+				Pair<Integer, Short> idAndQty = new Pair<>(Integer.valueOf(item.getItemId()), Short.valueOf(quantity));
 				if (quantity > 0) {
 					itemsToGain.add(new Pair<Pair<Integer, Short>, Integer>(idAndQty, Integer.valueOf(item.getPeriod())));
 					netEmptySlotRemovals.put(type, Integer.valueOf(netEmptySlotRemovals.get(type).intValue() + InventoryTools.slotsNeeded(p.getInventory(type), item.getItemId(), quantity, false)));
@@ -299,11 +300,12 @@ public class QuestRewards {
 	protected static class SkillReward {
 		private final List<Short> compatibleJobs;
 		private int skillId;
-		private byte currentLevel, masterLevel;
+		private byte currentLevel;
+		private byte masterLevel;
 		private boolean onlyMasterLevel;
 
 		protected SkillReward(int skillId, byte skillLevel, byte masterLevel, boolean onlyMasterLevel) {
-			this.compatibleJobs = new ArrayList<Short>();
+			this.compatibleJobs = new ArrayList<>();
 			this.skillId = skillId;
 			this.currentLevel = skillLevel;
 			this.masterLevel = masterLevel;

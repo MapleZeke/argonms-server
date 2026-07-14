@@ -130,10 +130,13 @@ public class GuildList extends IntraworldGroupList<
 		}
 	}
 
-	private final Lock bbsWriteLock, bbsReadLock;
+	private final Lock bbsWriteLock;
+	private final Lock bbsReadLock;
 	private String name;
-	private short emblemBg, emblemFg;
-	private byte emblemBgC, emblemFgC;
+	private short emblemBg;
+	private short emblemFg;
+	private byte emblemBgC;
+	private byte emblemFgC;
 	private String[] titles;
 	private byte capacity;
 	private String notice;
@@ -210,7 +213,7 @@ public class GuildList extends IntraworldGroupList<
 
 	@Override
 	public Member[] getAllMembers() {
-		List<Member> list = new ArrayList<Member>();
+		List<Member> list = new ArrayList<>();
 		list.addAll(localMembers.values());
 		for (Map<Integer, RemoteMember> channel : remoteMembers.values())
 			list.addAll(channel.values());
@@ -244,7 +247,7 @@ public class GuildList extends IntraworldGroupList<
 	protected RemoteMember addToOffline(IntraworldGroupList.Member member) {
 		Map<Integer, RemoteMember> others = remoteMembers.get(Byte.valueOf(OFFLINE_CH));
 		if (others == null) {
-			others = new HashMap<Integer, RemoteMember>();
+			others = new HashMap<>();
 			remoteMembers.put(Byte.valueOf(OFFLINE_CH), others);
 		}
 		RemoteMember offlineMember = createRemoteMember(member, OFFLINE_CH);

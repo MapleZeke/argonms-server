@@ -33,7 +33,7 @@ public abstract class MapDataLoader {
 	protected final Map<Integer, MapStats> mapStats;
 
 	protected MapDataLoader() {
-		mapStats = new HashMap<Integer, MapStats>();
+		mapStats = new HashMap<>();
 	}
 
 	protected abstract void load(int mapid);

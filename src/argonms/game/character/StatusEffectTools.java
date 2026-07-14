@@ -38,18 +38,16 @@ import java.util.Set;
  * @author GoldenKevin
  */
 public final class StatusEffectTools {
-	public static final byte
-		LEVEL_UP = 0,
-		ACTIVE_BUFF = 1, //player activated buff himself - such as all buffs that apply to the caster only
-		PASSIVE_BUFF = 2, //something else activated buff for player - energy charge, party buffs, beholder, etc.
-		ITEM_GAIN = 3,
-		PET_LVL_UP = 4,
-		DRAGON_BLOOD = 5,
-		SAFETY_CHARM = 6,
-		JOB_ADVANCEMENT = 8,
-		QUEST = 9,
-		MOB_BUFF = 11
-	;
+	public static final byte LEVEL_UP = 0;
+	public static final byte ACTIVE_BUFF = 1;
+	public static final byte PASSIVE_BUFF = 2;
+	public static final byte ITEM_GAIN = 3;
+	public static final byte PET_LVL_UP = 4;
+	public static final byte DRAGON_BLOOD = 5;
+	public static final byte SAFETY_CHARM = 6;
+	public static final byte JOB_ADVANCEMENT = 8;
+	public static final byte QUEST = 9;
+	public static final byte MOB_BUFF = 11;
 
 	private static byte[] getFirstPersonCastEffect(GameCharacter p, byte effectType, StatusEffectsData e, byte stance) {
 		switch (e.getSourceType()) {
@@ -149,7 +147,7 @@ public final class StatusEffectTools {
 	}
 
 	public static Map<PlayerStatusEffect, Short> applyEffects(GameCharacter p, StatusEffectsData e) {
-		Map<PlayerStatusEffect, Short> updatedStats = new EnumMap<PlayerStatusEffect, Short>(PlayerStatusEffect.class);
+		Map<PlayerStatusEffect, Short> updatedStats = new EnumMap<>(PlayerStatusEffect.class);
 		for (PlayerStatusEffect buff : e.getEffects()) {
 			PlayerStatusEffectValues v = p.getEffectValue(buff);
 			if (v != null)

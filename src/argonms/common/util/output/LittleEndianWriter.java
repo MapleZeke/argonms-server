@@ -20,6 +20,7 @@ package argonms.common.util.output;
 
 import java.awt.Point;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Write data to a stream using little endian byte ordering for
@@ -31,7 +32,7 @@ import java.nio.charset.Charset;
  * @version 1.1
  */
 public abstract class LittleEndianWriter {
-	private static final Charset asciiEncoder = Charset.forName("US-ASCII");
+	private static final Charset asciiEncoder = StandardCharsets.US_ASCII;
 
 	protected abstract void write(byte b);
 	protected abstract void write(byte... bytes);

@@ -40,8 +40,8 @@ public class ShopCrossServerSynchronization {
 	private final ReadWriteLock locks;
 
 	public ShopCrossServerSynchronization() {
-		allChannels = new HashMap<Byte, Map<Byte, ShopChannelSynchronization>>();
-		intraworldGroups = new HashMap<Byte, ShopCenterServerSynchronization>();
+		allChannels = new HashMap<>();
+		intraworldGroups = new HashMap<>();
 		locks = new ReentrantReadWriteLock();
 	}
 
@@ -65,7 +65,7 @@ public class ShopCrossServerSynchronization {
 		lockRead();
 		try {
 			ShopChannelSynchronization css = allChannels.get(Byte.valueOf(world)).get(Byte.valueOf(ch));
-			return new Pair<byte[], Integer>(css.getIpAddress(), Integer.valueOf(css.getPort()));
+			return new Pair<>(css.getIpAddress(), Integer.valueOf(css.getPort()));
 		} finally {
 			unlockRead();
 		}
@@ -76,7 +76,7 @@ public class ShopCrossServerSynchronization {
 		try {
 			Map<Byte, ShopChannelSynchronization> worldChannels = allChannels.get(Byte.valueOf(world));
 			if (worldChannels == null) {
-				worldChannels = new HashMap<Byte, ShopChannelSynchronization>();
+				worldChannels = new HashMap<>();
 				allChannels.put(Byte.valueOf(world), worldChannels);
 				intraworldGroups.put(Byte.valueOf(world), new ShopCenterServerSynchronization(world));
 			}

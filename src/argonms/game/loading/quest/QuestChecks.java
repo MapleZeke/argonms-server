@@ -49,24 +49,27 @@ public class QuestChecks {
 	private final Map<Integer, Integer> reqSkills;
 	private final Map<Integer, Short> reqMobs;
 	private final List<Integer> reqPets;
-	private short minLevel, maxLevel;
+	private short minLevel;
+	private short maxLevel;
 	private short minFame;
 	private long endDate;
-	private String startScript, endScript;
+	private String startScript;
+	private String endScript;
 	private int repeatInterval;
 	private short reqPetTameness;
 	private short reqMountTameness;
 	private short minMesos;
-	private short minPop, maxPop;
+	private short minPop;
+	private short maxPop;
 
 	protected QuestChecks(short questId) {
 		this.questId = questId;
-		reqItems = new ArrayList<QuestItemStats>();
-		reqQuests = new HashMap<Short, Byte>();
-		reqSkills = new HashMap<Integer, Integer>();
-		reqMobs = new LinkedHashMap<Integer, Short>();
-		reqPets = new ArrayList<Integer>();
-		reqJobs = new ArrayList<Short>();
+		reqItems = new ArrayList<>();
+		reqQuests = new HashMap<>();
+		reqSkills = new HashMap<>();
+		reqMobs = new LinkedHashMap<>();
+		reqPets = new ArrayList<>();
+		reqJobs = new ArrayList<>();
 		maxLevel = GlobalConstants.MAX_LEVEL;
 		endDate = Long.MAX_VALUE;
 		repeatInterval = -1;
@@ -149,7 +152,7 @@ public class QuestChecks {
 			return true;
 		//client only checks the boss pet
 		Pet pet = p.getPets()[0];
-		return (pet != null && reqPets.contains(Integer.valueOf(pet.getDataId())));
+		return pet != null && reqPets.contains(Integer.valueOf(pet.getDataId()));
 	}
 
 	public boolean isRepeatable() {

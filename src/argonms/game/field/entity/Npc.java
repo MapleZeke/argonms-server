@@ -27,7 +27,8 @@ import argonms.game.net.external.GamePackets;
  */
 public class Npc extends AbstractEntity {
 	private final int npcid;
-	private short rx0, rx1;
+	private short rx0;
+	private short rx1;
 	private short cy;
 
 	public Npc(int npcid) {

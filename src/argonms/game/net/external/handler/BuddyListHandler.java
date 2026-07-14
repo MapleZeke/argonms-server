@@ -44,25 +44,21 @@ import java.util.logging.Logger;
 public final class BuddyListHandler {
 	private static final Logger LOG = Logger.getLogger(BuddyListHandler.class.getName());
 
-	public static final byte //buddy list receive op codes
-		INVITE = 0x01,
-		ACCEPT = 0x02,
-		DELETE = 0x03
-	;
+	public static final byte INVITE = 0x01;
+	public static final byte ACCEPT = 0x02;
+	public static final byte DELETE = 0x03;
 
-	public static final byte //buddy list send op codes
-		FIRST = 0x07,
-		INVITE_RECEIVED = 0x09,
-		ADD = 0x0A,
-		YOUR_LIST_FULL = 0x0B,
-		THEIR_LIST_FULL = 0x0C,
-		ALREADY_ON_LIST = 0x0D,
-		NO_GM_INVITES = 0x0E,
-		NONEXISTENT = 0x0F,
-		REMOVE = 0x12,
-		BUDDY_LOGGED_IN = 0x14,
-		CAPACITY_CHANGE = 0x15
-	;
+	public static final byte FIRST = 0x07;
+	public static final byte INVITE_RECEIVED = 0x09;
+	public static final byte ADD = 0x0A;
+	public static final byte YOUR_LIST_FULL = 0x0B;
+	public static final byte THEIR_LIST_FULL = 0x0C;
+	public static final byte ALREADY_ON_LIST = 0x0D;
+	public static final byte NO_GM_INVITES = 0x0E;
+	public static final byte NONEXISTENT = 0x0F;
+	public static final byte REMOVE = 0x12;
+	public static final byte BUDDY_LOGGED_IN = 0x14;
+	public static final byte CAPACITY_CHANGE = 0x15;
 
 	private static boolean accountLoggedIn(int playerId) {
 		Connection con = null;
@@ -257,7 +253,7 @@ public final class BuddyListHandler {
 		//or the other user deleted us from his/her own buddy list already.
 		//doesn't hurt to try to retract the invite even if it's the second case
 		//(note, removed.getStatus() == STATUS_MUTUAL is equivalent to !tryRetractInvite)
-		boolean tryRetractInvite = (removed.getStatus() == BuddyListEntry.STATUS_HALF_OPEN);
+		boolean tryRetractInvite = removed.getStatus() == BuddyListEntry.STATUS_HALF_OPEN;
 		client.getSession().send(GamePackets.writeBuddyList(REMOVE, bList));
 
 		//if (channel == BuddyListEntry.OFFLINE_CHANNEL && removed.getStatus() == STATUS_MUTUAL),

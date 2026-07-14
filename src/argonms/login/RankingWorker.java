@@ -43,7 +43,8 @@ public class RankingWorker implements Runnable {
 	public void run() {
 		Connection con = null;
 		CallableStatement ps = null;
-		long start, end;
+		long start;
+		long end;
 		start = System.nanoTime();
 		try {
 			con = DatabaseManager.getConnection(DatabaseType.STATE);

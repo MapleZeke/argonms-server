@@ -41,13 +41,13 @@ public abstract class StringDataLoader {
 	protected final Map<Integer, String> itemMsgs;
 
 	protected StringDataLoader() {
-		itemNames = new HashMap<Integer, String>();
-		skillNames = new HashMap<Integer, String>();
-		streetNames = new HashMap<Integer, String>();
-		mapNames = new HashMap<Integer, String>();
-		mobNames = new HashMap<Integer, String>();
-		npcNames = new HashMap<Integer, String>();
-		itemMsgs = new HashMap<Integer, String>();
+		itemNames = new HashMap<>();
+		skillNames = new HashMap<>();
+		streetNames = new HashMap<>();
+		mapNames = new HashMap<>();
+		mobNames = new HashMap<>();
+		npcNames = new HashMap<>();
+		itemMsgs = new HashMap<>();
 	}
 
 	public abstract boolean loadAll();
@@ -77,7 +77,7 @@ public abstract class StringDataLoader {
 	}
 
 	public List<String> getSimilarNamedItems(String reference) {
-		List<String> retItems = new ArrayList<String>();
+		List<String> retItems = new ArrayList<>();
 		for (Entry<Integer, String> name : itemNames.entrySet())
 			if (name.getValue().toLowerCase().contains(reference.toLowerCase()))
 				retItems.add(name.getKey() + " - " + name.getValue());
@@ -85,7 +85,7 @@ public abstract class StringDataLoader {
 	}
 
 	public List<String> getSimilarNamedSkills(String reference) {
-		List<String> retSkills = new ArrayList<String>();
+		List<String> retSkills = new ArrayList<>();
 		for (Entry<Integer, String> name : skillNames.entrySet())
 			if (name.getValue().toLowerCase().contains(reference.toLowerCase()))
 				retSkills.add(name.getKey() + " - " + name.getValue());
@@ -93,7 +93,7 @@ public abstract class StringDataLoader {
 	}
 
 	public List<String> getSimilarNamedMaps(String reference) {
-		List<String> retMaps = new ArrayList<String>();
+		List<String> retMaps = new ArrayList<>();
 		for (Entry<Integer, String> name : mapNames.entrySet()) {
 			String streetAndMap = streetNames != null ? streetNames.get(name.getKey()) : null;
 			if (streetAndMap != null)
@@ -107,7 +107,7 @@ public abstract class StringDataLoader {
 	}
 
 	public List<String> getSimilarNamedMobs(String reference) {
-		List<String> retMobs = new ArrayList<String>();
+		List<String> retMobs = new ArrayList<>();
 		for (Entry<Integer, String> name : mobNames.entrySet())
 			if (name.getValue().toLowerCase().contains(reference.toLowerCase()))
 				retMobs.add(name.getKey() + " - " + name.getValue());
@@ -115,7 +115,7 @@ public abstract class StringDataLoader {
 	}
 
 	public List<String> getSimilarNamedNpcs(String reference) {
-		List<String> retNpcs = new ArrayList<String>();
+		List<String> retNpcs = new ArrayList<>();
 		for (Entry<Integer, String> name : npcNames.entrySet())
 			if (name.getValue().toLowerCase().contains(reference.toLowerCase()))
 				retNpcs.add(name.getKey() + " - " + name.getValue());

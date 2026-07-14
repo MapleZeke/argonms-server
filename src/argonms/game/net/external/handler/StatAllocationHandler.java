@@ -39,7 +39,7 @@ public final class StatAllocationHandler {
 		GameCharacter p = gc.getPlayer();
 		/*int time = */packet.readInt();
 		int updateMask = packet.readInt();
-		Map<ClientUpdateKey, Short> updatedStats = new EnumMap<ClientUpdateKey, Short>(ClientUpdateKey.class);
+		Map<ClientUpdateKey, Short> updatedStats = new EnumMap<>(ClientUpdateKey.class);
 		p.writeLockStats();
 		try {
 			for (ClientUpdateKey key : ClientUpdateKey.valueOf(updateMask)) {

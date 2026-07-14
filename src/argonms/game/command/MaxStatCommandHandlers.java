@@ -96,7 +96,7 @@ public final class MaxStatCommandHandlers implements CommandCollection<CommandCa
 				return;
 			}
 
-			List<CommandTarget.CharacterManipulation> changes = new ArrayList<CommandTarget.CharacterManipulation>();
+			List<CommandTarget.CharacterManipulation> changes = new ArrayList<>();
 			maxEquips(changes);
 			target.mutate(changes);
 		}
@@ -132,7 +132,7 @@ public final class MaxStatCommandHandlers implements CommandCollection<CommandCa
 				return;
 			}
 
-			List<CommandTarget.CharacterManipulation> changes = new ArrayList<CommandTarget.CharacterManipulation>();
+			List<CommandTarget.CharacterManipulation> changes = new ArrayList<>();
 			maxSkills(changes);
 			target.mutate(changes);
 		}
@@ -168,7 +168,7 @@ public final class MaxStatCommandHandlers implements CommandCollection<CommandCa
 				return;
 			}
 
-			List<CommandTarget.CharacterManipulation> changes = new ArrayList<CommandTarget.CharacterManipulation>();
+			List<CommandTarget.CharacterManipulation> changes = new ArrayList<>();
 			maxSkills(changes);
 			maxEquips(changes);
 			maxStats(changes);
@@ -178,7 +178,7 @@ public final class MaxStatCommandHandlers implements CommandCollection<CommandCa
 
 	@Override
 	public Map<String, AbstractCommandDefinition<CommandCaller>> getDefinitions() {
-		Map<String, AbstractCommandDefinition<CommandCaller>> definitions = new HashMap<String, AbstractCommandDefinition<CommandCaller>>();
+		Map<String, AbstractCommandDefinition<CommandCaller>> definitions = new HashMap<>();
 		definitions.put("!maxequips", new MaxEquipStatsHandler());
 		definitions.put("!maxskills", new MaxSkillsHandler());
 		definitions.put("!maxall", new MaxAllHandler());

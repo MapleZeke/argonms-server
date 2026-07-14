@@ -163,9 +163,9 @@ public class CashShopStaging implements IInventory {
 		//forgo to the overhead of ConcurrentHashMap. with no scripts and
 		//commands, we are guaranteed to not do much concurrency in cash shop
 		locks = new ReentrantReadWriteLock();
-		slots = new LinkedHashMap<Long, InventorySlot>();
-		purchaseProperties = new HashMap<Long, CashPurchaseProperties>();
-		giftNotifications = new ArrayList<CashItemGiftNotification>();
+		slots = new LinkedHashMap<>();
+		purchaseProperties = new HashMap<>();
+		giftNotifications = new ArrayList<>();
 	}
 
 	public void loadPurchaseProperties(int accountId) {
@@ -268,7 +268,7 @@ public class CashShopStaging implements IInventory {
 		//throw new UnsupportedOperationException("CashShopStaging has no concept of slot positions");
 		lockRead();
 		try {
-			Map<Short, InventorySlot> slotBasedMap = new LinkedHashMap<Short, InventorySlot>();
+			Map<Short, InventorySlot> slotBasedMap = new LinkedHashMap<>();
 			short slot = 1;
 			for (InventorySlot item : getAllValues()) {
 				slotBasedMap.put(Short.valueOf(slot), item);
@@ -396,7 +396,7 @@ public class CashShopStaging implements IInventory {
 		CashShopStaging.CashPurchaseProperties props = new CashShopStaging.CashPurchaseProperties(senderAcctId, senderName, serialNumber);
 		CashShopStaging.attachCashPurchaseProperties(item.getUniqueId(), props);
 
-		return new Pair<InventorySlot, CashPurchaseProperties>(item, props);
+		return new Pair<>(item, props);
 	}
 
 	public static boolean giveGift(int senderAcctId, String senderName, int recipientAcctId, int[] serialNumbers, String message, ItemManipulator itemManipulator) {
@@ -444,7 +444,7 @@ public class CashShopStaging implements IInventory {
 			rs.close();
 			ps.close();
 
-			final Map<Short, InventorySlot> inv = new LinkedHashMap<Short, InventorySlot>(serialNumbers.length);
+			final Map<Short, InventorySlot> inv = new LinkedHashMap<>(serialNumbers.length);
 			CashShopDataLoader csdl = CashShopDataLoader.getInstance();
 			for (int serialNumber : serialNumbers) {
 				Commodity c = csdl.getCommodity(serialNumber);

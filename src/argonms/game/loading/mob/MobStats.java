@@ -70,13 +70,13 @@ public class MobStats {
 
 	protected MobStats(int mobid) {
 		this.mobid = mobid;
-		this.elemAttr = new EnumMap<Element, Byte>(Element.class);
-		this.loseItems = new HashMap<Integer, Byte>();
-		this.summons = new ArrayList<Integer>();
-		this.attacks = new HashMap<Byte, Attack>();
-		this.skills = new ArrayList<Skill>();
-		this.delays = new HashMap<String, Integer>();
-		this.itemDrops = new ArrayList<ItemDropEntry>();
+		this.elemAttr = new EnumMap<>(Element.class);
+		this.loseItems = new HashMap<>();
+		this.summons = new ArrayList<>();
+		this.attacks = new HashMap<>();
+		this.skills = new ArrayList<>();
+		this.delays = new HashMap<>();
+		this.itemDrops = new ArrayList<>();
 		this.removeAfter = -1;
 		this.deathAnimation = Mob.DESTROY_ANIMATION_NORMAL;
 	}
@@ -258,7 +258,7 @@ public class MobStats {
 	}
 
 	public List<Integer> getItemsToTake() {
-		List<Integer> list = new ArrayList<Integer>();
+		List<Integer> list = new ArrayList<>();
 		Random r = Rng.getGenerator();
 		for (Entry<Integer, Byte> entry : loseItems.entrySet())
 			if (r.nextInt(100) < entry.getValue().byteValue())
@@ -328,7 +328,7 @@ public class MobStats {
 
 	public List<InventorySlot> getItemsToDrop() {
 		Random generator = Rng.getGenerator();
-		List<InventorySlot> items = new ArrayList<InventorySlot>();
+		List<InventorySlot> items = new ArrayList<>();
 		int multiplier = GameServer.getVariables().getDropRate();
 		for (ItemDropEntry entry : itemDrops) {
 			if (generator.nextInt(1000000) < ((long) entry.getDropChance() * multiplier)) {

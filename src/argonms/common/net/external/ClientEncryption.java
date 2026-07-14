@@ -50,7 +50,7 @@ public final class ClientEncryption {
 		(byte) 0x33, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x52, (byte) 0x00, (byte) 0x00, (byte) 0x00
 	};
 
-	private static final ThreadLocal<BlockCipher> aes256 = new ThreadLocal<BlockCipher>() {
+	private static final ThreadLocal<BlockCipher> aes256 = new ThreadLocal<>() {
 		@Override
 		public BlockCipher get() {
 			AESEngine cipher = new AESEngine();
@@ -148,8 +148,8 @@ public final class ClientEncryption {
 	 */
 	public static int getPacketLength(byte[] packetHeader) {
 		//read two 16-bit little-endian integers and XOR them.
-		return (((packetHeader[0] & 0xFF) | ((packetHeader[1] & 0xFF) << 8)) ^
-				((packetHeader[2] & 0xFF) | ((packetHeader[3] & 0xFF) << 8)));
+		return ((packetHeader[0] & 0xFF) | ((packetHeader[1] & 0xFF) << 8)) ^
+				((packetHeader[2] & 0xFF) | ((packetHeader[3] & 0xFF) << 8));
 	}
 
 	/**
@@ -162,8 +162,8 @@ public final class ClientEncryption {
 	public static boolean checkPacket(byte[] packetHeader, byte[] iv) {
 		//note, this is only valid for client to server packet headers. for
 		//server to client, the MAPLE_VERSION must be bitwise negated (~)
-		return ((((packetHeader[0] ^ iv[2]) & 0xFF) == (GlobalConstants.MAPLE_VERSION & 0xFF)) &&
-				(((packetHeader[1] ^ iv[3]) & 0xFF) == ((GlobalConstants.MAPLE_VERSION >>> 8) & 0xFF)));
+		return (((packetHeader[0] ^ iv[2]) & 0xFF) == (GlobalConstants.MAPLE_VERSION & 0xFF)) &&
+				(((packetHeader[1] ^ iv[3]) & 0xFF) == ((GlobalConstants.MAPLE_VERSION >>> 8) & 0xFF));
 	}
 
 	//The following routines are for MapleStory's custom encryption
@@ -218,7 +218,7 @@ public final class ClientEncryption {
 					cur ^= remember;
 					remember = cur;
 					cur = ByteTool.rollRight(cur, dataLength & 0xFF);
-					cur = ((byte) (~cur & 0xFF));
+					cur = (byte) (~cur & 0xFF);
 					cur += 0x48;
 					dataLength--;
 					data[i] = cur;
@@ -256,7 +256,7 @@ public final class ClientEncryption {
 				for (int i = 0; i < data.length; i++) {
 					byte cur = data[i];
 					cur -= 0x48;
-					cur = ((byte) (~cur & 0xFF));
+					cur = (byte) (~cur & 0xFF);
 					cur = ByteTool.rollLeft(cur, dataLength & 0xFF);
 					nextRemember = cur;
 					cur ^= remember;

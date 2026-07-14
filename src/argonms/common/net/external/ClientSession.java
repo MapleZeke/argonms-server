@@ -47,13 +47,11 @@ import java.util.logging.Logger;
  * @author GoldenKevin
  */
 public class ClientSession<T extends RemoteClient> implements Session {
-	public static final byte
-		CLIENT_DISTRIBUTION_JAPAN = 3,
-		CLIENT_DISTRIBUTION_TEST = 5,
-		CLIENT_DISTRIBUTION_SEA = 7,
-		CLIENT_DISTRIBUTION_GLOBAL = 8,
-		CLIENT_DISTRIBUTION_BRAZIL = 9
-	;
+	public static final byte CLIENT_DISTRIBUTION_JAPAN = 3;
+	public static final byte CLIENT_DISTRIBUTION_TEST = 5;
+	public static final byte CLIENT_DISTRIBUTION_SEA = 7;
+	public static final byte CLIENT_DISTRIBUTION_GLOBAL = 8;
+	public static final byte CLIENT_DISTRIBUTION_BRAZIL = 9;
 
 	private static final Logger LOG = Logger.getLogger(ClientSession.class.getName());
 	private static final int INIT_HEADER_LENGTH = 2;
@@ -87,7 +85,8 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	private MessageType nextMessageType;
 
 	private final Lock sendIvLock;
-	private byte[] recvIv, sendIv;
+	private byte[] recvIv;
+	private byte[] sendIv;
 
 	/* package-private */ interface CloseListener<T extends RemoteClient> {
 		public void closed(ClientSession<T> session);
@@ -365,7 +364,7 @@ public class ClientSession<T extends RemoteClient> implements Session {
 		private final AtomicReference<ScheduledFuture<?>> future;
 
 		public KeepAliveTask() {
-			future = new AtomicReference<ScheduledFuture<?>>(null);
+			future = new AtomicReference<>(null);
 		}
 
 		public void sendPing() {

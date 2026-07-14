@@ -18,6 +18,7 @@
 
 package argonms.common.util;
 
+import java.security.SecureRandom;
 import java.util.Random;
 
 /**
@@ -37,10 +38,10 @@ public final class Rng {
 	private final static ThreadLocal<Random> GENERATOR;
 
 	static {
-		GENERATOR = new ThreadLocal<Random>() {
+		GENERATOR = new ThreadLocal<>() {
 			 @Override
 			protected Random initialValue() {
-				 return new Random();
+				 return new SecureRandom();
 			}
 		};
 	}

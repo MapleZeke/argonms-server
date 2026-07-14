@@ -42,7 +42,8 @@ import java.util.logging.Logger;
  */
 public class RemoteServerListener implements SessionCreator {
 	private static final Logger LOG = Logger.getLogger(RemoteServerListener.class.getName());
-	private final ExecutorService bossThreadPool, workerThreadPool;
+	private final ExecutorService bossThreadPool;
+	private final ExecutorService workerThreadPool;
 	private final String interServerPassword;
 	private ServerSocketChannel listener;
 	private final AtomicBoolean closeEventsTriggered;
@@ -53,9 +54,7 @@ public class RemoteServerListener implements SessionCreator {
 			private final ThreadGroup group;
 
 			{
-				SecurityManager s = System.getSecurityManager();
-				group = (s != null)? s.getThreadGroup() :
-									 Thread.currentThread().getThreadGroup();
+				group = Thread.currentThread().getThreadGroup();
 			}
 
 			@Override
@@ -73,9 +72,7 @@ public class RemoteServerListener implements SessionCreator {
 			private final AtomicInteger threadNumber = new AtomicInteger(1);
 
 			{
-				SecurityManager s = System.getSecurityManager();
-				group = (s != null)? s.getThreadGroup() :
-									 Thread.currentThread().getThreadGroup();
+				group = Thread.currentThread().getThreadGroup();
 			}
 
 			@Override

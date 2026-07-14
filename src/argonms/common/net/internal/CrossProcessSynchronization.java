@@ -37,7 +37,7 @@ public abstract class CrossProcessSynchronization {
 
 		private WeakValueMap(Map<K, WeakValue<K, V>> backingMap) {
 			this.backingMap = backingMap;
-			queue = new ReferenceQueue<V>();
+			queue = new ReferenceQueue<>();
 		}
 
 		@SuppressWarnings("unchecked")
@@ -74,7 +74,7 @@ public abstract class CrossProcessSynchronization {
 			}
 
 			private static <K, V> WeakValue<K, V> create(K key, V value, ReferenceQueue<V> queue) {
-				return (value == null ? null : new WeakValue<K, V>(key, value, queue));
+				return value == null ? null : new WeakValue<K, V>(key, value, queue);
 			}
 
 			@Override
@@ -95,7 +95,7 @@ public abstract class CrossProcessSynchronization {
 			@Override
 			public int hashCode() {
 				Object ref = this.get();
-				return (ref == null) ? 0 : ref.hashCode();
+				return ref == null ? 0 : ref.hashCode();
 			}
 		}
 	}
@@ -105,7 +105,7 @@ public abstract class CrossProcessSynchronization {
 
 	protected CrossProcessSynchronization() {
 		//prevents memory leaks in case responses time out and never reach us
-		this.blockingCalls = new WeakValueMap<Integer, BlockingQueue<Pair<Byte, Object>>>
+		this.blockingCalls = new WeakValueMap<>
 				(new ConcurrentHashMap<Integer, WeakValueMap.WeakValue<Integer, BlockingQueue<Pair<Byte, Object>>>>());
 		this.nextResponseId = new AtomicInteger(0);
 	}

@@ -69,8 +69,8 @@ public class CenterServer {
 	private final Lock writeLock;
 
 	private CenterServer() {
-		gameServers = new HashMap<Byte, CenterGameInterface>();
-		worldGroups = new HashMap<Byte, IntraworldGroups>();
+		gameServers = new HashMap<>();
+		worldGroups = new HashMap<>();
 		ReentrantReadWriteLock locks = new ReentrantReadWriteLock();
 		readLock = locks.readLock();
 		writeLock = locks.writeLock();
@@ -174,7 +174,7 @@ public class CenterServer {
 	public List<CenterGameInterface> getAllServersOfWorld(byte world, byte exclusion) {
 		readLock.lock();
 		try {
-			List<CenterGameInterface> servers = new ArrayList<CenterGameInterface>();
+			List<CenterGameInterface> servers = new ArrayList<>();
 			for (Entry<Byte, CenterGameInterface> entry : gameServers.entrySet()) {
 				byte serverId = entry.getKey().byteValue();
 				CenterGameInterface server = entry.getValue();
@@ -400,7 +400,7 @@ public class CenterServer {
 				server = loginServer;
 			if (ServerType.isShop(serverId))
 				server = shopServer;
-			return (server != null && server.isOnline());
+			return server != null && server.isOnline();
 		} finally {
 			readLock.unlock();
 		}

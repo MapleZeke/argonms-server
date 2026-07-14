@@ -77,14 +77,14 @@ public class IntraworldGroups {
 		this.world = world;
 
 		nextPartyId = new AtomicInteger(getStartingPartyId(world));
-		parties = new ConcurrentHashMap<Integer, Party>();
+		parties = new ConcurrentHashMap<>();
 
 		loadedGuildNames = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
-		pendingGuildContractVotes = new ConcurrentHashMap<Integer, Set<Integer>>();
-		guilds = new ConcurrentHashMap<Integer, Guild>();
+		pendingGuildContractVotes = new ConcurrentHashMap<>();
+		guilds = new ConcurrentHashMap<>();
 
 		nextRoomId = new AtomicInteger();
-		rooms = new ConcurrentHashMap<Integer, Chatroom>();
+		rooms = new ConcurrentHashMap<>();
 	}
 
 	/**

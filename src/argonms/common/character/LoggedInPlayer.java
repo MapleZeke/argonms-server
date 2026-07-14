@@ -42,13 +42,13 @@ public abstract class LoggedInPlayer extends Player {
 		private Set<Long> uniqueIds;
 
 		public ItemExpireTask() {
-			itemExpires = new TreeMap<Long, Set<Long>>();
+			itemExpires = new TreeMap<>();
 		}
 
 		public synchronized void addExpire(long expiration, long uniqueId) {
 			Set<Long> sameTimeExpires = itemExpires.get(Long.valueOf(expiration));
 			if (sameTimeExpires == null) {
-				sameTimeExpires = new HashSet<Long>();
+				sameTimeExpires = new HashSet<>();
 				itemExpires.put(Long.valueOf(expiration), sameTimeExpires);
 				if (itemExpires.firstKey().longValue() == expiration) {
 					//just added item is at front of queue

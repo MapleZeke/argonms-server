@@ -32,8 +32,8 @@ public class PlayerLog<T extends Player> {
 	private final Map<Integer, T> idToPlayerMapping;
 
 	public PlayerLog() {
-		this.nameToPlayerMapping = new ConcurrentHashMap<String, T>();
-		this.idToPlayerMapping = new ConcurrentHashMap<Integer, T>();
+		this.nameToPlayerMapping = new ConcurrentHashMap<>();
+		this.idToPlayerMapping = new ConcurrentHashMap<>();
 	}
 
 	public void addPlayer(T p) {

@@ -30,11 +30,13 @@ public class SkillStats {
 	private final SortedMap<Byte, PlayerSkillEffectsData> levels;
 	private Element elemAttr;
 	private byte summon;
-	private boolean prepared, keydown, keydownend;
+	private boolean prepared;
+	private boolean keydown;
+	private boolean keydownend;
 	private int animationTime;
 
 	protected SkillStats() {
-		levels = new TreeMap<Byte, PlayerSkillEffectsData>();
+		levels = new TreeMap<>();
 		summon = -1;
 	}
 

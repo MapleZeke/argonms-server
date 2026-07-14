@@ -122,7 +122,8 @@ public class PetTools {
 		int sumItemProbs = 0;
 		for (int[] evolveChoice : evolveChoices)
 			sumItemProbs += evolveChoice[1];
-		int random = Rng.getGenerator().nextInt(sumItemProbs), runningProbs = 0;
+		int random = Rng.getGenerator().nextInt(sumItemProbs);
+		int runningProbs = 0;
 		for (int[] evolveChoice : evolveChoices) {
 			if (random < (runningProbs += evolveChoice[1])) {
 				itemId = evolveChoice[0];

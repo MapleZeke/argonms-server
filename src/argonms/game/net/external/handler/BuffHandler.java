@@ -53,7 +53,7 @@ import java.awt.Point;
  */
 public final class BuffHandler {
 	private static boolean isAffected(byte bitset, byte index) {
-		return ((bitset & (1 << (5 - index))) != 0);
+		return (bitset & (1 << (5 - index))) != 0;
 	}
 
 	public static void handleUseSkill(LittleEndianReader packet, GameClient gc) {

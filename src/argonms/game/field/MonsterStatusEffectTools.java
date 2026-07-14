@@ -109,7 +109,7 @@ public final class MonsterStatusEffectTools {
 		switch (e.getSourceType()) {
 			case MOB_SKILL: {
 				//check if it is a mob attack skill
-				MobSkillEffectsData skill = ((MobSkillEffectsData) e);
+				MobSkillEffectsData skill = (MobSkillEffectsData) e;
 				switch (e.getDataId()) {
 					case MobSkills.MIST:
 						Mist mist = new Mist(m, skill);
@@ -125,7 +125,8 @@ public final class MonsterStatusEffectTools {
 							for (Integer oMobId : skill.getSummons().values()) {
 								int mobId = oMobId.intValue();
 								Mob summon = new Mob(MobDataLoader.getInstance().getMobStats(mobId), m.getMap());
-								int ypos, xpos;
+								int ypos;
+								int xpos;
 								xpos = m.getPosition().x;
 								ypos = m.getPosition().y;
 								switch (mobId) {
@@ -141,7 +142,7 @@ public final class MonsterStatusEffectTools {
 									case 8510100: //Pianus bomb
 										if (Math.ceil(generator.nextDouble() * 5) == 1) {
 											ypos = 78;
-											xpos = (int)(0 + Math.ceil(generator.nextDouble() * 5)) + ((Math.ceil(generator.nextDouble() * 2) == 1) ? 180 : 0);
+											xpos = (int)(0 + Math.ceil(generator.nextDouble() * 5)) + (Math.ceil(generator.nextDouble() * 2) == 1 ? 180 : 0);
 										} else
 											xpos = (int)(m.getPosition().x + Math.ceil(generator.nextDouble() * 1000.0) - 500);
 										break;
@@ -218,7 +219,7 @@ public final class MonsterStatusEffectTools {
 	}
 
 	private static boolean applyEffectsAndShowVisualsInternal(final Mob m, final GameCharacter p, final MonsterStatusEffectsData e) {
-		Map<MonsterStatusEffect, Short> updatedStats = new EnumMap<MonsterStatusEffect, Short>(MonsterStatusEffect.class);
+		Map<MonsterStatusEffect, Short> updatedStats = new EnumMap<>(MonsterStatusEffect.class);
 		int duration = applyEffects(updatedStats, m, p, e);
 		if (duration == -1)
 			return false;
@@ -320,7 +321,7 @@ public final class MonsterStatusEffectTools {
 					if (v != null) {
 						assert (v.getSource() == Skills.VENOMOUS_STAR || v.getSource() == Skills.VENOMOUS_STAB);
 						mod += v.getModifier();
-						final AtomicReference<Runnable> decrementVenomTask = new AtomicReference<Runnable>();
+						final AtomicReference<Runnable> decrementVenomTask = new AtomicReference<>();
 						decrementVenomTask.set(new Runnable() {
 							@Override
 							public void run() {

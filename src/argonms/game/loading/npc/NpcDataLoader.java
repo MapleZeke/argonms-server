@@ -36,9 +36,9 @@ public abstract class NpcDataLoader {
 	protected final Map<Integer, String> scriptNames;
 
 	protected NpcDataLoader() {
-		loaded = new HashSet<Integer>();
-		storageCosts = new HashMap<Integer, NpcStorageKeeper>();
-		scriptNames = new HashMap<Integer, String>();
+		loaded = new HashSet<>();
+		storageCosts = new HashMap<>();
+		scriptNames = new HashMap<>();
 	}
 
 	protected abstract void load(int npcId);

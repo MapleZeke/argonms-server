@@ -34,7 +34,7 @@ public abstract class CommodityOverrideDataLoader {
 	protected final Map<Integer, Map<CommodityMod, Object>> mods;
 
 	protected CommodityOverrideDataLoader() {
-		mods = new HashMap<Integer, Map<CommodityMod, Object>>();
+		mods = new HashMap<>();
 	}
 
 	public boolean loadAll() {

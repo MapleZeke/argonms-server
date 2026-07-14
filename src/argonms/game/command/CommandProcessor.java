@@ -61,9 +61,9 @@ public class CommandProcessor {
 	}
 
 	private CommandProcessor() {
-		inGameOnlyCommands = new LinkedHashMap<String, AbstractCommandDefinition<GameCharacterCommandCaller>>();
-		byTelnetOnlyCommands = new LinkedHashMap<String, AbstractCommandDefinition<RemoteAdminCommandCaller>>();
-		universalCommands = new LinkedHashMap<String, AbstractCommandDefinition<CommandCaller>>();
+		inGameOnlyCommands = new LinkedHashMap<>();
+		byTelnetOnlyCommands = new LinkedHashMap<>();
+		universalCommands = new LinkedHashMap<>();
 		populateDefinitions();
 	}
 
@@ -294,7 +294,8 @@ public class CommandProcessor {
 			@Override
 			public void doAction(CommandCaller caller, CommandArguments args, CommandOutput resp) {
 				int skillId;
-				byte skillLevel, masterLevel = -1;
+				byte skillLevel;
+				byte masterLevel = -1;
 				SkillStats s;
 
 				String targetName = args.extractOptionalTarget(caller.getName());

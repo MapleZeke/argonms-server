@@ -31,7 +31,7 @@ public class TownCommandHandler extends AbstractCommandDefinition<CommandCaller>
 	private final Map<String, Integer> lookup;
 
 	public TownCommandHandler() {
-		lookup = new LinkedHashMap<String, Integer>();
+		lookup = new LinkedHashMap<>();
 		lookup.put("southperry", Integer.valueOf(60000));
 		lookup.put("amherst", Integer.valueOf(1010000));
 		lookup.put("henesys", Integer.valueOf(100000000));

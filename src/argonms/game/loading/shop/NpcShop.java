@@ -67,7 +67,7 @@ public abstract class NpcShop implements NpcMiniroom {
 	protected static class DefaultNpcShopStock extends NpcShop {
 		protected DefaultNpcShopStock(List<ShopSlot> items) {
 			super(items);
-			this.rechargeableOnly = new HashMap<Integer, Double>();
+			this.rechargeableOnly = new HashMap<>();
 			for (int itemId = 2070000; itemId <= 2070018; itemId++) //stars
 				if (itemId != 2070014 && itemId != 2070017)
 					rechargeableOnly.put(Integer.valueOf(itemId), Double.valueOf(ItemDataLoader.getInstance().getUnitPrice(itemId)));
@@ -98,7 +98,7 @@ public abstract class NpcShop implements NpcMiniroom {
 		protected McdbNpcShopStock(Map<Integer, Double> rechargeables, List<ShopSlot> items) {
 			super(items);
 			this.rechargeables = rechargeables;
-			this.rechargeableOnly = new HashMap<Integer, Double>(rechargeables);
+			this.rechargeableOnly = new HashMap<>(rechargeables);
 			for (ShopSlot item : allItems())
 				if (rechargeableOnly.containsKey(Integer.valueOf(item.itemId)))
 					rechargeableOnly.remove(Integer.valueOf(item.itemId));
@@ -112,7 +112,7 @@ public abstract class NpcShop implements NpcMiniroom {
 		@Override
 		public int rechargeCost(int itemId, int amount) {
 			Double unitCost = rechargeables.get(Integer.valueOf(itemId));
-			return (unitCost != null) ? ((int) Math.ceil(unitCost.doubleValue() * amount)) : -1;
+			return unitCost != null ? ((int) Math.ceil(unitCost.doubleValue() * amount)) : -1;
 		}
 	}
 }

@@ -39,7 +39,7 @@ public class DefaultNpcDataLoader extends NpcDataLoader {
 	private final Map<Integer, NpcStorageKeeper> hardCodedTable;
 
 	protected DefaultNpcDataLoader() {
-		hardCodedTable = new HashMap<Integer, NpcStorageKeeper>();
+		hardCodedTable = new HashMap<>();
 		hardCodedTable.put(Integer.valueOf(1002005), new NpcStorageKeeper(100, 0));
 		hardCodedTable.put(Integer.valueOf(1012009), new NpcStorageKeeper(100, 0));
 		hardCodedTable.put(Integer.valueOf(1022005), new NpcStorageKeeper(100, 0));

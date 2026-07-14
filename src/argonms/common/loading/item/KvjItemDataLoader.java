@@ -37,38 +37,34 @@ import java.util.logging.Logger;
 public class KvjItemDataLoader extends ItemDataLoader {
 	private static final Logger LOG = Logger.getLogger(KvjItemDataLoader.class.getName());
 
-	private static final byte
-		WHOLE_PRICE = 1,
-		SLOT_MAX = 2,
-		IS_TRADE_BLOCKED = 3,
-		IS_ONE_ONLY = 4,
-		IS_QUEST_ITEM = 5,
-		BONUS_STAT = 6,
-		SUMMON = 7,
-		SUCCESS = 8,
-		CURSED = 9,
-		RECOVER = 10,
-		RAND_STAT = 11,
-		PREVENT_SLIP = 12,
-		WARM_SUPPORT = 13,
-		CASH = 14,
-		OPERATING_HOURS = 15,
-		SKILL = 16,
-		UNIT_PRICE = 17,
-		REQ_STAT = 18,
-		UPGRADE_SLOTS = 19,
-		SCROLL_REQUIREMENTS = 20,
-		ITEM_EFFECT = 21,
-		TRIGGER_ITEM = 22,
-		MESO_VALUE = 23,
-
-		PET_COMMAND = 24,
-		PET_HUNGER = 25,
-		PET_PERIOD = 26,
-		PET_EVOLVE = 27,
-
-		TAMING_MOB_ID = 28
-	;
+	private static final byte WHOLE_PRICE = 1;
+	private static final byte SLOT_MAX = 2;
+	private static final byte IS_TRADE_BLOCKED = 3;
+	private static final byte IS_ONE_ONLY = 4;
+	private static final byte IS_QUEST_ITEM = 5;
+	private static final byte BONUS_STAT = 6;
+	private static final byte SUMMON = 7;
+	private static final byte SUCCESS = 8;
+	private static final byte CURSED = 9;
+	private static final byte RECOVER = 10;
+	private static final byte RAND_STAT = 11;
+	private static final byte PREVENT_SLIP = 12;
+	private static final byte WARM_SUPPORT = 13;
+	private static final byte CASH = 14;
+	private static final byte OPERATING_HOURS = 15;
+	private static final byte SKILL = 16;
+	private static final byte UNIT_PRICE = 17;
+	private static final byte REQ_STAT = 18;
+	private static final byte UPGRADE_SLOTS = 19;
+	private static final byte SCROLL_REQUIREMENTS = 20;
+	private static final byte ITEM_EFFECT = 21;
+	private static final byte TRIGGER_ITEM = 22;
+	private static final byte MESO_VALUE = 23;
+	private static final byte PET_COMMAND = 24;
+	private static final byte PET_HUNGER = 25;
+	private static final byte PET_PERIOD = 26;
+	private static final byte PET_EVOLVE = 27;
+	private static final byte TAMING_MOB_ID = 28;
 
 	private final String dataPath;
 
@@ -132,17 +128,17 @@ public class KvjItemDataLoader extends ItemDataLoader {
 	@Override
 	public boolean canLoad(int itemid) {
 		File f;
-		return (loaded.contains(Integer.valueOf(itemid)) || (f = getFile(itemid)) != null && f.exists());
+		return loaded.contains(Integer.valueOf(itemid)) || (f = getFile(itemid)) != null && f.exists();
 	}
 
 	private File getFile(int iid) {
 		File f;
-		String id = String.format("%08d", iid);
+		String id = "%08d".formatted(iid);
 		String cat = InventoryTools.getCategoryName(iid);
 		if (cat == null)
 			f = null;
 		else if (cat.equals("Pet"))
-			f = new File(new StringBuilder(dataPath).append("Item.wz").append(File.separator).append(cat).append(File.separator).append(String.format("%07d", iid)).append(".img.kvj").toString());
+			f = new File(new StringBuilder(dataPath).append("Item.wz").append(File.separator).append(cat).append(File.separator).append("%07d".formatted(iid)).append(".img.kvj").toString());
 		else if (cat.equals("Equip"))
 			f = new File(new StringBuilder(dataPath).append("Character.wz").append(File.separator).append(InventoryTools.getCharCat(iid)).append(File.separator).append(id).append(".img.kvj").toString());
 		else
@@ -271,7 +267,7 @@ public class KvjItemDataLoader extends ItemDataLoader {
 	}
 
 	private List<Integer> processScrollReqs(LittleEndianReader reader) {
-		List<Integer> reqs = new ArrayList<Integer>();
+		List<Integer> reqs = new ArrayList<>();
 		for (int i = reader.readInt(); i > 0; i--)
 			reqs.add(Integer.valueOf(reader.readInt()));
 		return reqs;

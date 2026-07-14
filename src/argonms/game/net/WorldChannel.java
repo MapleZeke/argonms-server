@@ -57,7 +57,8 @@ public class WorldChannel {
 	private final Map<Integer, Pair<Byte, ScheduledFuture<?>>> queuedChannelChanges;
 	private long startTime;
 	private final ClientListener<GameClient> handler;
-	private final byte world, channel;
+	private final byte world;
+	private final byte channel;
 	private int port;
 	private final MapFactory mapFactory;
 	private EventManager eventManager;
@@ -65,14 +66,14 @@ public class WorldChannel {
 	private CrossServerSynchronization worldComm;
 
 	public WorldChannel(final byte world, final byte channel, int port) {
-		channelChangeData = new ConcurrentHashMap<Integer, PlayerContinuation>();
-		queuedChannelChanges = new ConcurrentHashMap<Integer, Pair<Byte, ScheduledFuture<?>>>();
+		channelChangeData = new ConcurrentHashMap<>();
+		queuedChannelChanges = new ConcurrentHashMap<>();
 		this.world = world;
 		this.channel = channel;
 		this.port = port;
 		mapFactory = new MapFactory();
-		storage = new PlayerLog<GameCharacter>();
-		handler = new ClientListener<GameClient>(new ClientGamePacketProcessor(), new ClientFactory<GameClient>() {
+		storage = new PlayerLog<>();
+		handler = new ClientListener<>(new ClientGamePacketProcessor(), new ClientFactory<GameClient>() {
 			@Override
 			public GameClient newInstance() {
 				return new GameClient(world, channel);

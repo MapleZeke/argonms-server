@@ -54,7 +54,7 @@ public final class ItemTools {
 	private static Map<ClientUpdateKey, Number> itemRecovers(GameCharacter p, ItemEffectsData e, int statIncreasePercent) {
 		//might as well save ourself some bandwidth and don't send an individual
 		//packet for each changed stat
-		Map<ClientUpdateKey, Number> ret = new EnumMap<ClientUpdateKey, Number>(ClientUpdateKey.class);
+		Map<ClientUpdateKey, Number> ret = new EnumMap<>(ClientUpdateKey.class);
 		if (e.getHpRecover() != 0) {
 			p.setLocalHp((short) Math.min(p.getHp() + e.getHpRecover() * statIncreasePercent / 100, p.getCurrentMaxHp()));
 			ret.put(ClientUpdateKey.HP, Short.valueOf(p.getHp()));

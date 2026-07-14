@@ -55,11 +55,9 @@ import java.util.logging.Logger;
 public class ShopCharacter extends LoggedInPlayer {
 	private static final Logger LOG = Logger.getLogger(ShopCharacter.class.getName());
 
-	public static final int
-		PAYPAL_NX = 1,
-		MAPLE_POINTS = 2,
-		GAME_CARD_NX = 4
-	;
+	public static final int PAYPAL_NX = 1;
+	public static final int MAPLE_POINTS = 2;
+	public static final int GAME_CARD_NX = 4;
 
 	private ShopClient client;
 
@@ -79,10 +77,10 @@ public class ShopCharacter extends LoggedInPlayer {
 
 	private ShopCharacter() {
 		cashShopBalance = new AtomicInteger[4];
-		skills = new HashMap<Integer, SkillEntry>();
-		cooldowns = new HashMap<Integer, Cooldown>();
-		questStatuses = new HashMap<Short, QuestEntry>();
-		wishList = new ArrayList<Integer>(10);
+		skills = new HashMap<>();
+		cooldowns = new HashMap<>();
+		questStatuses = new HashMap<>();
+		wishList = new ArrayList<>(10);
 
 		itemExpireTask = new ItemExpireTask() {
 			@Override
@@ -346,7 +344,8 @@ public class ShopCharacter extends LoggedInPlayer {
 		String invUpdate = "DELETE FROM `inventoryitems` WHERE "
 				+ "`characterid` = ? AND `inventorytype` <= " + InventoryType.CASH.byteValue()
 				+ " OR `accountid` = ? AND `inventorytype` = " + InventoryType.CASH_SHOP.byteValue();
-		PreparedStatement ps = null, ips = null;
+		PreparedStatement ps = null;
+		PreparedStatement ips = null;
 		ResultSet rs = null;
 		try {
 			ps = con.prepareStatement(invUpdate);
@@ -355,7 +354,7 @@ public class ShopCharacter extends LoggedInPlayer {
 			ps.executeUpdate();
 			ps.close();
 
-			EnumMap<InventoryType, IInventory> union = new EnumMap<InventoryType, IInventory>(getInventories());
+			EnumMap<InventoryType, IInventory> union = new EnumMap<>(getInventories());
 			union.put(InventoryType.CASH_SHOP, shopInventory);
 			commitInventory(con, union);
 		} catch (SQLException e) {
@@ -455,7 +454,7 @@ public class ShopCharacter extends LoggedInPlayer {
 			ps.close();
 
 			p.shopInventory = new CashShopStaging();
-			EnumMap<InventoryType, IInventory> invUnion = new EnumMap<InventoryType, IInventory>(p.getInventories());
+			EnumMap<InventoryType, IInventory> invUnion = new EnumMap<>(p.getInventories());
 			invUnion.put(InventoryType.CASH_SHOP, p.shopInventory);
 			ps = con.prepareStatement("SELECT * FROM `inventoryitems` WHERE "
 					+ "`characterid` = ? AND `inventorytype` <= " + InventoryType.CASH.byteValue()
@@ -485,7 +484,7 @@ public class ShopCharacter extends LoggedInPlayer {
 			rs.close();
 			ps.close();
 
-			List<BuddyListEntry> buddies = new ArrayList<BuddyListEntry>();
+			List<BuddyListEntry> buddies = new ArrayList<>();
 			ps = con.prepareStatement("SELECT `e`.`buddy` AS `id`,"
 					+ "IF(ISNULL(`c`.`name`),`e`.`buddyname`,`c`.`name`) AS `name`,`e`.`status` "
 					+ "FROM `buddyentries` `e` LEFT JOIN `characters` `c` ON `c`.`id` = `e`.`buddy` "
@@ -529,7 +528,7 @@ public class ShopCharacter extends LoggedInPlayer {
 				while (rs.next()) {
 					int questEntryId = rs.getInt(1);
 					short questId = rs.getShort(2);
-					Map<Integer, AtomicInteger> mobProgress = new LinkedHashMap<Integer, AtomicInteger>();
+					Map<Integer, AtomicInteger> mobProgress = new LinkedHashMap<>();
 					mps.setInt(1, questEntryId);
 					mrs = null;
 					try {

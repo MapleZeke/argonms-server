@@ -33,9 +33,9 @@ public class ShopWorld {
 	private final Map<Byte, Set<Byte>> gameToChannelMapping;
 
 	public ShopWorld() {
-		this.hosts = new HashMap<Byte, byte[]>();
-		this.channelPorts = new HashMap<Byte, Integer>();
-		this.gameToChannelMapping = new HashMap<Byte, Set<Byte>>();
+		this.hosts = new HashMap<>();
+		this.channelPorts = new HashMap<>();
+		this.gameToChannelMapping = new HashMap<>();
 	}
 
 	public void addGameServer(byte[] ip, Map<Byte, Integer> ports, byte serverId) {

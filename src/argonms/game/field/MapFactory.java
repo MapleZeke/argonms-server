@@ -35,7 +35,7 @@ public class MapFactory {
 	private Set<GameMap> instanceMaps;
 
 	public MapFactory() {
-		maps = new ConcurrentHashMap<Integer, GameMap>();
+		maps = new ConcurrentHashMap<>();
 		instanceMaps = Collections.newSetFromMap(new ConcurrentHashMap<GameMap, Boolean>());
 	}
 

@@ -42,7 +42,8 @@ import java.util.logging.Logger;
  */
 public class TelnetListener implements SessionCreator {
 	private static final Logger LOG = Logger.getLogger(TelnetListener.class.getName());
-	private final ExecutorService bossThreadPool, workerThreadPool;
+	private final ExecutorService bossThreadPool;
+	private final ExecutorService workerThreadPool;
 	private final TelnetCommandProcessor packetProc;
 	private final TelnetSession.CommandReceivedDelegate packetDelegate;
 	private ServerSocketChannel listener;
@@ -54,9 +55,7 @@ public class TelnetListener implements SessionCreator {
 			private final ThreadGroup group;
 
 			{
-				SecurityManager s = System.getSecurityManager();
-				group = (s != null)? s.getThreadGroup() :
-									 Thread.currentThread().getThreadGroup();
+				group = Thread.currentThread().getThreadGroup();
 			}
 
 			@Override
@@ -74,9 +73,7 @@ public class TelnetListener implements SessionCreator {
 			private final AtomicInteger threadNumber = new AtomicInteger(1);
 
 			{
-				SecurityManager s = System.getSecurityManager();
-				group = (s != null)? s.getThreadGroup() :
-									 Thread.currentThread().getThreadGroup();
+				group = Thread.currentThread().getThreadGroup();
 			}
 
 			@Override

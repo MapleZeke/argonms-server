@@ -23,12 +23,10 @@ package argonms.common;
  * @author GoldenKevin
  */
 public final class ServerType {
-	public static final byte
-		UNDEFINED = -4,
-		CENTER = -3,
-		SHOP = -2,
-		LOGIN = -1
-	;
+	public static final byte UNDEFINED = -4;
+	public static final byte CENTER = -3;
+	public static final byte SHOP = -2;
+	public static final byte LOGIN = -1;
 
 	public static boolean isCenter(byte type) {
 		return type == CENTER;

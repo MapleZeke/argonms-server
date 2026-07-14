@@ -47,7 +47,8 @@ public abstract class Minigame extends Miniroom {
 	}
 
 	private final boolean[] exitAfterFinish;
-	protected boolean inProgress, ownerMovesFirst;
+	protected boolean inProgress;
+	protected boolean ownerMovesFirst;
 	protected byte currentPos;
 
 	public Minigame(GameCharacter owner, String text, String password, byte pieceType) {
@@ -107,7 +108,7 @@ public abstract class Minigame extends Miniroom {
 		inProgress = false;
 		byte exiterPos;
 		if (!exitAfterFinish[exiterPos = 0] && !exitAfterFinish[exiterPos = 1]) {
-			ownerMovesFirst = (result != MinigameResult.TIE ? winnerPos == 1 : !ownerMovesFirst);
+			ownerMovesFirst = result != MinigameResult.TIE ? winnerPos == 1 : !ownerMovesFirst;
 			currentPos = (byte) (ownerMovesFirst ? 0 : 1);
 			getPlayerByPosition((byte) 0).getMap().sendToAll(getUpdateBalloonMessage());
 		} else {
@@ -119,7 +120,7 @@ public abstract class Minigame extends Miniroom {
 	}
 
 	public byte nextTurn() {
-		return (currentPos = (byte) ((currentPos + 1) % 2));
+		return currentPos = (byte) ((currentPos + 1) % 2);
 	}
 
 	public void setExitAfterGame(GameCharacter p, boolean shouldExit) {
@@ -188,7 +189,8 @@ public abstract class Minigame extends Miniroom {
 		private static final int COLUMNS = 15;
 
 		private final byte[][] board;
-		private int[] lastLastMove, lastMove;
+		private int[] lastLastMove;
+		private int[] lastMove;
 
 		public Omok(GameCharacter owner, String text, String password, byte stoneLook) {
 			super(owner, text, password, stoneLook);
@@ -199,8 +201,12 @@ public abstract class Minigame extends Miniroom {
 			if (board[x][y] != 0)
 				return MoveResult.OCCUPIED;
 
-			int horizontal = 1, vertical = 1, mainDiagonal = 1, antiDiagonal = 1;
-			int nextX, nextY;
+			int horizontal = 1;
+			int vertical = 1;
+			int mainDiagonal = 1;
+			int antiDiagonal = 1;
+			int nextX;
+			int nextY;
 
 			for (nextX = x + 1; nextX < COLUMNS && board[nextX][y] == playerNum; nextX++)
 				horizontal++;
@@ -342,12 +348,10 @@ public abstract class Minigame extends Miniroom {
 	}
 
 	public static class MatchCards extends Minigame {
-		private static final byte
-			MOVE_RESULT_OWNER_UN_TURN = 0,
-			MOVE_RESULT_VISITOR_UN_TURN = 1,
-			MOVE_RESULT_OWNER_MATCH = 2,
-			MOVE_RESULT_VISITOR_MATCH = 3
-		;
+		private static final byte MOVE_RESULT_OWNER_UN_TURN = 0;
+		private static final byte MOVE_RESULT_VISITOR_UN_TURN = 1;
+		private static final byte MOVE_RESULT_OWNER_MATCH = 2;
+		private static final byte MOVE_RESULT_VISITOR_MATCH = 3;
 
 		private int[] cards;
 		private byte firstSelect;
@@ -396,7 +400,7 @@ public abstract class Minigame extends Miniroom {
 					sendToAll(writeSecondSelect(firstSelect, card, currentPos == 0 ? MOVE_RESULT_OWNER_MATCH : MOVE_RESULT_VISITOR_MATCH));
 					matches[currentPos]++;
 					if (matches[0] + matches[1] == cards.length / 2)
-						endGame((matches[0] != matches[1]) ? MinigameResult.WIN : MinigameResult.TIE, (byte) (matches[0] > matches[1] ? 0 : 1));
+						endGame(matches[0] != matches[1] ? MinigameResult.WIN : MinigameResult.TIE, (byte) (matches[0] > matches[1] ? 0 : 1));
 				}
 			}
 		}

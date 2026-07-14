@@ -45,10 +45,8 @@ import java.awt.Point;
  * @author GoldenKevin
  */
 public final class TakeDamageHandler {
-	private static final byte
-		BUMP_DAMAGE = -1, //the kind of damage you take when you run into a mob
-		MAP_DAMAGE = -2 //e.g. vines b/w henesys and ellinia
-	;
+	private static final byte BUMP_DAMAGE = -1;
+	private static final byte MAP_DAMAGE = -2;
 
 	public static void handleTakeDamage(LittleEndianReader packet, GameClient gc) {
 		GameCharacter p = gc.getPlayer();
@@ -100,9 +98,9 @@ public final class TakeDamageHandler {
 					pgmr.setSkill(packet.readByte()); //powerguard = 6, mana reflection = 0
 					pgmr.setPosition(packet.readPos());
 					pgmr.setDamage(damage);
-					int hurtDmg = (damage * reduction / 100);
+					int hurtDmg = damage * reduction / 100;
 					if (pgmr.isPhysical())
-						damage = (damage - hurtDmg);
+						damage = damage - hurtDmg;
 					switch (pgmr.getSkill()) {
 						case 0:
 							if (!p.isEffectActive(PlayerStatusEffect.MANA_REFLECTION)) {
@@ -270,7 +268,7 @@ public final class TakeDamageHandler {
 	}
 
 	private static byte[] writeHurtMonster(Mob monster, int damage, boolean byMob) {
-		LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(!byMob ? 11 : 19);
+		LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(byMob ? 19 : 11);
 		lew.writeShort(ClientSendOps.DAMAGE_MONSTER);
 		lew.writeInt(monster.getId());
 		lew.writeBool(byMob);

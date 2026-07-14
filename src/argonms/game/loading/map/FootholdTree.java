@@ -43,11 +43,11 @@ public class FootholdTree {
 	private int minDropX;
 
 	public FootholdTree() {
-		this.footholds = new LinkedList<Foothold>();
+		this.footholds = new LinkedList<>();
 	}
 
 	private FootholdTree(Point p1, Point p2, int depth) {
-		this.footholds = new LinkedList<Foothold>();
+		this.footholds = new LinkedList<>();
 		this.p1 = p1;
 		this.p2 = p2;
 		this.depth = depth;
@@ -60,7 +60,7 @@ public class FootholdTree {
 
 	protected void finished() {
 		List<Foothold> loaded = footholds;
-		footholds = new LinkedList<Foothold>();
+		footholds = new LinkedList<>();
 		Point lBound = new Point();
 		Point uBound = new Point();
 		for (Foothold fh : loaded) {
@@ -114,7 +114,7 @@ public class FootholdTree {
 	}
 	
 	private List<Foothold> getRelevants(Point p) {
-		return getRelevants(p, new LinkedList<Foothold>());
+		return getRelevants(p, new LinkedList<>());
 	}
 	
 	private List<Foothold> getRelevants(Point p, List<Foothold> list) {
@@ -170,7 +170,7 @@ public class FootholdTree {
 	public Foothold findBelow(Point p) {
 		List<Foothold> relevants = getRelevants(p);
 		// find fhs with matching x coordinates
-		List<Foothold> xMatches = new LinkedList<Foothold>();
+		List<Foothold> xMatches = new LinkedList<>();
 		for (Foothold fh : relevants) {
 			if (fh.getX1() <= p.x && fh.getX2() >= p.x) xMatches.add(fh);
 		}

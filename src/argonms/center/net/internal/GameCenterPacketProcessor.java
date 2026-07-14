@@ -91,7 +91,7 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 		r.setHost(packet.readLengthPrefixedString());
 		byte world = packet.readByte();
 		byte size = packet.readByte();
-		Map<Byte, Integer> clientPorts = new HashMap<Byte, Integer>(size);
+		Map<Byte, Integer> clientPorts = new HashMap<>(size);
 		for (int i = 0; i < size; i++)
 			clientPorts.put(Byte.valueOf(packet.readByte()), packet.readInt());
 		r.setWorld(world);
@@ -312,7 +312,7 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 				//logs on before he changes channels or logs off, he
 				//will still be loaded into the party list
 				CenterServer.getInstance().getGroupsDb(r.getWorld()).flushParty(partyId);
-			partyChannels = new HashSet<Byte>(partyChannels);
+			partyChannels = new HashSet<>(partyChannels);
 			partyChannels.add(Byte.valueOf(leaverChannel));
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : partyChannels) {
@@ -770,7 +770,7 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 				//logs on before he changes channels or logs off, he
 				//will still be loaded into the guild list
 				CenterServer.getInstance().getGroupsDb(r.getWorld()).flushGuild(guildId);
-			guildChannels = new HashSet<Byte>(guildChannels);
+			guildChannels = new HashSet<>(guildChannels);
 			guildChannels.add(Byte.valueOf(leaverChannel));
 			for (CenterGameInterface cgi : CenterServer.getInstance().getAllServersOfWorld(r.getWorld(), ServerType.UNDEFINED)) {
 				for (Byte channel : guildChannels) {
@@ -1163,7 +1163,7 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 
 	private void processCreateChatroom(LittleEndianReader packet) {
 		int creatorId = packet.readInt();
-		Map<Short, Integer> equips = new HashMap<Short, Integer>();
+		Map<Short, Integer> equips = new HashMap<>();
 		for (byte i = packet.readByte(); i > 0; i--) {
 			short slot = packet.readShort();
 			int itemId = packet.readInt();
@@ -1186,7 +1186,7 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 	private void processJoinChatroom(LittleEndianReader packet) {
 		int roomId = packet.readInt();
 		int joinerId = packet.readInt();
-		Map<Short, Integer> equips = new HashMap<Short, Integer>();
+		Map<Short, Integer> equips = new HashMap<>();
 		for (byte i = packet.readByte(); i > 0; i--) {
 			short slot = packet.readShort();
 			int itemId = packet.readInt();
@@ -1398,7 +1398,7 @@ public class GameCenterPacketProcessor extends GameOrShopPacketProcessor {
 	private void processUpdateChatroomPlayerLook(LittleEndianReader packet) {
 		int playerId = packet.readInt();
 		int roomId = packet.readInt();
-		Map<Short, Integer> equips = new HashMap<Short, Integer>();
+		Map<Short, Integer> equips = new HashMap<>();
 		for (byte i = packet.readByte(); i > 0; i--) {
 			short slot = packet.readShort();
 			int itemId = packet.readInt();

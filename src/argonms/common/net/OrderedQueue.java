@@ -34,11 +34,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class OrderedQueue {
 	private final SortedMap<Integer, ByteBuffer> queued;
-	private final AtomicInteger nextPopCursor, nextPushCursor;
+	private final AtomicInteger nextPopCursor;
+	private final AtomicInteger nextPushCursor;
 	private final AtomicBoolean writeInProgress;
 
 	public OrderedQueue() {
-		queued = new ConcurrentSkipListMap<Integer, ByteBuffer>();
+		queued = new ConcurrentSkipListMap<>();
 		nextPopCursor = new AtomicInteger(0);
 		nextPushCursor = new AtomicInteger(0);
 		writeInProgress = new AtomicBoolean(false);
@@ -88,7 +89,7 @@ public class OrderedQueue {
 	 * insert(). The list has no gaps in order numbers.
 	 */
 	public List<ByteBuffer> pop() {
-		List<ByteBuffer> consecutive = new ArrayList<ByteBuffer>();
+		List<ByteBuffer> consecutive = new ArrayList<>();
 		Iterator<Entry<Integer, ByteBuffer>> elements = queued.entrySet().iterator();
 		if (elements.hasNext()) {
 			Entry<Integer, ByteBuffer> lastPopped = elements.next();

@@ -625,7 +625,7 @@ public final class DealDamageHandler {
 	}
 
 	private static byte getMasteryLevel(GameCharacter p, AttackType type, int skill) {
-		List<Integer> skills = new ArrayList<Integer>();
+		List<Integer> skills = new ArrayList<>();
 		switch (type) {
 			case MAGIC:
 				skills.add(Integer.valueOf(skill));
@@ -789,9 +789,13 @@ public final class DealDamageHandler {
 	}
 
 	private static class AttackInfo {
-		public short ammoSlot, cashAmmoSlot;
-		public int skill, charge, ammoItemId;
-		public byte numAttacked, numDamage;
+		public short ammoSlot;
+		public short cashAmmoSlot;
+		public int skill;
+		public int charge;
+		public int ammoItemId;
+		public byte numAttacked;
+		public byte numDamage;
 		public byte stance;
 		public Map<Integer, int[]> allDamage;
 		public int[] mesoExplosion;
@@ -801,7 +805,7 @@ public final class DealDamageHandler {
 
 		public AttackInfo() {
 			this.speed = 4;
-			this.allDamage = new HashMap<Integer, int[]>();
+			this.allDamage = new HashMap<>();
 		}
 
 		public PlayerSkillEffectsData getAttackEffect(GameCharacter p) {

@@ -20,6 +20,7 @@ package argonms.common.net;
 
 import argonms.common.util.Rng;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA1Digest;
@@ -30,16 +31,16 @@ import org.bouncycastle.crypto.digests.SHA512Digest;
  * @author GoldenKevin
  */
 public final class HashFunctions {
-	public static final Charset ASCII = Charset.forName("US-ASCII");
+	public static final Charset ASCII = StandardCharsets.US_ASCII;
 
-	private static ThreadLocal<Digest> sha1digest = new ThreadLocal<Digest>() {
+	private static ThreadLocal<Digest> sha1digest = new ThreadLocal<>() {
 		@Override
 		public Digest initialValue() {
 			return new SHA1Digest();
 		}
 	};
 
-	private static ThreadLocal<Digest> sha512digest = new ThreadLocal<Digest>() {
+	private static ThreadLocal<Digest> sha512digest = new ThreadLocal<>() {
 		@Override
 		public Digest initialValue() {
 			return new SHA512Digest();

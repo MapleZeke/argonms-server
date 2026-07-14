@@ -38,13 +38,13 @@ public class ShopPlayerContinuation extends AbstractPlayerContinuation {
 			byte channel, short energyCharge, int chatroom, boolean isEnteringCashShop) {
 		super(activeItems, activeSkills, activeDebuffs, channel, energyCharge);
 		setChatroomId(chatroom);
-		activeSummons = new HashMap<Integer, BuffState.PlayerSummonState>();
+		activeSummons = new HashMap<>();
 		cashShop = isEnteringCashShop;
 	}
 
 	public ShopPlayerContinuation() {
 		super();
-		activeSummons = new HashMap<Integer, BuffState.PlayerSummonState>();
+		activeSummons = new HashMap<>();
 	}
 
 	public Map<Integer, BuffState.PlayerSummonState> getActiveSummons() {

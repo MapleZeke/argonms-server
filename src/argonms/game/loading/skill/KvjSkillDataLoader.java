@@ -36,16 +36,14 @@ import java.util.logging.Logger;
 public class KvjSkillDataLoader extends SkillDataLoader {
 	private static final Logger LOG = Logger.getLogger(KvjSkillDataLoader.class.getName());
 
-	private static final byte //skill props
-		NEXT_SKILL = 1,
-		ELEM_ATTR = 2,
-		DELAY = 3,
-		SUMMON = 4,
-		PREPARED = 5,
-		KEY_DOWN = 6,
-		KEY_DOWN_END = 7,
-		NEXT_LEVEL = 8
-	;
+	private static final byte NEXT_SKILL = 1;
+	private static final byte ELEM_ATTR = 2;
+	private static final byte DELAY = 3;
+	private static final byte SUMMON = 4;
+	private static final byte PREPARED = 5;
+	private static final byte KEY_DOWN = 6;
+	private static final byte KEY_DOWN_END = 7;
+	private static final byte NEXT_LEVEL = 8;
 
 	private final String dataPath;
 	private final Set<Integer> loadedFiles;
@@ -57,7 +55,7 @@ public class KvjSkillDataLoader extends SkillDataLoader {
 
 	@Override
 	protected void loadPlayerSkill(int skillid) {
-		String id = String.format("%07d", skillid);
+		String id = "%07d".formatted(skillid);
 
 		try {
 			Integer key = Integer.valueOf(Integer.parseInt(id.substring(0, 3)));
@@ -121,7 +119,7 @@ public class KvjSkillDataLoader extends SkillDataLoader {
 			return false;
 		//TODO: actually load the file to see if the skill exists so we can use
 		//this method as an "does exist" instead of just "is loadable"?
-		String id = String.format("%07d", skillid);
+		String id = "%07d".formatted(skillid);
 		File f = new File(new StringBuilder(dataPath).append("Skill.wz").append(File.separator).append(id.substring(0, 3)).append(".img.kvj").toString());
 		return f.exists();
 	}

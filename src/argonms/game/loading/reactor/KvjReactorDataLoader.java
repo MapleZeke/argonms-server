@@ -36,12 +36,10 @@ import java.util.logging.Logger;
 public class KvjReactorDataLoader extends ReactorDataLoader {
 	private static final Logger LOG = Logger.getLogger(KvjReactorDataLoader.class.getName());
 
-	private static final byte
-		LINK = 1,
-		HIT_EVENT = 2,
-		ITEM_EVENT = 3,
-		SCRIPT_NAME = 4
-	;
+	private static final byte LINK = 1;
+	private static final byte HIT_EVENT = 2;
+	private static final byte ITEM_EVENT = 3;
+	private static final byte SCRIPT_NAME = 4;
 
 	private final String dataPath;
 
@@ -51,7 +49,7 @@ public class KvjReactorDataLoader extends ReactorDataLoader {
 
 	@Override
 	protected void load(int reactorid) {
-		String id = String.format("%07d", reactorid);
+		String id = "%07d".formatted(reactorid);
 
 		ReactorStats stats = null;
 		try {
@@ -90,7 +88,7 @@ public class KvjReactorDataLoader extends ReactorDataLoader {
 	public boolean canLoad(int reactorid) {
 		if (reactorStats.containsKey(reactorid))
 			return true;
-		String id = String.format("%07d", reactorid);
+		String id = "%07d".formatted(reactorid);
 		File f = new File(new StringBuilder(dataPath).append("Reactor.wz").append(File.separator).append(id).append(".img.kvj").toString());
 		return f.exists();
 	}

@@ -35,16 +35,12 @@ import argonms.game.net.external.GamePackets;
  * @author GoldenKevin
  */
 public final class ChatHandler {
-	private static final byte
-		COMMAND_FIND = 5,
-		COMMAND_WHISPER = 6
-	;
+	private static final byte COMMAND_FIND = 5;
+	private static final byte COMMAND_WHISPER = 6;
 
-	private static final byte
-		FIND_RESPONSE_MAP = 1,
-		FIND_RESPONSE_CASH_SHOP = 2,
-		FIND_RESPONSE_CHANNEL = 3
-	;
+	private static final byte FIND_RESPONSE_MAP = 1;
+	private static final byte FIND_RESPONSE_CASH_SHOP = 2;
+	private static final byte FIND_RESPONSE_CHANNEL = 3;
 
 	public static void handleMapChat(LittleEndianReader packet, GameClient gc) {
 		String message = packet.readLengthPrefixedString();

@@ -85,11 +85,12 @@ public abstract class IntraworldGroup<T extends IntraworldGroup.Member> {
 	//lock for the entire IntraworldGroup instance rather than two ConcurrentHashMaps
 	private final Map<Integer, T> allMembers;
 	private final Map<Byte, Map<Integer, T>> channelMembers;
-	private final Lock readLock, writeLock;
+	private final Lock readLock;
+	private final Lock writeLock;
 
 	public IntraworldGroup() {
-		allMembers = new LinkedHashMap<Integer, T>(6);
-		channelMembers = new HashMap<Byte, Map<Integer, T>>();
+		allMembers = new LinkedHashMap<>(6);
+		channelMembers = new HashMap<>();
 		ReadWriteLock locks = new ReentrantReadWriteLock();
 		readLock = locks.readLock();
 		writeLock = locks.writeLock();
@@ -139,7 +140,7 @@ public abstract class IntraworldGroup<T extends IntraworldGroup.Member> {
 
 		Map<Integer, T> othersOnChannel = channelMembers.get(oCh);
 		if (othersOnChannel == null) {
-			othersOnChannel = new HashMap<Integer, T>();
+			othersOnChannel = new HashMap<>();
 			channelMembers.put(oCh, othersOnChannel);
 		}
 		othersOnChannel.put(Integer.valueOf(member.getPlayerId()), member);
@@ -158,7 +159,7 @@ public abstract class IntraworldGroup<T extends IntraworldGroup.Member> {
 
 	public boolean removePlayer(int playerId, boolean transition) {
 		boolean success;
-		Member removed = !transition ? allMembers.remove(Integer.valueOf(playerId)) : allMembers.get(Integer.valueOf(playerId));
+		Member removed = transition ? allMembers.get(Integer.valueOf(playerId)) : allMembers.remove(Integer.valueOf(playerId));
 		if (removed != null) {
 			success = true;
 			Map<Integer, T> others = channelMembers.get(Byte.valueOf(removed.getChannel()));

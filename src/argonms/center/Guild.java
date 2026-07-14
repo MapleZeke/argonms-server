@@ -63,8 +63,10 @@ public class Guild extends IntraworldGroup<Guild.Member> {
 	}
 
 	private String name;
-	private short emblemBg, emblemFg;
-	private byte emblemBgC, emblemFgC;
+	private short emblemBg;
+	private short emblemFg;
+	private byte emblemBgC;
+	private byte emblemFgC;
 	private String[] titles;
 	private byte capacity;
 	private String notice;
