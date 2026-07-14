@@ -24,6 +24,8 @@ import argonms.common.net.internal.ChannelSynchronizationOps;
 import argonms.common.util.DatabaseManager;
 import argonms.common.util.DatabaseManager.DatabaseType;
 import argonms.common.util.collections.Pair;
+import argonms.common.util.dao.BuddyDAO;
+import argonms.common.util.dao.DataAccessException;
 import argonms.common.util.input.LittleEndianReader;
 import argonms.game.GameServer;
 import argonms.game.character.BuddyList;
@@ -57,62 +59,16 @@ public final class BuddyListHandler {
 	public static final byte CAPACITY_CHANGE = 0x15;
 
 	private static boolean accountLoggedIn(int playerId) {
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-				PreparedStatement ps = con.prepareStatement("SELECT `a`.`connected` "
-						+ "FROM `accounts` `a` LEFT JOIN `characters` `c` ON `c`.`accountid` = `a`.`id` "
-						+ "WHERE `c`.`id` = ?")) {
-			ps.setInt(1, playerId);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (!rs.next()) {
-					return false;
-				}
-				//if logged into login or shop, treat as if offline since they don't
-				//overwrite the buddyentries SQL table
-				return rs.getByte(1) == RemoteClient.STATUS_INGAME;
-			}
-		} catch (SQLException e) {
+		try {
+			return BuddyDAO.isAccountInGame(playerId);
+		} catch (DataAccessException e) {
 			LOG.log(Level.WARNING, "Error checking if character " + playerId + " is online", e);
 			return false;
 		}
 	}
 
 	private static byte inviteOfflinePlayer(Connection con, int invitee, int inviter, String inviterName) throws SQLException {
-		boolean reAdd;
-		try (PreparedStatement ps = con.prepareStatement("SELECT "
-				+ "(`c`.`buddyslots` <= (SELECT COUNT(*) FROM `buddyentries` WHERE `owner` = `c`.`id`  AND `status` <> " + BuddyListEntry.STATUS_INVITED + ")) AS `full`,"
-				+ "EXISTS (SELECT * FROM `buddyentries` WHERE `owner` = `c`.`id` AND `buddy` = ?) AS `readd` "
-				+ "FROM `characters` `c` WHERE `id` = ?")) {
-			ps.setInt(1, inviter);
-			ps.setInt(2, invitee);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (!rs.next()) {
-					return -1;
-				}
-				if (rs.getBoolean(1)) {
-					return THEIR_LIST_FULL;
-				}
-				//assert row retrieved in subquery for `readd` had `status` == STATUS_HALF_OPEN
-				reAdd = rs.getBoolean(2);
-			}
-		}
-
-		if (!reAdd) {
-			try (PreparedStatement ps = con.prepareStatement("INSERT INTO `buddyentries` "
-					+ "(`owner`,`buddy`,`buddyname`,`status`) VALUES (?,?,?," + BuddyListEntry.STATUS_INVITED + ")")) {
-				ps.setInt(1, invitee);
-				ps.setInt(2, inviter);
-				ps.setString(3, inviterName);
-				ps.executeUpdate();
-				return Byte.MAX_VALUE;
-			}
-		} else {
-			try (PreparedStatement ps = con.prepareStatement("UPDATE `buddyentries` SET `status` = " + BuddyListEntry.STATUS_MUTUAL + " WHERE `owner` = ? AND `buddy` = ?")) {
-				ps.setInt(1, invitee);
-				ps.setInt(2, inviter);
-				ps.executeUpdate();
-				return Byte.MIN_VALUE;
-			}
-		}
+		return BuddyDAO.inviteOfflinePlayer(con, invitee, inviter, inviterName, THEIR_LIST_FULL);
 	}
 
 	private static void processSendInvite(String invitee, GameClient client) {
@@ -206,13 +162,9 @@ public final class BuddyListHandler {
 		//if we conclude he is offline, update his entry directly on the database
 		if (!accountLoggedIn(inviterId) || !GameServer.getChannel(client.getChannel()).getCrossServerInterface().sendBuddyInviteAccepted(p, inviterId)) {
 			//if inviter is concluded to be offline, attempt to make his entry MUTUAL on database
-			try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
-					PreparedStatement ps = con.prepareStatement("UPDATE `buddyentries` SET `status` = " + BuddyListEntry.STATUS_MUTUAL
-							+ " WHERE `owner` = ? AND `buddy` = ?")) {
-				ps.setInt(1, inviterId);
-				ps.setInt(2, p.getId());
-				ps.executeUpdate();
-			} catch (SQLException e) {
+			try {
+				BuddyDAO.setOfflineBuddyMutual(inviterId, p.getId());
+			} catch (DataAccessException e) {
 				LOG.log(Level.WARNING, "Could not accept buddy invite", e);
 			}
 		}
@@ -253,17 +205,9 @@ public final class BuddyListHandler {
 		} else if (!tryRetractInvite || !GameServer.getChannel(client.getChannel()).getCrossServerInterface().sendBuddyInviteRetracted(p, deletedId)) {
 			//if buddy is concluded to be offline, attempt to remove invite to him on database (no effect if tryRetractInvite is true and is the second case) or make his entry HALF_OPEN
 			assert !accountLoggedIn(deletedId) || GameServer.getChannel(client.getChannel()).getCrossServerInterface().scanChannelOfPlayer(removed.getName(), false) <= ChannelSynchronizationOps.CHANNEL_CASH_SHOP;
-			try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
-				String query = !tryRetractInvite
-						? "UPDATE `buddyentries` SET `status` = " + BuddyListEntry.STATUS_HALF_OPEN + " WHERE `owner` = ? AND `buddy` = ?"
-						: "DELETE FROM `buddyentries` WHERE `owner` = ? AND `buddy` = ?";
-				try (PreparedStatement ps = con.prepareStatement(query)) {
-					//assert no rows deleted or deleted row had `status` == STATUS_INVITED.
-					ps.setInt(1, deletedId);
-					ps.setInt(2, p.getId());
-					ps.executeUpdate();
-				}
-			} catch (SQLException e) {
+			try {
+				BuddyDAO.removeOfflineBuddyEntry(deletedId, p.getId(), tryRetractInvite);
+			} catch (DataAccessException e) {
 				LOG.log(Level.WARNING, "Could not delete buddy entry", e);
 			}
 		}

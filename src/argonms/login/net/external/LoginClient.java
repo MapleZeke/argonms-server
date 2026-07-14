@@ -27,14 +27,16 @@ import argonms.common.util.DatabaseManager.DatabaseType;
 import argonms.common.util.TimeTool;
 import argonms.common.util.dao.AccountDAO;
 import argonms.common.util.dao.AccountDAO.AuthRecord;
+import argonms.common.util.dao.BanDAO;
+import argonms.common.util.dao.BanDAO.BanStatus;
 import argonms.common.util.dao.DataAccessException;
+import argonms.common.util.dao.GuildDAO;
 import argonms.login.character.LoginCharacter;
 import java.net.InetSocketAddress;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -98,91 +100,16 @@ public class LoginClient extends RemoteClient {
 		return longValue;
 	}
 
-	private CheatTracker.Infraction loadBanStatusInternal(Connection con, ResultSet rs) throws SQLException {
-		EnumMap<CheatTracker.Infraction, Integer> infractionPoints = new EnumMap<>(CheatTracker.Infraction.class);
-		int highestPoints = 0;
-		CheatTracker.Infraction mainBanReason = null;
-
-		//load only non-expired infractions - even though the ban
-		//may have been given with infractions that have already
-		//expired, the longest lasting infraction will still remain
-		//the same, and we could just choose the most outstanding
-		//points from the active infractions to send to the client
-		try (PreparedStatement ips = con.prepareStatement("SELECT `expiredate`,`reason`,`severity` FROM `infractions` WHERE `accountid` = ? AND `pardoned` = 0 AND `expiredate` > (UNIX_TIMESTAMP() * 1000) ORDER BY `expiredate` DESC");
-				PreparedStatement rbps = con.prepareStatement("DELETE FROM `bans` WHERE `banid` = ?")) {
-			//there could be multiple bans (account bans, some mac, and others IP)
-			//if that's the case, load all of them and calculate the longest lasting
-			//infraction and the most outstanding infraction reason from a union
-			//of the infractions of all bans.
-			while (rs.next()) {
-				boolean release = true;
-				int totalPoints = 0;
-				ips.setInt(1, rs.getInt(2));
-				try (ResultSet irs = ips.executeQuery()) {
-					while (irs.next()) {
-						long infractionExpire = irs.getLong(1);
-						CheatTracker.Infraction infractionReason = CheatTracker.Infraction.valueOf(irs.getByte(2));
-						short severity = irs.getShort(3);
-
-						//ban expire time is based on the shortest amount of
-						//time before total points goes below tolerance.
-						//assume ResultSet is iterated in order of `expiredate`
-						//descending
-						if (release && (totalPoints += severity) >= CheatTracker.TOLERANCE) {
-							banExpire = infractionExpire;
-							release = false;
-						}
-
-						//meanwhile, the ban reason sent the client doesn't have
-						//to be paired up to the longest lasting ban. instead,
-						//send the reason that is most responsible for the ban
-						//(i.e. the reason that has the highest sum of points)
-						Integer runningPoints = infractionPoints.get(infractionReason);
-						int updatedPoints = (runningPoints != null ? runningPoints.intValue() : 0) + severity;
-						infractionPoints.put(infractionReason, Integer.valueOf(updatedPoints));
-						if (updatedPoints > highestPoints) {
-							highestPoints = updatedPoints;
-							mainBanReason = infractionReason;
-						}
-					}
-				}
-				if (release) {
-					rbps.setInt(1, rs.getInt(1));
-					rbps.addBatch();
-				}
-			}
-			rbps.executeBatch();
-		}
-		return mainBanReason;
-	}
-
 	private void loadBanStatusFromIdAndIp(Connection con) throws SQLException {
-		banExpire = 0;
-
-		CheatTracker.Infraction banStatus;
-
-		try (PreparedStatement ps = con.prepareStatement("SELECT `banid`,`accountid` FROM `bans` WHERE `accountid` = ? OR `ip` = ?")) {
-			ps.setInt(1, getAccountId());
-			ps.setLong(2, getIpAddress());
-			try (ResultSet rs = ps.executeQuery()) {
-				banStatus = loadBanStatusInternal(con, rs);
-			}
-		}
-		banReason = banStatus == null ? 0 : banStatus.byteValue();
+		BanStatus status = BanDAO.loadBanStatusFromIdAndIp(con, getAccountId(), getIpAddress());
+		banExpire = status.banExpire();
+		banReason = status.banReason();
 	}
 
 	private void loadBanStatusFromBanId(Connection con, int banId) throws SQLException {
-		banExpire = 0;
-
-		CheatTracker.Infraction banStatus;
-
-		try (PreparedStatement ps = con.prepareStatement("SELECT `banid`,`accountid` FROM `bans` WHERE `banid` = ?")) {
-			ps.setInt(1, banId);
-			try (ResultSet rs = ps.executeQuery()) {
-				banStatus = loadBanStatusInternal(con, rs);
-			}
-		}
-		banReason = banStatus == null ? 0 : banStatus.byteValue();
+		BanStatus status = BanDAO.loadBanStatusFromBanId(con, banId);
+		banExpire = status.banExpire();
+		banReason = status.banReason();
 	}
 
 	//TODO: Maybe we shouldn't reload all of the account data if we already
@@ -335,25 +262,23 @@ public class LoginClient extends RemoteClient {
 			return DELETE_ERROR_WRONG_BIRTHDAY;
 		}
 
-		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE)) {
-			try (PreparedStatement ps = con.prepareStatement("SELECT EXISTS(SELECT 1 FROM `guildmembers` WHERE `characterid` = ? AND `rank` = 1 LIMIT 1)")) {
-				ps.setInt(1, characterid);
-				try (ResultSet rs = ps.executeQuery()) {
-					rs.next();
-					if (rs.getBoolean(1)) {
-						return DELETE_ERROR_GUILD_MASTER;
-					}
-				}
+		try {
+			if (GuildDAO.isGuildMaster(characterid)) {
+				return DELETE_ERROR_GUILD_MASTER;
 			}
+		} catch (DataAccessException ex) {
+			LOG.log(Level.WARNING, "Could not check guild master status for character " + characterid, ex);
+			return DELETE_ERROR_SYSTEM;
+		}
 
-			try (PreparedStatement ps = con.prepareStatement("DELETE FROM `characters` WHERE `id` = ?")) {
-				ps.setInt(1, characterid);
-				int rowsUpdated = ps.executeUpdate();
-				if (rowsUpdated != 0) {
-					return DELETE_OKAY;
-				} else {
-					return DELETE_ERROR_SYSTEM;
-				}
+		try (Connection con = DatabaseManager.getConnection(DatabaseType.STATE);
+				PreparedStatement ps = con.prepareStatement("DELETE FROM `characters` WHERE `id` = ?")) {
+			ps.setInt(1, characterid);
+			int rowsUpdated = ps.executeUpdate();
+			if (rowsUpdated != 0) {
+				return DELETE_OKAY;
+			} else {
+				return DELETE_ERROR_SYSTEM;
 			}
 		} catch (SQLException ex) {
 			LOG.log(Level.WARNING, "Could not delete character " + characterid + " of account " + getAccountId(), ex);
