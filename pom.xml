@@ -177,6 +177,32 @@
                         </executions>
                     </plugin>
 
+                    <!-- ===== PMD ===== -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-pmd-plugin</artifactId>
+                        <version>3.21.2</version>
+                        <configuration>
+                            <targetJdk>17</targetJdk>
+                            <failOnViolation>true</failOnViolation>
+                            <printFailingErrors>true</printFailingErrors>
+                            <rulesets>
+                                <ruleset>category/java/bestpractices.xml</ruleset>
+                                <ruleset>category/java/errorprone.xml</ruleset>
+                                <ruleset>category/java/security.xml</ruleset>
+                            </rulesets>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>pmd-check</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
                     <!-- ===== OpenRewrite dry-run ===== -->
                     <!--
                         Run with: mvn rewrite:dryRunNoFork -P quality-baseline
