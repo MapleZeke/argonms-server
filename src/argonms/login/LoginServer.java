@@ -24,11 +24,11 @@ import argonms.common.ServerType;
 import argonms.common.loading.DataFileType;
 import argonms.common.loading.item.ItemDataLoader;
 import argonms.common.net.external.CheatTracker;
-import argonms.common.net.external.ClientListener;
 import argonms.common.net.internal.RemoteCenterSession;
 import argonms.common.util.DatabaseManager;
 import argonms.common.util.DatabaseManager.DatabaseType;
 import argonms.common.util.Scheduler;
+import argonms.common.net.external.NettyClientListener;
 import argonms.login.net.LoginWorld;
 import argonms.login.net.external.ClientLoginPacketProcessor;
 import argonms.login.net.external.LoginClient;
@@ -65,7 +65,7 @@ public final class LoginServer implements LocalServer {
 	private final Map<Byte, LoginWorld> onlineWorlds;
 	private final Map<Byte, Byte> worldFlags;
 	private final Map<Byte, String> worldMessages;
-	private ClientListener<LoginClient> handler;
+	private NettyClientListener<LoginClient> handler;
 	private LoginCenterInterface lci;
 	private String address;
 	private int port;
@@ -161,7 +161,7 @@ public final class LoginServer implements LocalServer {
 		}
 		wzPath = System.getProperty("argonms.data.dir");
 
-		handler = new ClientListener<>(new ClientLoginPacketProcessor(), () -> new LoginClient());
+		handler = new NettyClientListener<>(new ClientLoginPacketProcessor(), () -> new LoginClient());
 
 		boolean mcdb = wzType == DataFileType.MCDB;
 		prop = new PropertiesConfiguration();

@@ -24,6 +24,9 @@ import argonms.common.net.Session;
 import argonms.common.util.Rng;
 import argonms.common.util.Scheduler;
 import argonms.common.util.output.LittleEndianByteArrayWriter;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.channel.Channel;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -59,6 +62,8 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	private static final int TIMEOUT = 15000; //in milliseconds
 
 	private final SocketChannel commChn;
+	private final Channel nettyChn;
+	private final boolean nettyTransport;
 	private final AtomicBoolean closeEventsTriggered;
 	private ByteBuffer readBuffer;
 	private final CloseListener<T> onClose;
@@ -85,7 +90,16 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	}
 
 	/* package-private */ ClientSession(SocketChannel channel, SelectionKey key, T client, CloseListener<T> onClose) {
+		this(channel, null, key, client, onClose);
+	}
+
+	/* package-private */ ClientSession(Channel channel, T client) {
+		this(null, channel, null, client, null);
+	}
+
+	private ClientSession(SocketChannel socketChannel, Channel nettyChannel, SelectionKey key, T client, CloseListener<T> onClose) {
 		closeEventsTriggered = new AtomicBoolean(false);
+		nettyTransport = nettyChannel != null;
 		sendQueue = new OrderedQueue();
 		heartbeatTask = new KeepAliveTask();
 		queuedReads = new AtomicInteger(0);
@@ -98,7 +112,8 @@ public class ClientSession<T extends RemoteClient> implements Session {
 		generator.nextBytes(recvIv);
 		generator.nextBytes(sendIv);
 
-		this.commChn = channel;
+		this.commChn = socketChannel;
+		this.nettyChn = nettyChannel;
 		this.onClose = onClose;
 		this.selectionKey = key;
 		this.client = client;
@@ -114,7 +129,7 @@ public class ClientSession<T extends RemoteClient> implements Session {
 
 	@Override
 	public SocketAddress getAddress() {
-		return commChn.socket().getRemoteSocketAddress();
+		return nettyTransport ? nettyChn.remoteAddress() : commChn.socket().getRemoteSocketAddress();
 	}
 
 	public String getAccountName() {
@@ -135,6 +150,10 @@ public class ClientSession<T extends RemoteClient> implements Session {
 
 	@Override
 	public void send(byte[] message) {
+		if (nettyTransport) {
+			nettyChn.writeAndFlush(message);
+			return;
+		}
 		//we will have to synchronize here because send can be called from any
 		//thread. we have to ensure that this message is sent before any shorter
 		//messages that use a newer IV are sent, so use an OrderedQueue.
@@ -194,7 +213,11 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	public boolean close(String reason) {
 		if (closeEventsTriggered.compareAndSet(false, true)) {
 			try {
-				commChn.close();
+				if (nettyTransport) {
+					nettyChn.close();
+				} else {
+					commChn.close();
+				}
 			} catch (IOException ex) {
 				LOG.log(Level.WARNING, "Error while closing client " + getAccountName() + " (" + getAddress() + ")", ex);
 			}
@@ -206,8 +229,12 @@ public class ClientSession<T extends RemoteClient> implements Session {
 			}
 
 			LOG.log(Level.FINE, "Client {0} ({1}) disconnected: {2}", new Object[]{getAccountName(), getAddress(), reason});
-			client.disconnected();
-			onClose.closed(this);
+			if (client != null) {
+				client.disconnected();
+			}
+			if (onClose != null) {
+				onClose.closed(this);
+			}
 			return true;
 		}
 		return false;
@@ -220,6 +247,9 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	 * channel is closed.
 	 */
 	/* package-private */ byte tryFlushSendQueue() {
+		if (nettyTransport) {
+			return 1;
+		}
 	if (!sendQueue.shouldWrite()) {
 		return -1;
 	}
@@ -260,25 +290,13 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	 * Selector loop.
 	 */
 	/* package-private */ void sendInitPacket() {
-		LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(13);
-		lew.writeShort(GlobalConstants.MAPLE_VERSION);
-		lew.writeLengthPrefixedString("");
-		lew.writeBytes(recvIv);
-		lew.writeBytes(sendIv);
-		lew.writeByte(CLIENT_DISTRIBUTION_GLOBAL);
-		byte[] body = lew.getBytes();
-
-		ByteBuffer buf = ByteBuffer.allocate(INIT_HEADER_LENGTH + body.length);
-		buf.order(ByteOrder.LITTLE_ENDIAN);
-		buf.putShort((short) body.length);
-		buf.put(body);
-		buf.flip();
+		if (nettyTransport) {
+			activate();
+			return;
+		}
+		ByteBuffer buf = ByteBuffer.wrap(makeInitPacketBytes());
 		send(sendQueue.getNextPush(), buf);
-
-		readBuffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE);
-		readBuffer.limit(HEADER_LENGTH);
-		nextMessageType = MessageType.HEADER;
-		idleTaskFuture = Scheduler.getWheelTimer().runAfterDelay(idleTask, IDLE_TIME);
+		activate();
 	}
 
 	/**
@@ -287,6 +305,45 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	 */
 	/* package-private */ ByteBuffer readBuffer() {
 		return readBuffer;
+	}
+
+	/* package-private */ ByteBuf makeInitPacket(ByteBufAllocator allocator) {
+		byte[] packet = makeInitPacketBytes();
+		ByteBuf buf = allocator.buffer(packet.length);
+		buf.writeBytes(packet);
+		return buf;
+	}
+
+	/* package-private */ void activate() {
+		readBuffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE);
+		readBuffer.limit(HEADER_LENGTH);
+		nextMessageType = MessageType.HEADER;
+		rescheduleIdleTask();
+	}
+
+	/* package-private */ void touch() {
+		rescheduleIdleTask();
+	}
+
+	/* package-private */ byte[] getRecvIv() {
+		return recvIv;
+	}
+
+	/* package-private */ byte[] advanceRecvIv() {
+		byte[] iv = recvIv;
+		recvIv = ClientEncryption.nextIv(iv);
+		return iv;
+	}
+
+	/* package-private */ byte[] advanceSendIv() {
+		sendIvLock.lock();
+		try {
+			byte[] iv = sendIv;
+			sendIv = ClientEncryption.nextIv(iv);
+			return iv;
+		} finally {
+			sendIvLock.unlock();
+		}
 	}
 
 	/**
@@ -299,7 +356,9 @@ public class ClientSession<T extends RemoteClient> implements Session {
 	 * message body at index 1 if the message body was fully read.
 	 */
 	/* package-private */ byte[][] readMessage(int readBytes) {
-		idleTaskFuture.cancel(false);
+		if (idleTaskFuture != null) {
+			idleTaskFuture.cancel(false);
+		}
 		if (readBytes == -1) {
 			//connection closed
 			close("EOF received");
@@ -349,6 +408,29 @@ public class ClientSession<T extends RemoteClient> implements Session {
 			default:
 				return null;
 		}
+	}
+
+	private byte[] makeInitPacketBytes() {
+		LittleEndianByteArrayWriter lew = new LittleEndianByteArrayWriter(13);
+		lew.writeShort(GlobalConstants.MAPLE_VERSION);
+		lew.writeLengthPrefixedString("");
+		lew.writeBytes(recvIv);
+		lew.writeBytes(sendIv);
+		lew.writeByte(CLIENT_DISTRIBUTION_GLOBAL);
+		byte[] body = lew.getBytes();
+
+		ByteBuffer buf = ByteBuffer.allocate(INIT_HEADER_LENGTH + body.length);
+		buf.order(ByteOrder.LITTLE_ENDIAN);
+		buf.putShort((short) body.length);
+		buf.put(body);
+		return buf.array();
+	}
+
+	private void rescheduleIdleTask() {
+		if (idleTaskFuture != null) {
+			idleTaskFuture.cancel(false);
+		}
+		idleTaskFuture = Scheduler.getWheelTimer().runAfterDelay(idleTask, IDLE_TIME);
 	}
 
 	private static byte[] pingMessage() {

@@ -26,8 +26,8 @@ import argonms.common.loading.DataFileType;
 import argonms.common.loading.item.ItemDataLoader;
 import argonms.common.loading.string.StringDataLoader;
 import argonms.common.net.external.CheatTracker;
-import argonms.common.net.external.ClientListener;
 import argonms.common.net.external.CommonPackets;
+import argonms.common.net.external.NettyClientListener;
 import argonms.common.net.external.PlayerLog;
 import argonms.common.net.internal.RemoteCenterSession;
 import argonms.common.util.DatabaseManager;
@@ -73,7 +73,7 @@ public final class ShopServer implements LocalServer {
 
 	private final Map<Integer, ShopPlayerContinuation> channelChangeData;
 	private final Map<Integer, Pair<Byte, ScheduledFuture<?>>> queuedChannelChanges;
-	private ClientListener<ShopClient> handler;
+	private NettyClientListener<ShopClient> handler;
 	private ShopCenterInterface sci;
 	private String address;
 	private int port;
@@ -155,7 +155,7 @@ public final class ShopServer implements LocalServer {
 		}
 		wzPath = System.getProperty("argonms.data.dir");
 
-		handler = new ClientListener<>(new ClientShopPacketProcessor(), () -> new ShopClient());
+		handler = new NettyClientListener<>(new ClientShopPacketProcessor(), () -> new ShopClient());
 
 		boolean mcdb = wzType == DataFileType.MCDB;
 		prop = new PropertiesConfiguration();
