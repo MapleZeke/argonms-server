@@ -18,8 +18,8 @@
 
 package argonms.game.net;
 
-import argonms.common.net.external.ClientListener;
 import argonms.common.net.external.CommonPackets;
+import argonms.common.net.external.NettyClientListener;
 import argonms.common.net.external.PlayerLog;
 import argonms.common.net.internal.ChannelSynchronizationOps;
 import argonms.common.net.internal.RemoteCenterOps;
@@ -51,7 +51,7 @@ public class WorldChannel {
 	private final Map<Integer, PlayerContinuation> channelChangeData;
 	private final Map<Integer, Pair<Byte, ScheduledFuture<?>>> queuedChannelChanges;
 	private long startTime;
-	private final ClientListener<GameClient> handler;
+	private final NettyClientListener<GameClient> handler;
 	private final byte world;
 	private final byte channel;
 	private int port;
@@ -68,7 +68,7 @@ public class WorldChannel {
 		this.port = port;
 		mapFactory = new MapFactory();
 		storage = new PlayerLog<>();
-		handler = new ClientListener<>(new ClientGamePacketProcessor(), () -> new GameClient(world, channel));
+		handler = new NettyClientListener<>(new ClientGamePacketProcessor(), () -> new GameClient(world, channel));
 	}
 
 	public void listen(boolean useNio) {
