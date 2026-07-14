@@ -86,7 +86,7 @@ public final class MapleSessionHandler<T extends RemoteClient> extends ChannelIn
 
 		var channelClient = ctx.channel().attr(CLIENT_KEY).get();
 		var client = session.getClient();
-		if (channelClient == null || client == null || channelClient != client) {
+		if (channelClient == null || client == null) {
 			return;
 		}
 
